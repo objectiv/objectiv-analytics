@@ -1,0 +1,21 @@
+#
+# WARNING: do not put actual secrets in here. This file is checked into our git repo.
+#
+# Put a copy of this file in ~/.dbt/ with actual credentials
+
+config:
+    send_anonymous_usage_stats: False
+
+objectiv:
+    target: dev
+    outputs:
+      dev:
+        type: postgres
+        host: localhost
+        user: objectiv
+        password: 0bj3ctiv
+        port: 5432
+        dbname: objectiv
+        schema: public
+        threads: 4
+

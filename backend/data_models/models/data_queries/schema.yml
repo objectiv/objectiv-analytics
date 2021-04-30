@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: sessionized_data
+    description: "group raw data into sessions"
+    columns:
+      - name: id
+        description: "event-id"
+        tests:
+          - unique
+          - not_null
+  - name: event_id_context_type
+    description: "per event_id, per context-type, the contexts that match that type "
+    columns:
+      - name: event_id
+        description: "event-id"
+        tests:
+          - not_null
+  - name: event_id_url
+    description: "per event_id, the url that the event took place"
+    columns:
+      - name: event_id
+        description: "event-id"
+        tests:
+          - unique
+          - not_null

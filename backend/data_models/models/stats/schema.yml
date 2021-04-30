@@ -1,0 +1,9 @@
+version: 2
+
+models:
+  - name: stats_per_url_day
+    description: "Per url and day the number of unique users, sessions and events"
+  - name: stats_per_url_day_event
+    description: "Per url, day, and event-type the number of unique users, sessions and events"
+  - name: stats_per_user_day
+    description: "Per cookie_id the number of sessions and events"

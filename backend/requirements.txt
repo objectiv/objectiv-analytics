@@ -6,4 +6,5 @@ jsonschema
 flask
 flask-cors
 psycopg2-binary
-
+# in the future we should maybe split this into different kind of workers. And not have dbt installed on the http endpoint
+dbt

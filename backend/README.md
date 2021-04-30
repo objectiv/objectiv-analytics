@@ -39,6 +39,12 @@ while true;
 done
 ```
 
+# Run DBT models
+```bash
+cd data_models
+dbt run --profiles-dir .  
+```
+
 if all is well, the journey should validate, and result in a json file in `jsons/OK/`
 
 ## Run validation on file with events:
