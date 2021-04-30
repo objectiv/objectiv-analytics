@@ -1,19 +1,17 @@
 # Running the demo
 
-Running the demo, containerized, is a fairly simple process, involving 2 steps:
+Running the dev stack, containerized, is a fairly simple process, involving 2 steps:
 
-1. Build the images (required for running the demo):
+0. First build ROD, see `objectiv-demo` for info
+
+1. Build the images (required for running the dev stack):
 
 ```bash
-make build-demo
+make build-all-images
 ```
 
-By default, all images will be tagged with the current git revision. To tell 
-`docker-compose` what tag to use, you can set the `$TAG` env variable.
-
-The default tag used by docker-compose is 
-`latest` so, if you don't either tag your images, or properly set `TAG`, starting 
-the containers will fail. Alternatively, start the demo stack through `make`.
+By default, all images will be tagged `latest`. This can be overridden by setting 
+`TAG`.
 
 2. Starting the containers:
 ```bash
@@ -36,7 +34,6 @@ As this is a demo environment, permissions are pretty simple; the credentials ar
 Typically everything is available on localhost:
 - rod (http://localhost:3000)
 - notebook (http://localhost:8080)
-- sankey (http://localhost:8050)
 
 ### Connecting to Notebook
 By default, you need a token to connect to the Jupyter Notebook. You can find it in
