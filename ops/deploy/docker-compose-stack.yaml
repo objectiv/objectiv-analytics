@@ -1,24 +1,5 @@
 version: "3"
 services:
-  rod:
-    container_name: rod
-    image: eu.gcr.io/objectiv-production/rod-prod
-    networks:
-      - obj-proxy
-    expose:
-      - ${ROD_PORT}
-    working_dir: /services/rod
-    entrypoint: serve --listen ${ROD_PORT} --no-clipboard --single build
-    environment:
-      - VIRTUAL_HOST=${ROD_HOST}
-      - VIRTUAL_PORT=${ROD_PORT}
-      - LETSENCRYPT_HOST=${ROD_HOST}
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:${ROD_PORT}"]
-      interval: 30s
-      timeout: 2s
-      retries: 3
-
   postgres:
     container_name: postgres
     image: postgres:latest

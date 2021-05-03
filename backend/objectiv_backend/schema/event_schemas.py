@@ -60,7 +60,7 @@ DEFAULT_SCHEMA = {
     },
     "InteractiveEvent": {
         "parents": ["AbstractEvent"],
-        "requiresContext": ["RootSectionContext"]
+        "requiresContext": ["SectionContext"]
     },
     "ClickEvent": {
         "parents": ["InteractiveEvent"],

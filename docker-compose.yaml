@@ -1,23 +1,5 @@
 version: "3"
 services:
-  rod:
-    container_name: objectiv_rod
-    depends_on:
-      - collector
-    image: objectiv/rod:${TAG:-latest}
-    ports:
-      - 3000:3000
-    networks:
-      - obj
-    environment:
-      - REACT_APP_TRACKER_DEBUG=true
-      - REACT_APP_TRACKER_ENDPOINT=http://localhost:5000
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
-      interval: 30s
-      timeout: 2s
-      retries: 3
-
   collector:
     container_name: objectiv_collector
     depends_on:
