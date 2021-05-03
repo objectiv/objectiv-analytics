@@ -13,7 +13,7 @@ objectiv:
         type: postgres
         host: localhost
         user: objectiv
-        password: 0bj3ctiv
+        password: PUT_SOME_PASSWORD_HERE
         port: 5432
         dbname: objectiv
         schema: public

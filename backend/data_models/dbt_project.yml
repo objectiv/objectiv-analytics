@@ -33,9 +33,17 @@ clean-targets:         # directories to be removed by `dbt clean`
 # using the `{{ config(...) }}` macro.
 models:
   objectiv:
-      # Applies to all files under models/stats/
+#      +materialized: view
+
+      feature_creation:
+#          +materialized: view
+
       stats:
-          +materialized: view
+#          +materialized: view
+
+      # TODO improve name
+      data_queries:
+#          +materialized: view
 
 vars:
   session_gap_seconds: 5

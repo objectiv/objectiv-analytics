@@ -1,8 +1,18 @@
 This is a dbt project.
 
+to prepare dbt env:
+```bash
+mkdir -p ~/.dbt
+cp profiles_template.yml ~/.dbt/profiles.yml
+[ edit that file, add proper credentials]
+
+# check that all is good
+dbt debug
+```
+
 to run the models:
 ```bash
-dbt run --profiles-dir .
+dbt run
 ```
 
 ### Resources:
