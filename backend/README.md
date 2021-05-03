@@ -73,12 +73,9 @@ done
 ```
 
 # Build
-Make sure the python `build` package is installed.
-Note: on Ubuntu this might give some annoying warnings about a keyring, the escape button seems the right
-response to those.
-```
-apt install python3-venv
-pip install build
+Make sure the python `build` and `virtualenv` packages are installed.
+```bash
+pip install build virtualenv
 ```
 
 Build python package and docker image:
