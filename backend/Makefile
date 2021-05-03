@@ -14,7 +14,7 @@ docker-image: python-dist
 
 python-dist: $(PACKAGE_NAME)
 
-$(PACKAGE_NAME):
+$(PACKAGE_NAME): objectiv_backend
 	echo $(OBJ_PACKAGE_VERSION) > objectiv_backend/VERSION
 	python3 -m build --wheel
 
