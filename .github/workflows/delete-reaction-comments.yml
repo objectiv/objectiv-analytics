@@ -1,0 +1,26 @@
+name: 'Delete reaction comments & aks to use Reactions'
+
+on:
+  issue_comment:
+    types: [created, edited]
+  pull_request_review_comment:
+    types: [created, edited]
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  reaction:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dessant/reaction-comments@v2
+        with:
+          github-token: ${{ github.token }}
+          exempt-issue-labels: ''
+          issue-comment: >
+            :wave: @{comment-author}, would you like to leave
+            a [reaction](https://git.io/JUJYX) instead?
+          exempt-pr-labels: ''
+          pr-comment: >
+            :wave: @{comment-author}, would you like to leave
+            a [reaction](https://git.io/JUJYX) instead?
+          process-only: ''
