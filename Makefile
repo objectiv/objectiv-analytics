@@ -9,8 +9,6 @@ REVISION ?= $(shell git rev-parse HEAD)
 # where to push docker images
 CONTAINER_REPO=eu.gcr.io/objectiv-production
 
-BUILD_ARGS := --build-arg TAG=$(TAG)
-
 # by default we build all images
 all: build-all-images
 
@@ -21,7 +19,7 @@ build-all-images: build-backend build-ds
 build-ds: build-ds-notebook
 
 # what images to push
-push-images: push-image-backend
+push-images: push-image-backend push-image-notebook
 
 # images are pushed, tagged both "latest" and $REVISION
 push-image-%:
@@ -33,16 +31,13 @@ push-image-%:
 
 
 ## build backend images
-build-backend: build-docker-python3
+build-backend:
 	cd backend && make docker-image
 
 build-ds-notebook:
-	cd ds/docker/notebook && docker build -t objectiv/notebook:$(TAG) $(BUILD_ARGS) .
-
-# build generic modules
-build-docker-%:
-	$(eval MODULE = $(subst build-docker-,,$@))
-	cd docker/$(MODULE) && docker build -t objectiv/$(MODULE):$(TAG) $(BUILD_ARGS) .
+	cd ds && \
+	docker build \
+	-t objectiv/notebook:$(TAG) -f docker/notebook/Dockerfile .
 
 
 # control stack through docker-compose

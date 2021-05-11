@@ -32,8 +32,8 @@ export class WebTracker extends Tracker {
   }
 
   async trackEvent(event: TrackerEvent) {
-    let globalContexts: ResolvableContext[] = [];
-    let locationStack: ResolvableContext[] = [];
+    let globalContexts: ResolvableContext[] = event.global_contexts ?? [];
+    let locationStack: ResolvableContext[] = event.location_stack ?? [];
 
     // Resolve event early so we may validate its contexts
     const resolvedEvent = await this.resolveEvent(event);
@@ -46,7 +46,7 @@ export class WebTracker extends Tracker {
       }
 
       // TODO make a document factory that validates if window.document is available
-      locationStack.push(createWebDocumentContext({ id: this.id, href: window.document.location.href }));
+      locationStack.unshift(createWebDocumentContext({ id: this.id, href: window.document.location.href }));
     }
 
     // Automatically tracked Global Contexts
@@ -62,8 +62,8 @@ export class WebTracker extends Tracker {
 
     await super.trackEvent({
       ...resolvedEvent,
-      global_contexts: [...globalContexts, ...(event.global_contexts ?? [])],
-      location_stack: [...(event.location_stack ?? []), ...locationStack],
+      global_contexts: globalContexts,
+      location_stack: locationStack,
     });
   }
 }

@@ -1,0 +1,20 @@
+name: Remove 'Awaiting Triage' label on assigning to Development project
+on:
+  project_card:
+    types:
+      - created
+      - moved
+
+jobs:
+  remove_labels:
+    if: github.event.project_card.column_id == '14201763' || github.event.project_card.column_id == '14201764' || github.event.project_card.column_id == '14201816'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: remove labels
+        uses: andymckay/labeler@master
+        with:
+          remove-labels: "Status: Awaiting Triage"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}

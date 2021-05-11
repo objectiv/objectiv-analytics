@@ -1,8 +1,0 @@
-## this file is versioned! _NEVER_ put real credentials here
-## you have been warned!
-POSTGRES_USER=objectiv
-POSTGRES_PASSWORD=0bj3ctiv
-POSTGRES_DB=objectiv
-POSTGRES_HOSTNAME=postgres
-POSTGRES_PORT=5432
-

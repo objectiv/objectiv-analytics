@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Community Support
+    url: https://discourse.objectiv.io/
+    about: Please ask and answer questions on our Discourse forums.
+  - name: Security Issues
+    url: mailto:security@objectiv.io
+    about: Please report security vulnerabilities via email.

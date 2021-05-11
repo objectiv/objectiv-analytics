@@ -1,4 +1,5 @@
 build/
+dist/
 jsons/
 objectiv_backend.egg-info/
 sample_data/

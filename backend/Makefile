@@ -1,22 +1,31 @@
-.PHONY=all clean python-dist docker-image
+.PHONY=all clean python-package docker-image
 
-OBJ_PACKAGE_VERSION ?= 0.0.1
+# Targets:
+# docker-image:   Build docker image that includes installed python package. Only dependency is docker
+# python-package: Build python package locally
+# clean:          Remove python package built by python-package
+
+# All (sub) directories with python files that are relevant for the python package.
+# If a file in any of these directories changes then we want to rebuild the package.
+PYTHON_DIRECTORIES=$(shell find objectiv_backend -type d)
+
+# The name of the python package we'll build depends on the version
+OBJ_PACKAGE_VERSION = $(shell cat objectiv_backend/VERSION)
 PACKAGE_NAME = dist/objectiv_backend-$(OBJ_PACKAGE_VERSION)-py3-none-any.whl
+
+# tag of the container image we'll build
 TAG ?= latest
 
-all: docker-image
+all: docker-image python-package
 
-docker-image: python-dist
-	docker build \
-	--build-arg VERSION=$(OBJ_PACKAGE_VERSION) \
-	--build-arg TAG=$(TAG) \
-	-t objectiv/backend:$(TAG) -f docker/Dockerfile .
+docker-image:
+	docker build -t objectiv/backend:$(TAG) -f docker/Dockerfile .
 
-python-dist: $(PACKAGE_NAME)
+python-package: $(PACKAGE_NAME)
 
-$(PACKAGE_NAME): objectiv_backend
-	echo $(OBJ_PACKAGE_VERSION) > objectiv_backend/VERSION
+$(PACKAGE_NAME): $(PYTHON_DIRECTORIES)
 	python3 -m build --wheel
 
 clean:
-	rm $(PACKAGE_NAME)
+	rm dist/*
+	rm -r build

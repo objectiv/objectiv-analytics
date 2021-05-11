@@ -1,5 +1,5 @@
 
-# Development Setup
+# Development
 ## Setup
 ```bash
 virtualenv venv
@@ -8,14 +8,14 @@ export PYTHONPATH=${PYTHONPATH}:.
 export FLASK_APP=objectiv_backend.app
 # the following command fails if the postgres lib development headers are not present
 # if so, then on ubuntu that can be fixed with: sudo apt-get install libpq-dev
-pip install -r requirements.txt
+pip install --require-hashes -r requirements.txt
 ```
 
 ## Start DB
 ```bash
 cd ..; docker-compose up --detach postgres
 ```
-## Run flask endpoint
+## Run Collector
 After setting up the python env, simply run:
 ```bash
 flask run
@@ -40,19 +40,27 @@ python -m jsonschema -i <path to json file with events> test_schema.json
 ```
 
 # Build
-Make sure the python `build` and `virtualenv` packages are installed.
-```bash
-pip install build virtualenv
+## Build Container Image
+Only requires docker, no python.
+```
+make docker-image
 ```
 
-Build python package and docker image:
+## Build Python Package
+Requires additional python packages installed: `build` and `virtualenv`
+```bash
+pip install -r build-requirements.txt
+```
+
+Build python package:
 ```bash
 make clean
-make
+make python-package
 ```
 
 
 # Allowed schema extensions
+TODO: update this, and move it to some docs specifically about the taxonomy
 * Events:
     * adding new events
     * adding parents to an existing event

@@ -1,29 +1,105 @@
-# Running the demo
+# Objectiv Analytics
+Objectiv Analytics enables you to track and collect events from your product and analyse the collected data
+with powerful models. The collected data follows a standardized taxonomy, which enable many advanced
+analysis out of the box. If needed, both the data taxonomy and the data models can be easily extended.
 
-Running the demo, containerized, is a fairly simple process, involving 2 steps:
+Objectiv is fully open source, and easy to host yourself; so no need to share your customers's sensitive
+data with anyone.
 
-1. Build the images (required for running the demo):
+More information about what Objectiv Analytics is, and how it compares to other analytics solution can be
+found on https://objectiv.io
 
+We also created a demo app that shows how easy it is to integrate the Objectiv Analytics tracker into an
+app, and that gives an idea about what the resulting data insights look like.
+See the [objectiv-demo repository](https://github.com/objectiv/objectiv-demo).
+
+
+## Using Objectiv
+Starting to use Objectiv Analytics is not hard:
+1. Integrate the Objectiv-tracker into your app.
+2. Run an Objectiv Pipeline backend to receive and process the data.
+
+## Quick Start
+### Quick Start: Run Objectiv Pipeline Dockerized
+This is a great way to run Objectiv locally and to see what it is about. With some additional work this
+setup can also be used for low-traffic sites and apps. See also
+[Running the Objectiv Pipeline in Production](#running-the-objectiv-pipeline-in-production)
+
+
+The below commands assume that you have `docker-compose` [installed](https://docs.docker.com/compose/install/).
 ```bash
-make build-demo
+docker-compose pull  # pull pre-built images from gcr
+docker-compose up    # spin up Objective pipeline
+```
+This will spin up three images:
+* `objectiv_collector` - Endpoint that the Objectiv-tracker can send events to (http://localhost:5000).
+* `objectiv_postgres` - Database to store data.
+* `objectiv_notebook` - Jupyter notebook that can be used to query the data (http://localhost:8080).
+
+### Quick Start: Integrate the Objectiv-Tracker in your app
+TODO
+
+
+
+## Objectiv Architecture
+The following diagram shows in the Objectiv architecture in a nutshell. There are four main components:
+1. The Objectiv tracker. You'll need to integrate this into your project.
+   This is similar to e.g. a Google Analytics tracker.
+   The code for this can be found in the `objectiv-tracker` directory. 
+   See [objectiv-tracker/README.md](objectiv-tracker/README.md) for more information
+2. The Objectiv collector. A python app, which can be found in the `backend` directory.
+   See [backend/README.md](backend/README.md) for more information
+3. The database is used to store raw data, as well as processed data. We use SQL-supporting database,
+   because SQL is a very powerful query standard, and databases nowadays can process huge amounts of data.
+   Currently we only support Postgres. In the future we'll also support popular hosted big-data solutions.
+4. The Objectiv models. TODO
+
+
+```
+    |=[Your App]==============|
+    |                         |
+    |  [1. Objectiv Tracker]  |
+    |      ||                 |
+    |======||=================|
+           ||
+           ||
+    |======||=======[Objectiv Pipeline]====================================|
+    |      \/                                                              |
+    |  |===============================|                                   |
+    |  |      [2. Objectiv Collector]  |                                   |
+    |  |===============================|                                   |
+    |      ||                                                              |
+    |  |===||=================================|                            |
+    |  |   \/     [3. Database]               |                            |
+    |  |  ____________      _______________   |     ____________           |
+    |  |  |raw events|      |analysis data| ======> | Insights |           |
+    |  |  ------------      ---------------   |     ------------           |
+    |  |===||================/\==||===========|                            |
+    |      ||                ||  ||                                        |
+    |      \/                ||  \/                                        |
+    |  |===============================|                                   |
+    |  |      [4. Objectiv Models]     |                                   |
+    |  |===============================|                                   |
+    |======================================================================|
+```
+For more information on the Objectiv architecture see TODO.
+
+
+## Building Container Images
+**TODO:** make this work
+Requirements:
+* make
+* docker
+```bash
+make all
 ```
 
-By default, all images will be tagged with the current git revision. To tell 
-`docker-compose` what tag to use, you can set the `$TAG` env variable.
 
-The default tag used by docker-compose is 
-`latest` so, if you don't either tag your images, or properly set `TAG`, starting 
-the containers will fail. Alternatively, start the demo stack through `make`.
+## Running the Objectiv Pipeline in Production
+TODO
+This is quite straightforward. See TODO.
 
-2. Starting the containers:
-```bash
-make start
-```
 
-To stop a running stack, simply run:
-```bash
-make stop
-```
 
 ## Tips 'n tricks
 Some useful tricks are here
@@ -31,12 +107,6 @@ Some useful tricks are here
 ### What about PG configuration and permissions?
 As this is a demo environment, permissions are pretty simple; the credentials are set in 
 `docker/pg_env` and imported into the containers that need them.
-
-### What services are where?
-Typically everything is available on localhost:
-- rod (http://localhost:3000)
-- notebook (http://localhost:8080)
-- sankey (http://localhost:8050)
 
 ### Connecting to Notebook
 By default, you need a token to connect to the Jupyter Notebook. You can find it in

@@ -1,0 +1,17 @@
+name: Epics - Link children issues
+on:
+  issue_comment:
+    types: [created, edited, deleted]
+  issues:
+    types: [opened, closed, reopened, edited, deleted]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Update parent issues
+      uses: ribtoks/parent-issue-update@master
+      with:
+        TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REPO: ${{ github.repository }}

@@ -1,27 +1,41 @@
-version: "3"
+# Start the Objectiv Pipeline.
+#
+# By default uses images from eu.gcr.io/objectiv-production
+# To use locally built images set the OBJECTIV_CONTAINER_URL variable to just "objectiv"
+# To use a specific image version instead of latest set OBJECTIV_CONTAINER_TAG
+
+
+x-db_env_variables: &db_env_variables
+  # warning: never put production credentials in here!
+  POSTGRES_USER: 'objectiv'
+  POSTGRES_PASSWORD: '0bj3ctiv'
+  POSTGRES_DB: 'objectiv'
+  POSTGRES_HOSTNAME: 'objectiv_postgres'
+  POSTGRES_PORT: 5432
+
+version: "3.4"
 services:
-  collector:
+  objectiv_collector:
     container_name: objectiv_collector
     depends_on:
-      - postgres
-    image: objectiv/backend:${TAG:-latest}
+      - objectiv_postgres
+    # default image: eu.gcr.io/objectiv-production/backend:latest
+    image: ${OBJECTIV_CONTAINER_URL-eu.gcr.io/objectiv-production}/backend:${OBJECTIV_CONTAINER_TAG-latest}
     working_dir: /services
-    entrypoint: 
-      - ./collector.sh
+    entrypoint: bash -c "objectiv-db-init; ./entry_point.sh"
     ports:
       - 5000:5000
     networks:
       - obj
     environment:
-      - CONFIG_DEBUG=True
-    env_file: docker/pg_env
+      <<: *db_env_variables
     healthcheck:
       test: ["CMD", "printf",  "\"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/5000"]
       interval: 30s
       timeout: 2s
       retries: 3
 
-  postgres:
+  objectiv_postgres:
     container_name: objectiv_postgres
     image: postgres:latest
     ports:
@@ -30,24 +44,26 @@ services:
       - obj
     volumes:
       - pgdata:/var/lib/postgresql/data/
-      - ./backend/create_table.sql:/docker-entrypoint-initdb.d/init.sql
-    env_file: docker/pg_env
+    environment:
+      <<: *db_env_variables
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U objectiv" ]
       interval: 10s
       timeout: 2s
       retries: 5
 
-  notebook:
+  objectiv_notebook:
     container_name: objectiv_notebook
-    image: objectiv/notebook:${TAG:-latest}
+    # default image: eu.gcr.io/objectiv-production/notebook:latest
+    image: ${OBJECTIV_CONTAINER_URL-eu.gcr.io/objectiv-production}/notebook:${OBJECTIV_CONTAINER_TAG-latest}
     ports:
       - 8888:8888
     networks:
       - obj
     volumes:
-      - ./ds/notebooks:/home/jovyan/work
-    env_file: docker/pg_env
+      - ./ds/notebooks_volume:/home/jovyan/notebooks_volume
+    environment:
+      <<: *db_env_variables
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8888" ]
       interval: 30s

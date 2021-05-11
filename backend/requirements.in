@@ -1,0 +1,8 @@
+# TODO: split between production and development (e.g. have mypy there)
+# TODO: make backends (postgres?) optional
+boto3
+jsonschema
+flask
+flask-cors
+psycopg2-binary
+

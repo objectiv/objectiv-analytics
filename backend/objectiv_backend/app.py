@@ -37,9 +37,8 @@ AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')  # Need an I
 AWS_BUCKET = 'obj-tracker-journeys'
 AWS_S3_PREFIX = os.environ.get('AWS_S3_PREFIX', 'test-prefix')
 
-# Whether to run in debug or production mode
-# rename to something with 'ASYNC_MODE' ? TODO. Probably should switch the default to sync
-CONFIG_DEBUG = os.environ.get('CONFIG_DEBUG') in ('1', 'true', 'True')
+# Whether to run in sync mode (default) or async-mode.
+ASYNC_MODE = os.environ.get('ASYNC_MODE', '') == 'true'
 
 # set to False to disable setting a session cookie
 OBJ_COOKIE = 'obj_user_id'
@@ -220,10 +219,10 @@ def _get_http_context() -> ContextData:
 def write_events_db(events: List[EventWithId]) -> Tuple[List[EventWithId], List[EventWithId]]:
     """
     Write events to the database.
-    * If not CONFIG_DEBUG: All events are written to the entry queue. Workers will have to take care of
+    * If not ASYNC_MODE (=default): All events are fully processed, and written to the final data table.
+    * If ASYNC_MODE: All events are written to the entry queue. Workers will have to take care of
         further processing from there on. In this case all events are always returned as being OK, since
         the validation doesn't happen in this function.
-    * If CONFIG_DEBUG: All events are fully processed, and written to the final data table.
     :param events: List of events, with assigned unique-ids
     :return: Tuple with two lists:
         ok events: events that were processed okay
@@ -232,7 +231,7 @@ def write_events_db(events: List[EventWithId]) -> Tuple[List[EventWithId], List[
     connection = get_db_connection()
     try:
         with connection:
-            if not CONFIG_DEBUG:
+            if ASYNC_MODE:
                 pg_queue = PostgresQueues(connection=connection)
                 pg_queue.put_events(queue=ProcessingStage.ENTRY, events=events)
                 return events, []
