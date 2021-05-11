@@ -9,7 +9,7 @@ with session_starts as (
             true
         ) as is_start_of_session,
         moment as moment
-    from {{ ref('extracted_context') }}
+    from {{ ref('hashed_features') }}
 ),
 session_id_and_start as (
     select
@@ -27,8 +27,9 @@ session_id_and_start as (
 select
         s.session_id as session_id,
         row_number() over (partition by s.session_id order by d.moment, d.event_id asc) as session_hit_number,
+        d.cookie_id as user_id,
         d.*
-from {{ ref('extracted_context') }} as d
+from {{ ref('hashed_features') }} as d
 inner join session_id_and_start as s on s.cookie_id = d.cookie_id and s.moment <= d.moment
 where not exists (
     select *
