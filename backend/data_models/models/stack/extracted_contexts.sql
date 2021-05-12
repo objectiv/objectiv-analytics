@@ -4,4 +4,4 @@ SELECT *,
         JSON_EXTRACT_PATH(value, 'location_stack') AS location_stack,
         JSON_EXTRACT_PATH(value, 'time') AS time,
         JSON_EXTRACT_PATH(value, 'events') AS events
- FROM data
+ FROM {{ source('public', 'data') }}

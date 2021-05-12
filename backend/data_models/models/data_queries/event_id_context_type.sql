@@ -1,7 +1,7 @@
 {{ config(materialized='ephemeral') }}
 with data as (
     select *
-    from data
+    from {{ source('public', 'data') }}
 ), id_context as (
     select data.event_id as event_id,
            ctxs.rn as context_number,
