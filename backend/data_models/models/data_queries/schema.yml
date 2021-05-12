@@ -4,7 +4,7 @@ models:
   - name: sessionized_data
     description: "group raw data into sessions"
     columns:
-      - name: id
+      - name: event_id
         description: "event-id"
         tests:
           - unique

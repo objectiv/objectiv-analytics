@@ -33,13 +33,13 @@ clean-targets:         # directories to be removed by `dbt clean`
 # using the `{{ config(...) }}` macro.
 models:
   objectiv:
-#      +materialized: ephemeral
+      +materialized: ephemeral
 
       feature_creation:
 #          +materialized: view
 
       stats:
-#          +materialized: view
+          +materialized: view
 
       # TODO improve name
       data_queries:
