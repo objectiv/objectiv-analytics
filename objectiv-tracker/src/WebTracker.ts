@@ -1,7 +1,9 @@
 import {
   createDeviceContext,
+  createOptimizeContext,
   createWebDocumentContext,
   DEVICE_CONTEXT_TYPE,
+  OPTIMIZE_CONTEXT_TYPE,
   WEB_DOCUMENT_CONTEXT_TYPE,
 } from './contexts';
 import { Tracker, TrackerConfiguration, TrackerEvent } from './Tracker';
@@ -19,6 +21,7 @@ export class WebTracker extends Tracker {
   private readonly id: string;
   private readonly trackWebDocument: boolean;
   private readonly trackDevice: boolean;
+  private readonly gaData: object;
 
   constructor(configuration: WebTrackerConfiguration) {
     super(configuration);
@@ -29,6 +32,10 @@ export class WebTracker extends Tracker {
     if (this.trackWebDocument) {
       trackDocumentLoaded(this);
     }
+
+    this.gaData = {
+      gaData: {'gaData': 1},
+    };
   }
 
   async trackEvent(event: TrackerEvent) {
@@ -58,8 +65,20 @@ export class WebTracker extends Tracker {
 
       // TODO make a document factory that validates if window.navigator is available
       globalContexts.push(createDeviceContext({ userAgent: window.navigator.userAgent }));
+
     }
 
+    const { gaData } = this.gaData;
+
+    // if google optimize is loaded, add to global context
+    const propertyId = Object.keys(gaData)[0];
+
+    if ( propertyId ) {
+      const experimentId = Object.keys(gaData[propertyId].experiments)[0];
+      const variationId = gaData[propertyId].experiments[experimentId];
+      globalContexts.push(createOptimizeContext({ experimentId: experimentId, variant: variationId }));
+    }
+ 
     await super.trackEvent({
       ...resolvedEvent,
       global_contexts: globalContexts,
