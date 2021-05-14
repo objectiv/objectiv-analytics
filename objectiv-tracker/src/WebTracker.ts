@@ -3,13 +3,13 @@ import {
   createOptimizeContext,
   createWebDocumentContext,
   DEVICE_CONTEXT_TYPE,
-  OPTIMIZE_CONTEXT_TYPE,
   WEB_DOCUMENT_CONTEXT_TYPE,
 } from './contexts';
-import { Tracker, TrackerConfiguration, TrackerEvent } from './Tracker';
-import { ResolvableContext } from './ContextResolver';
-import { trackDocumentLoaded } from './events';
-import { documentAvailable, navigatorAvailable } from './utils';
+import {Tracker, TrackerConfiguration, TrackerEvent} from './Tracker';
+import {ResolvableContext} from './ContextResolver';
+import {trackDocumentLoaded} from './events';
+import {documentAvailable, navigatorAvailable} from './utils';
+import {documentLoaded} from "./documentLoaded";
 
 export type WebTrackerConfiguration = TrackerConfiguration & {
   id: string;
@@ -63,16 +63,20 @@ export class WebTracker extends Tracker {
 
     }
 
-
     // if google optimize is loaded, add to global context
-    const propertyId = Object.keys(window.gaData)[0];
+    documentLoaded().then(() => {
+      // @ts-ignore too lazy to create defs
+      const gaData = window.gaData;
+      const propertyId = Object.keys(gaData)[0];
+      const experiments = gaData[propertyId]?.experiments ?? [];
 
-    if ( propertyId ) {
-      const experimentId = Object.keys(window.gaData[propertyId].experiments)[0];
-      const variationId = window.gaData[propertyId].experiments[experimentId];
-      globalContexts.push(createOptimizeContext({ experimentId: experimentId, variant: variationId }));
-    }
- 
+      if ( propertyId && experiments.length) {
+        const experimentId = Object.keys(experiments)[0];
+        const variationId = experiments[experimentId];
+        globalContexts.push(createOptimizeContext({ experimentId: experimentId, variant: variationId }));
+      }
+    });
+
     await super.trackEvent({
       ...resolvedEvent,
       global_contexts: globalContexts,
