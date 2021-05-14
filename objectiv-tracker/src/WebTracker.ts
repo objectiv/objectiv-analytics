@@ -21,7 +21,6 @@ export class WebTracker extends Tracker {
   private readonly id: string;
   private readonly trackWebDocument: boolean;
   private readonly trackDevice: boolean;
-  private readonly gaData: object;
 
   constructor(configuration: WebTrackerConfiguration) {
     super(configuration);
@@ -32,10 +31,6 @@ export class WebTracker extends Tracker {
     if (this.trackWebDocument) {
       trackDocumentLoaded(this);
     }
-
-    this.gaData = {
-      gaData: {'gaData': 1},
-    };
   }
 
   async trackEvent(event: TrackerEvent) {
@@ -68,14 +63,13 @@ export class WebTracker extends Tracker {
 
     }
 
-    const { gaData } = this.gaData;
 
     // if google optimize is loaded, add to global context
-    const propertyId = Object.keys(gaData)[0];
+    const propertyId = Object.keys(window.gaData)[0];
 
     if ( propertyId ) {
-      const experimentId = Object.keys(gaData[propertyId].experiments)[0];
-      const variationId = gaData[propertyId].experiments[experimentId];
+      const experimentId = Object.keys(window.gaData[propertyId].experiments)[0];
+      const variationId = window.gaData[propertyId].experiments[experimentId];
       globalContexts.push(createOptimizeContext({ experimentId: experimentId, variant: variationId }));
     }
  
