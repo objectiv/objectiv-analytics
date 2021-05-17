@@ -98,6 +98,15 @@ CONTEXT_META = {
             # "referer": {"type": "string"},  # TODO: allow optional fields
             "remote_addr": {"type": "string"}
         }
+    },
+    "ABTestContext": {
+        "parents": ["AbstractGlobalContext"],
+        "properties": {
+            "variant": {"type": "string"}
+        }
+    },
+    "OptimizeContext": {
+        "parents": ["ABTestContext"]
     }
 }
 
