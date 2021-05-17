@@ -72,7 +72,7 @@ export class WebTracker extends Tracker {
 
       if ( propertyId && experiments.length) {
         for ( let experimentId in experiments ) {
-          const variationId = experiments[experimentId];
+          let variationId = experiments[experimentId];
           globalContexts.push(createOptimizeContext({
             experimentId: experimentId,
             variant: variationId,
