@@ -1,13 +1,15 @@
 import {
   createDeviceContext,
+  createOptimizeContext,
   createWebDocumentContext,
   DEVICE_CONTEXT_TYPE,
   WEB_DOCUMENT_CONTEXT_TYPE,
 } from './contexts';
-import { Tracker, TrackerConfiguration, TrackerEvent } from './Tracker';
-import { ResolvableContext } from './ContextResolver';
-import { trackDocumentLoaded } from './events';
-import { documentAvailable, navigatorAvailable } from './utils';
+import {Tracker, TrackerConfiguration, TrackerEvent} from './Tracker';
+import {ResolvableContext} from './ContextResolver';
+import {trackDocumentLoaded} from './events';
+import {documentAvailable, navigatorAvailable} from './utils';
+import {documentLoaded} from "./documentLoaded";
 
 export type WebTrackerConfiguration = TrackerConfiguration & {
   id: string;
@@ -58,7 +60,22 @@ export class WebTracker extends Tracker {
 
       // TODO make a document factory that validates if window.navigator is available
       globalContexts.push(createDeviceContext({ userAgent: window.navigator.userAgent }));
+
     }
+
+    // if google optimize is loaded, add to global context
+    documentLoaded().then(() => {
+      // @ts-ignore too lazy to create defs
+      const gaData = window.gaData;
+      const propertyId = Object.keys(gaData)[0];
+      const experiments = gaData[propertyId]?.experiments ?? [];
+
+      if ( propertyId && experiments.length) {
+        const experimentId = Object.keys(experiments)[0];
+        const variationId = experiments[experimentId];
+        globalContexts.push(createOptimizeContext({ experimentId: experimentId, variant: variationId }));
+      }
+    });
 
     await super.trackEvent({
       ...resolvedEvent,
