@@ -71,9 +71,14 @@ export class WebTracker extends Tracker {
       const experiments = gaData[propertyId]?.experiments ?? [];
 
       if ( propertyId && experiments.length) {
-        const experimentId = Object.keys(experiments)[0];
-        const variationId = experiments[experimentId];
-        globalContexts.push(createOptimizeContext({ experimentId: experimentId, variant: variationId }));
+        for ( let experimentId in experiments ) {
+          const variationId = experiments[experimentId];
+          globalContexts.push(createOptimizeContext({
+            experimentId: experimentId,
+            variant: variationId,
+            propertyId: propertyId
+          }));
+        }
       }
     });
 

@@ -106,7 +106,10 @@ CONTEXT_META = {
         }
     },
     "OptimizeContext": {
-        "parents": ["ABTestContext"]
+        "parents": ["ABTestContext"],
+        "properties": {
+            "propertyId": {"type": "string"}
+        }
     }
 }
 
