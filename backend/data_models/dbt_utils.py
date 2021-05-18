@@ -50,7 +50,9 @@ def get_sql(model: Optional[str], vars: Dict[str, str]) -> str:
     return last_result.node.compiled_sql
 
 
-def get_sql2(model: str, vars: Dict[str, str]) -> str:
+def get_sql_improved(model: str,
+                     vars: Dict[str, str],
+                     depth_ephemeral_models: Optional[int] = None) -> str:
     """
     Get the sql for a single model.
 
@@ -72,12 +74,13 @@ def get_sql2(model: str, vars: Dict[str, str]) -> str:
     node = manifest.nodes[full_model_name]
     node.config.materialized = 'ephemeral'
 
-    set_previous_nodes_materialization(
-        manifest=manifest,
-        graph=ctask.graph.graph,
-        node=node,
-        depth=2
-    )
+    if depth_ephemeral_models is not None:
+        set_previous_nodes_materialization(
+            manifest=manifest,
+            graph=ctask.graph.graph,
+            node=node,
+            depth=depth_ephemeral_models
+        )
 
     adapter = get_adapter(ctask.config)
     compiler = adapter.get_compiler()
@@ -99,6 +102,9 @@ def set_previous_nodes_materialization(manifest: Manifest,
     node.config.materialized = 'ephemeral'
     print(node.unique_id, node.config.materialized)
     for prev_node_id in graph.pred[node.unique_id]:
+        if prev_node_id not in manifest.nodes:
+            # not a model node, perhaps a source or seed
+            continue
         prev_node = manifest.nodes[prev_node_id]
         set_previous_nodes_materialization(manifest, graph, prev_node, depth-1)
 

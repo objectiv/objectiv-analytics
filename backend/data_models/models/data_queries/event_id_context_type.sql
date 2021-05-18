@@ -1,4 +1,4 @@
-{{ config(materialized='ephemeral') }}
+{{ config(materialized='view') }}
 with data as (
     select *
     from {{ source('public', 'data') }}
