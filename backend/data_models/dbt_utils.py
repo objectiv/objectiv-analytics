@@ -97,10 +97,8 @@ def set_previous_nodes_materialization(manifest: Manifest,
     """
     if depth == 0:
         node.config.materialized = 'view'
-        print(node.unique_id, node.config.materialized)
         return
     node.config.materialized = 'ephemeral'
-    print(node.unique_id, node.config.materialized)
     for prev_node_id in graph.pred[node.unique_id]:
         if prev_node_id not in manifest.nodes:
             # not a model node, perhaps a source or seed
