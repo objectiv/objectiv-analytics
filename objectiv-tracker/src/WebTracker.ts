@@ -64,18 +64,29 @@ export class WebTracker extends Tracker {
     }
 
     // if google optimize is loaded, add to global context
-    documentLoaded().then(() => {
+    await documentLoaded().then(() => {
       // @ts-ignore too lazy to create defs
-      const gaData = window.gaData;
-      const propertyId = Object.keys(gaData)[0];
-      const experiments = gaData[propertyId]?.experiments ?? [];
+      const ga = window.gaData;
 
-      if ( propertyId && experiments.length) {
-        for ( let experimentId in experiments ) {
-          let variationId = experiments[experimentId];
+      const propertyId = Object.keys(ga)[0];
+      const experiments = ga[propertyId]['experiments'] ?? false;
+
+      console.log('document loaded:' + Object.keys(experiments) );
+
+      console.log('found: '+ propertyId);
+
+      console.log('found some experiments: ' + Object.keys(ga[propertyId]));
+
+      if ( propertyId && experiments ) {
+        console.log('got into if');
+        for ( let [experimentId, variationId] of Object.entries(experiments) ) {
+          console.log('iterating:' + experimentId);
+          let _variationId = variationId as string;
+
+          console.log('got variation ' + variationId);
           globalContexts.push(createOptimizeContext({
             experimentId: experimentId,
-            variant: variationId,
+            variant: _variationId,
             propertyId: propertyId
           }));
         }
