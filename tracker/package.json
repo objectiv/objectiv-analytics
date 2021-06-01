@@ -8,9 +8,10 @@
   ],
   "scripts": {
     "build": "yarn workspaces foreach --verbose run build",
-    "prettier": "yarn workspaces foreach --verbose run prettier",
     "lint": "yarn workspaces foreach --verbose run lint",
     "list": "yarn workspaces list",
+    "postinstall": "yarn workspaces foreach --verbose run postinstall",
+    "prettier": "yarn workspaces foreach --verbose run prettier",
     "test": "yarn workspaces foreach --verbose run test",
     "test:ci": "yarn workspaces foreach --verbose run test:ci",
     "test:coverage": "yarn workspaces foreach --verbose run test:coverage"
