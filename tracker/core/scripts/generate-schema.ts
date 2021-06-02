@@ -23,7 +23,7 @@ project.resolveSourceFileDependencies();
 // Now we can get the source files to process them up
 const sourceFiles = project.getSourceFiles();
 
-// Initialize the OSF Schema JSON string
+// Initialize the OSF Schema JSON Object
 const schemaJSON: { [k: string]: unknown } = {};
 
 // Traverse source files

@@ -6,8 +6,9 @@
   "scripts": {
     "build": "rollup -c --silent --failAfterWarnings",
     "lint": "eslint . --ext .js,.ts",
+    "postinstall": "run schema:generate",
     "prettier": "prettier --write .",
-    "schema:generate": "ts-node scripts/schema-generate.ts",
+    "schema:generate": "ts-node scripts/generate-schema.ts",
     "test": "jest --no-cache --silent",
     "test:ci": "jest --no-cache --silent --ci",
     "test:coverage": "jest --no-cache --silent --coverage"
