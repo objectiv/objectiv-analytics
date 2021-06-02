@@ -32,5 +32,6 @@
       "@objectiv/core": ["core/src"],
       "@objectiv/plugin-*": ["plugins/*/src"]
     }
-  }
+  },
+  "exclude": ["node_modules", "dist"]
 }
