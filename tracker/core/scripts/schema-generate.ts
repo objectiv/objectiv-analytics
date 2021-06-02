@@ -3,6 +3,8 @@ import { Node, Project } from 'ts-morph';
 
 const TSCONFIG_PATH = 'tsconfig.json';
 const SCHEMA_PATH = 'schema/index.ts';
+const DESTINATION_PATH = '../../schema';
+const DESTINATION_JSON_NAME = 'base.json';
 
 const project = new Project({
   // Load tsconfig to get all the compiler options
@@ -39,6 +41,7 @@ sourceFiles.forEach((sourceFile) => {
     // Search for references and properties
     typeAlias.forEachDescendant((typeAliasDescendant) => {
       if (Node.isTypeReferenceNode(typeAliasDescendant)) {
+        // TODO check if this is correct
         newType['parent'] = typeAliasDescendant.getTypeName().getText(); // TODO this sucks
       }
 
@@ -56,13 +59,12 @@ sourceFiles.forEach((sourceFile) => {
   });
 });
 
-// Create schema dir if it doesn't exist
-const fullObjectivDirectoryPath = `../../schema`;
-if (!fs.existsSync(fullObjectivDirectoryPath)) {
-  fs.mkdirSync(fullObjectivDirectoryPath);
+// Create schema destination dir if it doesn't exist
+if (!fs.existsSync(DESTINATION_PATH)) {
+  fs.mkdirSync(DESTINATION_PATH);
 }
 
 // Write base schema
 const schemaJSONString = JSON.stringify(schemaJSON, null, 2);
 console.log(schemaJSONString);
-fs.writeFileSync(`${fullObjectivDirectoryPath}/base.json`, schemaJSONString);
+fs.writeFileSync(`${DESTINATION_PATH}/${DESTINATION_JSON_NAME}`, schemaJSONString);
