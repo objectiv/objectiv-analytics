@@ -23,26 +23,18 @@ const sourceFiles = project.getSourceFiles();
 // Traverse source files
 sourceFiles.forEach((sourceFile) => {
 
-  // For each source file get all children
-  sourceFile.forEachChild((node) => {
+  // For each source file get all the Type aliases
+  const typeAliases = sourceFile.getTypeAliases();
 
-    // We only care about TypeAlias Declarations
-    if (Node.isTypeAliasDeclaration(node)) {
+  // Go through all Type Aliases
+  typeAliases.forEach(typeAlias => {
+    console.log(typeAlias.getName());
 
-      // The symbol will allow us to get the type name
-      const typeSymbol = node.getSymbol();
-      const typeName = typeSymbol?.getName();
-      console.log(typeName);
-
-      // Search for properties
-      node.forEachDescendant(typeLiteralDescendant => {
-        if (Node.isPropertySignature(typeLiteralDescendant)) {
-          const propertySymbol = typeLiteralDescendant.getSymbol();
-          const propertyName = propertySymbol?.getName();
-
-          console.log(' -', propertyName, typeLiteralDescendant.getType().getText())
-        }
-      })
-    }
+    // Search for properties and their types
+    typeAlias.forEachDescendant(typeAliasDescendant => {
+      if (Node.isPropertySignature(typeAliasDescendant)) {
+        console.log(' -', typeAliasDescendant.getName(), typeAliasDescendant.getType().getText())
+      }
+    })
   })
 });
