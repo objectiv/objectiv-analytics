@@ -4,4 +4,6 @@ export type AbstractContext = {
 };
 
 export type AbstractGlobalContext = AbstractContext;
-export type AbstractLocationContext = AbstractContext;
+export type AbstractLocationContext = AbstractContext & {
+  _context_kind: 'LocationContext';
+};
