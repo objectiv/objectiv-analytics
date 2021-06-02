@@ -29,6 +29,7 @@ sourceFiles.forEach((sourceFile) => {
   // Go through all Type Aliases
   typeAliases.forEach(typeAlias => {
     console.log(typeAlias.getName());
+    console.log(typeAlias.getStructure());
 
     // Search for properties and their types
     typeAlias.forEachDescendant(typeAliasDescendant => {
