@@ -1,20 +1,11 @@
 import fs from 'fs';
 import { Node, Project } from 'ts-morph';
 
-const TSCONFIG_PATH = 'tsconfig.json';
 const SCHEMA_PATH = 'schema/index.ts';
 const DESTINATION_PATH = '../../schema';
 const DESTINATION_JSON_NAME = 'base.json';
 
-const project = new Project({
-  // Load tsconfig to get all the compiler options
-  tsConfigFilePath: TSCONFIG_PATH,
-
-  // Skip adding all of our sources; we only want to process the schema path and resolve those files.
-  skipAddingFilesFromTsConfig: true,
-  skipFileDependencyResolution: true,
-  skipLoadingLibFiles: true,
-});
+const project = new Project();
 
 // Add source files manually and resolve their dependencies
 project.addSourceFilesAtPaths(SCHEMA_PATH);
@@ -36,17 +27,23 @@ sourceFiles.forEach((sourceFile) => {
     const typeName = typeAlias.getName();
 
     // Initialize this new type in schemaJSONString
-    const newType: { [k: string]: unknown } = {};
+    const newType: { [k: string]: unknown, parents: string[] } = {
+      parents: []
+    };
 
     // Search for references and properties
     typeAlias.forEachDescendant((typeAliasDescendant) => {
       if (Node.isTypeReferenceNode(typeAliasDescendant)) {
-        // TODO check if this is correct
-        newType['parent'] = typeAliasDescendant.getTypeName().getText(); // TODO this sucks
+        newType.parents.push(typeAliasDescendant.getTypeName().getText()); // TODO this type inferring sucks
       }
 
       if (Node.isPropertySignature(typeAliasDescendant)) {
         const propertyName = typeAliasDescendant.getName();
+
+        // Skip properties starting with `_`. We use these for internal purposes
+        if (propertyName.startsWith('_')) {
+          return;
+        }
 
         // Add the property to the new type
         const propertyType = typeAliasDescendant.getType();
