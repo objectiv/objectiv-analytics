@@ -9,6 +9,7 @@ export FLASK_APP=objectiv_backend.app
 # the following command fails if the postgres lib development headers are not present
 # if so, then on ubuntu that can be fixed with: sudo apt-get install libpq-dev
 pip install --require-hashes -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
 ## Start DB
@@ -40,6 +41,11 @@ python objectiv_backend/schema/validate_events.py <path to json file with events
 python objectiv_backend/schema/generate_json_schema.py > test_schema.json
 # Validate a json5 file using the generate JSON schema.
 python -m jsonschema -i <path to json file with events> test_schema.json
+```
+
+## Run tests
+```bash
+pytest tests
 ```
 
 # Build

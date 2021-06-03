@@ -16,10 +16,10 @@ from objectiv_backend.common.config import get_collector_config
 from objectiv_backend.common.db import get_db_connection
 from objectiv_backend.common.event_utils import event_add_construct_context, add_global_context_to_event
 from objectiv_backend.common.types import EventWithId, EventData, ContextData
+from objectiv_backend.schema.generate_json_schema import generate_json_schema
 from objectiv_backend.schema.validate_events import validate_structure_event_list
 from objectiv_backend.workers.pg_queues import PostgresQueues, ProcessingStage
 from objectiv_backend.workers.pg_storage import insert_events_into_nok_data
-from objectiv_backend.workers.worker_enrichment import process_events_enrichment
 from objectiv_backend.workers.worker_entry import process_events_entry
 from objectiv_backend.workers.worker_finalize import insert_events_into_data
 
@@ -44,6 +44,20 @@ DATA_MAX_SIZE_BYTES = 1_000_000
 DATA_MAX_EVENT_COUNT = 1_000
 
 
+@app.route('/schema', methods=['GET'])
+def schema() -> Response:
+    event_schema = get_collector_config().schema
+    msg = str(event_schema)
+    return _get_json_response(status=200, msg=msg)
+
+
+@app.route('/jsonschema', methods=['GET'])
+def jsonschema() -> Response:
+    event_schema = get_collector_config().schema
+    msg = json.dumps(generate_json_schema(event_schema), indent=4)
+    return _get_json_response(status=200, msg=msg)
+
+
 @app.route('/', methods=['POST'])
 def index() -> Response:
     current_millis = round(time.time() * 1000)
@@ -51,7 +65,7 @@ def index() -> Response:
         events = _get_event_data(flask.request)
     except ValueError as exc:
         print(f'Data problem: {exc}')  # todo: real error logging
-        return _get_response(error_count=1, event_count=-1)
+        return _get_collector_response(error_count=1, event_count=-1)
 
     # Do all the enrichment steps that can only be done in this phase
     add_http_contexts(events)
@@ -62,13 +76,12 @@ def index() -> Response:
 
     if not get_collector_config().async_mode:
         ok_events, nok_events = process_events_entry(events=events_with_id)
-        ok_events = process_events_enrichment(events=ok_events)
         print(f'ok_events: {len(ok_events)}, nok_events: {len(nok_events)}')
         write_sync_events(ok_events=ok_events, nok_events=nok_events)
-        return _get_response(error_count=len(nok_events), event_count=len(events))
+        return _get_collector_response(error_count=len(nok_events), event_count=len(events))
     else:
         write_async_events(events=events_with_id)
-        return _get_response(error_count=0, event_count=len(events))
+        return _get_collector_response(error_count=0, event_count=len(events))
 
 
 def _get_event_data(request: Request) -> List[EventData]:
@@ -100,14 +113,25 @@ def _get_event_data(request: Request) -> List[EventData]:
     return events
 
 
-def _get_response(error_count: int, event_count: int) -> Response:
-    """ Create a Response object, with json content, and a cookie set if needed. """
+def _get_collector_response(error_count: int, event_count: int) -> Response:
+    """
+    Create a Response object, with a json message with event counts, and a cookie set if needed.
+    """
     status = 200 if error_count == 0 else 400
     msg = json.dumps({
         "status": f"{status}",
         "error_count": error_count,
         "event_count": event_count
     })
+    return _get_json_response(status=status, msg=msg)
+
+
+def _get_json_response(status: int, msg: str) -> Response:
+    """
+    Create a Response object, with json content, and a cookie set if needed.
+    :param status: http status code
+    :param msg: valid json string
+    """
     response = Response(mimetype='application/json', status=status, response=msg)
 
     cookie_config = get_collector_config().cookie

@@ -89,7 +89,6 @@ For more information on the Objectiv architecture see TODO.
 
 
 ## Building Container Images
-**TODO:** make this work
 Requirements:
 * make
 * docker

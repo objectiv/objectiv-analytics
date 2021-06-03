@@ -9,9 +9,9 @@ from typing import NamedTuple, Optional
 # complete overview.
 # These settings should not be accessed by the constants here, but through the functions defined
 # below (e.g. get_config_output())
+from objectiv_backend.schema.event_schemas import EventSchema, get_event_schema
 
-SCHEMA_EXTENSION_EVENT = os.environ.get('SCHEMA_EXTENSION_EVENT')
-SCHEMA_EXTENSION_CONTEXT = os.environ.get('SCHEMA_EXTENSION_CONTEXT')
+SCHEMA_EXTENSION_DIRECTORY = os.environ.get('SCHEMA_EXTENSION_DIRECTORY')
 
 # Whether to run in sync mode (default) or async-mode.
 _ASYNC_MODE = os.environ.get('ASYNC_MODE', '') == 'true'
@@ -81,6 +81,7 @@ class CollectorConfig(NamedTuple):
     async_mode: bool
     cookie: Optional[CookieConfig]
     output: OutputConfig
+    schema: EventSchema
 
 
 def get_config_output_aws() -> Optional[AwsOutputConfig]:
@@ -131,6 +132,10 @@ def get_config_cookie() -> CookieConfig:
     )
 
 
+def get_config_event_schema() -> EventSchema:
+    return get_event_schema(SCHEMA_EXTENSION_DIRECTORY)
+
+
 # creating these configuration structures is not heavy, but it's pointless to do it for each request.
 # so we have some super simple caching here
 # TODO: initialize configuration at startup
@@ -144,6 +149,7 @@ def get_collector_config() -> CollectorConfig:
         _CACHED_COLLECTOR_CONFIG = CollectorConfig(
             async_mode=_ASYNC_MODE,
             cookie=get_config_cookie(),
-            output=get_config_output()
+            output=get_config_output(),
+            schema=get_config_event_schema()
         )
     return _CACHED_COLLECTOR_CONFIG

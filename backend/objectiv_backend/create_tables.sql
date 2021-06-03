@@ -7,13 +7,6 @@ create table public.queue_entry (
     primary key(event_id)
 );
 
-create table public.queue_enrichment (
-    event_id uuid not null,
-    insert_order bigserial,
-    value json not null,
-    primary key(event_id)
-);
-
 create table public.queue_finalize (
     event_id uuid not null,
     insert_order bigserial,
@@ -99,7 +92,7 @@ grant insert on public.data, public.nok_data to obj_collector_role;
 -- update priv is needed because of the `select for update` queries
 create role obj_worker_role noinherit;
 grant select,update,delete on public.queue_entry to obj_worker_role;
-grant select,update,insert,delete on public.queue_enrichment, public.queue_finalize to obj_worker_role;
+grant select,update,insert,delete on public.queue_finalize to obj_worker_role;
 grant insert on public.data, public.nok_data to obj_worker_role;
 
 -- used by for example notebook to query session data

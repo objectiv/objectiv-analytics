@@ -28,8 +28,11 @@ services:
       - 127.0.0.1:5000:5000
     networks:
       - obj
+    volumes:
+      - ${SCHEMA_EXTENSION_DIRECTORY-./backend/tests/test_data/schemas1}/:/schema-extensions/
     environment:
       <<: *db_env_variables
+      SCHEMA_EXTENSION_DIRECTORY: /schema-extensions/
     healthcheck:
       test: ["CMD", "printf",  "\"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/5000"]
       interval: 30s
