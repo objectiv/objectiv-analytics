@@ -3,7 +3,9 @@ export type AbstractContext = {
   id: string;
 };
 
-export type AbstractGlobalContext = AbstractContext;
+export type AbstractGlobalContext = AbstractContext & {
+  _context_kind: 'GlobalContext';
+};
 export type AbstractLocationContext = AbstractContext & {
   _context_kind: 'LocationContext';
 };
