@@ -1,9 +1,6 @@
-import fs from 'fs';
 import { Node, Project } from 'ts-morph';
 
 const SCHEMA_PATH = 'schema/index.ts';
-const DESTINATION_PATH = '../../schema';
-const DESTINATION_JSON_NAME = 'base.json';
 
 const project = new Project();
 
@@ -15,7 +12,7 @@ project.resolveSourceFileDependencies();
 const sourceFiles = project.getSourceFiles();
 
 // Initialize the OSF Schema JSON Object
-const schemaJSON: { [k: string]: unknown } = {};
+const schemaJSON: { contexts: { [k: string]: unknown }} = {contexts: {} };
 
 // Traverse source files
 sourceFiles.forEach((sourceFile) => {
@@ -27,13 +24,14 @@ sourceFiles.forEach((sourceFile) => {
     const typeName = typeAlias.getName();
 
     // Initialize this new type in schemaJSONString
-    const newType: { [k: string]: unknown, parents: string[] } = {
-      parents: []
-    };
+    const newType: { parents?: string[], properties?: {[k: string]: unknown} } = {};
 
     // Search for references and properties
     typeAlias.forEachDescendant((typeAliasDescendant) => {
       if (Node.isTypeReferenceNode(typeAliasDescendant)) {
+        if (!newType?.parents) {
+          newType['parents'] = [];
+        }
         newType.parents.push(typeAliasDescendant.getTypeName().getText()); // TODO this type inferring sucks
       }
 
@@ -45,23 +43,20 @@ sourceFiles.forEach((sourceFile) => {
           return;
         }
 
-        // Add the property to the new type
         const propertyType = typeAliasDescendant.getType();
-        newType[propertyName] = propertyType.isLiteral() ? propertyType.getLiteralValue() : propertyType.getText();
+
+        // Add the property to the new type
+        if (!newType?.properties) {
+          newType['properties'] = {};
+        }
+        newType.properties[propertyName] = propertyType.isLiteral() ? propertyType.getLiteralValue() : propertyType.getText();
       }
     });
 
     // Add this type to the schemaJSONString
-    schemaJSON[typeName] = newType;
+    schemaJSON.contexts[typeName] = newType;
   });
 });
 
-// Create schema destination dir if it doesn't exist
-if (!fs.existsSync(DESTINATION_PATH)) {
-  fs.mkdirSync(DESTINATION_PATH);
-}
-
-// Write base schema
-const schemaJSONString = JSON.stringify(schemaJSON, null, 2);
-console.log(schemaJSONString);
-fs.writeFileSync(`${DESTINATION_PATH}/${DESTINATION_JSON_NAME}`, schemaJSONString);
+// Output schema
+console.log(JSON.stringify(schemaJSON, null, 2));
