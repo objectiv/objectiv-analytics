@@ -72,4 +72,4 @@ jobs:
       - name: Build docker image
         run: |
           cd backend
-          make build-images
+          make docker-image
