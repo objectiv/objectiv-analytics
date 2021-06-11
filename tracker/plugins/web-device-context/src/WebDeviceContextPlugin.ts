@@ -1,19 +1,19 @@
-import { TrackerEvent, TrackerPlugin } from '@objectiv/core';
-import { newWebDeviceContext, WEB_DEVICE_CONTEXT_TYPE, WebDeviceContext } from './WebDeviceContext';
+import { DeviceContext } from '@objectiv/schema';
+import { makeDeviceContext, TrackerEvent, TrackerPlugin } from '@objectiv/tracker-core';
 
 /**
  * The WebDeviceContext Plugin gathers the current user-agent using the Navigator API.
  * It detects it during construction and adds it as GlobalContext before events are handed over to TrackerTransport.
  */
 export class WebDeviceContextPlugin implements TrackerPlugin {
-  readonly pluginName = `${WEB_DEVICE_CONTEXT_TYPE}Plugin`;
-  readonly webDeviceContext: WebDeviceContext;
+  readonly pluginName = `WebDeviceContextPlugin`;
+  readonly webDeviceContext: DeviceContext;
 
   /**
    * Detects user-agent and generates a WebDeviceContext.
    */
   constructor() {
-    this.webDeviceContext = newWebDeviceContext();
+    this.webDeviceContext = makeDeviceContext({ userAgent: navigator.userAgent });
   }
 
   /**

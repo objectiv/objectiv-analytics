@@ -1,4 +1,5 @@
-import { Contexts, ContextsConfig, GlobalContext, LocationContext } from './Context';
+import { AbstractGlobalContext, AbstractLocationContext, Contexts } from '@objectiv/schema';
+import { ContextsConfig } from './Context';
 import { TrackerEvent } from './TrackerEvent';
 import { TrackerPlugins } from './TrackerPlugin';
 import { TrackerTransport } from './TrackerTransport';
@@ -26,8 +27,8 @@ export class Tracker implements Contexts {
   readonly plugins?: TrackerPlugins;
 
   // Contexts interface
-  readonly locationStack: LocationContext[];
-  readonly globalContexts: GlobalContext[];
+  readonly locationStack: AbstractLocationContext[];
+  readonly globalContexts: AbstractGlobalContext[];
 
   /**
    * Configures the Tracker instance via one TrackerConfig and optionally one or more ContextConfig.
@@ -42,8 +43,8 @@ export class Tracker implements Contexts {
     this.plugins = trackerConfig?.plugins;
 
     // Process ContextConfigs
-    let newLocationStack: LocationContext[] = trackerConfig?.locationStack ?? [];
-    let newGlobalContexts: GlobalContext[] = trackerConfig?.globalContexts ?? [];
+    let newLocationStack: AbstractLocationContext[] = trackerConfig?.locationStack ?? [];
+    let newGlobalContexts: AbstractGlobalContext[] = trackerConfig?.globalContexts ?? [];
     contextConfigs.forEach(({ locationStack, globalContexts }) => {
       newLocationStack = [...newLocationStack, ...(locationStack ?? [])];
       newGlobalContexts = [...newGlobalContexts, ...(globalContexts ?? [])];

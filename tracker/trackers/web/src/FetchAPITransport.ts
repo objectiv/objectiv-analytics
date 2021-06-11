@@ -1,4 +1,4 @@
-import { TrackerEvent, TrackerTransport } from '@objectiv/core';
+import { TrackerEvent, TrackerTransport } from '@objectiv/tracker-core';
 
 /**
  * The default set of parameters for the fetch API call.
@@ -48,7 +48,7 @@ export type FetchAPITransportConfig = {
 
 /**
  * A TrackerTransport based on Fetch API. Sends event to the specified Collector endpoint.
- * Optionally supports specifying extra parameters for the `fetch` call via the `fetchParameters` config attribute.
+ * Optionally supports specifying a custom `fetchFunction`.
  */
 export class FetchAPITransport implements TrackerTransport {
   readonly transportName = 'FetchAPITransport';

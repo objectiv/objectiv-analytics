@@ -1,14 +1,4 @@
-import { Tracker, TrackerEvent } from '@objectiv/core';
-
-/**
- * The event name definition
- */
-export const URL_CHANGE_EVENT_NAME = 'URLChangeEvent';
-
-/**
- * URLChangedEvent triggers on each URL change. The actual URL can be retrieved from the WebDocumentContext
- */
-export class URLChangedEvent extends TrackerEvent {}
+import { makeURLChangedEvent, Tracker } from '@objectiv/tracker-core';
 
 /**
  * Although a `popstate` Event exists, it's only triggered on actual user's interactions with the browser's buttons.
@@ -31,13 +21,10 @@ export const trackURLChangedEvent = (tracker: Tracker): void => {
     forward: history.forward,
   };
 
-  // Factor URLChangedEvent. The actual URL can be retrieved via the WebDocumentContext in the Global Contexts list
-  const urlChangedEvent = new URLChangedEvent({ eventName: URL_CHANGE_EVENT_NAME });
-
   // Create all the spies: for each of them we just track the URLChangeEvent and run the original backed-up method.
   Object.keys(historyBackup).forEach((methodToSpy) => {
     history[methodToSpy] = (...rest: unknown[]) => {
-      tracker.trackEvent(urlChangedEvent);
+      tracker.trackEvent(makeURLChangedEvent());
       return historyBackup[methodToSpy].apply(history, rest);
     };
   });

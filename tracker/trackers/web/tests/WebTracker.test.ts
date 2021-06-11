@@ -1,5 +1,5 @@
 import { defaultFetchFunction, FetchAPITransport, WebTracker } from '../src';
-import { QueuedTransport, TrackerEvent, TrackerPlugins } from '@objectiv/core';
+import { QueuedTransport, TrackerEvent, TrackerPlugins } from '@objectiv/tracker-core';
 import fetchMock from 'jest-fetch-mock';
 import { clear, mockUserAgent } from 'jest-useragent-mock';
 
@@ -91,22 +91,34 @@ describe('WebTracker', () => {
 
     it('should track WebDocument and WebDevice Contexts as GlobalContexts automatically by default', () => {
       const testTracker = new WebTracker({ endpoint: 'localhost' });
-      const testEvent = new TrackerEvent({ eventName: 'test-event' });
+      const testEvent = new TrackerEvent({ event: 'test-event' });
       expect(testTracker).toBeInstanceOf(WebTracker);
       expect(testEvent.globalContexts).toHaveLength(0);
+      expect(testEvent.locationStack).toHaveLength(0);
+
       const trackedEvent = testTracker.trackEvent(testEvent);
-      expect(trackedEvent.globalContexts).toHaveLength(2);
-      expect(trackedEvent.globalContexts).toEqual(
+
+      expect(trackedEvent.locationStack).toHaveLength(1);
+      expect(trackedEvent.locationStack).toEqual(
         expect.arrayContaining([
           {
+            _location_context: true,
+            _section_context: true,
             _context_type: 'WebDocumentContext',
             id: '#document',
             url: 'http://localhost/',
           },
+        ])
+      );
+
+      expect(trackedEvent.globalContexts).toHaveLength(1);
+      expect(trackedEvent.globalContexts).toEqual(
+        expect.arrayContaining([
           {
-            _context_type: 'WebDeviceContext',
+            _global_context: true,
+            _context_type: 'DeviceContext',
             id: 'device',
-            'user-agent': USER_AGENT_MOCK_VALUE,
+            userAgent: USER_AGENT_MOCK_VALUE,
           },
         ])
       );

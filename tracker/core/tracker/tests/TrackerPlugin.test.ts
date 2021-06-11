@@ -71,7 +71,7 @@ describe('Plugin', () => {
     const testPlugins = new TrackerPlugins(plugins);
     expect(pluginA.beforeTransport).not.toHaveBeenCalled();
     expect(pluginB.beforeTransport).not.toHaveBeenCalled();
-    const testEvent = new TrackerEvent({ eventName: 'test-event' });
+    const testEvent = new TrackerEvent({ event: 'test-event' });
     testPlugins.beforeTransport(testEvent);
     expect(pluginA.beforeTransport).toHaveBeenCalledWith(testEvent);
     expect(pluginB.beforeTransport).toHaveBeenCalledWith(testEvent);

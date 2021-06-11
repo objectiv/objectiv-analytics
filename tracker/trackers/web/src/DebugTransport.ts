@@ -1,4 +1,4 @@
-import { TrackerEvent, TrackerTransport } from '@objectiv/core';
+import { TrackerEvent, TrackerTransport } from '@objectiv/tracker-core';
 
 /**
  * A TrackerTransport that simply logs TrackerEvents to the console as debug messages.

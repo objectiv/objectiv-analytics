@@ -1,9 +1,9 @@
 import { TrackerEvent, MemoryQueue } from '../src';
 
 describe('MemoryQueue', () => {
-  const TrackerEvent1 = new TrackerEvent({ eventName: 'a' });
-  const TrackerEvent2 = new TrackerEvent({ eventName: 'b' });
-  const TrackerEvent3 = new TrackerEvent({ eventName: 'c' });
+  const TrackerEvent1 = new TrackerEvent({ event: 'a' });
+  const TrackerEvent2 = new TrackerEvent({ event: 'b' });
+  const TrackerEvent3 = new TrackerEvent({ event: 'c' });
 
   it('should instantiate to a 0 length Queue', () => {
     const testQueue = new MemoryQueue();

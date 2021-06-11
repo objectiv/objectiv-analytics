@@ -1,4 +1,4 @@
-import { TrackerEvent, TrackerTransport } from '@objectiv/core';
+import { TrackerEvent, TrackerTransport } from '@objectiv/tracker-core';
 
 /**
  * The configuration of the BeaconAPITransport class

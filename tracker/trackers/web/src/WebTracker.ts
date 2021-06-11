@@ -6,12 +6,12 @@ import {
   TrackerPlugins,
   TransportGroup,
   TransportSwitch,
-} from '@objectiv/core';
+} from '@objectiv/tracker-core';
 import { FetchAPITransport } from './FetchAPITransport';
 import { WebDocumentContextPlugin } from '@objectiv/plugin-web-document-context';
 import { WebDeviceContextPlugin } from '@objectiv/plugin-web-device-context';
-import { BeaconAPITransport } from './BeaconAPITransport';
 import { DebugTransport } from './DebugTransport';
+import { XMLHttpRequestTransport } from './XMLHttpRequestTransport';
 
 /**
  * Web Tracker can be configured in a easier way by specifying just an `endpoint`.
@@ -66,7 +66,7 @@ export class WebTracker extends Tracker {
           transport: new TransportGroup(
             new TransportSwitch(
               new FetchAPITransport({ endpoint: config.endpoint }),
-              new BeaconAPITransport({ endpoint: config.endpoint })
+              new XMLHttpRequestTransport({ endpoint: config.endpoint })
             ),
             new DebugTransport()
           ),

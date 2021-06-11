@@ -1,5 +1,5 @@
-# Objectiv Core JavaScript module 
-[PLACEHOLDER: Objectiv Core module introductory text]
+# Objectiv JavaScript Tracker Core 
+[PLACEHOLDER: Objectiv JavaScript Tracker Core introductory text]
 
 ---
 # Installing
@@ -7,25 +7,25 @@ To install the most recent stable version:
 
 ### yarn
 ```sh
-yarn add @objectiv/core
+yarn add @objectiv/tracker-core
 ```
 
 ### npm
 ```sh
-npm install @objectiv/core
+npm install @objectiv/tracker-core
 ```
 
 # Usage
 
 ### ESModule
 ```javascript
-import { Tracker } from '@objectiv/core';
+import { Tracker } from '@objectiv/tracker-core';
 const tracker = new Tracker();
 ```
 
 ### CommonJS
 ```javascript
-const objectiv = require('@objectiv/core');
+const objectiv = require('@objectiv/tracker-core');
 const tracker = new objectiv.Tracker();
 ```
 

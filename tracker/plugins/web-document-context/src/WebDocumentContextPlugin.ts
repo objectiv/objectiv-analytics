@@ -1,5 +1,4 @@
-import { Tracker, TrackerEvent, TrackerPlugin } from '@objectiv/core';
-import { newWebDocumentContext, WEB_DOCUMENT_CONTEXT_TYPE } from './WebDocumentContext';
+import { makeWebDocumentContext, Tracker, TrackerEvent, TrackerPlugin } from '@objectiv/tracker-core';
 import { trackURLChangedEvent } from './URLChangedEvent';
 
 /**
@@ -14,7 +13,7 @@ export type WebDocumentContextPluginConfig = {
  * It implements the `run` method. This ensures the URL is retrieved before each Event is sent.
  */
 export class WebDocumentContextPlugin implements TrackerPlugin {
-  readonly pluginName = `${WEB_DOCUMENT_CONTEXT_TYPE}Plugin`;
+  readonly pluginName = `WebDocumentContextPlugin`;
   readonly documentContextId: string;
 
   /**
@@ -36,6 +35,10 @@ export class WebDocumentContextPlugin implements TrackerPlugin {
    * Generate a fresh WebDocumentContext before each TrackerEvent is handed over to the TrackerTransport.
    */
   beforeTransport(event: TrackerEvent): void {
-    event.globalContexts.push(newWebDocumentContext({ documentContextId: this.documentContextId }));
+    const webDocumentContext = makeWebDocumentContext({
+      id: this.documentContextId,
+      url: document.location.href,
+    });
+    event.locationStack.push(webDocumentContext);
   }
 }

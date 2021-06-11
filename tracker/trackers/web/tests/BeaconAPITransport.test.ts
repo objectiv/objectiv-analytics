@@ -1,5 +1,5 @@
 import { BeaconAPITransport } from '../src';
-import { TrackerEvent } from '@objectiv/core';
+import { TrackerEvent } from '@objectiv/tracker-core';
 
 // TODO add actual Karma + Chrome tests to test the real API, instead of the mock below
 
@@ -10,7 +10,7 @@ describe('BeaconAPITransport', () => {
   const MOCK_ENDPOINT = '/test-endpoint';
 
   const testEvent = new TrackerEvent({
-    eventName: 'test-event',
+    event: 'test-event',
   });
 
   it('should send using `sendBeacon` API', async () => {

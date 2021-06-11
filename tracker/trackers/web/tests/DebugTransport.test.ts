@@ -1,9 +1,9 @@
 import { DebugTransport } from '../src/DebugTransport';
-import { TrackerEvent } from '@objectiv/core';
+import { TrackerEvent } from '@objectiv/tracker-core';
 
 describe('DebugTransport', () => {
   const testEvent = new TrackerEvent({
-    eventName: 'test-event',
+    event: 'test-event',
   });
 
   it('should `console.debug` the event', async () => {

@@ -12,6 +12,7 @@
     "test:coverage": "jest --no-cache --silent --coverage"
   },
   "devDependencies": {
+    "@objectiv/schema": "~0.0.1",
     "@rollup/plugin-commonjs": "^19.0.0",
     "@rollup/plugin-node-resolve": "^13.0.0",
     "@types/jest": "^26.0.23",
@@ -34,6 +35,6 @@
     "typescript": "^4.2.4"
   },
   "dependencies": {
-    "@objectiv/core": "~0.0.1"
+    "@objectiv/tracker-core": "~0.0.1"
   }
 }

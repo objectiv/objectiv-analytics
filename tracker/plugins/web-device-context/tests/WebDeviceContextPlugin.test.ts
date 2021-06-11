@@ -1,5 +1,5 @@
 import { WebDeviceContextPlugin } from '../src';
-import { Tracker, TrackerEvent, TrackerPlugins } from '@objectiv/core';
+import { ContextsConfig, Tracker, TrackerEvent, TrackerPlugins } from '@objectiv/tracker-core';
 import { clear, mockUserAgent } from 'jest-useragent-mock';
 
 const USER_AGENT_MOCK_VALUE = 'Mocked User Agent';
@@ -13,33 +13,35 @@ describe('WebDeviceContextPlugin', () => {
     clear();
   });
 
-  it('should generate the WebDeviceContext when constructed', () => {
+  it('should generate a DeviceContext when constructed', () => {
     const testWebDeviceContextPlugin = new WebDeviceContextPlugin();
     expect(testWebDeviceContextPlugin.webDeviceContext).toEqual({
-      _context_type: 'WebDeviceContext',
+      _global_context: true,
+      _context_type: 'DeviceContext',
       id: 'device',
-      'user-agent': USER_AGENT_MOCK_VALUE,
+      userAgent: USER_AGENT_MOCK_VALUE,
     });
   });
 
-  it('should add the WebDeviceContext to the Event when `beforeTransport` is executed by the Tracker', () => {
+  it('should add the DeviceContext to the Event when `beforeTransport` is executed by the Tracker', () => {
     const testTracker = new Tracker({ plugins: new TrackerPlugins([WebDeviceContextPlugin]) });
-    const eventContexts = {
+    const eventContexts: ContextsConfig = {
       globalContexts: [
-        { _context_type: 'section', id: 'X' },
-        { _context_type: 'section', id: 'Y' },
+        { _global_context: true, _context_type: 'section', id: 'X' },
+        { _global_context: true, _context_type: 'section', id: 'Y' },
       ],
     };
-    const testEvent = new TrackerEvent({ eventName: 'test-event', ...eventContexts });
+    const testEvent = new TrackerEvent({ event: 'test-event', ...eventContexts });
     expect(testEvent.globalContexts).toHaveLength(2);
     const trackedEvent = testTracker.trackEvent(testEvent);
     expect(trackedEvent.globalContexts).toHaveLength(3);
     expect(trackedEvent.globalContexts).toEqual(
       expect.arrayContaining([
         {
-          _context_type: 'WebDeviceContext',
+          _global_context: true,
+          _context_type: 'DeviceContext',
           id: 'device',
-          'user-agent': USER_AGENT_MOCK_VALUE,
+          userAgent: USER_AGENT_MOCK_VALUE,
         },
       ])
     );

@@ -3,4 +3,7 @@ module.exports = {
   testEnvironment: 'node',
   reporters: ['jest-standard-reporter'],
   collectCoverageFrom: ['src/**.ts'],
+  moduleNameMapper: {
+    '@objectiv/schema': '../../../core/schema/src',
+  },
 };

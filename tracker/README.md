@@ -3,13 +3,15 @@
 
 ---
 # Overview
-The Objectiv JavaScript Tracker is composed of three module domains. 
+The Objectiv JavaScript Tracker is composed of three workspaces. 
 
-- The **Core** module is a platform agnostic set of generic Interfaces and Classes.  
-  More **Core** modules may be added in the future.  
-  
+- **Core** modules are generic Types, Interfaces and Classes used by Plugins and Trackers.  
+  It provides the **JavaScript Tracker Core** and **Schema** modules.
+
+
 - **Plugins** are independent packages that can be configured in any Tracker instance to add or mutate contextual information.  
   
+
 - **Trackers** are platform specific extensions of the generic **Core** Tracker.  
   They offer a higher level, easier to configure and use, API and may be bundled with a sensible set of **Plugins** for their target environment.
 
@@ -19,7 +21,8 @@ This is a complete list of the currently available packages.
 
 | Name                                  | Type    | Path                          | Links                                                     |
 | ------------------------------------- | ------- | ----------------------------- | --------------------------------------------------------- |
-| @objectiv/core                        | core    | /core                         | [README](/tracker/core/README.md)                         |
+| @objectiv/schema                      | core    | /core/schema                  | [README](/tracker/core/schema/README.md)                         |
+| @objectiv/tracker-core                | core    | /core/tracker                 | [README](/tracker/core/tracker/README.md)                         |
 | @objectiv/plugin-web-device-context   | plugin  | /plugins/web-device-context   | [README](/tracker/plugins/web-device-context/README.md)   |
 | @objectiv/plugin-web-document-context | plugin  | /plugins/web-document-context | [README](/tracker/plugins/web-document-context/README.md) |
 | @objectiv/tracker-web                 | tracker | /trackers/web                 | [README](/tracker/trackers/web/README.md)                 |
@@ -48,7 +51,7 @@ yarn workspace <package name> <command>
 
 For example, this command will run tests only for the Core module:
 ```bash
-yarn workspace @objectiv/core test
+yarn workspace @objectiv/tracker-core test
 ```
 
 ## Dependency management
@@ -56,9 +59,9 @@ yarn workspace @objectiv/core test
 This is how to add and remove dependencies:
 
 ```bash
-yarn workspace @objectiv/core add <packageA>
-yarn workspace @objectiv/core add <packageB> --dev
-yarn workspace @objectiv/core remove <packageA> <packageB>
+yarn workspace @objectiv/tracker-core add <packageA>
+yarn workspace @objectiv/tracker-core add <packageB> --dev
+yarn workspace @objectiv/tracker-core remove <packageA> <packageB>
 ```
 
 
