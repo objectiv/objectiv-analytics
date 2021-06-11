@@ -26,7 +26,7 @@ jobs:
         with:
           # This path is specific to Ubuntu
           path: ~/.cache/pip
-          key: pip-${{ matrix.python-version }}-${{ hashFiles('backend/requirements.txt', 'backend/requirements-dev.txt') }}
+          key: pip-dev-${{ matrix.python-version }}-${{ hashFiles('backend/requirements.txt', 'backend/requirements-dev.txt') }}
       - name: Install dependencies
         run: |
           cd backend
@@ -41,3 +41,35 @@ jobs:
         run: |
           cd backend
           pytest
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Cache pip
+        # Configure cache for the files that pip downloads. At the end of the steps the path gets cached
+        # (if the cache keys doesn't exist yet). If the cache key exists it gets restored in this step.
+        uses: actions/cache@v2
+        with:
+          # This path is specific to Ubuntu
+          path: ~/.cache/pip
+          key: pip-build-${{ matrix.python-version }}-${{ hashFiles('backend/requirements-build.txt') }}
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install --require-hashes -r requirements-build.txt
+      - name: Build python package
+        run: |
+          cd backend
+          make python-package
+      - name: Build docker image
+        run: |
+          cd backend
+          make build-images
