@@ -40,6 +40,12 @@ build-ds-notebook:
 	-t objectiv/notebook:$(TAG) -f docker/notebook/Dockerfile .
 
 
+build-tracker:
+	cd tracker && yarn build
+
+publish-tracker: build-tracker
+	cd tracker && yarn publish
+
 # control stack through docker-compose
 start:
 	docker-compose up -d
