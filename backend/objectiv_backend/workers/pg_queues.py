@@ -14,7 +14,6 @@ from objectiv_backend.common.types import EventWithId
 
 class ProcessingStage(Enum):
     ENTRY = "entry"
-    ENRICHMENT = "enrichment"
     FINALIZE = "finalize"
 
 
@@ -41,8 +40,6 @@ class PostgresQueues:
     def _queue_to_table(queue: ProcessingStage):
         if queue == ProcessingStage.ENTRY:
             return 'queue_entry'
-        if queue == ProcessingStage.ENRICHMENT:
-            return 'queue_enrichment'
         if queue == ProcessingStage.FINALIZE:
             return 'queue_finalize'
         raise Exception('Implementation incomplete')

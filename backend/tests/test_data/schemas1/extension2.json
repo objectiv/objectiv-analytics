@@ -1,0 +1,22 @@
+{
+  "name": "extension2",
+  "version": {"extension2": "0.0.3"},
+  "events": {
+    "New2Event": {
+        "parents": ["NonInteractiveEvent"],
+        "requiresContext": ["X2Context"]
+    }
+  },
+  "contexts": {
+    "X2Context": {
+      "parents": [
+        "AbstractGlobalContext"
+      ],
+      "properties": {
+        "field": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-.PHONY=all clean python-package docker-image
+.PHONY: all clean python-package docker-image tests
 
 # Targets:
 # docker-image:   Build docker image that includes installed python package. Only dependency is docker
@@ -29,3 +29,7 @@ $(PACKAGE_NAME): $(PYTHON_DIRECTORIES)
 clean:
 	rm dist/*
 	rm -r build
+
+tests:
+	mypy objectiv_backend
+	pytest tests

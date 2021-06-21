@@ -36,6 +36,9 @@ This will spin up three images:
 * `objectiv_postgres` - Database to store data.
 * `objectiv_notebook` - Jupyter notebook that can be used to query the data (http://localhost:8080).
 
+SECURITY WARNING: The above docker-compose commands start a postgres container that allows connections
+without verifying passwords. Do not use this in production or on a shared system!
+
 ### Quick Start: Integrate the Objectiv-Tracker in your app
 TODO
 
@@ -86,7 +89,6 @@ For more information on the Objectiv architecture see TODO.
 
 
 ## Building Container Images
-**TODO:** make this work
 Requirements:
 * make
 * docker
@@ -150,4 +152,4 @@ PG is called pgdata. To remove it, lookup the name from the list and run:
 docker volume rm <volumename>
 ```
 
-
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](CODE_OF_CONDUCT.md)

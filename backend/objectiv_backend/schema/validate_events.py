@@ -206,15 +206,13 @@ def validate_events_in_file(event_schema: EventSchema, filename: str) -> List[Er
 
 def main():
     parser = argparse.ArgumentParser(description='Validate events')
-    parser.add_argument('--schema-extension-event', type=str)
-    parser.add_argument('--schema-extension-context', type=str)
+    parser.add_argument('--schema-extensions-directory', type=str)
     parser.add_argument('filenames', type=str, nargs='+')
     args = parser.parse_args(sys.argv[1:])
 
     errors: Dict[str, List[ErrorInfo]] = {}
     filenames = args.filenames
-    event_schema = get_event_schema(event_schema_extension_filename=args.schema_extension_event,
-                                    context_schema_extension_filename=args.schema_extension_context)
+    event_schema = get_event_schema(schema_extensions_directory=args.schema_extensions_directory)
 
     print(f'Schema: {event_schema}')
     for filename in args.filenames:

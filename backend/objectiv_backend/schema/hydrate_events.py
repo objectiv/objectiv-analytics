@@ -37,21 +37,19 @@ def hydrate_types_into_event(event_schema: EventSchema, event: Dict[str, Any]) -
 
 def main(argv: List[str]):
     parser = argparse.ArgumentParser(description='Hydrate events')
-    parser.add_argument('--schema-extension-event', type=str)
-    parser.add_argument('--schema-extension-context', type=str)
+    parser.add_argument('--schema-extensions-directory', type=str)
     parser.add_argument('filenames', type=str, nargs='+')
     args = parser.parse_args(argv[1:])
 
     filenames = args.filenames
-    event_schema = get_event_schema(event_schema_extension_filename=args.schema_extension_event,
-                                    context_schema_extension_filename=args.schema_extension_context)
+    event_schema = get_event_schema(schema_extensions_directory=args.schema_extensions_directory)
 
     for filename in filenames:
         with open(filename) as file:
             event_data = json.loads(file.read())
         errors = validate_event_list(event_schema=event_schema, event_data=event_data)
         if errors:
-            raise Exception(f'Error in file: {filename}')
+            raise Exception(f'Error in file: {filename} - {errors}')
         print(
             json.dumps(
                 [hydrate_types_into_event(event_schema, event) for event in event_data],

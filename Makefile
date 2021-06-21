@@ -1,4 +1,4 @@
-.PHONY=all build-all-images build-ds push-images
+.PHONY: all build-all-images build-ds push-images
 
 # default tag, used to tag images
 # we use latest as default, for convenience
