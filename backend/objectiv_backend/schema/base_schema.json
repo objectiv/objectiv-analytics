@@ -1,0 +1,220 @@
+{
+  "name": "base_schema",
+  "version": {"base_schema": "0.0.1"},
+  "comment": "This is the Objectiv base schema",
+  "events": {
+    "AbstractEvent": {
+      "parents": [],
+      "requiresContext": ["AbstractContext"]
+    },
+    "NonInteractiveEvent": {
+      "parents": ["AbstractEvent"],
+      "requiresContext": []
+    },
+    "DocumentLoadedEvent": {
+      "parents": ["NonInteractiveEvent"],
+      "requiresContext": ["WebDocumentContext"]
+    },
+    "URLChangeEvent": {
+      "parents": ["NonInteractiveEvent"],
+      "requiresContext": ["WebDocumentContext"]
+    },
+    "ApplicationLoadedEvent": {
+      "parents": ["NonInteractiveEvent"],
+      "requiresContext": ["SectionContext"]
+    },
+    "SectionVisibleEvent": {
+      "parents": ["NonInteractiveEvent"],
+      "requiresContext": ["SectionContext"]
+    },
+    "SectionHiddenEvent": {
+      "parents": ["NonInteractiveEvent"],
+      "requiresContext": ["SectionContext"]
+    },
+    "VideoEvent": {
+      "parents": ["NonInteractiveEvent"],
+      "requiresContext": ["MediaPlayerContext"]
+    },
+    "VideoLoadEvent": {
+      "parents": ["VideoEvent"],
+      "requiresContext": []
+    },
+    "VideoStartEvent": {
+      "parents": ["VideoEvent"],
+      "requiresContext": []
+    },
+    "VideoStopEvent": {
+      "parents": ["VideoEvent"],
+      "requiresContext": []
+    },
+    "VideoPauseEvent": {
+      "parents": ["VideoEvent"],
+      "requiresContext": []
+    },
+    "InteractiveEvent": {
+      "parents": ["AbstractEvent"],
+      "requiresContext": ["SectionContext"]
+    },
+    "ClickEvent": {
+      "parents": ["InteractiveEvent"],
+      "requiresContext": []
+    },
+    "InputChangeEvent": {
+      "parents": ["InteractiveEvent"],
+      "requiresContext": ["InputContext"]
+    }
+  },
+  "contexts": {
+    "AbstractContext": {
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "AbstractLocationContext": {
+      "parents": [
+        "AbstractContext"
+      ]
+    },
+    "AbstractGlobalContext": {
+      "parents": [
+        "AbstractContext"
+      ]
+    },
+    "SectionContext": {
+      "parents": [
+        "AbstractLocationContext"
+      ]
+    },
+    "WebDocumentContext": {
+      "parents": [
+        "SectionContext"
+      ],
+      "properties": {
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "ScreenContext": {
+      "parents": [
+        "SectionContext"
+      ],
+      "properties": {
+        "screen": {
+          "type": "string"
+        }
+      }
+    },
+    "ExpandableSectionContext": {
+      "parents": [
+        "SectionContext"
+      ]
+    },
+    "MediaPlayerContext": {
+      "parents": [
+        "SectionContext"
+      ]
+    },
+    "NavigationContext": {
+      "parents": [
+        "SectionContext"
+      ]
+    },
+    "OverlayContext": {
+      "parents": [
+        "SectionContext"
+      ]
+    },
+    "ItemContext": {
+      "parents": [
+        "AbstractLocationContext"
+      ]
+    },
+    "InputContext": {
+      "parents": [
+        "ItemContext"
+      ]
+    },
+    "ActionContext": {
+      "parents": [
+        "ItemContext"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "ButtonContext": {
+      "parents": [
+        "ActionContext"
+      ]
+    },
+    "LinkContext": {
+      "parents": [
+        "ActionContext"
+      ]
+    },
+    "DeviceContext": {
+      "parents": [
+        "AbstractGlobalContext"
+      ],
+      "properties": {
+        "user-agent": {
+          "type": "string"
+        }
+      }
+    },
+    "ErrorContext": {
+      "parents": [
+        "AbstractGlobalContext"
+      ],
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "CookieIdContext": {
+      "parents": [
+        "AbstractGlobalContext"
+      ],
+      "properties": {
+        "cookie_id": {
+          "type": "string"
+        }
+      }
+    },
+    "SessionContext": {
+      "parents": [
+        "AbstractGlobalContext"
+      ],
+      "properties": {
+        "hitNumber": {
+          "type": "integer"
+        }
+      }
+    },
+    "HttpContext": {
+      "parents": [
+        "AbstractGlobalContext"
+      ],
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "user-agent": {
+          "type": "string"
+        },
+        "remote_addr": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

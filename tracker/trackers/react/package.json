@@ -1,0 +1,53 @@
+{
+  "name": "@objectiv/tracker-react",
+  "version": "0.0.1",
+  "description": "Objectiv React Tracker",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "module": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rollup -c --silent --failAfterWarnings",
+    "prettier": "prettier --write .",
+    "test": "jest --no-cache --silent --runInBand",
+    "test:ci": "jest --no-cache --silent --ci --runInBand",
+    "test:coverage": "jest --no-cache --silent --coverage --runInBand"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^19.0.0",
+    "@rollup/plugin-node-resolve": "^13.0.0",
+    "@testing-library/react": "^11.2.7",
+    "@testing-library/react-hooks": "^7.0.0",
+    "@types/jest": "^26.0.23",
+    "@types/react": "^17.0.11",
+    "jest": "^26.6.3",
+    "jest-fetch-mock": "^3.0.3",
+    "jest-standard-reporter": "^2.0.0",
+    "prettier": "^2.3.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-test-renderer": "^17.0.2",
+    "rollup": "^2.48.0",
+    "rollup-plugin-cleanup": "^3.2.1",
+    "rollup-plugin-filesize": "^9.1.1",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "rollup-plugin-sizes": "^1.0.4",
+    "rollup-plugin-terser": "^7.0.2",
+    "rollup-plugin-ts": "^1.4.0",
+    "ts-jest": "^26.5.6",
+    "tslib": "^2.2.0",
+    "typescript": "^4.2.4"
+  },
+  "dependencies": {
+    "@objectiv/schema": "~0.0.1",
+    "@objectiv/tracker-core": "~0.0.1",
+    "@objectiv/tracker-web": "~0.0.1",
+    "fast-deep-equal": "^3.1.3"
+  },
+  "peerDependencies": {
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  }
+}

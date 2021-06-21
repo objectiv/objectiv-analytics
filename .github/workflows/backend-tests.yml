@@ -1,0 +1,43 @@
+name: "Backend tests: pytest mypy"
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+      # Also run if we update this file, or any other workflow
+      - '.github/**'
+
+jobs:
+  typecheck-and-run-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Cache pip
+        # Configure cache for the files that pip downloads. At the end of the steps the path gets cached
+        # (if the cache keys doesn't exist yet). If the cache key exists it gets restored in this step.
+        uses: actions/cache@v2
+        with:
+          # This path is specific to Ubuntu
+          path: ~/.cache/pip
+          key: pip-${{ matrix.python-version }}-${{ hashFiles('backend/requirements.txt', 'backend/requirements-dev.txt') }}
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+          pip install --require-hashes -r requirements.txt
+      - name: Typecheck with mypy
+        run: |
+          cd backend
+          mypy objectiv_backend/
+      - name: Test with pytest
+        run: |
+          cd backend
+          pytest
