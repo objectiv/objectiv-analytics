@@ -5,23 +5,14 @@ storage: /verdaccio/storage/data
 plugins: /verdaccio/plugins
 
 web:
-  # WebUI is enabled as default, if you want disable it, just uncomment this line
-  #enable: false
   title: Objectiv Verdaccio
-  # comment out to disable gravatar support
-  # gravatar: false
-  # by default packages are ordercer ascendant (asc|desc)
-  # sort_packages: asc
-  # darkMode: true
-  # logo: http://somedomain/somelogo.png
-  # favicon: http://somedomain/favicon.ico | /path/favicon.ico
 
 auth:
   htpasswd:
     file: /verdaccio/storage/htpasswd
     # Maximum amount of users allowed to register, defaults to "+infinity".
     # You can set this to -1 to disable registration.
-    # max_users: 1000
+    max_users: -1
 
 # a list of other known repositories we can talk to
 uplinks:
@@ -65,17 +56,3 @@ middlewares:
 # log settings
 logs: { type: stdout, format: pretty, level: http }
 
-#experiments:
-#  # support for npm token command
-#  token: false
-#  # enable tarball URL redirect for hosting tarball with a different server, the tarball_url_redirect can be a template string
-#  tarball_url_redirect: 'https://mycdn.com/verdaccio/${packageName}/${filename}'
-#  # the tarball_url_redirect can be a function, takes packageName and filename and returns the url, when working with a js configuration file
-#  tarball_url_redirect(packageName, filename) {
-#    const signedUrl = // generate a signed url
-#    return signedUrl;
-#  }
-
-# This affect the web and api (not developed yet)
-#i18n:
-#web: en-US
