@@ -1,0 +1,18 @@
+{
+  "name": "root",
+  "private": true,
+  "workspaces": [
+    "core/**",
+    "plugins/**",
+    "trackers/**"
+  ],
+  "scripts": {
+    "build": "yarn workspaces foreach --exclude root --verbose run build",
+    "prettier": "yarn workspaces foreach --exclude root --verbose run prettier",
+    "list": "yarn workspaces list",
+    "test": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --verbose run test",
+    "test:ci": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --verbose run test:ci",
+    "test:coverage": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --verbose run test:coverage",
+    "publish": "yarn workspaces foreach --exclude root --verbose exec npm publish"
+  }
+}

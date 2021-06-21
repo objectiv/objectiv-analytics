@@ -61,8 +61,8 @@ export class Tracker implements TrackerInterface {
     await fetch(this.endpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'X-Session-Id': await this.sessionRepository.getOrCreateSessionId(),
+        'Content-Type': 'text/plain',
+//        'X-Session-Id': await this.sessionRepository.getOrCreateSessionId(),
       },
       body: JSON.stringify([resolvedEvent]),
       // set cookies in cross-origin requests too (e.g. a request to a different port number)

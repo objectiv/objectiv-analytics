@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    /* Enable importing .json files as modules */
+    "resolveJsonModule": true,
+
+    /* Enable all of the strict mode family options */
+    "strict": true,
+
+    /* Report errors on unused local variables */
+    "noUnusedLocals": true,
+
+    /* Report errors on unused function parameters */
+    "noUnusedParameters": true,
+
+    /* Report errors when not all code paths in a function return a value */
+    "noImplicitReturns": true,
+
+    /* Report errors for fallthrough cases in switch statements */
+    "noFallthroughCasesInSwitch": true,
+
+    /* Enable emitting interoperability between CommonJS and ES Modules. Enables also 'allowSyntheticDefaultImports' */
+    "esModuleInterop": true,
+
+    /* Generate .d.ts declaration files */
+    "declaration": true,
+
+    /* Make sure module resolution works nicely while developing. Base url is necessary for the `paths` directive */
+    "baseUrl": "./",
+
+    /* Let's compile to a reasonably modern target  */
+    "target": "ES5",
+
+    /* Tell the compiler how to resolve our own modules relatively to `baseUrl` */
+    "paths": {
+      "@objectiv/schema": ["core/schema/src"],
+      "@objectiv/plugin-*": ["plugins/*/src"],
+      "@objectiv/tracker-core": ["core/tracker/src"],
+      "@objectiv/tracker-*": ["trackers/*/src"],
+    }
+  }
+}
