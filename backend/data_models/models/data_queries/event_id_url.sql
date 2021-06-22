@@ -1,4 +1,9 @@
 {{ config(materialized='ephemeral') }}
+--
+--
+-- TEST VAR: {{ var('test_variable') }} - Table {{ this }}
+--
+--
 select
     event_id,
     context ->> 'id' as url

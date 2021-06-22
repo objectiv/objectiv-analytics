@@ -1,6 +1,12 @@
 --
 -- Per url and day the number of unique users, sessions and events
 --
+
+--
+--
+-- TEST VAR: {{ var('test_variable') }} - Table {{ this }}
+--
+--
 select
        eiu.url,
        sd.day,

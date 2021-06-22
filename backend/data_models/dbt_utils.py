@@ -1,16 +1,31 @@
 """
 Copyright 2021 Objectiv B.V.
+
+
+None of the code here is production ready. This is completely experimental.
+
+
+Some of the code here is derived from DBT code, which is apache 2.0 licensed and copyrighted by
+fishtown-analytics. See https://github.com/fishtown-analytics/dbt/commits/develop/License.md
 """
-from typing import Optional, Dict
+from copy import deepcopy
+from typing import Optional, Dict, Any, List, cast, Tuple
 
 from dbt import tracking
 from dbt.adapters.factory import get_adapter
+from dbt.clients import jinja
+from dbt.compilation import Compiler, _extend_prepended_ctes, _add_prepended_cte
+from dbt.contracts.graph.compiled import CompiledModelNode, InjectedCTE, COMPILED_TYPES, \
+    NonSourceCompiledNode
 from dbt.contracts.graph.manifest import Manifest
 from dbt.contracts.graph.parsed import ParsedModelNode
+from dbt.exceptions import RuntimeException, InternalException
 from dbt.main import parse_args
 from dbt.task.compile import CompileTask
 from dbt.tracking import User
 from networkx import DiGraph
+
+
 
 
 def get_compile_task(model: Optional[str], vars: Dict[str, str]) -> CompileTask:
@@ -52,7 +67,8 @@ def get_sql(model: Optional[str], vars: Dict[str, str]) -> str:
 
 def get_sql_improved(model: str,
                      vars: Dict[str, str],
-                     depth_ephemeral_models: Optional[int] = None) -> str:
+                     depth_ephemeral_models: Optional[int] = None,
+                     model_specific_vars: Dict[str, Dict[str, str]] = None) -> str:
     """
     Get the sql for a single model.
 
@@ -84,8 +100,187 @@ def get_sql_improved(model: str,
 
     adapter = get_adapter(ctask.config)
     compiler = adapter.get_compiler()
-    compiled_node = compiler.compile_node(node=node, manifest=manifest, extra_context=None, write=False)
+    # debug code
+    # extra_context = None
+    # if override_vars and model in override_vars:
+    #     extra_context = override_vars[model]
+    compiled_node = custom_compile(compiler=compiler, node=node, manifest=manifest, extra_context=None,
+                                   model_specific_vars=model_specific_vars)
+    #compiled_node = compiler.compile_node(node=node, manifest=manifest, extra_context=extra_context, write=False)
     return compiled_node.compiled_sql
+
+
+def custom_compile(
+        compiler: Compiler,
+        node: ParsedModelNode,
+        manifest: Manifest,
+        extra_context: Optional[Dict[str, Any]] = None,
+        model_specific_vars: Dict[str, Dict[str, str]] = None) -> CompiledModelNode:
+    """
+    Replacement for dbt.compilation.Compiler.compile_node that adds the possibility to set variables for
+    specific models.
+    """
+    node = _custom_compile_node(compiler, node, manifest, extra_context, model_specific_vars)
+    node, _ = _custom_recursively_prepend_ctes(compiler, node, manifest, extra_context, model_specific_vars)
+    return node
+
+
+def _custom_compile_node(compiler: Compiler,
+                         node: ParsedModelNode,
+                         manifest: Manifest,
+                         extra_context: Optional[Dict[str, Any]] = None,
+                         model_specific_vars: Dict[str, Dict[str, str]] = None) -> CompiledModelNode:
+    """
+    Replacement for dbt.compilation.Compiler._compile_node
+    """
+    if extra_context is None:
+        extra_context = {}
+    if model_specific_vars is None:
+        model_specific_vars = {}
+
+    print("Compiling {}".format(node.unique_id))
+
+    data = node.to_dict(omit_none=True)
+    data.update({
+        'compiled': False,
+        'compiled_sql': None,
+        'extra_ctes_injected': False,
+        'extra_ctes': [],
+    })
+    compiled_node = CompiledModelNode.from_dict(data)
+
+    # change: check if variables are overridden
+    # todo: don't use magic to get model_name, have a function for this
+    model_name = node.unique_id.split('.')[-1]  # 'model.objectiv.x' -> 'x'
+    if model_name in model_specific_vars and model_specific_vars[model_name]:
+        config_copy = deepcopy(compiler.config)
+        for var, value in model_specific_vars[model_name].items():
+            config_copy.vars.vars[var] = value
+        compiler_copy = Compiler(config_copy)
+        context = compiler_copy._create_node_context(
+            compiled_node, manifest, extra_context
+        )
+    else:
+        # normal path: no variables overridden for this specific model
+        context = compiler._create_node_context(
+            compiled_node, manifest, extra_context
+        )
+
+    compiled_node.compiled_sql = jinja.get_rendered(
+        node.raw_sql,
+        context,
+        node,
+    )
+    compiled_node.relation_name = compiler._get_relation_name(node)
+    compiled_node.compiled = True
+
+    return compiled_node
+
+
+def _custom_recursively_prepend_ctes(
+        compiler: Compiler,
+        model: CompiledModelNode,
+        manifest: Manifest,
+        extra_context: Optional[Dict[str, Any]],
+        model_specific_vars: Dict[str, Dict[str, str]] = None
+    ) -> Tuple[CompiledModelNode, List[InjectedCTE]]:
+    """
+    Based on dbt.compilation.Compiler._recursively_prepend_ctes
+
+    Main difference with the main method is that this calls _custom_compile_node instead of
+    compiler._compile_node, but there are secondary changes too.
+
+    Original docstring:
+    This method is called by the 'compile_node' method. Starting
+    from the node that it is passed in, it will recursively call
+    itself using the 'extra_ctes'.  The 'ephemeral' models do
+    not produce SQL that is executed directly, instead they
+    are rolled up into the models that refer to them by
+    inserting CTEs into the SQL.
+    """
+    if model.compiled_sql is None:
+        raise RuntimeException(
+            'Cannot inject ctes into an unparsed node', model
+        )
+    if model.extra_ctes_injected:
+        return (model, model.extra_ctes)
+
+    # Just to make it plain that nothing is actually injected for this case
+    if not model.extra_ctes:
+        model.extra_ctes_injected = True
+        manifest.update_node(model)
+        return (model, model.extra_ctes)
+
+    # This stores the ctes which will all be recursively
+    # gathered and then "injected" into the model.
+    prepended_ctes: List[InjectedCTE] = []
+
+    dbt_test_name = compiler._get_dbt_test_name()
+
+    # extra_ctes are added to the model by
+    # RuntimeRefResolver.create_relation, which adds an
+    # extra_cte for every model relation which is an
+    # ephemeral model.
+    for cte in model.extra_ctes:
+        if cte.id == dbt_test_name:
+            sql = cte.sql
+        else:
+            if cte.id not in manifest.nodes:
+                raise InternalException(
+                    f'During compilation, found a cte reference that '
+                    f'could not be resolved: {cte.id}'
+                )
+            cte_model = manifest.nodes[cte.id]
+
+            if not cte_model.is_ephemeral_model:
+                raise InternalException(f'{cte.id} is not ephemeral')
+
+            # This model has already been compiled, so it's been
+            # through here before
+            if getattr(cte_model, 'compiled', False):
+                assert isinstance(cte_model,
+                                  tuple(COMPILED_TYPES.values()))
+                cte_model = cast(NonSourceCompiledNode, cte_model)
+                new_prepended_ctes = cte_model.extra_ctes
+
+            # if the cte_model isn't compiled, i.e. first time here
+            else:
+                # This is an ephemeral parsed model that we can compile.
+                # Compile and update the node
+                cte_model = _custom_compile_node(compiler,
+                    cte_model, manifest, extra_context, model_specific_vars)
+                # recursively call this method
+                cte_model, new_prepended_ctes = \
+                    compiler._recursively_prepend_ctes(
+                        cte_model, manifest, extra_context
+                    )
+                # Save compiled SQL file and sync manifest
+                compiler._write_node(cte_model)
+                manifest.sync_update_node(cte_model)
+
+            _extend_prepended_ctes(prepended_ctes, new_prepended_ctes)
+
+            new_cte_name = compiler.add_ephemeral_prefix(cte_model.name)
+            rendered_sql = (
+                cte_model._pre_injected_sql or cte_model.compiled_sql
+            )
+            sql = f' {new_cte_name} as (\n{rendered_sql}\n)'
+
+        _add_prepended_cte(prepended_ctes, InjectedCTE(id=cte.id, sql=sql))
+
+    injected_sql = compiler._inject_ctes_into_sql(
+        model.compiled_sql,
+        prepended_ctes,
+    )
+    model._pre_injected_sql = model.compiled_sql
+    model.compiled_sql = injected_sql
+    model.extra_ctes_injected = True
+    model.extra_ctes = prepended_ctes
+    model.validate(model.to_dict(omit_none=True))
+
+    manifest.update_node(model)
+
+    return model, prepended_ctes
 
 
 def set_previous_nodes_materialization(manifest: Manifest,

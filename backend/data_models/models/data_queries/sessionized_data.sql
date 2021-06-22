@@ -1,3 +1,8 @@
+--
+--
+-- TEST VAR: {{ var('test_variable') }} - Table {{ this }}
+--
+--
 with session_starts as (
     select
         cookie_id as cookie_id,
