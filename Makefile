@@ -43,7 +43,7 @@ build-ds-notebook:
 build-tracker:
 	cd tracker && yarn build
 
-publish-tracker: build-tracker
+publish-tracker: 
 	cd tracker && yarn publish
 
 # control stack through docker-compose
