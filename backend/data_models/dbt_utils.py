@@ -188,7 +188,7 @@ The Manifest object dbt.contracts.graph.manifest.Manifest contains the full grap
 be run. Each model being a node in the graph. A node is uniquely identified by it's name (e.g.
 'model.objectiv.aggregated_features').
 
-The ManifestLoader builds the manifest based on the files in the project-dir, and all includes projects.
+The ManifestLoader builds the manifest based on the files in the project-dir, and all included projects.
 
 ## Task
 The nodes are all put into a queue (in the right order).
@@ -203,6 +203,6 @@ that on the fly, we really need to work on the graph and node level.
 
 ## Tracking
 A lot of the code in the main code is peppered with tracking statements, that call onto the snowplow
-tracker to ship usage data back to DBT / fishtown. This sometimes makes the code a bit harder to
-understand; just ignoring anything with `track` in the name makes it a bit easier to follow the code.
+tracker to ship usage data back to DBT / fishtown. This sometimes makes the code harder to understand; just
+ignoring anything with `track` in the name makes it a bit easier to follow the code.
 """
