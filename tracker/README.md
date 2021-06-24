@@ -120,7 +120,11 @@ yarn publish
 
 Now surf to http://localhost:4873 and you should see the packages you've just published. 
 
-
+To stop verdaccio, simply run:
+```bash
+cd verdaccio && make stop
+```
+Stopping verdaccio will also remove any published packages (as the storage isn't persistent.)
 ## Other useful commands
 
 The following commands will be executed for all packages automatically when issued from the monorepo root; the `/tracker` directory. 
