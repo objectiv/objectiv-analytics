@@ -99,6 +99,27 @@ yarn up <package>
 yarn up <package> -i
 ```
 
+## Building / publishing packages
+To locally publish the packages (so they can be used by applications), we use verdaccio. By far, the easiest way, is to run
+```bash
+make publish-tracker
+```
+from the root of the repo.
+
+To have a little more control, you can also manually run the steps involved:
+```bash
+## start up verdaccio in Docker container
+cd verdaccio && make run
+
+## build tracker
+yarn build
+
+## publish it
+yarn publish
+```
+
+Now surf to http://localhost:4873 and you should see the packages you've just published. 
+
 
 ## Other useful commands
 
