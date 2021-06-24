@@ -11,12 +11,8 @@ from typing import NamedTuple, Optional
 # below (e.g. get_config_output())
 from objectiv_backend.schema.event_schemas import EventSchema, get_event_schema
 
+LOAD_BASE_SCHEMA = os.environ.get('LOAD_BASE_SCHEMA', 'true') == 'true'
 SCHEMA_EXTENSION_DIRECTORY = os.environ.get('SCHEMA_EXTENSION_DIRECTORY')
-
-# this is where we expect the base schema to be .normally it lives outside of the scop of backend
-# (/schema/base_schema.json), so either tell backend where it is (local), or copy it here, at build time
-SCHEMA_BASE_PATH = os.environ.get('SCHEMA_BASE_PATH', os.path.join(
-    os.path.dirname(__file__), '..', 'schema', 'base_schema.json'))
 
 # Whether to run in sync mode (default) or async-mode.
 _ASYNC_MODE = os.environ.get('ASYNC_MODE', '') == 'true'

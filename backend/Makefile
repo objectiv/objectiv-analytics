@@ -13,16 +13,12 @@ PYTHON_DIRECTORIES=$(shell find objectiv_backend -type d)
 OBJ_PACKAGE_VERSION = $(shell cat objectiv_backend/VERSION)
 PACKAGE_NAME = dist/objectiv_backend-$(OBJ_PACKAGE_VERSION)-py3-none-any.whl
 
-SCHEMA_SOURCE_DIR=../schema
-SCHEMA_TARGET_DIR=objectiv_backend/schema
-SCHEMA_BASE_FILE=base_schema.json
-
 # tag of the container image we'll build
 TAG ?= latest
 
 all: docker-image python-package
 
-docker-image:
+docker-image: base_schema
 	docker build -t objectiv/backend:$(TAG) -f docker/Dockerfile .
 
 python-package: $(PACKAGE_NAME)
@@ -30,7 +26,7 @@ python-package: $(PACKAGE_NAME)
 # copy base schema into the scope of the python package
 # we always do this, to make sure, we're not using old stuff
 base_schema:
-	cp -f ${SCHEMA_SOURCE_DIR}/${SCHEMA_BASE_FILE} ${SCHEMA_TARGET_DIR}
+	cp -f ../schema/base_schema.json objectiv_backend/schema/
 
 $(PACKAGE_NAME): base_schema $(PYTHON_DIRECTORIES)
 	python3 -m build --wheel
@@ -38,11 +34,8 @@ $(PACKAGE_NAME): base_schema $(PYTHON_DIRECTORIES)
 clean:
 	rm dist/*
 	rm -r build
-	rm ${SCHEMA_TARGET_DIR}/${SCHEMA_BASE_FILE}
+	rm objectiv_backend/schema/base_schema.json
 
 tests:
 	mypy objectiv_backend
 	pytest tests
-
-run: base_schema
-	cd objectiv_backend && flask run

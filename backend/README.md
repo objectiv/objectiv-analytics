@@ -19,6 +19,11 @@ cd backend; python objectiv_backend/tools/db_init/db_init.py
 ```
 SECURITY WARNING: The above docker-compose command starts a postgres container that allows connections
 without verifying passwords. Do not use this in production or on a shared system!
+
+## Make sure we have the base schema in place:
+```bash
+make base_schema
+```
 ## Run Collector
 After setting up the python env, simply run:
 ```bash

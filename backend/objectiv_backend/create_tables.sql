@@ -86,7 +86,7 @@ create role obj_collector_role noinherit;
 grant select, update, insert on queue_entry to obj_collector_role;
 -- we also add the "worker" permissions here, to make sure
 -- the synchronous mode properly works
-grant insert on data, nok_data to obj_collector_role;
+grant select, insert on data, nok_data to obj_collector_role;
 
 -- used by worker to read/write queues
 -- update priv is needed because of the `select for update` queries
