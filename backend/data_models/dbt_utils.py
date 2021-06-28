@@ -26,8 +26,6 @@ from dbt.tracking import User
 from networkx import DiGraph
 
 
-
-
 def get_compile_task(model: Optional[str], vars: Dict[str, str]) -> CompileTask:
     args = ['compile']
     if model:
@@ -65,14 +63,25 @@ def get_sql(model: Optional[str], vars: Dict[str, str]) -> str:
     return last_result.node.compiled_sql
 
 
-def get_sql_improved(model: str,
-                     vars: Dict[str, str],
-                     depth_ephemeral_models: Optional[int] = None,
-                     model_specific_vars: Dict[str, Dict[str, str]] = None) -> str:
+def get_sql_improved(
+        model: str,
+        vars: Dict[str, str],
+        model_specific_vars: Dict[str, Dict[str, str]] = None,
+        depth_ephemeral_models: Optional[int] = 99
+    ) -> str:
     """
-    Get the sql for a single model.
+    Get the sql for a single model, including all dependent models that are ephemeral.
 
-    WIP
+    :param model: Short name of the model for which to get the sql. e.g. specify 'stats_per_feature_day'
+        to indicate 'model.objectiv.stats_per_feature_day'
+    :param vars: Dictionary mapping variable names to values. These values are global and are applied to
+        all models, unless they are overridden.
+    :param depth_ephemeral_models: Override for dbt settings regarding materializations. All recursively
+        referenced models, x steps deep are set to be ephemeral.
+    :param model_specific_vars: Override for the vars that only hold for a single model. Dictionary mapping
+        the model name to a dictionary with key, values with model specific variables.
+
+    :return: sql select query
     """
     tracking.active_user = User('')
     tracking.active_user.do_not_track = True
@@ -100,13 +109,10 @@ def get_sql_improved(model: str,
 
     adapter = get_adapter(ctask.config)
     compiler = adapter.get_compiler()
-    # debug code
-    # extra_context = None
-    # if override_vars and model in override_vars:
-    #     extra_context = override_vars[model]
+    # We want to call compiler.compile_node, but since that doesn't implement overriding variables per
+    # model, we use our own custom_compile function instead.
     compiled_node = custom_compile(compiler=compiler, node=node, manifest=manifest, extra_context=None,
                                    model_specific_vars=model_specific_vars)
-    #compiled_node = compiler.compile_node(node=node, manifest=manifest, extra_context=extra_context, write=False)
     return compiled_node.compiled_sql
 
 
