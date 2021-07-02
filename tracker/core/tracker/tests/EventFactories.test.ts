@@ -190,13 +190,6 @@ describe('Event Factories', () => {
   });
 
   it('ClickEvent', () => {
-    expect(makeClickEvent()).toStrictEqual({
-      __interactive_event: true,
-      event: 'ClickEvent',
-      global_contexts: [],
-      location_stack: [],
-    });
-
     expect(makeClickEvent({ location_stack: [sectionA], global_contexts: [device] })).toStrictEqual({
       __interactive_event: true,
       event: 'ClickEvent',
@@ -206,13 +199,6 @@ describe('Event Factories', () => {
   });
 
   it('InputChangeEvent', () => {
-    expect(makeInputChangeEvent()).toStrictEqual({
-      __interactive_event: true,
-      event: 'InputChangeEvent',
-      global_contexts: [],
-      location_stack: [],
-    });
-
     expect(makeInputChangeEvent({ location_stack: [sectionA], global_contexts: [device] })).toStrictEqual({
       __interactive_event: true,
       event: 'InputChangeEvent',
