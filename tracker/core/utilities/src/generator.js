@@ -154,17 +154,18 @@ function createFactory(
   const props = [];
 
   // factories for the events have some optional parameters
-  const optional = params.object_type === 'event' ? '?' : '';
+  let has_all_optional_properties = true;
   for (let mp in merged_properties) {
     if (merged_properties[mp]['discriminator']) {
       discriminators.push(`${mp}: true`);
     } else if (merged_properties[mp]['type']) {
-      if (optional === '?') {
+      if (merged_properties[mp]['optional'] === true) {
         // because the global_contexts and location_stack arrays are optional
         // we provide an empty array as default here
         properties.push(`${mp}: props?.${mp} ?? []`);
         props.push(`${mp}?: ${merged_properties[mp]['type']}`);
       } else {
+        has_all_optional_properties = false;
         properties.push(`${mp}: props.${mp}`);
         props.push(`${mp}: ${merged_properties[mp]['type']}`);
       }
@@ -173,9 +174,9 @@ function createFactory(
     }
   }
   const tpl =
-    `export const make${params.class_name} = ( props${optional}: { ${props.join('; ')} }): ${
-      params.class_name
-    } => ({\n` +
+    `export const make${params.class_name} = ( props${has_all_optional_properties ? '?' : ''}: { ${props.join(
+      '; '
+    )} }): ${params.class_name} => ({\n` +
     `\t${discriminators.join(',\n\t')},\n` +
     `\t${properties.join(',\n\t')},\n` +
     `});`;
@@ -361,6 +362,10 @@ for (let event_type in events) {
     for (let property_name in event['properties']) {
       properties[property_name] = [];
       properties[property_name]['type'] = get_property_definition(event['properties'][property_name]);
+      // some properties may be optional via the `optional` attribute set to true
+      if (event['properties'][property_name]['optional'] === true) {
+        properties[property_name]['optional'] = true;
+      }
     }
   }
 

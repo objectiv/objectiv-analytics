@@ -9,11 +9,13 @@
       "properties":{
         "location_stack": {
           "type": "array",
-          "items": "AbstractLocationContext"
+          "items": "AbstractLocationContext",
+          "optional": true
         },
         "global_contexts": {
           "type": "array",
-          "items": "AbstractGlobalContext"
+          "items": "AbstractGlobalContext",
+          "optional": true
         },
         "event": {
           "type": "string"
