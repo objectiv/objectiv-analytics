@@ -48,6 +48,10 @@ packages:
 server:
   keepAliveTimeout: 60
 
+listen:
+  - localhost:4873
+  - verdaccio:4873
+
 middlewares:
   audit:
     enabled: true
