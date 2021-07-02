@@ -1,6 +1,6 @@
 export abstract class AbstractEvent {
-  location_stack: AbstractLocationContext[];
-  global_contexts: AbstractGlobalContext[];
+  location_stack?: AbstractLocationContext[];
+  global_contexts?: AbstractGlobalContext[];
   event: string;
 }
 export abstract class AbstractContext {
@@ -21,6 +21,7 @@ export abstract class AbstractVideoEvent extends AbstractNonInteractiveEvent {
 }
 export abstract class AbstractInteractiveEvent extends AbstractEvent {
   readonly __interactive_event = true;
+  location_stack: AbstractLocationContext[];
 }
 export abstract class AbstractSectionContext extends AbstractLocationContext {
   readonly __section_context = true;

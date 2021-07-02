@@ -25,13 +25,13 @@ export const makeApplicationLoadedEvent = (props?: {
   location_stack: props?.location_stack ?? [],
   global_contexts: props?.global_contexts ?? [],
 });
-export const makeClickEvent = (props?: {
-  location_stack?: AbstractLocationContext[];
+export const makeClickEvent = (props: {
+  location_stack: AbstractLocationContext[];
   global_contexts?: AbstractGlobalContext[];
 }): ClickEvent => ({
   __interactive_event: true,
   event: 'ClickEvent',
-  location_stack: props?.location_stack ?? [],
+  location_stack: props.location_stack,
   global_contexts: props?.global_contexts ?? [],
 });
 export const makeDocumentLoadedEvent = (props?: {
@@ -43,22 +43,22 @@ export const makeDocumentLoadedEvent = (props?: {
   location_stack: props?.location_stack ?? [],
   global_contexts: props?.global_contexts ?? [],
 });
-export const makeInputChangeEvent = (props?: {
-  location_stack?: AbstractLocationContext[];
+export const makeInputChangeEvent = (props: {
+  location_stack: AbstractLocationContext[];
   global_contexts?: AbstractGlobalContext[];
 }): InputChangeEvent => ({
   __interactive_event: true,
   event: 'InputChangeEvent',
-  location_stack: props?.location_stack ?? [],
+  location_stack: props.location_stack,
   global_contexts: props?.global_contexts ?? [],
 });
-export const makeInteractiveEvent = (props?: {
-  location_stack?: AbstractLocationContext[];
+export const makeInteractiveEvent = (props: {
+  location_stack: AbstractLocationContext[];
   global_contexts?: AbstractGlobalContext[];
 }): InteractiveEvent => ({
   __interactive_event: true,
   event: 'InteractiveEvent',
-  location_stack: props?.location_stack ?? [],
+  location_stack: props.location_stack,
   global_contexts: props?.global_contexts ?? [],
 });
 export const makeNonInteractiveEvent = (props?: {

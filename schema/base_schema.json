@@ -68,7 +68,13 @@
     },
     "InteractiveEvent": {
       "parents": ["AbstractEvent"],
-      "requiresContext": ["SectionContext"]
+      "requiresContext": ["SectionContext"],
+      "properties":{
+        "location_stack": {
+          "type": "array",
+          "items": "AbstractLocationContext"
+        }
+      }
     },
     "ClickEvent": {
       "parents": ["InteractiveEvent"],

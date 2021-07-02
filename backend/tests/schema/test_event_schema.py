@@ -19,7 +19,7 @@ def test_create_schema_empty():
 def test_create_schema_extend():
     schema = EventSchema().get_extended_schema(_SIMPLE_BASE_SCHEMA)
     assert schema.list_event_types() == ['BaseEvent', 'Child2Event', 'ChildEvent', 'GrandChildEvent']
-    assert schema.list_context_types() == ['BaseContext', 'OtherContext']
+    assert schema.list_context_types() == ['BaseContext', 'OtherContext', 'OverridingContext']
     assert schema.version == {'test_schema': '1.0.0'}
 
 
@@ -29,7 +29,7 @@ def test_create_schema_extend_multiple():
         .get_extended_schema(_EXTENSION_TO_SIMPLE_BASE_SCHEMA)
     assert schema.list_event_types() == \
            ['BaseEvent', 'Child2Event', 'ChildEvent', 'GrandChildEvent', 'GreatGrandChildEvent']
-    assert schema.list_context_types() == ['BaseContext', 'ExtraContext', 'OtherContext']
+    assert schema.list_context_types() == ['BaseContext', 'ExtraContext', 'OtherContext', 'OverridingContext']
     expected_version = {
         'extension_to_test_schema': '0.5',
         'test_schema': '1.0.0'
@@ -133,7 +133,7 @@ def test_all_required_contexts():
 
 def test_list_context_types():
     schema = _get_schema()
-    assert schema.list_context_types() == ['BaseContext', 'ExtraContext', 'OtherContext']
+    assert schema.list_context_types() == ['BaseContext', 'ExtraContext', 'OtherContext', 'OverridingContext']
 
 
 def test_all_parent_context_types():
@@ -152,7 +152,7 @@ def test_all_child_context_types():
     schema = _get_schema()
     assert schema.get_all_child_context_types('X') == set()
     assert schema.get_all_child_context_types('BaseContext') == \
-           {'BaseContext', 'OtherContext', 'ExtraContext'}
+           {'BaseContext', 'OtherContext', 'ExtraContext', 'OverridingContext'}
     assert schema.get_all_child_context_types('OtherContext') == {'ExtraContext', 'OtherContext'}
     assert schema.get_all_child_context_types('ExtraContext') == {'ExtraContext'}
 
@@ -162,16 +162,24 @@ def test_get_context_schema():
     base_context_json_schema = {
         'properties': {
             'id': {'type': 'string'},
-            'optional_property': {'type': 'string'}
+            'some_property': {'type': 'string'}
         },
         'required': ['id'],
+        'type': 'object'
+    }
+    overriding_context_json_schema = {
+        'properties': {
+            'id': {'type': 'string'},
+            'some_property': {'type': 'string'}
+        },
+        'required': ['id', 'some_property'],
         'type': 'object'
     }
     extra_context_json_schema = {
         'properties': {
             'extra_property': {'type': 'string'},
             'id': {'type': 'string'},
-            'optional_property': {'type': 'string'},
+            'some_property': {'type': 'string'},
             'other_property': {'type': 'number'}
         },
         'required': ['extra_property', 'id', 'other_property'],
@@ -179,6 +187,7 @@ def test_get_context_schema():
     }
 
     assert schema.get_context_schema('BaseContext') == base_context_json_schema
+    assert schema.get_context_schema('OverridingContext') == overriding_context_json_schema
     assert schema.get_context_schema('ExtraContext') == extra_context_json_schema
 
 
@@ -220,7 +229,7 @@ _SIMPLE_BASE_SCHEMA = {
                 "id": {
                     "type": "string"
                 },
-                "optional_property": {
+                "some_property": {
                     "type": "string",
                     "optional": "true",
                 }
@@ -233,6 +242,16 @@ _SIMPLE_BASE_SCHEMA = {
             "properties": {
                 "other_property": {
                     "type": "number"
+                }
+            }
+        },
+        "OverridingContext": {
+            "parents": [
+                "BaseContext"
+            ],
+            "properties": {
+                "some_property": {
+                    "type": "string",
                 }
             }
         }

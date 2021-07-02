@@ -86,12 +86,13 @@ function createDefinition(
 ) {
   const p_list = [];
   for (let property in params.properties) {
+    const optional = params.properties[property]['optional'] ? '?' : '';
     if (params.properties[property]['type']) {
-      p_list.push(`${property}: ${get_property_definition(params.properties[property])};`);
+      p_list.push(`${property}${optional}: ${get_property_definition(params.properties[property])};`);
     } else if (params.properties[property]['discriminator']) {
       p_list.push(`readonly ${property} = ${params.properties[property]['discriminator']};`);
     } else {
-      p_list.push(`readonly ${property}: ${params.properties[property]['value']};`);
+      p_list.push(`readonly ${property}${optional}: ${params.properties[property]['value']};`);
     }
   }
 
@@ -139,13 +140,10 @@ function createFactory(
   merged_properties_temp.push(params.properties);
 
   // now we merge all of the defined properties, hierarchically (from parent to child)
-  // taking care not to overwrite existing ones
   const merged_properties = [];
   for (let mpt in merged_properties_temp) {
     for (let property in merged_properties_temp[mpt]) {
-      if (!(property in merged_properties)) {
-        merged_properties[property] = merged_properties_temp[mpt][property];
-      }
+      merged_properties[property] = merged_properties_temp[mpt][property];
     }
   }
 
