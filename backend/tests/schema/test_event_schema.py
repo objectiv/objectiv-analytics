@@ -161,7 +161,8 @@ def test_get_context_schema():
     schema = _get_schema()
     base_context_json_schema = {
         'properties': {
-            'id': {'type': 'string'}
+            'id': {'type': 'string'},
+            'optional_property': {'type': 'string'}
         },
         'required': ['id'],
         'type': 'object'
@@ -170,6 +171,7 @@ def test_get_context_schema():
         'properties': {
             'extra_property': {'type': 'string'},
             'id': {'type': 'string'},
+            'optional_property': {'type': 'string'},
             'other_property': {'type': 'number'}
         },
         'required': ['extra_property', 'id', 'other_property'],
@@ -217,6 +219,10 @@ _SIMPLE_BASE_SCHEMA = {
             "properties": {
                 "id": {
                     "type": "string"
+                },
+                "optional_property": {
+                    "type": "string",
+                    "optional": "true",
                 }
             }
         },

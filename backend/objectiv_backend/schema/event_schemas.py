@@ -262,14 +262,21 @@ class ContextSubSchema:
             return None
         all_classes = self.get_all_parent_context_types(context_type)
         properties = {}
+        required_properties = []
         for klass in all_classes:
             class_properties = deepcopy(self.schema[klass].get("properties", {}))
             for key, value in class_properties.items():
+                # If the "optional" attribute is missing or set to False, add this property to the required ones
+                if not value.get("optional", False):
+                    required_properties.append(key)
+                # Clear the "optional" property from the schema properties, as it's an internal one
+                if "optional" in value:
+                    del(value["optional"])
                 properties[key] = deepcopy(value)
         schema = {
             "type": "object",
             "properties": properties,
-            "required": sorted(properties.keys())
+            "required": sorted(required_properties)
         }
         return schema
 
