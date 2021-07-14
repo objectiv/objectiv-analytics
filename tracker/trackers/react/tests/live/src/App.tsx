@@ -21,14 +21,14 @@ function App() {
         <div className="sidebar">
 
           <ul className="menu">
-            <li className="menu-item menu-item-active"><a href="/guide/introduction">Introduction</a></li>
-            <li className="menu-item"><a href="/guide/get-started">Get Started</a></li>
-            <li className="menu-item"><a href="/guide/use-with-create-react-app">Use in create-react-app</a></li>
+            <li className="menu-item"><a href="/introduction">Introduction</a></li>
+            <li className="menu-item"><a href="/track-application-loaded">trackApplicationLoaded</a></li>
+            <li className="menu-item menu-item-active"><a href="/track-link-click">trackLinkClick</a></li>
+            <li className="menu-item"><a href="/track-button-loaded">trackButtonClick</a></li>
           </ul>
 
         </div>
         <div className="body">
-          body
           <div
             onClick={
               () => trackLinkClick(makeLinkContext({id: 'test-link', href: '/', text: 'Track Link Click'}), tracker)
