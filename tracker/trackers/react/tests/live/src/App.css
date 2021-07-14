@@ -64,8 +64,8 @@ header {
   color: #333;
 }
 
-.menu-item-active a {
+.menu-item-active {
   text-decoration: none;
-  color: indianred;
+  color: indianred !important;
   font-weight: bold;
 }

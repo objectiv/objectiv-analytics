@@ -1,14 +1,20 @@
-import { makeLinkContext, trackLinkClick, useTrackApplicationLoaded, useTracker } from "@objectiv/tracker-react";
 import logo from './logo-objectiv.svg';
 import './App.css';
+import MenuItem from "./MenuItem";
+import { BrowserRouter, Switch, Route } from "react-router-dom";
+
+// @ts-ignore .tsx is not allowed in imports but we have a preloader in place to support it
+import cases from "./cases/**/*.tsx";
+
+export type Case = {
+  urlSlug: string,
+  menuLabel: string,
+  Component: any
+}
 
 function App() {
-  const tracker = useTracker();
-
-  useTrackApplicationLoaded();
-
   return (
-    <>
+    <BrowserRouter>
       <header className="header">
         <a className="link" href="/">
           <div className="logo-wrapper">
@@ -21,23 +27,19 @@ function App() {
         <div className="sidebar">
 
           <ul className="menu">
-            <li className="menu-item"><a href="/introduction">Introduction</a></li>
-            <li className="menu-item"><a href="/track-application-loaded">trackApplicationLoaded</a></li>
-            <li className="menu-item menu-item-active"><a href="/track-link-click">trackLinkClick</a></li>
-            <li className="menu-item"><a href="/track-button-loaded">trackButtonClick</a></li>
+            {cases.map((props: Case, index: number) => <MenuItem key={index} {...props} />)}
           </ul>
 
         </div>
         <div className="body">
-          <div
-            onClick={
-              () => trackLinkClick(makeLinkContext({id: 'test-link', href: '/', text: 'Track Link Click'}), tracker)
-            }>
-            Track Link Click
-          </div>
+          <Switch>
+            {cases.map(({ Component, urlSlug }: Case, index: number) => (
+              <Route key={index} path={`/${urlSlug}`} exact={true} component={Component} />
+            ))}
+          </Switch>
         </div>
       </div>
-    </>
+    </BrowserRouter>
   );
 }
 
