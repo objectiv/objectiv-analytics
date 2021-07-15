@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "yarn workspaces foreach --exclude root --exclude @objectiv/tracker-react-live-testing-app --verbose run build",
-    "prettier": "yarn workspaces foreach --exclude root --exclude @objectiv/tracker-react-live-testing-app --verbose run prettier",
+    "prettier": "yarn workspaces foreach --exclude root --verbose run prettier",
     "list": "yarn workspaces list",
     "tsc": "yarn workspaces foreach --exclude root --exclude @objectiv/tracker-react-live-testing-app --verbose run tsc",
     "test": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-react-live-testing-app --verbose run test",

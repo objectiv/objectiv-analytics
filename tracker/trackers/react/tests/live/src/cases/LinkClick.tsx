@@ -1,9 +1,9 @@
-import { NavLink } from "react-router-dom";
-import { makeLinkContext, ReactTracker, trackLinkClick } from "@objectiv/tracker-react";
-import { useMirage } from "../useMirage";
+import { NavLink } from 'react-router-dom';
+import { makeLinkContext, ReactTracker, trackLinkClick } from '@objectiv/tracker-react';
+import { useMirage } from '../useMirage';
 
-export const urlSlug = 'track-link-click'
-export const menuLabel = 'trackLinkClick'
+export const urlSlug = 'track-link-click';
+export const menuLabel = 'trackLinkClick';
 export const trackerInstance = new ReactTracker({ endpoint: '/endpoint' });
 
 export function Component() {
@@ -14,11 +14,7 @@ export function Component() {
   useMirage();
 
   return (
-    <NavLink
-      to={href}
-      onClick={
-        () => trackLinkClick(makeLinkContext({id, href, text}), trackerInstance)
-      }>
+    <NavLink to={href} onClick={() => trackLinkClick(makeLinkContext({ id, href, text }), trackerInstance)}>
       {text}
     </NavLink>
   );

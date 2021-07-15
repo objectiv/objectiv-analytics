@@ -1,5 +1,5 @@
-import { Case } from "./App";
-import { NavLink } from "react-router-dom";
+import { Case } from './App';
+import { NavLink } from 'react-router-dom';
 
 export default function MenuItem({ urlSlug, menuLabel }: Case) {
   return (
@@ -8,5 +8,5 @@ export default function MenuItem({ urlSlug, menuLabel }: Case) {
         {menuLabel}
       </NavLink>
     </li>
-  )
+  );
 }

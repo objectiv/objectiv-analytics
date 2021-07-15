@@ -8,7 +8,7 @@ module.exports = {
         source: 'tsconfig',
         tsConfigPath: 'tsconfig.extend.json',
       },
-    }
+    },
   ],
   webpack: {
     configure: {
@@ -16,9 +16,10 @@ module.exports = {
         rules: [
           {
             test: /\.tsx$/,
-            use: 'webpack-import-glob-loader'
+            use: 'webpack-import-glob-loader',
           },
-        ]
+        ],
       },
-    }  }
+    },
+  },
 };
