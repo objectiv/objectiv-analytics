@@ -41,7 +41,7 @@
     "@craco/craco": "^6.2.0",
     "@types/react-router-dom": "^5.1.8",
     "craco-alias": "^3.0.1",
-    "prettier": "^2.3.2",
+    "prettier": "^2.3.0",
     "webpack-import-glob-loader": "^1.6.3"
   }
 }
