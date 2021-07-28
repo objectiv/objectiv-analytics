@@ -30,6 +30,15 @@ const StackTraceRegExp: { [key in StackTraceFormat]: RegExp } = {
 const LocationRegExp = /\(?(.+?)(?::(\d+))?(?::(\d+))?\)?$/;
 
 /**
+ * The data we can extract from a location string via the LocationRegExp above
+ */
+type LocationData = [
+  fileName: string,
+  lineNumber: number,
+  columnNumber: number
+]
+
+/**
  * Corresponds to one line of a Stack Trace and represents a function call.
  */
 type StackFrame = {
@@ -129,17 +138,11 @@ const chromeStackTraceLineToFrameReducer = (stackFrames: StackFrame[], stackTrac
   const functionName = maybeFunctionName !== '' ? maybeFunctionName : '<anonymous>';
 
   // Parse `locationData`
-  const locationPieces =
+  const [fileName, lineNumber, columnNumber] = extractLocationData(
     LocationRegExp.exec(locationData) ??
-    // istanbul ignore next - This is dead code due to our regex test above. TS cannot detect it
-    [];
-
-  // Discard match and get `fileName`, `lineNumberString` and `columnNumberString` from the rest
-  const [fileName, lineNumberString, columnNumberString] = locationPieces.slice(1);
-
-  // Cast number strings to actual numbers
-  const lineNumber = Number(lineNumberString);
-  const columnNumber = Number(columnNumberString);
+    // istanbul ignore next - This is dead code due to our line test regex at the beginning. TS cannot detect it
+    []
+  );
 
   return [
     ...stackFrames,
@@ -157,6 +160,8 @@ const chromeStackTraceLineToFrameReducer = (stackFrames: StackFrame[], stackTrac
  *
  * Automatically filters out lines that don't carry any Location (path:line:column) information.
  * Haven't encountered any for FF, but we double check anyway for consistency.
+ *
+ * TODO this is not finished
  *
  */
 const firefoxStackTraceLineToFrameReducer = (stackFrames: StackFrame[], stackTraceLine: string): StackFrame[] => {
@@ -179,17 +184,11 @@ const firefoxStackTraceLineToFrameReducer = (stackFrames: StackFrame[], stackTra
   const functionName = maybeFunctionName !== '' ? maybeFunctionName : '<anonymous>';
 
   // Parse `locationData`
-  const locationPieces =
+  const [fileName, lineNumber, columnNumber] = extractLocationData(
     LocationRegExp.exec(locationData) ??
-    // istanbul ignore next - This is dead code due to our regex test above. TS cannot detect it
-    [];
-
-  // Discard match and get `fileName`, `lineNumberString` and `columnNumberString` from the rest
-  const [fileName, lineNumberString, columnNumberString] = locationPieces.slice(1);
-
-  // Cast number strings to actual numbers
-  const lineNumber = Number(lineNumberString);
-  const columnNumber = Number(columnNumberString);
+    // istanbul ignore next - This is dead code due to our line test regex at the beginning. TS cannot detect it
+    []
+  );
 
   return [
     ...stackFrames,
@@ -200,4 +199,22 @@ const firefoxStackTraceLineToFrameReducer = (stackFrames: StackFrame[], stackTra
       columnNumber,
     },
   ];
+};
+
+/**
+ * Extracts `fileName`, `lineNumber` and `columnNumber` from an array of location pieces
+ */
+const extractLocationData = (locationPieces: string[]): LocationData => {
+  // Discard match and get `fileName`, `lineNumberString` and `columnNumberString` from the rest
+  const [fileName, lineNumberString, columnNumberString] = locationPieces.slice(1);
+
+  // Cast number strings to actual numbers
+  const lineNumber = Number(lineNumberString);
+  const columnNumber = Number(columnNumberString);
+
+  return [
+    fileName,
+    lineNumber,
+    columnNumber
+  ]
 };
