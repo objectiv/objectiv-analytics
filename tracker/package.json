@@ -10,16 +10,16 @@
   ],
   "scripts": {
     "clean": "yarn exec make clean",
-    "build": "yarn workspaces foreach --exclude root --exclude @objectiv/tracker-react-live-testing-app --verbose run build",
+    "build": "yarn workspaces foreach --exclude root --exclude @objectiv/tracker-react-live-testing-app --exclude @objectiv/developer-tools-cra-app-for-fixtures --verbose run build",
     "build:dev": "dev=true yarn build",
     "prettier": "yarn workspaces foreach --exclude root --exclude @objectiv/tracker-react-live-testing-app --verbose run prettier",
     "list": "yarn workspaces list",
-    "tsc": "yarn workspaces foreach --exclude root --exclude @objectiv/tracker-react-live-testing-app --verbose run tsc",
-    "test": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-react-live-testing-app --verbose run test",
+    "tsc": "yarn workspaces foreach --exclude root --exclude @objectiv/tracker-react-live-testing-app --exclude @objectiv/developer-tools-cra-app-for-fixtures --verbose run tsc",
+    "test": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-react-live-testing-app --exclude @objectiv/developer-tools-cra-app-for-fixtures --verbose run test",
     "test:live": "yarn workspace @objectiv/tracker-react-live-testing-app start",
-    "test:ci": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-react-live-testing-app --verbose run test:ci",
-    "test:coverage": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-react-live-testing-app --verbose run test:coverage",
-    "publish": "yarn workspaces foreach --exclude root --exclude @objectiv/utilities --exclude @objectiv/tracker-react-live-testing-app --verbose exec npm publish",
+    "test:ci": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-react-live-testing-app --exclude @objectiv/developer-tools-cra-app-for-fixtures --verbose run test:ci",
+    "test:coverage": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-react-live-testing-app --exclude @objectiv/developer-tools-cra-app-for-fixtures --verbose run test:coverage",
+    "publish": "yarn workspaces foreach --exclude root --exclude @objectiv/utilities --exclude @objectiv/tracker-react-live-testing-app --exclude @objectiv/developer-tools-cra-app-for-fixtures --verbose exec npm publish",
     "utils:generate": "yarn workspace @objectiv/utilities generate && yarn prettier && yarn tsc"
   }
 }

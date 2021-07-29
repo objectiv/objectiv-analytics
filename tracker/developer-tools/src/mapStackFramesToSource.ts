@@ -72,7 +72,6 @@ export const mapStackFramesToSource = async (stackFrames: StackFrame[]): Promise
     sourceCache.set(fileName, { sourceCode, sourceMapConsumer });
   });
 
-
   // return frames.map(frame => {
   //   const { functionName, fileName, lineNumber, columnNumber } = frame;
   //   let { map, fileSource } = cache[fileName] || {};

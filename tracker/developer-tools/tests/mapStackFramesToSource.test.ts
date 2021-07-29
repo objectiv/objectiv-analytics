@@ -15,7 +15,6 @@ beforeEach(() => {
       request.url.replace('http://0.0.0.0:5000/', './cra-app-for-fixtures/build/')
     );
 
-
     console.log(`Mapping "${request.url}" to "${fixturePath}"`);
 
     return Promise.resolve(fs.readFileSync(fixturePath).toString());
