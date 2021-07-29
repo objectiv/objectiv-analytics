@@ -28,30 +28,27 @@ const getSourceMapConsumer = async (fileName: string, sourceCode: string) => {
     const isBase64InlineSourceMapRegExp = /^data:application\/json;([\w=:"-]+;)*base64,/;
     const base64InlineSourceMapMatchArray = sourceMappingURL.match(isBase64InlineSourceMapRegExp);
 
-    // ???
+    // Inline Source Maps must be base64 encoded
     if (base64InlineSourceMapMatchArray === null) {
       throw new Error('Inline source maps must be base64 encoded.');
     }
 
-    // ???
+    // Get the encoded sourcemap from the URL itself
     const encodedInlineSourceMap = sourceMappingURL.substring(base64InlineSourceMapMatchArray.length);
 
-    // ???
+    // Decode from base64 to string and parse to JSON Object
     const decodedInlineSourceMap = window.atob(encodedInlineSourceMap);
-
-    // ???
     rawSourceMap = JSON.parse(decodedInlineSourceMap);
   } else {
-    // Regular sourceMap
+    // sourceMappingURL is relative to the fileName. Here we prepend sourceMappingURL with the same path of fileName.
     const index = fileName.lastIndexOf('/');
-
-    // ???
     const url = fileName.substring(0, index + 1) + sourceMappingURL;
 
-    // ???
+    // Fetch the source map contents as JSON Object
     rawSourceMap = await fetch(url).then((res) => res.json());
   }
 
+  // Create a new SourceMapConsumer either with the inline or the fetched SourceMap Object
   return new SourceMapConsumer(rawSourceMap);
 };
 
@@ -75,7 +72,6 @@ export const mapStackFramesToSource = async (stackFrames: StackFrame[]): Promise
     sourceCache.set(fileName, { sourceCode, sourceMapConsumer });
   });
 
-  console.log(sourceCache);
 
   // return frames.map(frame => {
   //   const { functionName, fileName, lineNumber, columnNumber } = frame;
