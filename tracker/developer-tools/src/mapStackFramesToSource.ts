@@ -18,7 +18,7 @@ function getSourceMappingURLFromSourceCode(sourceCode: string): string | null {
 
 /**
  * Retrieves the sourceMappingURL from the given sourceCode and determines if it's an actual URL or an inline base64
- * encoded Source Map. Then either decodes the sourceMap or fetches it as JSON Object and uses it to initialized and
+ * encoded Source Map. Then either decodes the sourceMap or fetches it as JSON Object and uses it to initialize and
  * return a SourceMapConsumer.
  */
 const getSourceMapConsumer = async (fileName: string, sourceCode: string) => {
