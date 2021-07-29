@@ -3,6 +3,7 @@
   "private": true,
   "workspaces": [
     "core/**",
+    "developer_tools/**",
     "plugins/**",
     "trackers/**"
   ],

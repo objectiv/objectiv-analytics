@@ -1,4 +1,4 @@
-# Test app for developer-tools
+# Test app for generating fixtures for the developer-tools
 
 This project has been created with [Create React App](https://github.com/facebook/create-react-app).
 
