@@ -39,6 +39,22 @@ describe('mapStackFramesToSource', () => {
       at Fe (http://0.0.0.0:5000/static/js/2.2fd84a33.chunk.js:2:123976)
       at http://0.0.0.0:5000/static/js/2.2fd84a33.chunk.js:2:43925
     `);
-    await mapStackFramesToSource(stackFrames);
+
+    const mappedSTackFrames = await mapStackFramesToSource(stackFrames);
+
+    expect(mappedSTackFrames).toStrictEqual([
+      {
+        columnNumber: 31,
+        fileName: 'App.tsx',
+        functionName: 'eval',
+        lineNumber: 10,
+      },
+      {
+        columnNumber: 31,
+        fileName: 'App.tsx',
+        functionName: 'onClick',
+        lineNumber: 10,
+      },
+    ]);
   });
 });

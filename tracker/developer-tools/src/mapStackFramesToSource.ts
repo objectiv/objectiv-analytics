@@ -1,6 +1,9 @@
 import { SourceMapConsumer } from 'source-map';
 import { StackFrame } from './common';
 
+/**
+ * Given a source code string it parses the last `sourceMappingURL` entry from it.
+ */
 function getSourceMappingURLFromSourceCode(sourceCode: string): string | null {
   const sourceMappingURLRegex = /\/\/[#@] ?sourceMappingURL=([^\s'"]+)\s*$/gm;
 
@@ -13,6 +16,11 @@ function getSourceMappingURLFromSourceCode(sourceCode: string): string | null {
   return sourceMappingUrl;
 }
 
+/**
+ * Retrieves the sourceMappingURL from the given sourceCode and determines if it's an actual URL or an inline base64
+ * encoded Source Map. Then either decodes the sourceMap or fetches it as JSON Object and uses it to initialized and
+ * return a SourceMapConsumer.
+ */
 const getSourceMapConsumer = async (fileName: string, sourceCode: string) => {
   // Attempt to retrieve the sourceMappingURL from the given sourceCode
   const sourceMappingURL = getSourceMappingURLFromSourceCode(sourceCode);
@@ -30,7 +38,7 @@ const getSourceMapConsumer = async (fileName: string, sourceCode: string) => {
 
     // Inline Source Maps must be base64 encoded
     if (base64InlineSourceMapMatchArray === null) {
-      throw new Error('Inline source maps must be base64 encoded.');
+      return Promise.reject('Inline source maps must be base64 encoded.');
     }
 
     // Get the encoded sourcemap from the URL itself
@@ -66,55 +74,43 @@ export const mapStackFramesToSource = async (stackFrames: StackFrame[]): Promise
   const fileNames = allFileNames.filter((fileName, index, allFileNames) => allFileNames.indexOf(fileName) === index);
 
   // For each fileName, fetch both its `sourceCode` and `sourceMapConsumer` and store them in `sourceCache`
-  await fileNames.map(async (fileName) => {
-    const sourceCode = await fetch(fileName).then((response) => response.text());
-    const sourceMapConsumer = await getSourceMapConsumer(fileName, sourceCode);
-    sourceCache.set(fileName, { sourceCode, sourceMapConsumer });
+  await Promise.all(
+    fileNames.map(async (fileName) => {
+      const sourceCode = await fetch(fileName).then((response) => response.text());
+      const sourceMapConsumer = await getSourceMapConsumer(fileName, sourceCode);
+      sourceCache.set(fileName, { sourceCode, sourceMapConsumer });
+    })
+  );
+
+  // Now that we, hopefully, have SourceMapConsumers for all Stack Frame fileNames we can attempt to process them up
+  const mappedStackFrames = stackFrames.map((stackFrame) => {
+    const sourceCacheEntry = sourceCache.get(stackFrame.fileName);
+
+    // If we can't find this stackFrame's fileName in our cache, just return the frame as-is
+    if (!sourceCacheEntry) {
+      console.log('No source cache entry found for stackFrame');
+      return stackFrame;
+    }
+
+    // Retrieve the original position from the Source Map Consumer
+    const originalPosition = sourceCacheEntry.sourceMapConsumer.originalPositionFor({
+      line: stackFrame.lineNumber,
+      column: stackFrame.columnNumber,
+    });
+
+    // TODO here we could extract the original source code from around this stack frame. Nice for logging or UI
+    // Retrieve the original source code from the Source Map Consumer
+    // const originalSourceCode = sourceCacheEntry.sourceMapConsumer.sourceContentFor(stackFrame.fileName)
+
+    // Return a new StackFrame with the new values
+    return {
+      functionName: stackFrame.functionName,
+      fileName: originalPosition.source,
+      lineNumber: originalPosition.line,
+      columnNumber: originalPosition.column,
+    };
   });
 
-  // return frames.map(frame => {
-  //   const { functionName, fileName, lineNumber, columnNumber } = frame;
-  //   let { map, fileSource } = cache[fileName] || {};
-  //   if (map == null || lineNumber == null) {
-  //     return frame;
-  //   }
-  //   const { source, line, column } = map.getOriginalPosition(
-  //     lineNumber,
-  //     columnNumber
-  //   );
-  //   const originalSource = source == null ? [] : map.getSource(source);
-  //   return new StackFrame(
-  //     functionName,
-  //     fileName,
-  //     lineNumber,
-  //     columnNumber,
-  //     getLinesAround(lineNumber, contextLines, fileSource),
-  //     functionName,
-  //     source,
-  //     line,
-  //     column,
-  //     getLinesAround(line, contextLines, originalSource)
-  //   );
-
-  // TODO actual processing of the sourceMap
-  return stackFrames;
+  // Clean up `node_modules` frames and return the list of mapped stack frames
+  return mappedStackFrames.filter(mappedStackFrame => mappedStackFrame.fileName.indexOf('node_modules') <0)
 };
-
-// function getLinesAround(
-//   line,
-//   count,
-//   lines
-// ) {
-//   if (typeof lines === 'string') {
-//     lines = lines.split('\n');
-//   }
-//   const result = [];
-//   for (
-//     let index = Math.max(0, line - 1 - count);
-//     index <= Math.min(lines.length - 1, line - 1 + count);
-//     ++index
-//   ) {
-//     result.push(new ScriptLine(index + 1, lines[index], index === line - 1));
-//   }
-//   return result;
-// }
