@@ -68,6 +68,8 @@ export const mapStackFramesToSource = async (stackFrames: StackFrame[]): Promise
   // Remove duplicates
   const fileNames = allFileNames.filter((fileName, index, allFileNames) => allFileNames.indexOf(fileName) === index);
 
+  console.log('filenames', fileNames);
+
   // For each fileName, fetch both its `sourceCode` and `sourceMapConsumer` and store them in `sourceCache`
   await fileNames.map(async (fileName) => {
     const sourceCode = await fetch(fileName).then((response) => response.text());
@@ -75,7 +77,7 @@ export const mapStackFramesToSource = async (stackFrames: StackFrame[]): Promise
     sourceCache.set(fileName, { sourceCode, sourceMapConsumer });
   });
 
-  console.log(sourceCache)
+  console.log(sourceCache);
 
   // return frames.map(frame => {
   //   const { functionName, fileName, lineNumber, columnNumber } = frame;

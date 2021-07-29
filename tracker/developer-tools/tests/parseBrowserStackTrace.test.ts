@@ -1,5 +1,5 @@
-import { parseBrowserStackTrace } from "../src";
-import { chrome_91, firefox_90 } from './fixturesAndExpectations';
+import { parseBrowserStackTrace } from '../src';
+import { chrome_91, firefox_90 } from './stackTracesAndExpectations';
 
 describe('parseBrowserStackTrace', () => {
   beforeEach(() => {
