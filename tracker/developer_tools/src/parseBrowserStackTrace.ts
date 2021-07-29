@@ -32,11 +32,7 @@ const LocationRegExp = /\(?(.+?)(?::(\d+))?(?::(\d+))?\)?$/;
 /**
  * The data we can extract from a location string via the LocationRegExp above
  */
-type LocationData = [
-  fileName: string,
-  lineNumber: number,
-  columnNumber: number
-]
+type LocationData = [fileName: string, lineNumber: number, columnNumber: number];
 
 /**
  * Corresponds to one line of a Stack Trace and represents a function call.
@@ -140,8 +136,8 @@ const chromeStackTraceLineToFrameReducer = (stackFrames: StackFrame[], stackTrac
   // Parse `locationData`
   const [fileName, lineNumber, columnNumber] = extractLocationData(
     LocationRegExp.exec(locationData) ??
-    // istanbul ignore next - This is dead code due to our line test regex at the beginning. TS cannot detect it
-    []
+      // istanbul ignore next - This is dead code due to our line test regex at the beginning. TS cannot detect it
+      []
   );
 
   return [
@@ -186,8 +182,8 @@ const firefoxStackTraceLineToFrameReducer = (stackFrames: StackFrame[], stackTra
   // Parse `locationData`
   const [fileName, lineNumber, columnNumber] = extractLocationData(
     LocationRegExp.exec(locationData) ??
-    // istanbul ignore next - This is dead code due to our line test regex at the beginning. TS cannot detect it
-    []
+      // istanbul ignore next - This is dead code due to our line test regex at the beginning. TS cannot detect it
+      []
   );
 
   return [
@@ -212,9 +208,5 @@ const extractLocationData = (locationPieces: string[]): LocationData => {
   const lineNumber = Number(lineNumberString);
   const columnNumber = Number(columnNumberString);
 
-  return [
-    fileName,
-    lineNumber,
-    columnNumber
-  ]
+  return [fileName, lineNumber, columnNumber];
 };

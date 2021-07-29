@@ -1,4 +1,4 @@
-import { parseBrowserStackTrace } from '../../src/developer_tools';
+import { parseBrowserStackTrace } from "../src";
 import { chrome_91, firefox_90 } from './fixturesAndExpectations';
 
 describe('parseBrowserStackTrace', () => {
