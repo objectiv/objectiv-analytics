@@ -1,17 +1,33 @@
 import fetchMock from 'jest-fetch-mock';
+import path from 'path';
+import fs from 'fs';
 import { mapStackFramesToSource, parseBrowserStackTrace } from '../src';
+import craFixturesAppAssetManifest from './cra-app-for-fixtures/build/asset-manifest.json';
 
 beforeAll(() => {
   fetchMock.enableMocks();
 });
 
 beforeEach(() => {
-  fetchMock.mockIf(/^http:\/\/localhost:3000.*$/, (request: Request) => {
-    const fixtureURL = request.url.replace('http://localhost:3000/', './cra-app-for-fixtures/build/');
-    console.log(`Mapping "${request.url}" to "${fixtureURL}"`);
-    return fetch(fixtureURL).then((response) =>
-      response.text()
-    )
+  fetchMock.mockIf(/^http:\/\/0.0.0.0:5000.*$/, (request: Request) => {
+    const fixturePath = path
+      // Replace remote url with local one
+      .resolve(__dirname, request.url.replace('http://0.0.0.0:5000/', './cra-app-for-fixtures/build/'))
+      // Get rid of hashcode and `.chunk` from the file name for `main` and `runtime` chunks.
+      .replace(/.(main|runtime-main)..{8}.chunk.js$/, '/$1.js');
+
+    const assetName = path.basename(fixturePath);
+    let actualBuildFileToFetch = fixturePath;
+
+    // For `main` and `runtime` we use the manifest of the built app to map the file we need to the actual file on disk
+    if (['main.js', 'runtime-main.js'].includes(assetName)) {
+      // @ts-ignore
+      actualBuildFileToFetch = path.dirname(fixturePath) + craFixturesAppAssetManifest.files[assetName];
+    }
+
+    console.log(`Mapping "${request.url}" to "${actualBuildFileToFetch}"`);
+
+    return Promise.resolve(fs.readFileSync(actualBuildFileToFetch).toString());
   });
 });
 afterEach(() => {
@@ -20,29 +36,18 @@ afterEach(() => {
 
 describe('mapStackFramesToSource', () => {
   it('should parse Chrome stack trace as expected', () => {
-    const stackFrames = parseBrowserStackTrace(`Error
-      at eval (eval at <anonymous> (eval at onClick (http://localhost:3000/static/js/main.chunk.js:41:24)), <anonymous>:1:1)
-      at eval (eval at onClick (http://localhost:3000/static/js/main.chunk.js:41:24), <anonymous>:1:1)
-      at onClick (http://localhost:3000/static/js/main.chunk.js:41:24)
-      at HTMLUnknownElement.callCallback (http://localhost:3000/static/js/vendors~main.chunk.js:14571:18)
-      at Object.invokeGuardedCallbackDev (http://localhost:3000/static/js/vendors~main.chunk.js:14620:20)
-      at invokeGuardedCallback (http://localhost:3000/static/js/vendors~main.chunk.js:14680:35)
-      at invokeGuardedCallbackAndCatchFirstError (http://localhost:3000/static/js/vendors~main.chunk.js:14695:29)
-      at executeDispatch (http://localhost:3000/static/js/vendors~main.chunk.js:18930:7)
-      at processDispatchQueueItemsInOrder (http://localhost:3000/static/js/vendors~main.chunk.js:18962:11)
-      at processDispatchQueue (http://localhost:3000/static/js/vendors~main.chunk.js:18975:9)
-      at dispatchEventsForPlugins (http://localhost:3000/static/js/vendors~main.chunk.js:18986:7)
-      at http://localhost:3000/static/js/vendors~main.chunk.js:19197:16
-      at batchedEventUpdates$1 (http://localhost:3000/static/js/vendors~main.chunk.js:32882:16)
-      at batchedEventUpdates (http://localhost:3000/static/js/vendors~main.chunk.js:14369:16)
-      at dispatchEventForPluginEventSystem (http://localhost:3000/static/js/vendors~main.chunk.js:19196:7)
-      at attemptToDispatchEvent (http://localhost:3000/static/js/vendors~main.chunk.js:16679:7)
-      at dispatchEvent (http://localhost:3000/static/js/vendors~main.chunk.js:16597:23)
-      at unstable_runWithPriority (http://localhost:3000/static/js/vendors~main.chunk.js:9400:16)
-      at runWithPriority$1 (http://localhost:3000/static/js/vendors~main.chunk.js:21977:14)
-      at discreteUpdates$1 (http://localhost:3000/static/js/vendors~main.chunk.js:32899:18)
-      at discreteUpdates (http://localhost:3000/static/js/vendors~main.chunk.js:14381:16)
-      at dispatchDiscreteEvent (http://localhost:3000/static/js/vendors~main.chunk.js:16563:7)
+    const stackFrames = parseBrowserStackTrace(`
+      Error
+      at eval (eval at onClick (http://0.0.0.0:5000/static/js/main.c56bb7a5.chunk.js:1:1102), <anonymous>:1:28)
+      at onClick (http://0.0.0.0:5000/static/js/main.c56bb7a5.chunk.js:1:1102)
+      at Object.$e (http://0.0.0.0:5000/static/js/2.2fd84a33.chunk.js:2:23594)
+      at Ye (http://0.0.0.0:5000/static/js/2.2fd84a33.chunk.js:2:23748)
+      at http://0.0.0.0:5000/static/js/2.2fd84a33.chunk.js:2:41955
+      at _r (http://0.0.0.0:5000/static/js/2.2fd84a33.chunk.js:2:42049)
+      at Cr (http://0.0.0.0:5000/static/js/2.2fd84a33.chunk.js:2:42464)
+      at http://0.0.0.0:5000/static/js/2.2fd84a33.chunk.js:2:48117
+      at Fe (http://0.0.0.0:5000/static/js/2.2fd84a33.chunk.js:2:123976)
+      at http://0.0.0.0:5000/static/js/2.2fd84a33.chunk.js:2:43925
     `);
     mapStackFramesToSource(stackFrames);
   });

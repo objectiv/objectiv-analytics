@@ -68,8 +68,6 @@ export const mapStackFramesToSource = async (stackFrames: StackFrame[]): Promise
   // Remove duplicates
   const fileNames = allFileNames.filter((fileName, index, allFileNames) => allFileNames.indexOf(fileName) === index);
 
-  console.log('filenames', fileNames);
-
   // For each fileName, fetch both its `sourceCode` and `sourceMapConsumer` and store them in `sourceCache`
   await fileNames.map(async (fileName) => {
     const sourceCode = await fetch(fileName).then((response) => response.text());
@@ -107,12 +105,6 @@ export const mapStackFramesToSource = async (stackFrames: StackFrame[]): Promise
   return stackFrames;
 };
 
-// /**
-//  *
-//  * @param {number} line The line number to provide context around.
-//  * @param {number} count The number of lines you'd like for context.
-//  * @param {string[] | string} lines The source code.
-//  */
 // function getLinesAround(
 //   line,
 //   count,
