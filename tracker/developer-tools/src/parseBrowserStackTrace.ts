@@ -120,18 +120,25 @@ const chromeStackTraceLineToFrameReducer = (stackFrames: StackFrame[], stackTrac
     return stackFrames;
   }
 
-  // Stack Trace Lines with `eval` are sort-of nested. Throw away all `eval at ...` and keep only the innermost frame
-  const evalFreeStackTraceLine = stackTraceLine.replace(/(\(eval at [^()]*)|(\),.*$)/g, '');
+  // Skip `eval` lines
+  const evalRegExp = /(\(eval at [^()]*)|(\),.*$)/g;
+  if (stackTraceLine.match(evalRegExp)) {
+    return stackFrames;
+  }
 
   // Trim and split by space(s)
-  const linePieces = evalFreeStackTraceLine.trim().split(/\s+/g);
+  const linePieces = stackTraceLine.trim().split(/\s+/g);
 
   // Slice away the first piece (`at `), reverse pieces, extract `locationData`. Store remaining pieces in `restOfLine`
   const [locationData, ...restOfLine] = linePieces.slice(1).reverse();
 
-  // Join up `restOfLine` as `maybeFunctionName`. Default to `anonymous function` for lines without any function
+  // Join up `restOfLine` as `maybeFunctionName`. Default to `<anonymous>` for lines without any function
   const maybeFunctionName = restOfLine.join(' ').trim();
-  const functionName = maybeFunctionName !== '' ? maybeFunctionName : '<anonymous>';
+  const rawFunctionName = maybeFunctionName !== '' ? maybeFunctionName : '<anonymous>';
+
+  // Clean functionName from some built-in prefixes. This list may be incomplete
+  const builtInRegExp = /(Array|Object)./;
+  const functionName = rawFunctionName.replace(builtInRegExp, '');
 
   // Parse `locationData`
   const [fileName, lineNumber, columnNumber] = extractLocationData(
@@ -157,8 +164,6 @@ const chromeStackTraceLineToFrameReducer = (stackFrames: StackFrame[], stackTrac
  * Automatically filters out lines that don't carry any Location (path:line:column) information.
  * Haven't encountered any for FF, but we double check anyway for consistency.
  *
- * TODO this is not finished
- *
  */
 const firefoxStackTraceLineToFrameReducer = (stackFrames: StackFrame[], stackTraceLine: string): StackFrame[] => {
   // Skip this line if it doesn't match a useful Stack Frame, see documentation above for what that means
@@ -166,22 +171,27 @@ const firefoxStackTraceLineToFrameReducer = (stackFrames: StackFrame[], stackTra
     return stackFrames;
   }
 
-  // Stack Trace Lines with `eval` prepend the location data with eval related information we don't need.
-  const evalFreeStackTraceLine = stackTraceLine.replace(/line (\d+)(?: > eval line \d+)* > eval/g, '');
+  // Skip `eval` lines
+  const evalRegExp = /line (\d+)(?: > eval line \d+)* > eval/g;
+  if (stackTraceLine.match(evalRegExp)) {
+    return stackFrames;
+  }
 
-  // Trim and split by `@`
-  const linePieces = evalFreeStackTraceLine.trim().split(/[@]/g);
+  // Trim line
+  const trimmedStackTraceLine = stackTraceLine.trim();
 
-  // Reverse pieces, extract `locationData`. Store remaining pieces in `restOfLine`
-  const [locationData, ...restOfLine] = linePieces.reverse();
+  // Find function name, default to '<anonymous>' if we can't find either a name at all or if we detect anonymous info.
+  const functionNameRegExp = /((.*".+"[^@]*)?[^@]*)@/;
+  const matches = trimmedStackTraceLine.match(functionNameRegExp);
+  const rawFunctionName = matches && matches[1];
+  const anonymousFunctionRegExp = /[</]/g;
+  const isAnonymousFunction = rawFunctionName?.match(anonymousFunctionRegExp);
+  const functionName = rawFunctionName && !isAnonymousFunction ? rawFunctionName : '<anonymous>';
 
-  // Join up `restOfLine` as `maybeFunctionName`. Default to `anonymous function` for lines without any function
-  const maybeFunctionName = restOfLine.join(' ').trim();
-  const functionName = maybeFunctionName !== '' ? maybeFunctionName : '<anonymous>';
-
-  // Parse `locationData`
+  // Use the rest of the line to parse the location
+  const lineWithoutFunctionName = trimmedStackTraceLine.replace(functionNameRegExp, '');
   const [fileName, lineNumber, columnNumber] = extractLocationData(
-    LocationRegExp.exec(locationData) ??
+    LocationRegExp.exec(lineWithoutFunctionName) ??
       // istanbul ignore next - This is dead code due to our line test regex at the beginning. TS cannot detect it
       []
   );

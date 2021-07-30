@@ -112,5 +112,5 @@ export const mapStackFramesToSource = async (stackFrames: StackFrame[]): Promise
   });
 
   // Clean up `node_modules` frames and return the list of mapped stack frames
-  return mappedStackFrames.filter(mappedStackFrame => mappedStackFrame.fileName.indexOf('node_modules') <0)
+  return mappedStackFrames.filter((mappedStackFrame) => mappedStackFrame.fileName.indexOf('node_modules') < 0);
 };
