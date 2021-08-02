@@ -71,7 +71,7 @@ export const parseBrowserStackTrace = (stackTrace?: StackTraceString): StackFram
 };
 
 /**
- * Attempts to detect the given Stack Trace string is supported. Either Chrome or Firefox.
+ * Attempts to detect the given Stack Trace string is supported. Either Chrome or Firefox for now.
  * Returns null if we could not detect the format.
  */
 const detectStackTraceFormat = (stackTrace: StackTraceString): StackTraceFormat | null => {
@@ -98,9 +98,9 @@ const convertStackTraceToFrames = (stackTrace: StackTraceString, stackTraceForma
   // Map each line to a Stack Frame
   switch (stackTraceFormat) {
     case StackTraceFormat.Chrome:
-      return stackTraceLines.reduce<StackFrame[]>(chromeStackTraceLineToFrameReducer, []);
+      return stackTraceLines.reduce(chromeStackTraceLineToFrameReducer, []);
     case StackTraceFormat.Firefox:
-      return stackTraceLines.reduce<StackFrame[]>(firefoxStackTraceLineToFrameReducer, []);
+      return stackTraceLines.reduce(firefoxStackTraceLineToFrameReducer, []);
   }
 };
 
@@ -120,7 +120,7 @@ const chromeStackTraceLineToFrameReducer = (stackFrames: StackFrame[], stackTrac
     return stackFrames;
   }
 
-  // Skip `eval` lines
+  // Skip `eval` lines for now, we may want to support these later
   const evalRegExp = /(\(eval at [^()]*)|(\),.*$)/g;
   if (stackTraceLine.match(evalRegExp)) {
     return stackFrames;
@@ -143,7 +143,7 @@ const chromeStackTraceLineToFrameReducer = (stackFrames: StackFrame[], stackTrac
   // Parse `locationData`
   const [fileName, lineNumber, columnNumber] = extractLocationData(
     LocationRegExp.exec(locationData) ??
-      // istanbul ignore next - This is dead code due to our line test regex at the beginning. TS cannot detect it
+      // istanbul ignore next - This is dead code due to our line test regex at the beginning.
       []
   );
 
@@ -171,7 +171,7 @@ const firefoxStackTraceLineToFrameReducer = (stackFrames: StackFrame[], stackTra
     return stackFrames;
   }
 
-  // Skip `eval` lines
+  // Skip `eval` lines for now, we may want to support these later
   const evalRegExp = /line (\d+)(?: > eval line \d+)* > eval/g;
   if (stackTraceLine.match(evalRegExp)) {
     return stackFrames;
@@ -192,7 +192,7 @@ const firefoxStackTraceLineToFrameReducer = (stackFrames: StackFrame[], stackTra
   const lineWithoutFunctionName = trimmedStackTraceLine.replace(functionNameRegExp, '');
   const [fileName, lineNumber, columnNumber] = extractLocationData(
     LocationRegExp.exec(lineWithoutFunctionName) ??
-      // istanbul ignore next - This is dead code due to our line test regex at the beginning. TS cannot detect it
+      // istanbul ignore next - This is dead code due to our line test regex at the beginning.
       []
   );
 
