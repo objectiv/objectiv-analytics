@@ -1,3 +1,5 @@
+import { StackFrame } from "./common";
+
 /**
  * Prefixed in front of all console messages.
  */
@@ -33,16 +35,6 @@ const LocationRegExp = /\(?(.+?)(?::(\d+))?(?::(\d+))?\)?$/;
  * The data we can extract from a location string via the LocationRegExp above
  */
 type LocationData = [fileName: string, lineNumber: number, columnNumber: number];
-
-/**
- * Corresponds to one line of a Stack Trace and represents a function call.
- */
-type StackFrame = {
-  functionName: string;
-  fileName: string;
-  lineNumber: number;
-  columnNumber: number;
-};
 
 /**
  * Attempts to parse a browser Error.stack by matching it against some regular expressions.

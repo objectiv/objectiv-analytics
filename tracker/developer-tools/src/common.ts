@@ -6,4 +6,9 @@ export type StackFrame = {
   fileName: string;
   lineNumber: number;
   columnNumber: number;
+  sourceCodePreview?: {
+    lineNumber: number,
+    line: string,
+    isFrameTarget: boolean,
+  }[]
 };

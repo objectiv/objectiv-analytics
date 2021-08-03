@@ -98,9 +98,9 @@ export const mapStackFramesToSource = async (stackFrames: StackFrame[]): Promise
       column: stackFrame.columnNumber,
     });
 
-    // TODO here we could extract the original source code from around this stack frame. Nice for logging or UI
-    // Retrieve the original source code from the Source Map Consumer
-    // const originalSourceCode = sourceCacheEntry.sourceMapConsumer.sourceContentFor(stackFrame.fileName)
+    // Retrieve the original source code from the Source Map Consumer and use it to build the source code preview
+    const originalSourceCode = sourceCacheEntry.sourceMapConsumer.sourceContentFor(originalPosition.source)
+    const sourceCodePreview = getSourceCodePreview(originalPosition.line, originalSourceCode);
 
     // Return a new StackFrame with the new values
     return {
@@ -108,9 +108,40 @@ export const mapStackFramesToSource = async (stackFrames: StackFrame[]): Promise
       fileName: originalPosition.source,
       lineNumber: originalPosition.line,
       columnNumber: originalPosition.column,
+      sourceCodePreview
     };
   });
 
   // Clean up `node_modules` frames and return the list of mapped stack frames
   return mappedStackFrames.filter((mappedStackFrame) => mappedStackFrame.fileName.indexOf('node_modules') < 0);
 };
+
+/**
+ *
+ * Given the source code and a reference lineNumber, it fetches 3 lines before and after the reference line number
+ */
+function getSourceCodePreview(lineNumber: number, sourceCode: string) {
+  const sourceLines = sourceCode.split('\n').map((sourceLine, index) => ({lineNumber: index + 1, line: sourceLine}));
+  const linesToGet = 7;
+  const startIndex = Math.max(0, Math.min(Math.floor(lineNumber - linesToGet / 2), sourceLines.length - linesToGet));
+  return sourceLines.slice(startIndex, startIndex + linesToGet).map(sourceLine => ({
+    ...sourceLine,
+    isFrameTarget: sourceLine.lineNumber === lineNumber
+  }));
+}
+
+// /** A container holding a script line. */
+// class ScriptLine {
+//   /** The line number of this line of source. */
+//   lineNumber;
+//   /** The content (or value) of this line of source. */
+//   content;
+//   /** Whether or not this line should be highlighted. Particularly useful for error reporting with context. */
+//   highlight;
+//
+//   constructor(lineNumber, content, highlight = false) {
+//     this.lineNumber = lineNumber;
+//     this.content = content;
+//     this.highlight = highlight;
+//   }
+// }

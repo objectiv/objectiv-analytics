@@ -2768,9 +2768,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@objectiv/developer-tools-cra-app-for-fixtures@workspace:developer-tools/tests/cra-app-for-fixtures"
   dependencies:
+    "@objectiv/developer-tools": ~0.0.1
     "@types/node": ^15.0.2
     "@types/react": ^17.0.0
     "@types/react-dom": ^17.0.0
+    html-react-parser: ^1.2.7
     react: ^17.0.2
     react-dom: ^17.0.2
     react-scripts: 4.0.3
@@ -2779,7 +2781,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@objectiv/developer-tools@workspace:developer-tools":
+"@objectiv/developer-tools@workspace:developer-tools, @objectiv/developer-tools@~0.0.1":
   version: 0.0.0-use.local
   resolution: "@objectiv/developer-tools@workspace:developer-tools"
   dependencies:
@@ -7074,7 +7076,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"domhandler@npm:^4.0.0, domhandler@npm:^4.2.0":
+"domhandler@npm:4.2.0, domhandler@npm:^4.0.0, domhandler@npm:^4.2.0":
   version: 4.2.0
   resolution: "domhandler@npm:4.2.0"
   dependencies:
@@ -9002,6 +9004,16 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"html-dom-parser@npm:1.0.1":
+  version: 1.0.1
+  resolution: "html-dom-parser@npm:1.0.1"
+  dependencies:
+    domhandler: 4.2.0
+    htmlparser2: 6.1.0
+  checksum: 5dc95bb0fd4f4c0331d5d268eb70ada1c2682b7a61c4f44658ee567fc395704de4ffed655e9ed39a983f2d56488dacfa9322eeb24b7cd1fca1b6ad286018a9f0
+  languageName: node
+  linkType: hard
+
 "html-encoding-sniffer@npm:^2.0.1":
   version: 2.0.1
   resolution: "html-encoding-sniffer@npm:2.0.1"
@@ -9042,6 +9054,20 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"html-react-parser@npm:^1.2.7":
+  version: 1.2.7
+  resolution: "html-react-parser@npm:1.2.7"
+  dependencies:
+    domhandler: 4.2.0
+    html-dom-parser: 1.0.1
+    react-property: 1.0.1
+    style-to-js: 1.1.0
+  peerDependencies:
+    react: ^0.14 || ^15 || ^16 || ^17
+  checksum: e355ab957ef31f9b4a5b6d7de6432df585fafa6882839b09ac04db221e95975bdf3d65599e9fb5f726235d1ceb0e9f7f15a3003ad73c48065b77a86d5bf64684
+  languageName: node
+  linkType: hard
+
 "html-webpack-plugin@npm:4.5.0":
   version: 4.5.0
   resolution: "html-webpack-plugin@npm:4.5.0"
@@ -9061,7 +9087,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"htmlparser2@npm:^6.1.0":
+"htmlparser2@npm:6.1.0, htmlparser2@npm:^6.1.0":
   version: 6.1.0
   resolution: "htmlparser2@npm:6.1.0"
   dependencies:
@@ -9422,6 +9448,13 @@ fsevents@^1.2.7:
   version: 1.3.8
   resolution: "ini@npm:1.3.8"
   checksum: 62189ce7ea44c5778e757e4232c581212e838f3c39e79d931bb9152fd4b9275f09fb20b96afdd60ba9f5d7996b92486cad6cc617fcb84ff4beedd1b33b86221e
+  languageName: node
+  linkType: hard
+
+"inline-style-parser@npm:0.1.1":
+  version: 0.1.1
+  resolution: "inline-style-parser@npm:0.1.1"
+  checksum: 02f3b430cd6b9d13a255dafc54f45855cbb3db3c314228c6e58e19ce8dd2bb8e89f3a311bedcc5ded185ba2cc64195d1dddf54076b2160beee379fd7cdf6fb08
   languageName: node
   linkType: hard
 
@@ -14443,6 +14476,13 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"react-property@npm:1.0.1":
+  version: 1.0.1
+  resolution: "react-property@npm:1.0.1"
+  checksum: a9e8d614ba5775b8a1df6b51fd6bb0c3117a3bcf977b4f27c6ecf162317a193351187549a1f46b2a2bb629d3ceaf19d1a02f2edc22f0a0d1787fcdb9dec05f75
+  languageName: node
+  linkType: hard
+
 "react-refresh@npm:^0.8.3":
   version: 0.8.3
   resolution: "react-refresh@npm:0.8.3"
@@ -16383,6 +16423,24 @@ resolve@^2.0.0-next.3:
   peerDependencies:
     webpack: ^4.0.0 || ^5.0.0
   checksum: 4654b5178cb2c32f8d35363938b8bbb2b435fcfd2f81865185e3899183a3ad1390a24da467890463a6c9d07f6785d568a269805b706c8d56086c942530d77d95
+  languageName: node
+  linkType: hard
+
+"style-to-js@npm:1.1.0":
+  version: 1.1.0
+  resolution: "style-to-js@npm:1.1.0"
+  dependencies:
+    style-to-object: 0.3.0
+  checksum: d2a31479969dce7ebc141987f10b6eda9d12ef9c56dd0ec2ad25fe236ce41bd56aaad8dbe421529cb87847285ea84477634ca6fb3b03900f7918fe986446ab66
+  languageName: node
+  linkType: hard
+
+"style-to-object@npm:0.3.0":
+  version: 0.3.0
+  resolution: "style-to-object@npm:0.3.0"
+  dependencies:
+    inline-style-parser: 0.1.1
+  checksum: 869b30171c2c0d1ed1928e86c3644d691d96277e484fdafaa99df3ad3b1e11e0fcfc2ac2def4e3dd068df49995de585918dbda2ff833b5691bc8206d1cda37ad
   languageName: node
   linkType: hard
 
