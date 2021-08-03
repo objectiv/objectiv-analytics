@@ -2,6 +2,15 @@ import React from 'react';
 import Button from "./Button";
 import detectPosition from "./detectPosition";
 import { usePositionContext } from "./PositionProvider";
+import { tracker } from './tracker';
+
+const boxStyle = {
+  padding: 10,
+  border: 1,
+  borderColor: 'black',
+  borderStyle: 'solid',
+  display: 'inline-block'
+};
 
 function Box(props:any) {
   const { setPosition } = usePositionContext();
@@ -12,22 +21,22 @@ function Box(props:any) {
     return <>loading...</>;
   }
 
-  return <div style={{padding: 10, border: 1, borderColor: 'black', borderStyle: 'solid', display: 'inline-block'}}>
+  return <tracker.div id='box' style={boxStyle}>
     <h2>Box Component</h2>
     <p>
       <Button>Button Component in Box Component</Button>
     </p>
     <p>
-      <button
+      <tracker.button id='inline-button'
         onClick={
           async () => {
             const position = await detectPosition()
             setPosition(position);
           }
         }
-      >Inline &lt;button&gt; in Box Component</button>
+      >Inline &lt;button&gt; in Box Component</tracker.button>
     </p>
-  </div>
+  </tracker.div>
 }
 
 export default Box;

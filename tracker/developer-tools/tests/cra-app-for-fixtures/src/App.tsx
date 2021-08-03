@@ -3,6 +3,7 @@ import Box from "./Box";
 import Button from "./Button";
 import detectPosition from "./detectPosition";
 import { usePositionContext } from "./PositionProvider";
+import { tracker } from './tracker';
 
 function App() {
   const { setPosition, position } = usePositionContext();
@@ -29,7 +30,8 @@ function App() {
   }
 
   return (
-    <div>
+    // @ts-ignore
+    <tracker.div id={'app'}>
       <header>
         <div style={{display: 'flex', flexDirection: 'row'}}>
           <div style={{padding: 20, marginRight: '20%', backgroundColor: 'lightgreen'}}>
@@ -41,14 +43,15 @@ function App() {
               <Button>Button Component</Button>
             </p>
             <p>
-              <button
+              <tracker.button
+                id={'inline-button'}
                 onClick={
                   async () => {
                     const position = await detectPosition()
                     setPosition(position);
                   }
                 }
-              >Inline &lt;button&gt;</button>
+              >Inline &lt;button&gt;</tracker.button>
             </p>
             <Box />
           </div>
@@ -78,7 +81,7 @@ function App() {
         <h1>Stack Trace</h1>
         <pre >{position?.stackTrace}</pre>
       </aside>
-    </div>
+    </tracker.div>
   );
 }
 

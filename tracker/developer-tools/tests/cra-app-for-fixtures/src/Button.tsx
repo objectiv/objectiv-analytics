@@ -1,12 +1,14 @@
 import React, { ButtonHTMLAttributes } from 'react';
 import detectPosition from "./detectPosition";
 import { usePositionContext } from "./PositionProvider";
+import { tracker } from './tracker';
 
 function Button(props: ButtonHTMLAttributes<HTMLButtonElement>) {
   const { setPosition } = usePositionContext();
 
   return setPosition ?
-    <button
+    <tracker.button
+      id='button-component'
       onClick={
         async () => {
           const position = await detectPosition()
@@ -14,7 +16,7 @@ function Button(props: ButtonHTMLAttributes<HTMLButtonElement>) {
         }
       }
       {...props}
-    >{props.children}</button> : null;
+    >{props.children}</tracker.button> : null;
 }
 
 export default Button;
