@@ -5,27 +5,21 @@ const OBJT_NAME_SEPARATOR = '-';
 const OBJT_VALUE_SEPARATOR = ':';
 const OBJT_LOCATION = `${OBJT_PREFIX}${OBJT_NAME_SEPARATOR}location`;
 
-enum ElementType {
-  div = 'div',
-  span = 'span',
-  button = 'button'
+// TODO get this from Schema._context_type literals
+enum ContextType {
+  section = 'SectionContext',
+  button = 'ButtonContext',
 }
 
-const contextTypeByElementType: {[key in ElementType]: string} = {
-  [ElementType.div]: 'section',
-  [ElementType.span]: 'section',
-  [ElementType.button]: 'button',
-}
-
-type ReactHTMLProperties = React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
-type CommonContextProperties = ReactHTMLProperties & {
+type JSXElements = keyof JSX.IntrinsicElements;
+type ReactHTMLProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
+type ContextElementProps = ReactHTMLProps & {
   id: string,
 }
 
-const ContextFactory: (elementType: ElementType) => FC<CommonContextProperties> = (elementType) => (props) => {
-  const objectivContextType = contextTypeByElementType[elementType];
+const ContextElementFactory: (elementType: JSXElements, contextType: ContextType) => FC<ContextElementProps> = (elementType, contextType) => (props) => {
   const { id, ...otherProps } = props;
-  const location = `${objectivContextType}${OBJT_VALUE_SEPARATOR}${id}`;
+  const location = `${contextType}${OBJT_VALUE_SEPARATOR}${id}`;
 
   return createElement(
     elementType, {
@@ -35,8 +29,12 @@ const ContextFactory: (elementType: ElementType) => FC<CommonContextProperties> 
   )
 }
 
-export const tracker = new Proxy(ElementType, {
-  get(_, elementType: ElementType) {
-    return ContextFactory(elementType)
-  }
-})
+export const TrackerButton = ContextElementFactory('button', ContextType.button)
+export const TrackerDiv = ContextElementFactory('div', ContextType.section)
+export const TrackerSpan = ContextElementFactory('span', ContextType.section)
+
+export const tracker = {
+  button: TrackerButton,
+  div: TrackerDiv,
+  span: TrackerSpan
+}

@@ -30,7 +30,6 @@ function App() {
   }
 
   return (
-    // @ts-ignore
     <tracker.div id={'app'}>
       <header>
         <div style={{display: 'flex', flexDirection: 'row'}}>
