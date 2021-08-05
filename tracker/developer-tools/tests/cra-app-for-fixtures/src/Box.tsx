@@ -1,42 +1,48 @@
-import React from 'react';
-import Button from "./Button";
-import detectPosition from "./detectPosition";
-import { usePositionContext } from "./PositionProvider";
+import React, { CSSProperties, FC } from 'react';
+import Button from './Button';
+import detectPosition from './detectPosition';
 import { tracker } from './tracker';
+import { useElementContext } from './TrackerElementContextProvider';
 
-const boxStyle = {
+const boxStyle = (color: string): CSSProperties => ({
+  margin: 10,
   padding: 10,
   border: 1,
   borderColor: 'black',
   borderStyle: 'solid',
-  display: 'inline-block'
-};
+  display: 'inline-flex',
+  flexDirection: 'column',
+  backgroundColor: color,
+});
 
-function Box(props:any) {
-  const { setPosition } = usePositionContext();
-  // @ts-ignore
-  console.log(props)
+const Box: FC<{ color: string }> = ({ children, color }) => {
+  const { setElementContext } = useElementContext();
 
-  if (!setPosition) {
-    return <>loading...</>;
-  }
-
-  return <tracker.div id='box' style={boxStyle}>
-    <h2>Box Component</h2>
-    <p>
-      <Button>Button Component in Box Component</Button>
-    </p>
-    <p>
-      <tracker.button id='inline-button'
-        onClick={
-          async () => {
-            const position = await detectPosition()
-            setPosition(position);
+  return (
+    <tracker.div id="box" style={boxStyle(color)}>
+      <h2 style={{ margin: 5 }}>Box Component</h2>
+      <Button>Button Component</Button>
+      <br />
+      <tracker.button
+        id="inline-button"
+        onClick={async ({ target }) => {
+          if (!target || !(target instanceof HTMLElement)) {
+            return;
           }
-        }
-      >Inline &lt;button&gt; in Box Component</tracker.button>
-    </p>
-  </tracker.div>
-}
+          const elementId = target.dataset.objectiv;
+          if (!elementId) {
+            return;
+          }
+          const position = await detectPosition(elementId);
+          setElementContext(position);
+        }}
+      >
+        &lt;button&gt; Tag
+      </tracker.button>
+      <br />
+      {children}
+    </tracker.div>
+  );
+};
 
 export default Box;

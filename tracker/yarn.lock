@@ -2773,11 +2773,13 @@ __metadata:
     "@types/react": ^17.0.0
     "@types/react-dom": ^17.0.0
     html-react-parser: ^1.2.7
+    prettier: ^2.3.2
     react: ^17.0.2
     react-dom: ^17.0.2
     react-scripts: 4.0.3
     serve: ^12.0.0
     typescript: ^4.2.4
+    uuid: ^8.3.2
   languageName: unknown
   linkType: soft
 
@@ -14015,6 +14017,15 @@ fsevents@^1.2.7:
   bin:
     prettier: bin-prettier.js
   checksum: 652640cc8b71bc5277cfb8bf6f161783ca588efcf683c3d630837b39da8d57fef35c9e00ae5855a8e3c75136c42274046c913cc2b2d2968558315f31c6a26981
+  languageName: node
+  linkType: hard
+
+"prettier@npm:^2.3.2":
+  version: 2.3.2
+  resolution: "prettier@npm:2.3.2"
+  bin:
+    prettier: bin-prettier.js
+  checksum: 4fd89a7f6a12b13456d359fba2b1dd0fc0a17cf33f8f15953ab9f43b21ea9b09b5a2861d63b558ca0577274ce606d390e70628cf93e26d19d6cb7f19c9eebc31
   languageName: node
   linkType: hard
 

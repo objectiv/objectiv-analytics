@@ -1,13 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
-import { PositionContextProvider } from "./PositionProvider";
+import { TrackerElementContextProvider } from './TrackerElementContextProvider';
 
 ReactDOM.render(
   <React.StrictMode>
-    <PositionContextProvider>
+    <TrackerElementContextProvider>
       <App />
-    </PositionContextProvider>
+    </TrackerElementContextProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );

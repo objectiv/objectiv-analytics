@@ -1,86 +1,55 @@
-import React from 'react';
-import Box from "./Box";
-import Button from "./Button";
-import detectPosition from "./detectPosition";
-import { usePositionContext } from "./PositionProvider";
+import React, { CSSProperties } from 'react';
+import Box from './Box';
+import Button from './Button';
+import detectPosition from './detectPosition';
+import { ElementContext } from './ElementContext';
 import { tracker } from './tracker';
+import { useElementContext } from './TrackerElementContextProvider';
+
+const appStyle: CSSProperties = {
+  padding: 20,
+  backgroundColor: 'lightgreen',
+};
+
+const headerStyle: CSSProperties = {
+  paddingBottom: 20,
+};
+
+const mainStyle: CSSProperties = {
+  display: 'inline',
+  verticalAlign: 'top',
+};
 
 function App() {
-  const { setPosition, position } = usePositionContext();
-
-  if (!position || !setPosition) {
-    return <>loading...</>;
-  }
-
-  let sourceCodePositionString = '';
-  let relevantFrame = null;
-  let maxDigits = 0;
-  let spacing = 3;
-  let fileName = "";
-  if(position.mappedStackFrames && position.mappedStackFrames.length > 1) {
-    relevantFrame = position.mappedStackFrames[1];
-    fileName = relevantFrame.fileName.replace('home/surai/Projects/objectiv/objectiv-analytics/tracker/developer-tools/tests/cra-app-for-fixtures/', '')
-    sourceCodePositionString += `Function: ${relevantFrame.functionName}\n`;
-    sourceCodePositionString += `File: ${fileName}\n`
-    sourceCodePositionString += `Line: ${relevantFrame.lineNumber}\n`
-    sourceCodePositionString += `Column: ${relevantFrame.columnNumber}\n`
-    if (relevantFrame.sourceCodePreview) {
-      maxDigits = Math.max(...relevantFrame.sourceCodePreview.map(line => line.lineNumber)).toString().length;
-    }
-  }
+  const { setElementContext } = useElementContext();
 
   return (
-    <tracker.div id={'app'}>
-      <header>
-        <div style={{display: 'flex', flexDirection: 'row'}}>
-          <div style={{padding: 20, marginRight: '20%', backgroundColor: 'lightgreen'}}>
-            {/*<p>*/}
-            {/*  /!* eslint-disable-next-line no-eval *!/*/}
-            {/*  <button onClick={() => eval('console.log(JSON.stringify(new Error().stack))')}>Trigger eval exception</button>*/}
-            {/*</p>*/}
-            <p>
-              <Button>Button Component</Button>
-            </p>
-            <p>
-              <tracker.button
-                id={'inline-button'}
-                onClick={
-                  async () => {
-                    const position = await detectPosition()
-                    setPosition(position);
-                  }
-                }
-              >Inline &lt;button&gt;</tracker.button>
-            </p>
-            <Box />
-          </div>
-          <div style={{flex: 1, color: "black"}}>
-            <h1>Source Code Info:</h1>
-            <pre><code>{sourceCodePositionString}</code></pre>
-            {relevantFrame?.sourceCodePreview && <h2>{fileName ?? 'Code Preview'}</h2>}
-            {relevantFrame?.sourceCodePreview?.map((sourceCodeLine, index) => {
-              const formattedLine = String(sourceCodeLine.lineNumber).padStart(maxDigits, ` `) + String().padStart(spacing, ' ') + sourceCodeLine.line;
-
-              if(sourceCodeLine.isFrameTarget) {
-                return <pre key={index}><code style={{backgroundColor: 'PapayaWhip'}}>{formattedLine.padEnd(formattedLine.length + maxDigits + spacing)}</code></pre>
-              }
-              return <pre key={index}><code>{formattedLine}</code></pre>
-            })}
-          </div>
-        </div>
-      </header>
-      <hr style={{marginTop: 200}}/>
-      <aside>
-        <h1>Mapped Stack Frames</h1>
-        <pre >{JSON.stringify(position?.mappedStackFrames, null, 2)}</pre>
-        <hr/>
-        <h1>Raw Stack Frames</h1>
-        <pre >{JSON.stringify(position?.rawStackFrames, null, 2)}</pre>
-        <hr/>
-        <h1>Stack Trace</h1>
-        <pre >{position?.stackTrace}</pre>
-      </aside>
-    </tracker.div>
+    <>
+      <tracker.div id="app" style={appStyle}>
+        <h1 style={{ margin: 0, marginBottom: 20 }}>App component</h1>
+        <tracker.header id="header" style={headerStyle}>
+          <Button>Button Component</Button>{' '}
+          <tracker.button
+            id="inline-button"
+            onClick={async () => {
+              const position = await detectPosition('');
+              setElementContext(position);
+            }}
+          >
+            &lt;button&gt; Tag
+          </tracker.button>
+        </tracker.header>
+        <main style={mainStyle}>
+          <Box color="mediumpurple" />
+          <Box color="orange" />
+          <Box color="lightblue">
+            <Box color="lavender" />
+          </Box>
+          <Box color="salmon" />
+        </main>
+      </tracker.div>
+      <ElementContext />
+    </>
   );
 }
 

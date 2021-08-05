@@ -1,22 +1,31 @@
 import React, { ButtonHTMLAttributes } from 'react';
-import detectPosition from "./detectPosition";
-import { usePositionContext } from "./PositionProvider";
+import detectPosition from './detectPosition';
+import { useElementContext } from './TrackerElementContextProvider';
 import { tracker } from './tracker';
 
 function Button(props: ButtonHTMLAttributes<HTMLButtonElement>) {
-  const { setPosition } = usePositionContext();
+  const { setElementContext } = useElementContext();
 
-  return setPosition ?
+  return (
     <tracker.button
-      id='button-component'
-      onClick={
-        async () => {
-          const position = await detectPosition()
-          setPosition(position);
+      id={props.id ?? 'button-component'}
+      onClick={async ({ target }) => {
+        if (!target || !(target instanceof HTMLElement)) {
+          return;
         }
-      }
+        const elementId = target.dataset.objectiv;
+        if (!elementId) {
+          return;
+        }
+
+        const position = await detectPosition(elementId);
+        setElementContext(position);
+      }}
       {...props}
-    >{props.children}</tracker.button> : null;
+    >
+      {props.children}
+    </tracker.button>
+  );
 }
 
 export default Button;
