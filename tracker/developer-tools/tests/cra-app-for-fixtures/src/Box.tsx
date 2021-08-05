@@ -1,7 +1,7 @@
 import React, { CSSProperties, FC } from 'react';
 import Button from './Button';
 import detectPosition from './detectPosition';
-import { tracker } from './tracker';
+import { trackButton, trackDiv } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
 
 const boxStyle = (color: string): CSSProperties => ({
@@ -15,16 +15,16 @@ const boxStyle = (color: string): CSSProperties => ({
   backgroundColor: color,
 });
 
-const Box: FC<{ color: string }> = ({ children, color }) => {
+const Box: FC<{ id: string; color: string }> = ({ children, id, color }) => {
   const { setElementContext } = useElementContext();
 
   return (
-    <tracker.div id="box" style={boxStyle(color)}>
+    <div {...trackDiv(id)} style={boxStyle(color)}>
       <h2 style={{ margin: 5 }}>Box Component</h2>
       <Button>Button Component</Button>
       <br />
-      <tracker.button
-        id="inline-button"
+      <button
+        {...trackButton('inline-button')}
         onClick={async ({ target }) => {
           if (!target || !(target instanceof HTMLElement)) {
             return;
@@ -38,10 +38,10 @@ const Box: FC<{ color: string }> = ({ children, color }) => {
         }}
       >
         &lt;button&gt; Tag
-      </tracker.button>
+      </button>
       <br />
       {children}
-    </tracker.div>
+    </div>
   );
 };
 

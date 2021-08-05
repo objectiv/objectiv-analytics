@@ -3,7 +3,7 @@ import Box from './Box';
 import Button from './Button';
 import detectPosition from './detectPosition';
 import { ElementContext } from './ElementContext';
-import { tracker } from './tracker';
+import { trackButton, trackDiv, trackHeader } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
 
 const appStyle: CSSProperties = {
@@ -25,29 +25,36 @@ function App() {
 
   return (
     <>
-      <tracker.div id="app" style={appStyle}>
+      <div {...trackDiv('app')} style={appStyle}>
         <h1 style={{ margin: 0, marginBottom: 20 }}>App component</h1>
-        <tracker.header id="header" style={headerStyle}>
+        <header {...trackHeader('header')} style={headerStyle}>
           <Button>Button Component</Button>{' '}
-          <tracker.button
-            id="inline-button"
-            onClick={async () => {
-              const position = await detectPosition('');
+          <button
+            {...trackButton('inline-button')}
+            onClick={async ({ target }) => {
+              if (!target || !(target instanceof HTMLElement)) {
+                return;
+              }
+              const elementId = target.dataset.objectiv;
+              if (!elementId) {
+                return;
+              }
+              const position = await detectPosition(elementId);
               setElementContext(position);
             }}
           >
             &lt;button&gt; Tag
-          </tracker.button>
-        </tracker.header>
+          </button>
+        </header>
         <main style={mainStyle}>
-          <Box color="mediumpurple" />
-          <Box color="orange" />
-          <Box color="lightblue">
-            <Box color="lavender" />
+          <Box id="purple" color="mediumpurple" />
+          <Box id="orange" color="orange" />
+          <Box id="cyan" color="cyan">
+            <Box id="pink" color="pink" />
           </Box>
-          <Box color="salmon" />
+          <Box id="green" color="brown" />
         </main>
-      </tracker.div>
+      </div>
       <ElementContext />
     </>
   );

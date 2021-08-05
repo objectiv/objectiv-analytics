@@ -1,4 +1,4 @@
-import { createElement, FC, useRef } from 'react';
+import { parseBrowserStackTrace } from '@objectiv/developer-tools';
 import { v4 as uuidv4 } from 'uuid';
 
 // TODO get this from Schema._context_type literals
@@ -10,9 +10,9 @@ enum ContextType {
 
 export type TrackerElementMetadata = {
   elementId: string;
-  elementType: JSXElement;
   contextType: ContextType;
   contextId: string;
+  componentName: string;
 };
 
 export type TrackerElementTarget = EventTarget & {
@@ -21,46 +21,31 @@ export type TrackerElementTarget = EventTarget & {
 
 export const TrackerStore = new Map<string, TrackerElementMetadata>();
 
-type JSXElement = keyof JSX.IntrinsicElements;
-type ReactHTMLProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
-type RequireId = { id: string; objectivContextId?: string };
-type RequireObjectivContextId = { id: string; objectivContextId: string };
-type TrackerElementProps = ReactHTMLProps & (RequireObjectivContextId | RequireId);
+export const track = (contextId: string, contextType: ContextType, stackTrace: string = new Error().stack ?? '') => {
+  const componentName = parseBrowserStackTrace(stackTrace)[2].functionName;
 
-const TrackerElementFactory: (elementType: JSXElement, contextType: ContextType) => FC<TrackerElementProps> = (
-  elementType: JSXElement,
-  contextType: ContextType
-) =>
-  function TrackerElement(props: TrackerElementProps) {
-    const { id, objectivContextId, ...otherProps } = props;
-    const contextId = id ?? objectivContextId;
+  const elementId = uuidv4();
+  if (!TrackerStore.has(elementId)) {
+    TrackerStore.set(elementId, { elementId, contextType, contextId, componentName });
+    console.log(`Tracking Element ${elementId}: ${contextType} with id '${contextId}' in ${componentName} component`);
+  }
 
-    if (!contextId) {
-      throw new Error(`Tracker Element (${elementType}) requires either 'id' or 'objectivContextId' to be set.`);
-    }
-
-    const elementId = useRef(uuidv4()).current;
-    if (!TrackerStore.has(elementId)) {
-      TrackerStore.set(elementId, { elementId, elementType, contextType, contextId });
-      console.log(`Tracking Element ${elementId}: ${elementType}#${contextId}`);
-    }
-
-    return createElement(elementType, {
-      ...otherProps,
-      'data-objectiv': elementId,
-    });
+  return {
+    'data-objectiv': elementId,
   };
-
-export const TrackerButton = TrackerElementFactory('button', ContextType.button);
-export const TrackerDiv = TrackerElementFactory('div', ContextType.section);
-export const TrackerHeader = TrackerElementFactory('header', ContextType.section);
-export const TrackerLink = TrackerElementFactory('link', ContextType.link);
-export const TrackerSpan = TrackerElementFactory('span', ContextType.section);
-
-export const tracker = {
-  button: TrackerButton,
-  div: TrackerDiv,
-  header: TrackerHeader,
-  link: TrackerLink,
-  span: TrackerSpan,
 };
+
+export const trackButton = (contextId: string, stackTrace: string = new Error().stack ?? '') =>
+  track(contextId, ContextType.button, stackTrace);
+
+export const trackDiv = (contextId: string, stackTrace: string = new Error().stack ?? '') =>
+  track(contextId, ContextType.section, stackTrace);
+
+export const trackHeader = (contextId: string, stackTrace: string = new Error().stack ?? '') =>
+  track(contextId, ContextType.section, stackTrace);
+
+export const trackLink = (contextId: string, stackTrace: string = new Error().stack ?? '') =>
+  track(contextId, ContextType.link, stackTrace);
+
+export const trackSpan = (contextId: string, stackTrace: string = new Error().stack ?? '') =>
+  track(contextId, ContextType.section, stackTrace);

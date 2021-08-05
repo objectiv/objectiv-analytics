@@ -1,4 +1,5 @@
 import React from 'react';
+import { TrackerElementMetadata, TrackerStore } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
 
 const rootPath = 'home/surai/Projects/objectiv/objectiv-analytics/tracker/developer-tools/tests/cra-app-for-fixtures/';
@@ -21,6 +22,27 @@ export const ElementContext = (
     maxDigits = Math.max(...relevantFrame.sourceCodePreview.map((line) => line.lineNumber)).toString().length;
   }
 
+  const parentElements: TrackerElementMetadata[] = [];
+  const traverseAndCollectMetadata = (htmlElement: HTMLElement | null) => {
+    if (!htmlElement) {
+      return;
+    }
+    if (htmlElement.dataset.objectiv) {
+      const trackerElementMetadata = TrackerStore.get(htmlElement.dataset.objectiv);
+      if (!trackerElementMetadata) {
+        throw new Error(`Encountered an unknown Tracker Element in the DOM: ${htmlElement.dataset.objectiv}`);
+      }
+      parentElements.push(trackerElementMetadata);
+    }
+    traverseAndCollectMetadata(htmlElement.parentElement);
+  };
+  if (elementContext.elementMetadata?.elementId) {
+    const htmlElement = document.querySelector(`[data-objectiv='${elementContext.elementMetadata?.elementId}']`);
+    traverseAndCollectMetadata(htmlElement as HTMLElement);
+  }
+
+  const elementStack = parentElements.reverse();
+
   return (
     <div {...props} style={{ padding: 20 }}>
       <div style={{ display: 'flex', paddingBottom: 20 }}>
@@ -38,19 +60,34 @@ export const ElementContext = (
           </code>
         </div>
         {elementContext.elementMetadata?.elementId && (
-          <div>
-            <h2>Element Info</h2>
-            <code>
-              Element Id: <strong>{elementContext.elementMetadata.elementId}</strong>
-              <br />
-              Element Type: <strong>&lt;{elementContext.elementMetadata.elementType}&gt;</strong>
-              <br />
-              Context Type: <strong>{elementContext.elementMetadata.contextType}</strong>
-              <br />
-              Context Id: <strong>{elementContext.elementMetadata.contextId}</strong>
-              <br />
-            </code>
-          </div>
+          <>
+            <div style={{ paddingRight: 100 }}>
+              <h2>Element Info</h2>
+              <code>
+                Element Id: <strong>{elementContext.elementMetadata.elementId}</strong>
+                <br />
+                Context Type: <strong>{elementContext.elementMetadata.contextType.replace('Context', '')}</strong>
+                <br />
+                Context Id: <strong>{elementContext.elementMetadata.contextId}</strong>
+                <br />
+                Component: <strong>{elementContext.elementMetadata.componentName}</strong>
+              </code>
+            </div>
+
+            <div>
+              <h2>Element Stack</h2>
+              <code>
+                <ul style={{ marginLeft: -24 }}>
+                  {elementStack.map((parentElement, index) => (
+                    <li key={index} style={{ marginLeft: index * 12, marginTop: 5 }}>
+                      {parentElement.componentName} - <strong>{parentElement.contextType}</strong> with id{' '}
+                      <strong>{parentElement.contextId}</strong>
+                    </li>
+                  ))}
+                </ul>
+              </code>
+            </div>
+          </>
         )}
       </div>
 
@@ -59,7 +96,7 @@ export const ElementContext = (
           <h2>Source code preview</h2>
           <h3>{shortFileName}</h3>
 
-          <div style={{backgroundColor: "aliceblue", padding: 20}}>
+          <div style={{ backgroundColor: 'aliceblue', padding: 20 }}>
             {relevantFrame.sourceCodePreview.map((sourceCodeLine, index) => {
               const formattedLine =
                 String(sourceCodeLine.lineNumber).padStart(maxDigits + 2, ` `) +
@@ -70,16 +107,16 @@ export const ElementContext = (
               if (sourceCodeLine.isFrameTarget) {
                 return (
                   <pre key={index} style={{ margin: 5 }}>
-              <code key={index} style={{ backgroundColor: 'PapayaWhip' }}>
-                {'>' + formattedLine.padEnd(formattedLine.length + maxDigits + spacing).slice(1)}
-              </code>
-            </pre>
+                    <code key={index} style={{ backgroundColor: 'PapayaWhip' }}>
+                      {'>' + formattedLine.padEnd(formattedLine.length + maxDigits + spacing).slice(1)}
+                    </code>
+                  </pre>
                 );
               }
               return (
                 <pre key={index} style={{ margin: 5 }}>
-            <code>{formattedLine}</code>
-          </pre>
+                  <code>{formattedLine}</code>
+                </pre>
               );
             })}
           </div>
