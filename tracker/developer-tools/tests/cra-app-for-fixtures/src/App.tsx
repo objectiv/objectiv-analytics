@@ -13,11 +13,12 @@ const appStyle: CSSProperties = {
   padding: 20,
   backgroundColor: 'palegreen',
   zoom: 1.3,
+  overflow: 'scroll'
 };
 
 const headerStyle: CSSProperties = {
   paddingBottom: 20,
-  position: 'fixed',
+  position: 'absolute',
   top: 35,
   left: '22%',
 };
@@ -68,7 +69,7 @@ function App() {
             <RoundedBoxComponent id="rounded-box2" color="cadetblue" />
           </BoxComponent>
           <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-            <CircleComponent id="circle1" color="magenta" />
+            <CircleComponent id="circle1" color="lightblue" />
             <ThirdPartyComponent
               {...trackDiv('3rd-party')}
               button1={<ButtonComponent id="button-component-2">Button Component</ButtonComponent>}
@@ -97,7 +98,7 @@ function App() {
           </RoundedBoxComponent>
         </main>
       </div>
-      <ElementContext />
+      <ElementContext onClick={() => setElementContext({})}/>
     </>
   );
 }

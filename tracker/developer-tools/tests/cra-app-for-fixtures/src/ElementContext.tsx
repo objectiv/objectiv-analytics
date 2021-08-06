@@ -8,6 +8,13 @@ export const ElementContext = (
 ) => {
   const { elementContext } = useElementContext();
 
+  document.querySelectorAll(`[data-objectiv]`).forEach(trackedElement => {
+    if (trackedElement instanceof HTMLElement) {
+      trackedElement.style.boxShadow = '';
+      trackedElement.style.opacity = elementContext.elementMetadata ? '.7' : '1';
+    }
+  });
+
   if (!elementContext.mappedStackFrames || elementContext.mappedStackFrames.length < 1) {
     return null;
   }
@@ -20,6 +27,14 @@ export const ElementContext = (
   if (relevantFrame.sourceCodePreview) {
     maxDigits = Math.max(...relevantFrame.sourceCodePreview.map((line) => line.lineNumber)).toString().length;
   }
+
+  elementContext.elementMetadata?.parentsMetadata.forEach(parentMetadata => {
+    const parentElement = document.querySelector(`[data-objectiv='${parentMetadata.elementId}']`)
+    if (parentElement instanceof HTMLElement) {
+      parentElement.style.opacity = '1';
+      parentElement.style.boxShadow = '0 0 0 3px red';
+    }
+  })
 
   return (
     <div {...props} style={{ padding: 20, zoom: 1.2 }}>
