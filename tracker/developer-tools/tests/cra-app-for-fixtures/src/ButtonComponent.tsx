@@ -1,15 +1,14 @@
 import React, { ButtonHTMLAttributes } from 'react';
 import detectPosition from './detectPosition';
 import { useElementContext } from './TrackerElementContextProvider';
-import { trackDiv } from './tracker';
+import { trackButton } from './tracker';
 
-function Button(props: ButtonHTMLAttributes<HTMLButtonElement>) {
+function ButtonComponent(props: ButtonHTMLAttributes<HTMLButtonElement>) {
   const { setElementContext } = useElementContext();
 
   return (
     <button
-      {...trackDiv(props.id ?? 'button-component')}
-      id={props.id ?? 'button-component'}
+      {...trackButton(props.id ?? 'button-component')}
       onClick={async ({ target }) => {
         if (!target || !(target instanceof HTMLElement)) {
           return;
@@ -29,4 +28,4 @@ function Button(props: ButtonHTMLAttributes<HTMLButtonElement>) {
   );
 }
 
-export default Button;
+export default ButtonComponent;

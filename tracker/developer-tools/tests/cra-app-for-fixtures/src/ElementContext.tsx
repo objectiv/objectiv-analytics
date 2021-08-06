@@ -44,9 +44,9 @@ export const ElementContext = (
   const elementStack = parentElements.reverse();
 
   return (
-    <div {...props} style={{ padding: 20 }}>
-      <div style={{ display: 'flex', paddingBottom: 20 }}>
-        <div style={{ paddingRight: 100 }}>
+    <div {...props} style={{ padding: 20, zoom: 1.2 }}>
+      <div style={{ display: 'flex', paddingBottom: 5 }}>
+        <div style={{ flex: 0.55 }}>
           <h2>Source Code Info</h2>
           <code>
             Function: <strong>{relevantFrame.functionName}</strong>
@@ -61,12 +61,12 @@ export const ElementContext = (
         </div>
         {elementContext.elementMetadata?.elementId && (
           <>
-            <div style={{ paddingRight: 100 }}>
-              <h2>Element Info</h2>
+            <div style={{ flex: 0.8 }}>
+              <h2>Tracking Metadata</h2>
               <code>
                 Element Id: <strong>{elementContext.elementMetadata.elementId}</strong>
                 <br />
-                Context Type: <strong>{elementContext.elementMetadata.contextType.replace('Context', '')}</strong>
+                Context Type: <strong>{elementContext.elementMetadata.contextType}</strong>
                 <br />
                 Context Id: <strong>{elementContext.elementMetadata.contextId}</strong>
                 <br />
@@ -74,8 +74,8 @@ export const ElementContext = (
               </code>
             </div>
 
-            <div>
-              <h2>Element Stack</h2>
+            <div style={{ flex: 1 }}>
+              <h2>Component Stack</h2>
               <code>
                 <ul style={{ marginLeft: -24 }}>
                   {elementStack.map((parentElement, index) => (
@@ -93,8 +93,7 @@ export const ElementContext = (
 
       {relevantFrame.sourceCodePreview && (
         <>
-          <h2>Source code preview</h2>
-          <h3>{shortFileName}</h3>
+          <h2>{shortFileName}</h2>
 
           <div style={{ backgroundColor: 'aliceblue', padding: 20 }}>
             {relevantFrame.sourceCodePreview.map((sourceCodeLine, index) => {

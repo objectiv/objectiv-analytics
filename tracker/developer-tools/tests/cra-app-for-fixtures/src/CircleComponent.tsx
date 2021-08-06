@@ -1,5 +1,5 @@
-import React, { CSSProperties, FC } from 'react';
-import Button from './Button';
+import React, { CSSProperties } from 'react';
+import ButtonComponent from './ButtonComponent';
 import detectPosition from './detectPosition';
 import { trackButton, trackDiv } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
@@ -7,21 +7,26 @@ import { useElementContext } from './TrackerElementContextProvider';
 const boxStyle = (color: string): CSSProperties => ({
   margin: 10,
   padding: 10,
+  width: 180,
+  height: 180,
+  borderRadius: '50%',
   border: 1,
   borderColor: 'black',
   borderStyle: 'solid',
   display: 'inline-flex',
   flexDirection: 'column',
   backgroundColor: color,
+  alignItems: 'center'
 });
 
-const Box: FC<{ id: string; color: string }> = ({ children, id, color }) => {
+function CircleComponent({ id, color }: { id: string; color: string }) {
   const { setElementContext } = useElementContext();
 
   return (
     <div {...trackDiv(id)} style={boxStyle(color)}>
-      <h2 style={{ margin: 5 }}>Box Component</h2>
-      <Button>Button Component</Button>
+      <h2 style={{ margin: 5 }}>Circle</h2>
+      <h4>named function</h4>
+      <ButtonComponent>Button Component</ButtonComponent>
       <br />
       <button
         {...trackButton('inline-button')}
@@ -40,9 +45,8 @@ const Box: FC<{ id: string; color: string }> = ({ children, id, color }) => {
         &lt;button&gt; Tag
       </button>
       <br />
-      {children}
     </div>
   );
 };
 
-export default Box;
+export default CircleComponent;

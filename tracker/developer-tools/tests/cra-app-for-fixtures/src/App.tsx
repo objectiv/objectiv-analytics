@@ -1,18 +1,24 @@
 import React, { CSSProperties } from 'react';
-import Box from './Box';
-import Button from './Button';
+import BoxComponent from './BoxComponent';
+import ButtonComponent from './ButtonComponent';
+import CircleComponent from "./CircleComponent";
 import detectPosition from './detectPosition';
 import { ElementContext } from './ElementContext';
+import RoundedBoxComponent from "./RoundedBoxComponent";
 import { trackButton, trackDiv, trackHeader } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
 
 const appStyle: CSSProperties = {
   padding: 20,
-  backgroundColor: 'lightgreen',
+  backgroundColor: 'palegreen',
+  zoom: 1.3,
 };
 
 const headerStyle: CSSProperties = {
   paddingBottom: 20,
+  position: 'fixed',
+  top: 35,
+  left: '22%'
 };
 
 const mainStyle: CSSProperties = {
@@ -26,9 +32,12 @@ function App() {
   return (
     <>
       <div {...trackDiv('app')} style={appStyle}>
-        <h1 style={{ margin: 0, marginBottom: 20 }}>App component</h1>
+        <h1 style={{ margin: 0, marginBottom: 20 }}>
+          App component
+          <div style={{ fontSize: '50%', float: 'right', color: 'red' }}>v0.2-epic</div>
+        </h1>
         <header {...trackHeader('header')} style={headerStyle}>
-          <Button>Button Component</Button>{' '}
+          <ButtonComponent>Button Component</ButtonComponent>{' '}
           <button
             {...trackButton('inline-button')}
             onClick={async ({ target }) => {
@@ -47,12 +56,18 @@ function App() {
           </button>
         </header>
         <main style={mainStyle}>
-          <Box id="purple" color="mediumpurple" />
-          <Box id="orange" color="orange" />
-          <Box id="cyan" color="cyan">
-            <Box id="pink" color="pink" />
-          </Box>
-          <Box id="green" color="brown" />
+          <div style={{display:'inline-flex', flexDirection: 'column'}}>
+            <BoxComponent id="box1" color="mediumpurple" />
+            <RoundedBoxComponent id="rounded-box1" color="olive" />
+          </div>
+          <BoxComponent id="box2" color="orange" />
+          <BoxComponent id="box3" color="cyan">
+            <BoxComponent id="box4" color="pink" />
+          </BoxComponent>
+          <CircleComponent id="circle1" color="magenta" />
+          <BoxComponent id="box5" color="salmon">
+            <CircleComponent id="circle2" color="lightyellow" />
+          </BoxComponent>
         </main>
       </div>
       <ElementContext />
