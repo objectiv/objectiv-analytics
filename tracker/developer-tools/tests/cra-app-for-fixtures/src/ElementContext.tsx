@@ -1,5 +1,4 @@
 import React from 'react';
-import { TrackerElementMetadata, TrackerStore } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
 
 const rootPath = 'home/surai/Projects/objectiv/objectiv-analytics/tracker/developer-tools/tests/cra-app-for-fixtures/';
@@ -22,27 +21,6 @@ export const ElementContext = (
     maxDigits = Math.max(...relevantFrame.sourceCodePreview.map((line) => line.lineNumber)).toString().length;
   }
 
-  const parentElements: TrackerElementMetadata[] = [];
-  const traverseAndCollectMetadata = (htmlElement: HTMLElement | null) => {
-    if (!htmlElement) {
-      return;
-    }
-    if (htmlElement.dataset.objectiv) {
-      const trackerElementMetadata = TrackerStore.get(htmlElement.dataset.objectiv);
-      if (!trackerElementMetadata) {
-        throw new Error(`Encountered an unknown Tracker Element in the DOM: ${htmlElement.dataset.objectiv}`);
-      }
-      parentElements.push(trackerElementMetadata);
-    }
-    traverseAndCollectMetadata(htmlElement.parentElement);
-  };
-  if (elementContext.elementMetadata?.elementId) {
-    const htmlElement = document.querySelector(`[data-objectiv='${elementContext.elementMetadata?.elementId}']`);
-    traverseAndCollectMetadata(htmlElement as HTMLElement);
-  }
-
-  const elementStack = parentElements.reverse();
-
   return (
     <div {...props} style={{ padding: 20, zoom: 1.2 }}>
       <div style={{ display: 'flex', paddingBottom: 5 }}>
@@ -64,6 +42,8 @@ export const ElementContext = (
             <div style={{ flex: 0.8 }}>
               <h2>Tracking Metadata</h2>
               <code>
+                Store Id: <strong>{elementContext.elementMetadata.elementId}</strong>
+                <br />
                 Context Type: <strong>{elementContext.elementMetadata.contextType}</strong>
                 <br />
                 Context Id: <strong>{elementContext.elementMetadata.contextId}</strong>
@@ -76,7 +56,7 @@ export const ElementContext = (
               <h2>Component Stack</h2>
               <code>
                 <ul style={{ marginLeft: -24 }}>
-                  {elementStack.map((parentElement, index) => (
+                  {elementContext.elementMetadata?.parentsMetadata.map((parentElement, index) => (
                     <li key={index} style={{ marginLeft: 12, marginTop: 5 }}>
                       {parentElement.componentName} - <strong>{parentElement.contextType}</strong> with id{' '}
                       <strong>{parentElement.contextId}</strong>

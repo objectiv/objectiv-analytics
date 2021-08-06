@@ -3,7 +3,7 @@ import detectPosition from './detectPosition';
 import { useElementContext } from './TrackerElementContextProvider';
 import { trackButton } from './tracker';
 
-function ButtonComponent(props: ButtonHTMLAttributes<HTMLButtonElement> & {id: string}) {
+function ButtonComponent(props: ButtonHTMLAttributes<HTMLButtonElement> & { id: string }) {
   const { setElementContext } = useElementContext();
 
   return (

@@ -1,6 +1,9 @@
 import { parseBrowserStackTrace } from '@objectiv/developer-tools';
 import { v4 as uuidv4 } from 'uuid';
 
+const TRACKING_DATASET_ATTRIBUTE_NAME = 'objectiv';
+const TRACKING_FULL_ATTRIBUTE_NAME = `data-${TRACKING_DATASET_ATTRIBUTE_NAME}`;
+
 // TODO get this from Schema._context_type literals
 enum ContextType {
   section = 'SectionContext',
@@ -13,6 +16,7 @@ export type TrackerElementMetadata = {
   contextType: ContextType;
   contextId: string;
   componentName: string;
+  parentsMetadata: TrackerElementMetadata[];
 };
 
 export type TrackerElementTarget = EventTarget & {
@@ -26,14 +30,61 @@ export const track = (contextId: string, contextType: ContextType, stackTrace: s
   const elementId = uuidv4();
 
   if (!TrackerStore.has(elementId)) {
-    TrackerStore.set(elementId, { elementId, contextType, contextId, componentName });
-    console.log(`Tracking Element ${elementId}: ${contextType} with id '${contextId}' in ${componentName} component`);
+    TrackerStore.set(elementId, { elementId, contextType, contextId, componentName, parentsMetadata: [] });
   }
 
   return {
-    'data-objectiv': elementId,
+    [TRACKING_FULL_ATTRIBUTE_NAME]: elementId,
   };
 };
+
+// FIXME this should go in its own module / context provider. Also it sucks :)
+export const traverseAndCollectParentsMetadata = (
+  htmlElement: HTMLElement | null,
+  parentElements: TrackerElementMetadata[] = []
+): TrackerElementMetadata[] => {
+  if (!htmlElement) {
+    return parentElements;
+  }
+  if (htmlElement.dataset.objectiv) {
+    const trackerElementMetadata = TrackerStore.get(htmlElement.dataset.objectiv);
+    if (trackerElementMetadata) {
+      parentElements.push(trackerElementMetadata);
+    }
+  }
+  return traverseAndCollectParentsMetadata(htmlElement.parentElement, parentElements);
+};
+
+const mutationObserver = new MutationObserver(() => {
+  const trackedElementIds:string[] = [];
+  const trackedElements = document.querySelectorAll('[data-objectiv]');
+  trackedElements.forEach((trackedElement) => {
+    if (trackedElement instanceof HTMLElement && trackedElement.dataset.objectiv) {
+      const trackedElementId = trackedElement.dataset.objectiv;
+      trackedElementIds.push(trackedElementId)
+      const trackedElementMetadata = TrackerStore.get(trackedElementId);
+      if (trackedElementMetadata) {
+        TrackerStore.set(trackedElementId, {
+          ...trackedElementMetadata,
+          parentsMetadata: traverseAndCollectParentsMetadata(trackedElement).reverse(),
+        });
+      }
+    }
+  });
+  // Cleanup store
+  TrackerStore.forEach((trackedElementMetadata) => {
+    if(!trackedElementIds.includes(trackedElementMetadata.elementId)) {
+      TrackerStore.delete(trackedElementMetadata.elementId);
+    }
+  })
+});
+
+mutationObserver.observe(document, {
+  attributeFilter: [TRACKING_FULL_ATTRIBUTE_NAME],
+  attributeOldValue: true,
+  subtree: true,
+  childList: true,
+});
 
 export const trackButton = (contextId: string, stackTrace: string = new Error().stack ?? '') =>
   track(contextId, ContextType.button, stackTrace);

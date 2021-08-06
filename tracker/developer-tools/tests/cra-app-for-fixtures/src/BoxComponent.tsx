@@ -13,7 +13,7 @@ const boxStyle = (color: string): CSSProperties => ({
   display: 'inline-flex',
   flexDirection: 'column',
   backgroundColor: color,
-  alignItems: 'center'
+  alignItems: 'center',
 });
 
 const BoxComponent: FC<{ id: string; color: string }> = ({ children, id, color }) => {
@@ -23,7 +23,7 @@ const BoxComponent: FC<{ id: string; color: string }> = ({ children, id, color }
     <div {...trackDiv(id)} style={boxStyle(color)}>
       <h2 style={{ margin: 5 }}>Box</h2>
       <h4>anonymous arrow function</h4>
-      <ButtonComponent id='button-component'>Button Component</ButtonComponent>
+      <ButtonComponent id="button-component">Button Component</ButtonComponent>
       <br />
       <button
         {...trackButton('inline-button')}

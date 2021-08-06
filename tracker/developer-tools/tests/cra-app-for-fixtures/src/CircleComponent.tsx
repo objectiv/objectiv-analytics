@@ -16,7 +16,7 @@ const boxStyle = (color: string): CSSProperties => ({
   display: 'inline-flex',
   flexDirection: 'column',
   backgroundColor: color,
-  alignItems: 'center'
+  alignItems: 'center',
 });
 
 function CircleComponent({ id, color }: { id: string; color: string }) {
@@ -26,7 +26,7 @@ function CircleComponent({ id, color }: { id: string; color: string }) {
     <div {...trackDiv(id)} style={boxStyle(color)}>
       <h2 style={{ margin: 5 }}>Circle</h2>
       <h4>named function</h4>
-      <ButtonComponent id='button-component'>Button Component</ButtonComponent>
+      <ButtonComponent id="button-component">Button Component</ButtonComponent>
       <br />
       <button
         {...trackButton('inline-button')}
@@ -47,6 +47,6 @@ function CircleComponent({ id, color }: { id: string; color: string }) {
       <br />
     </div>
   );
-};
+}
 
 export default CircleComponent;
