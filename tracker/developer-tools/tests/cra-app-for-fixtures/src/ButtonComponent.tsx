@@ -3,12 +3,12 @@ import detectPosition from './detectPosition';
 import { useElementContext } from './TrackerElementContextProvider';
 import { trackButton } from './tracker';
 
-function ButtonComponent(props: ButtonHTMLAttributes<HTMLButtonElement>) {
+function ButtonComponent(props: ButtonHTMLAttributes<HTMLButtonElement> & {id: string}) {
   const { setElementContext } = useElementContext();
 
   return (
     <button
-      {...trackButton(props.id ?? 'button-component')}
+      {...trackButton(props.id)}
       onClick={async ({ target }) => {
         if (!target || !(target instanceof HTMLElement)) {
           return;

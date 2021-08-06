@@ -26,7 +26,7 @@ function CircleComponent({ id, color }: { id: string; color: string }) {
     <div {...trackDiv(id)} style={boxStyle(color)}>
       <h2 style={{ margin: 5 }}>Circle</h2>
       <h4>named function</h4>
-      <ButtonComponent>Button Component</ButtonComponent>
+      <ButtonComponent id='button-component'>Button Component</ButtonComponent>
       <br />
       <button
         {...trackButton('inline-button')}

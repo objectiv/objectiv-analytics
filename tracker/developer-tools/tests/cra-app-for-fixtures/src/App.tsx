@@ -5,6 +5,7 @@ import CircleComponent from "./CircleComponent";
 import detectPosition from './detectPosition';
 import { ElementContext } from './ElementContext';
 import RoundedBoxComponent from "./RoundedBoxComponent";
+import ThirdPartyComponent from "./ThirdPartyComponent";
 import { trackButton, trackDiv, trackHeader } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
 
@@ -37,7 +38,7 @@ function App() {
           <div style={{ fontSize: '50%', float: 'right', color: 'red' }}>v0.2-epic</div>
         </h1>
         <header {...trackHeader('header')} style={headerStyle}>
-          <ButtonComponent>Button Component</ButtonComponent>{' '}
+          <ButtonComponent id='button-component-1'>Button Component</ButtonComponent>{' '}
           <button
             {...trackButton('inline-button')}
             onClick={async ({ target }) => {
@@ -60,14 +61,39 @@ function App() {
             <BoxComponent id="box1" color="mediumpurple" />
             <RoundedBoxComponent id="rounded-box1" color="olive" />
           </div>
-          <BoxComponent id="box2" color="orange" />
           <BoxComponent id="box3" color="cyan">
             <BoxComponent id="box4" color="pink" />
           </BoxComponent>
-          <CircleComponent id="circle1" color="magenta" />
-          <BoxComponent id="box5" color="salmon">
-            <CircleComponent id="circle2" color="lightyellow" />
+          <BoxComponent id="box2" color="orange">
+            <RoundedBoxComponent id="rounded-box2" color="cadetblue" />
           </BoxComponent>
+          <div style={{display:'inline-flex', flexDirection: 'column'}}>
+            <CircleComponent id="circle1" color="magenta" />
+            <ThirdPartyComponent {...trackDiv('3rd-party')} button1={
+              <ButtonComponent id='button-component-2'>Button Component</ButtonComponent>
+            }
+            button2={
+              <button
+                {...trackButton('inline-button')}
+                onClick={async ({ target }) => {
+                  if (!target || !(target instanceof HTMLElement)) {
+                    return;
+                  }
+                  const elementId = target.dataset.objectiv;
+                  if (!elementId) {
+                    return;
+                  }
+                  const position = await detectPosition(elementId);
+                  setElementContext(position);
+                }}
+              >
+                &lt;button&gt; Tag
+              </button>
+            }/>
+          </div>
+          <RoundedBoxComponent id="rounded-box3" color="salmon">
+            <CircleComponent id="circle2" color="lightyellow" />
+          </RoundedBoxComponent>
         </main>
       </div>
       <ElementContext />

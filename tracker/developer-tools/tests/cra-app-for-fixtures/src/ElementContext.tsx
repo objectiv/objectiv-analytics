@@ -64,8 +64,6 @@ export const ElementContext = (
             <div style={{ flex: 0.8 }}>
               <h2>Tracking Metadata</h2>
               <code>
-                Element Id: <strong>{elementContext.elementMetadata.elementId}</strong>
-                <br />
                 Context Type: <strong>{elementContext.elementMetadata.contextType}</strong>
                 <br />
                 Context Id: <strong>{elementContext.elementMetadata.contextId}</strong>
@@ -79,7 +77,7 @@ export const ElementContext = (
               <code>
                 <ul style={{ marginLeft: -24 }}>
                   {elementStack.map((parentElement, index) => (
-                    <li key={index} style={{ marginLeft: index * 12, marginTop: 5 }}>
+                    <li key={index} style={{ marginLeft: 12, marginTop: 5 }}>
                       {parentElement.componentName} - <strong>{parentElement.contextType}</strong> with id{' '}
                       <strong>{parentElement.contextId}</strong>
                     </li>

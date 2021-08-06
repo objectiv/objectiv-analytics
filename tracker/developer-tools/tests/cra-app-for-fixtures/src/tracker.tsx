@@ -21,11 +21,8 @@ export type TrackerElementTarget = EventTarget & {
 
 export const TrackerStore = new Map<string, TrackerElementMetadata>();
 
-// TODO memoize the whole thing?
 export const track = (contextId: string, contextType: ContextType, stackTrace: string = new Error().stack ?? '') => {
-  // TODO memoize across re-renders
-  const componentName = parseBrowserStackTrace(stackTrace)[2].functionName;
-  // TODO memoize across re-renders
+  const componentName = parseBrowserStackTrace(stackTrace)[2].functionName.replace(/\.render$/, '');
   const elementId = uuidv4();
 
   if (!TrackerStore.has(elementId)) {
