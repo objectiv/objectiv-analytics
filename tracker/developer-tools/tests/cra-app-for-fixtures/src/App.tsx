@@ -1,4 +1,4 @@
-import React, { CSSProperties } from 'react';
+import React, { createRef, CSSProperties } from 'react';
 import BoxComponent from './BoxComponent';
 import ButtonComponent from './ButtonComponent';
 import CircleComponent from './CircleComponent';
@@ -31,6 +31,11 @@ const mainStyle: CSSProperties = {
 
 function App() {
   const { setElementContext } = useElementContext();
+
+  const boxComponentRef = createRef<HTMLDivElement>();
+  const BoxComponentWithForwardedRef = React.forwardRef<HTMLDivElement, { id: string; color: string }>((props, ref) => (
+    <BoxComponent {...props} forwardedRef={ref} />
+  ));
 
   return (
     <>
@@ -98,6 +103,7 @@ function App() {
             <CircleComponent id="circle2" color="lightyellow" />
           </RoundedBoxComponent>
           <ThickBoxComponent id="thickbox3" color="orange" />
+          <BoxComponentWithForwardedRef ref={boxComponentRef} id="wrapped-box" color="red" />
         </main>
       </div>
       <ElementContext onClick={() => setElementContext({})} />

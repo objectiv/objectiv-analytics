@@ -1,4 +1,4 @@
-import React, { CSSProperties, FC } from 'react';
+import React, { CSSProperties, FC, ForwardedRef, RefObject } from 'react';
 import ButtonComponent from './ButtonComponent';
 import detectPosition from './detectPosition';
 import { trackButton, trackDiv } from './tracker';
@@ -16,13 +16,18 @@ const boxStyle = (color: string): CSSProperties => ({
   alignItems: 'center',
 });
 
-const BoxComponent: FC<{ id: string; color: string }> = ({ children, id, color }) => {
+const BoxComponent: FC<{ id: string; color: string; forwardedRef?: ForwardedRef<HTMLDivElement> }> = ({
+  children,
+  id,
+  color,
+  forwardedRef,
+}) => {
   const { setElementContext } = useElementContext();
 
   return (
-    <div {...trackDiv(id)} style={boxStyle(color)}>
+    <div {...trackDiv(id)} style={boxStyle(color)} ref={forwardedRef}>
       <h2 style={{ margin: 5 }}>Box</h2>
-      <h4>anonymous arrow function</h4>
+      <h4>anonymous arrow function{forwardedRef && ' with forwarded ref'}</h4>
       <ButtonComponent id="button-component">Button Component</ButtonComponent>
       <br />
       <button
