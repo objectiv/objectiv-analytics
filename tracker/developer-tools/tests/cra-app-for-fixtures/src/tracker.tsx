@@ -28,7 +28,6 @@ export const TrackerStore = new Map<string, TrackerElementMetadata>();
 export const track = (contextId: string, contextType: ContextType, stackTrace: string = new Error().stack ?? '') => {
   const componentName = parseBrowserStackTrace(stackTrace)[2].functionName.replace(/\.render$/, '');
   const elementId = uuidv4();
-  console.log(JSON.stringify(new Error().stack));
 
   if (!TrackerStore.has(elementId)) {
     TrackerStore.set(elementId, { elementId, contextType, contextId, componentName, parentsMetadata: [] });
