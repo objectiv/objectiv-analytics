@@ -1,4 +1,4 @@
-import React, { CSSProperties, FC, ForwardedRef, RefObject } from 'react';
+import React, { CSSProperties, FC, ForwardedRef } from 'react';
 import ButtonComponent from './ButtonComponent';
 import detectPosition from './detectPosition';
 import { trackButton, trackDiv } from './tracker';
