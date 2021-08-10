@@ -1,4 +1,4 @@
-import { StackFrame } from "./common";
+import { StackFrame } from './common';
 
 /**
  * Prefixed in front of all console messages.

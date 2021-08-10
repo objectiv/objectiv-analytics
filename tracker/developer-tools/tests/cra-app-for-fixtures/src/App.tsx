@@ -5,6 +5,7 @@ import CircleComponent from './CircleComponent';
 import detectPosition from './detectPosition';
 import { ElementContext } from './ElementContext';
 import RoundedBoxComponent from './RoundedBoxComponent';
+import ThickBoxComponent from './ThickBoxComponent';
 import ThirdPartyComponent from './ThirdPartyComponent';
 import { trackButton, trackDiv, trackHeader } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
@@ -13,7 +14,7 @@ const appStyle: CSSProperties = {
   padding: 20,
   backgroundColor: 'palegreen',
   zoom: 1.3,
-  overflow: 'scroll'
+  overflow: 'scroll',
 };
 
 const headerStyle: CSSProperties = {
@@ -96,9 +97,10 @@ function App() {
           <RoundedBoxComponent id="rounded-box3" color="salmon">
             <CircleComponent id="circle2" color="lightyellow" />
           </RoundedBoxComponent>
+          <ThickBoxComponent id="thickbox3" color="orange" />
         </main>
       </div>
-      <ElementContext onClick={() => setElementContext({})}/>
+      <ElementContext onClick={() => setElementContext({})} />
     </>
   );
 }

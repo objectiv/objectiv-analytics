@@ -7,8 +7,8 @@ export type StackFrame = {
   lineNumber: number;
   columnNumber: number;
   sourceCodePreview?: {
-    lineNumber: number,
-    line: string,
-    isFrameTarget: boolean,
-  }[]
+    lineNumber: number;
+    line: string;
+    isFrameTarget: boolean;
+  }[];
 };

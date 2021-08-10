@@ -8,7 +8,7 @@ export const ElementContext = (
 ) => {
   const { elementContext } = useElementContext();
 
-  document.querySelectorAll(`[data-objectiv]`).forEach(trackedElement => {
+  document.querySelectorAll(`[data-objectiv]`).forEach((trackedElement) => {
     if (trackedElement instanceof HTMLElement) {
       trackedElement.style.boxShadow = '';
       trackedElement.style.opacity = elementContext.elementMetadata ? '.7' : '1';
@@ -28,13 +28,13 @@ export const ElementContext = (
     maxDigits = Math.max(...relevantFrame.sourceCodePreview.map((line) => line.lineNumber)).toString().length;
   }
 
-  elementContext.elementMetadata?.parentsMetadata.forEach(parentMetadata => {
-    const parentElement = document.querySelector(`[data-objectiv='${parentMetadata.elementId}']`)
+  elementContext.elementMetadata?.parentsMetadata.forEach((parentMetadata) => {
+    const parentElement = document.querySelector(`[data-objectiv='${parentMetadata.elementId}']`);
     if (parentElement instanceof HTMLElement) {
       parentElement.style.opacity = '1';
       parentElement.style.boxShadow = '0 0 0 3px red';
     }
-  })
+  });
 
   return (
     <div {...props} style={{ padding: 20, zoom: 1.2 }}>

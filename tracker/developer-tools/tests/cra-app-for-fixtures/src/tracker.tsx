@@ -28,6 +28,7 @@ export const TrackerStore = new Map<string, TrackerElementMetadata>();
 export const track = (contextId: string, contextType: ContextType, stackTrace: string = new Error().stack ?? '') => {
   const componentName = parseBrowserStackTrace(stackTrace)[2].functionName.replace(/\.render$/, '');
   const elementId = uuidv4();
+  console.log(JSON.stringify(new Error().stack));
 
   if (!TrackerStore.has(elementId)) {
     TrackerStore.set(elementId, { elementId, contextType, contextId, componentName, parentsMetadata: [] });
@@ -56,12 +57,12 @@ export const traverseAndCollectParentsMetadata = (
 };
 
 const mutationObserver = new MutationObserver(() => {
-  const trackedElementIds:string[] = [];
+  const trackedElementIds: string[] = [];
   const trackedElements = document.querySelectorAll('[data-objectiv]');
   trackedElements.forEach((trackedElement) => {
     if (trackedElement instanceof HTMLElement && trackedElement.dataset.objectiv) {
       const trackedElementId = trackedElement.dataset.objectiv;
-      trackedElementIds.push(trackedElementId)
+      trackedElementIds.push(trackedElementId);
       const trackedElementMetadata = TrackerStore.get(trackedElementId);
       if (trackedElementMetadata) {
         TrackerStore.set(trackedElementId, {
@@ -73,10 +74,10 @@ const mutationObserver = new MutationObserver(() => {
   });
   // Cleanup store
   TrackerStore.forEach((trackedElementMetadata) => {
-    if(!trackedElementIds.includes(trackedElementMetadata.elementId)) {
+    if (!trackedElementIds.includes(trackedElementMetadata.elementId)) {
       TrackerStore.delete(trackedElementMetadata.elementId);
     }
-  })
+  });
 });
 
 mutationObserver.observe(document, {

@@ -65,6 +65,43 @@ describe('mapStackFramesToSource', () => {
       fileName: 'App.tsx',
       functionName: 'onClick',
       lineNumber: 10,
+      sourceCodePreview: [
+        {
+          isFrameTarget: false,
+          line: '        <p>',
+          lineNumber: 7,
+        },
+        {
+          isFrameTarget: false,
+          line: '          Edit <code>src/App.tsx</code> and save to reload.',
+          lineNumber: 8,
+        },
+        {
+          isFrameTarget: false,
+          line: '        </p>',
+          lineNumber: 9,
+        },
+        {
+          isFrameTarget: true,
+          line: "        <button onClick={() => eval('console.log(JSON.stringify(new Error().stack))')}>Trigger eval exception</button>",
+          lineNumber: 10,
+        },
+        {
+          isFrameTarget: false,
+          line: '      </header>',
+          lineNumber: 11,
+        },
+        {
+          isFrameTarget: false,
+          line: '    </div>',
+          lineNumber: 12,
+        },
+        {
+          isFrameTarget: false,
+          line: '  );',
+          lineNumber: 13,
+        },
+      ],
     },
   ];
 
