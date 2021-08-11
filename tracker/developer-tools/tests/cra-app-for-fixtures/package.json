@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@craco/craco": "^6.2.0",
     "@objectiv/developer-tools": "~0.0.1",
     "@types/node": "^15.0.2",
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
+    "babel-plugin-objectiv": "workspace:developer-tools/tests/cra-app-for-fixtures/babel-plugin-objectiv",
     "html-react-parser": "^1.2.7",
     "prettier": "^2.3.2",
     "react": "^17.0.2",
@@ -17,11 +19,11 @@
     "uuid": "^8.3.2"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "prettier": "prettier --write ."
+    "start": "yarn clear:babel-cache && craco start",
+    "build": "yarn clear:babel-cache && craco build",
+    "test": "craco test",
+    "prettier": "prettier --write .",
+    "clear:babel-cache": "rimraf -rf ./node_modules/.cache/babel-loader/*"
   },
   "eslintConfig": {
     "extends": [
@@ -39,5 +41,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "rimraf": "^3.0.2"
   }
 }

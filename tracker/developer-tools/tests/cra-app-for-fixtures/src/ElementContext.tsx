@@ -1,4 +1,5 @@
 import React from 'react';
+import { DatasetAttribute, TrackerElementMetadata } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
 
 const rootPath = 'home/surai/Projects/objectiv/objectiv-analytics/tracker/developer-tools/tests/cra-app-for-fixtures/';
@@ -8,10 +9,25 @@ export const ElementContext = (
 ) => {
   const { elementContext } = useElementContext();
 
-  document.querySelectorAll(`[data-objectiv]`).forEach((trackedElement) => {
+  const element = document.querySelector(
+    `[${DatasetAttribute.objectivElementId}='${elementContext.elementMetadata?.objectivElementId}']`
+  );
+  const parentElementsMetadata = traverseAndCollectParentsMetadata(element);
+
+  document.querySelectorAll(`[${DatasetAttribute.objectivElementId}]`).forEach((trackedElement) => {
     if (trackedElement instanceof HTMLElement) {
       trackedElement.style.boxShadow = '';
       trackedElement.style.opacity = elementContext.elementMetadata ? '.7' : '1';
+    }
+  });
+
+  parentElementsMetadata.forEach((parentMetadata) => {
+    const parentElement = document.querySelector(
+      `[${DatasetAttribute.objectivElementId}='${parentMetadata.objectivElementId}']`
+    );
+    if (parentElement instanceof HTMLElement) {
+      parentElement.style.opacity = '1';
+      parentElement.style.boxShadow = '0 0 0 3px red';
     }
   });
 
@@ -27,14 +43,6 @@ export const ElementContext = (
   if (relevantFrame.sourceCodePreview) {
     maxDigits = Math.max(...relevantFrame.sourceCodePreview.map((line) => line.lineNumber)).toString().length;
   }
-
-  elementContext.elementMetadata?.parentsMetadata.forEach((parentMetadata) => {
-    const parentElement = document.querySelector(`[data-objectiv='${parentMetadata.elementId}']`);
-    if (parentElement instanceof HTMLElement) {
-      parentElement.style.opacity = '1';
-      parentElement.style.boxShadow = '0 0 0 3px red';
-    }
-  });
 
   return (
     <div {...props} style={{ padding: 20, zoom: 1.2 }}>
@@ -52,18 +60,18 @@ export const ElementContext = (
             <br />
           </code>
         </div>
-        {elementContext.elementMetadata?.elementId && (
+        {elementContext.elementMetadata?.objectivElementId && (
           <>
             <div style={{ flex: 0.8 }}>
               <h2>Tracking Metadata</h2>
               <code>
-                Store Id: <strong>{elementContext.elementMetadata.elementId}</strong>
+                Element Id: <strong>{elementContext.elementMetadata.objectivElementId}</strong>
                 <br />
-                Context Type: <strong>{elementContext.elementMetadata.contextType}</strong>
+                Context Type: <strong>{elementContext.elementMetadata.objectivContextType}</strong>
                 <br />
-                Context Id: <strong>{elementContext.elementMetadata.contextId}</strong>
+                Context Id: <strong>{elementContext.elementMetadata.objectivContextId}</strong>
                 <br />
-                Component: <strong>{elementContext.elementMetadata.componentName}</strong>
+                Component Name: <strong>{elementContext.elementMetadata.objectivComponent}</strong>
               </code>
             </div>
 
@@ -71,10 +79,11 @@ export const ElementContext = (
               <h2>Component Stack</h2>
               <code>
                 <ul style={{ marginLeft: -24 }}>
-                  {elementContext.elementMetadata?.parentsMetadata.map((parentElement, index) => (
+                  {parentElementsMetadata?.reverse().map((parentElementMetadata, index) => (
                     <li key={index} style={{ marginLeft: 12, marginTop: 5 }}>
-                      {parentElement.componentName} - <strong>{parentElement.contextType}</strong> with id{' '}
-                      <strong>{parentElement.contextId}</strong>
+                      {parentElementMetadata.objectivComponent} -{' '}
+                      <strong>{parentElementMetadata.objectivContextType}</strong> with id{' '}
+                      <strong>{parentElementMetadata.objectivContextId}</strong>
                     </li>
                   ))}
                 </ul>
@@ -128,4 +137,17 @@ export const ElementContext = (
       </aside>
     </div>
   );
+};
+
+const traverseAndCollectParentsMetadata = (
+  element?: Element | null,
+  parentElements: TrackerElementMetadata[] = []
+): TrackerElementMetadata[] => {
+  if (!element) {
+    return parentElements;
+  }
+  if (element instanceof HTMLElement && element.getAttribute(DatasetAttribute.objectivElementId)) {
+    parentElements.push(element.dataset);
+  }
+  return traverseAndCollectParentsMetadata(element.parentElement, parentElements);
 };

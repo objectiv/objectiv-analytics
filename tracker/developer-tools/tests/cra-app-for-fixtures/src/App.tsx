@@ -49,14 +49,7 @@ function App() {
           <button
             {...trackButton('inline-button')}
             onClick={async ({ target }) => {
-              if (!target || !(target instanceof HTMLElement)) {
-                return;
-              }
-              const elementId = target.dataset.objectiv;
-              if (!elementId) {
-                return;
-              }
-              const position = await detectPosition(elementId);
+              const position = await detectPosition(target);
               setElementContext(position);
             }}
           >
@@ -83,14 +76,7 @@ function App() {
                 <button
                   {...trackButton('inline-button')}
                   onClick={async ({ target }) => {
-                    if (!target || !(target instanceof HTMLElement)) {
-                      return;
-                    }
-                    const elementId = target.dataset.objectiv;
-                    if (!elementId) {
-                      return;
-                    }
-                    const position = await detectPosition(elementId);
+                    const position = await detectPosition(target);
                     setElementContext(position);
                   }}
                 >

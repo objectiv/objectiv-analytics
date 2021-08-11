@@ -21,5 +21,8 @@
     "test:coverage": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-react-live-testing-app --exclude @objectiv/developer-tools-cra-app-for-fixtures --verbose run test:coverage",
     "publish": "yarn workspaces foreach --exclude root --exclude @objectiv/utilities --exclude @objectiv/tracker-react-live-testing-app --exclude @objectiv/developer-tools-cra-app-for-fixtures --verbose exec npm publish",
     "utils:generate": "yarn workspace @objectiv/utilities generate && yarn prettier && yarn tsc"
+  },
+  "resolutions": {
+    "babel-plugin-objectiv": "portal:/home/surai/Projects/objectiv/objectiv-analytics/tracker/developer-tools/tests/cra-app-for-fixtures/babel-plugin-objectiv"
   }
 }

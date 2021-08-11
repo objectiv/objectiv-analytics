@@ -29,14 +29,7 @@ export default ({ children, id, color }: { children?: ReactNode; id: string; col
       <button
         {...trackButton('inline-button')}
         onClick={async ({ target }) => {
-          if (!target || !(target instanceof HTMLElement)) {
-            return;
-          }
-          const elementId = target.dataset.objectiv;
-          if (!elementId) {
-            return;
-          }
-          const position = await detectPosition(elementId);
+          const position = await detectPosition(target);
           setElementContext(position);
         }}
       >

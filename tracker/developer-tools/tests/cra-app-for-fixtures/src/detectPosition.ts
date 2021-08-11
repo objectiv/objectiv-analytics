@@ -1,11 +1,15 @@
 import { mapStackFramesToSource, parseBrowserStackTrace } from '@objectiv/developer-tools';
-import { TrackerStore } from './tracker';
+import { DatasetAttribute, TrackerElementMetadata } from './tracker';
 
-async function detectPosition(elementId: string) {
+async function detectPosition(element: EventTarget) {
   const stackTrace = new Error().stack;
   const rawStackFrames = parseBrowserStackTrace(stackTrace);
   const mappedStackFrames = await mapStackFramesToSource(rawStackFrames);
-  const elementMetadata = TrackerStore.get(elementId);
+  let elementMetadata: TrackerElementMetadata = {};
+
+  if (element instanceof HTMLElement && element.getAttribute(DatasetAttribute.objectivElementId)) {
+    elementMetadata = element.dataset;
+  }
 
   return {
     stackTrace,

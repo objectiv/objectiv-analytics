@@ -31,14 +31,7 @@ function CircleComponent({ id, color }: { id: string; color: string }) {
       <button
         {...trackButton('inline-button')}
         onClick={async ({ target }) => {
-          if (!target || !(target instanceof HTMLElement)) {
-            return;
-          }
-          const elementId = target.dataset.objectiv;
-          if (!elementId) {
-            return;
-          }
-          const position = await detectPosition(elementId);
+          const position = await detectPosition(target);
           setElementContext(position);
         }}
       >
