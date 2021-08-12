@@ -1,5 +1,7 @@
-const COMPONENT_NAME_ATTRIBUTE = 'data-objectiv-component';
-const FILE_NAME_ATTRIBUTE = 'data-objectiv-file';
+const path = require('path');
+
+const COMPONENT_ATTRIBUTE = 'data-objectiv-component';
+const FILE_NAME_ATTRIBUTE = 'data-objectiv-file-name';
 
 function isReactFragment(openingElement) {
   return (
@@ -10,7 +12,7 @@ function isReactFragment(openingElement) {
   );
 }
 
-function sourceFileNameFromState(state) {
+function getFileNameFromState(state) {
   const name = state.file.opts.parserOpts.sourceFileName;
   if (typeof name !== 'string') {
     return undefined;
@@ -24,119 +26,106 @@ function sourceFileNameFromState(state) {
   }
 }
 
-function applyAttribute({ openingElement, types, componentName, fileName }) {
-  if (!openingElement || isReactFragment(openingElement)) {
+function addJSXAttribute({ types, jsxElement, name, value }) {
+  if (!value) {
     return false;
   }
 
-  const isComponentNameAlreadySet = openingElement.node.attributes.find((node) => {
-    if (!node.name) {
-      return false;
-    }
-    return node.name.name === COMPONENT_NAME_ATTRIBUTE;
-  });
-
-  const isFileNameAlreadySet = openingElement.node.attributes.find((node) => {
-    if (!node.name) {
-      return false;
-    }
-    return node.name.name === FILE_NAME_ATTRIBUTE;
-  });
-
-  if (!isComponentNameAlreadySet) {
-    openingElement.node.attributes.push(
-      types.jSXAttribute(types.jSXIdentifier(COMPONENT_NAME_ATTRIBUTE), types.stringLiteral(componentName))
-    );
+  if (isReactFragment(jsxElement)) {
+    return false;
   }
 
-  if (!isFileNameAlreadySet) {
-    openingElement.node.attributes.push(
-      types.jSXAttribute(types.jSXIdentifier(FILE_NAME_ATTRIBUTE), types.stringLiteral(fileName))
-    );
+  if (!jsxElement.node.attributes) {
+    jsxElement.node.attributes = {};
   }
+
+  jsxElement.node.attributes.push(types.JSXAttribute(types.jSXIdentifier(name), types.stringLiteral(value)));
 }
 
-function functionBodyPushAttributes(types, path, componentName, fileName) {
-  let openingElement = null;
-  const functionBody = path.get('body').get('body');
-  if (functionBody.parent && functionBody.parent.type === 'JSXElement') {
-    const jsxElement = functionBody.find((c) => {
-      return c.type === 'JSXElement';
-    });
-    if (!jsxElement) {
-      return false;
-    }
-    openingElement = jsxElement.get('openingElement');
-  } else {
-    const returnStatement = functionBody.find((c) => {
-      return c.type === 'ReturnStatement';
-    });
-    if (!returnStatement) {
-      return false;
-    }
-
-    const arg = returnStatement.get('argument');
-    if (!arg.isJSXElement()) {
-      return false;
-    }
-
-    openingElement = arg.get('openingElement');
-  }
-
-  applyAttribute({ openingElement, types, componentName, fileName });
+function processJSXElements({ node, component, fileName, types }) {
+  node.traverse({
+    JSXOpeningElement(jsxElement) {
+      // TODO we could improve this to add the attributes only to tracked elements
+      // TODO we could improve this and add the ID, ContextType and ContextId also to third party components
+      addJSXAttribute({ types, jsxElement, name: COMPONENT_ATTRIBUTE, value: component });
+      addJSXAttribute({ types, jsxElement, name: FILE_NAME_ATTRIBUTE, value: fileName });
+    },
+  });
 }
 
 module.exports = function ({ types }) {
   return {
     visitor: {
-      FunctionDeclaration(path, state) {
-        if (!path.node.id || !path.node.id.name) {
+      ArrowFunctionExpression(arrowFunctionExpression, state) {
+        const isAnonymous = !(arrowFunctionExpression.parent.id && arrowFunctionExpression.parent.id.name);
+        const isExportDefault = arrowFunctionExpression.parentPath.isExportDefaultDeclaration();
+
+        // Skipping ArrowFunctionExpression without parent.id.name
+        if (isAnonymous && !isExportDefault) {
           return false;
         }
 
-        const componentName = path.node.id.name;
-        const fileName = sourceFileNameFromState(state);
+        const fileName = getFileNameFromState(state);
 
-        functionBodyPushAttributes(types, path, componentName, fileName);
-      },
-      ArrowFunctionExpression(path, state) {
-        if (!path.parent.id || !path.parent.id.name) {
-          return false;
+        let component = null;
+        if (!isAnonymous && !isExportDefault) {
+          component = arrowFunctionExpression.parent.id.name;
+        } else {
+          component = path.parse(fileName).name;
         }
 
-        const componentName = path.parent.id.name;
-        const fileName = sourceFileNameFromState(state);
-
-        functionBodyPushAttributes(types, path, componentName, fileName);
-      },
-      ClassDeclaration(path, state) {
-        const name = path.get('id');
-        const properties = path.get('body').get('body');
-
-        const render = properties.find((prop) => {
-          return prop.isClassMethod() && prop.get('key').isIdentifier({ name: 'render' });
+        processJSXElements({
+          node: arrowFunctionExpression,
+          component,
+          fileName,
+          types,
         });
+      },
 
-        if (!render || !render.traverse) {
+      FunctionDeclaration(functionDeclaration, state) {
+        // Skipping FunctionDeclaration without node.id.name
+        if (!functionDeclaration.node.id || !functionDeclaration.node.id.name) {
           return false;
         }
 
-        render.traverse({
-          ReturnStatement(returnStatement) {
-            const arg = returnStatement.get('argument');
-            if (!arg.isJSXElement()) {
-              return false;
+        const fileName = getFileNameFromState(state);
+
+        processJSXElements({
+          node: functionDeclaration,
+          component: functionDeclaration.node.id.name,
+          fileName,
+          types,
+        });
+      },
+
+      ClassDeclaration(classDeclaration, state) {
+        // Skipping ClassDeclaration without node.id.name
+        if (!classDeclaration.node.id || !classDeclaration.node.id.name) {
+          return false;
+        }
+
+        const fileName = getFileNameFromState(state);
+
+        classDeclaration.traverse({
+          ClassMethod(classMethod) {
+            if (classMethod.node.key.name === 'render') {
+              classMethod.traverse({
+                ReturnStatement(returnStatement) {
+                  const returnValue = returnStatement.get('argument');
+                  if (returnValue.isJSXElement()) {
+                    processJSXElements({
+                      node: returnValue,
+                      component: classDeclaration.node.id.name,
+                      fileName,
+                      types
+                    });
+                  }
+                },
+              });
             }
-
-            const openingElement = arg.get('openingElement');
-
-            const componentName = name.node && name.node.name;
-            const fileName = sourceFileNameFromState(state);
-
-            applyAttribute({ openingElement, types, componentName, fileName });
           },
         });
       },
     },
   };
-};
+}

@@ -19,8 +19,8 @@
     "uuid": "^8.3.2"
   },
   "scripts": {
-    "start": "yarn clear:babel-cache && craco start",
-    "build": "yarn clear:babel-cache && craco build",
+    "start": "yarn clear:babel-cache; craco start",
+    "build": "yarn clear:babel-cache; craco build",
     "test": "craco test",
     "prettier": "prettier --write .",
     "clear:babel-cache": "rimraf -rf ./node_modules/.cache/babel-loader/*"

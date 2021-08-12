@@ -2770,6 +2770,7 @@ __metadata:
   dependencies:
     "@craco/craco": ^6.2.0
     "@objectiv/developer-tools": ~0.0.1
+    "@types/babel-plugin-syntax-jsx": ^6.18.0
     "@types/node": ^15.0.2
     "@types/react": ^17.0.0
     "@types/react-dom": ^17.0.0
@@ -3344,6 +3345,13 @@ __metadata:
   version: 4.2.1
   resolution: "@types/aria-query@npm:4.2.1"
   checksum: 1b64d16e09ebb071f9c97a4a0ae0d0f6b573a3c14e9f966d51c9ebfc30d19681782428d7cb4ec75d93aa1b58a857f5f17babbfedeefebc85c4047cf5f6b96d5f
+  languageName: node
+  linkType: hard
+
+"@types/babel-plugin-syntax-jsx@npm:^6.18.0":
+  version: 6.18.0
+  resolution: "@types/babel-plugin-syntax-jsx@npm:6.18.0"
+  checksum: b6c22493673efdd4352482c05ab872aaba45bda7adff52ea7ca39904a92109737d0c982c06260ce052565a8868113f2577fd917e8bd0b82d071189680ace9783
   languageName: node
   linkType: hard
 
@@ -4918,6 +4926,7 @@ __metadata:
   resolution: "babel-plugin-objectiv@workspace:developer-tools/tests/cra-app-for-fixtures/babel-plugin-objectiv"
   dependencies:
     "@babel/preset-react": ^7.14.5
+    "@types/babel-plugin-syntax-jsx": ^6.18.0
     babel-core: ^6.26.3
   languageName: unknown
   linkType: soft
