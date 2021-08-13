@@ -2,7 +2,7 @@ const path = require('path');
 
 const COMPONENT_ATTRIBUTE = 'data-objectiv-component';
 const FILE_NAME_ATTRIBUTE = 'data-objectiv-file-name';
-const INTERACTIVE_ATTRIBUTE = 'data-objectiv-interactive';
+const TRACK_CLICK_ATTRIBUTE = 'data-objectiv-track-click';
 
 function isReactFragment(openingElement) {
   return (
@@ -66,7 +66,7 @@ function processJSXElements({ node, component, fileName, types }) {
 
       // TODO we could improve this to monitor other handlers as well
       const isInteractive = isJSXAttributeSet({ jsxElement, name: 'onClick' });
-      addJSXAttribute({ types, jsxElement, name: INTERACTIVE_ATTRIBUTE, value: isInteractive ? 'true' : 'false' });
+      addJSXAttribute({ types, jsxElement, name: TRACK_CLICK_ATTRIBUTE, value: isInteractive ? 'true' : 'false' });
     },
   });
 }

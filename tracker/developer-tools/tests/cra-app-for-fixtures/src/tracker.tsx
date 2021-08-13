@@ -5,13 +5,13 @@ export const DATASET_ATTRIBUTE_ELEMENT_ID = `${DATASET_ATTRIBUTE_PREFIX}-element
 export const DATASET_ATTRIBUTE_CONTEXT_TYPE = `${DATASET_ATTRIBUTE_PREFIX}-context-type`;
 export const DATASET_ATTRIBUTE_CONTEXT_ID = `${DATASET_ATTRIBUTE_PREFIX}-context-id`;
 export const DATASET_ATTRIBUTE_COMPONENT = `${DATASET_ATTRIBUTE_PREFIX}-component`;
-export const DATASET_ATTRIBUTE_INTERACTIVE = `${DATASET_ATTRIBUTE_PREFIX}-interactive`;
+export const DATASET_ATTRIBUTE_TRACK_CLICK = `${DATASET_ATTRIBUTE_PREFIX}-track-click`;
 export const DatasetAttribute = {
   objectivElementId: DATASET_ATTRIBUTE_ELEMENT_ID,
   objectivContextType: DATASET_ATTRIBUTE_CONTEXT_TYPE,
   objectivContextId: DATASET_ATTRIBUTE_CONTEXT_ID,
   objectivComponent: DATASET_ATTRIBUTE_COMPONENT,
-  objectivInteractive: DATASET_ATTRIBUTE_INTERACTIVE,
+  objectivTrackClick: DATASET_ATTRIBUTE_TRACK_CLICK,
 };
 
 // TODO get this from Schema._context_type literals
@@ -52,17 +52,28 @@ export const trackLink = (contextId: string) => trackElement(contextId, ContextT
 
 export const trackSpan = (contextId: string) => trackElement(contextId, ContextType.section);
 
-const logClick = () => {
-  console.log('should track this!');
+const logClick = (event: Event, element: HTMLElement) => {
+  if (!(event.target instanceof HTMLElement)) {
+    return;
+  }
+
+  const targetId = event.target.getAttribute(DatasetAttribute.objectivElementId);
+  const elementId = element.getAttribute(DatasetAttribute.objectivElementId);
+  if(targetId !== elementId) {
+    return;
+  }
+
+  const meta = element.dataset;
+  console.log(`Tracking ${meta.objectivComponent} as ${meta.objectivContextType}:${meta.objectivContextId}`);
 }
 
 function trackInteractiveElements(node: HTMLElement) {
   const elements = node.querySelectorAll(`[${DatasetAttribute.objectivElementId}]`);
   elements.forEach((element) => {
     if (element instanceof HTMLElement) {
-      const isInteractive = element.getAttribute(DatasetAttribute.objectivInteractive) === 'true';
-      if (isInteractive) {
-        element.addEventListener('click', logClick, element.dataset)
+      const trackClick = element.getAttribute(DatasetAttribute.objectivTrackClick) === 'true';
+      if (trackClick) {
+        element.addEventListener('click', (event: Event) => logClick(event, element), element.dataset)
       }
     }
   });
