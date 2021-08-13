@@ -2,6 +2,7 @@ const path = require('path');
 
 const COMPONENT_ATTRIBUTE = 'data-objectiv-component';
 const FILE_NAME_ATTRIBUTE = 'data-objectiv-file-name';
+const INTERACTIVE_ATTRIBUTE = 'data-objectiv-interactive';
 
 function isReactFragment(openingElement) {
   return (
@@ -26,12 +27,25 @@ function getFileNameFromState(state) {
   }
 }
 
+function isJSXAttributeSet({ jsxElement, name }) {
+  return jsxElement.node.attributes.find((attribute) => {
+    if (!attribute.name) {
+      return false;
+    }
+    return attribute.name.name === name;
+  });
+}
+
 function addJSXAttribute({ types, jsxElement, name, value }) {
   if (!value) {
     return false;
   }
 
   if (isReactFragment(jsxElement)) {
+    return false;
+  }
+
+  if (isJSXAttributeSet({ jsxElement, name })) {
     return false;
   }
 
@@ -49,6 +63,10 @@ function processJSXElements({ node, component, fileName, types }) {
       // TODO we could improve this and add the ID, ContextType and ContextId also to third party components
       addJSXAttribute({ types, jsxElement, name: COMPONENT_ATTRIBUTE, value: component });
       addJSXAttribute({ types, jsxElement, name: FILE_NAME_ATTRIBUTE, value: fileName });
+
+      // TODO we could improve this to monitor other handlers as well
+      const isInteractive = isJSXAttributeSet({ jsxElement, name: 'onClick' });
+      addJSXAttribute({ types, jsxElement, name: INTERACTIVE_ATTRIBUTE, value: isInteractive ? 'true' : 'false' });
     },
   });
 }
