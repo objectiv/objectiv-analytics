@@ -32,7 +32,7 @@ export type TrackerElementTarget = EventTarget & {
   objectiv: string;
 };
 
-export const trackElement = (contextId: string, contextType: ContextType) => {
+export const trackElement = (contextId: string, contextType: ContextType = ContextType.section) => {
   const elementId = uuidv4();
 
   return {
@@ -43,16 +43,9 @@ export const trackElement = (contextId: string, contextType: ContextType) => {
 };
 
 export const trackButton = (contextId: string) => trackElement(contextId, ContextType.button);
-
-export const trackDiv = (contextId: string) => trackElement(contextId, ContextType.section);
-
-export const trackHeader = (contextId: string) => trackElement(contextId, ContextType.section);
-
 export const trackLink = (contextId: string) => trackElement(contextId, ContextType.link);
 
-export const trackSpan = (contextId: string) => trackElement(contextId, ContextType.section);
-
-const logClick = (event: Event, element: HTMLElement) => {
+const track = (event: Event, element: HTMLElement) => {
   if (!(event.target instanceof HTMLElement)) {
     return;
   }
@@ -63,8 +56,10 @@ const logClick = (event: Event, element: HTMLElement) => {
     return;
   }
 
+  const metadata = traverseAndCollectParentsMetadata(element).reverse();
+
   const meta = element.dataset;
-  console.log(`Tracking ${meta.objectivComponent} as ${meta.objectivContextType}:${meta.objectivContextId}`);
+  console.log(`Tracking ${meta.objectivComponent} - Location Stack`, metadata.map(meta => `${meta.objectivContextType}:${meta.objectivContextId}`));
 }
 
 function trackInteractiveElements(node: HTMLElement) {
@@ -73,7 +68,7 @@ function trackInteractiveElements(node: HTMLElement) {
     if (element instanceof HTMLElement) {
       const trackClick = element.getAttribute(DatasetAttribute.objectivTrackClick) === 'true';
       if (trackClick) {
-        element.addEventListener('click', (event: Event) => logClick(event, element), element.dataset)
+        element.addEventListener('click', (event: Event) => track(event, element), element.dataset)
       }
     }
   });
@@ -90,3 +85,16 @@ const mutationObserver = new MutationObserver((mutationsList) => {
 });
 
 mutationObserver.observe(document, { childList: true, subtree: true });
+
+export const traverseAndCollectParentsMetadata = (
+  element?: Element | null,
+  parentElements: TrackerElementMetadata[] = []
+): TrackerElementMetadata[] => {
+  if (!element) {
+    return parentElements;
+  }
+  if (element instanceof HTMLElement && element.getAttribute(DatasetAttribute.objectivElementId)) {
+    parentElements.push(element.dataset);
+  }
+  return traverseAndCollectParentsMetadata(element.parentElement, parentElements);
+};

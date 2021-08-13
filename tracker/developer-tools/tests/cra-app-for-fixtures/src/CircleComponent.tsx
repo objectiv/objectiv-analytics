@@ -1,7 +1,7 @@
 import React, { CSSProperties } from 'react';
 import ButtonComponent from './ButtonComponent';
 import detectPosition from './detectPosition';
-import { trackButton, trackDiv } from './tracker';
+import { trackButton, trackElement } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
 
 const boxStyle = (color: string): CSSProperties => ({
@@ -23,7 +23,7 @@ function CircleComponent({ id, color }: { id: string; color: string }) {
   const { setElementContext } = useElementContext();
 
   return (
-    <div {...trackDiv(id)} style={boxStyle(color)}>
+    <div {...trackElement(id)} style={boxStyle(color)}>
       <h2 style={{ margin: 5 }}>Circle</h2>
       <h4>named function</h4>
       <ButtonComponent id="button-component">Button Component</ButtonComponent>

@@ -1,7 +1,7 @@
 import React, { CSSProperties, FC, ForwardedRef } from 'react';
 import ButtonComponent from './ButtonComponent';
 import detectPosition from './detectPosition';
-import { trackButton, trackDiv } from './tracker';
+import { trackButton, trackElement } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
 
 const boxStyle = (color: string): CSSProperties => ({
@@ -25,7 +25,7 @@ const BoxComponent: FC<{ id: string; color: string; forwardedRef?: ForwardedRef<
   const { setElementContext } = useElementContext();
 
   return (
-    <div {...trackDiv(id)} data-objectiv-track-click={true} style={boxStyle(color)} ref={forwardedRef}>
+    <div {...trackElement(id)} data-objectiv-track-click={true} style={boxStyle(color)} ref={forwardedRef}>
       <h2 style={{ margin: 5 }}>Box</h2>
       <h4>anonymous arrow function{forwardedRef && ' with forwarded ref'}</h4>
       <ButtonComponent id="button-component">Button Component</ButtonComponent>

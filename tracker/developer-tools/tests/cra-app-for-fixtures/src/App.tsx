@@ -7,7 +7,7 @@ import { ElementContext } from './ElementContext';
 import RoundedBoxComponent from './RoundedBoxComponent';
 import ThickBoxComponent from './ThickBoxComponent';
 import ThirdPartyComponent from './ThirdPartyComponent';
-import { trackButton, trackDiv, trackHeader } from './tracker';
+import { trackButton, trackElement } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
 
 const appStyle: CSSProperties = {
@@ -39,12 +39,12 @@ function App() {
 
   return (
     <>
-      <div {...trackDiv('app')} style={appStyle}>
+      <div {...trackElement('app')} style={appStyle}>
         <h1 style={{ margin: 0, marginBottom: 20 }}>
           App component
           <div style={{ fontSize: '50%', float: 'right', color: 'red' }}>v0.2-epic</div>
         </h1>
-        <header {...trackHeader('header')} style={headerStyle}>
+        <header {...trackElement('header')} style={headerStyle}>
           <ButtonComponent id="button-component">Button Component</ButtonComponent>{' '}
           <button
             {...trackButton('inline-button')}
@@ -70,7 +70,7 @@ function App() {
           <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
             <CircleComponent id="circle1" color="lightblue" />
             <ThirdPartyComponent
-              {...trackDiv('3rd-party')}
+              {...trackElement('3rd-party')}
               button1={<ButtonComponent id="button-component-2">Button Component</ButtonComponent>}
               button2={
                 <button

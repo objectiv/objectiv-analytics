@@ -1,7 +1,7 @@
 import React, { CSSProperties } from 'react';
 import ButtonComponent from './ButtonComponent';
 import detectPosition from './detectPosition';
-import { trackButton, trackDiv } from './tracker';
+import { trackButton, trackElement } from './tracker';
 import { TrackerElementContext } from './TrackerElementContextProvider';
 
 const boxStyle = (color: string): CSSProperties => ({
@@ -23,7 +23,7 @@ class RoundedBoxComponent extends React.Component<{ id: string; color: string }>
 
   render() {
     return (
-      <div {...trackDiv(this.props.id)} style={boxStyle(this.props.color)}>
+      <div {...trackElement(this.props.id)} style={boxStyle(this.props.color)}>
         <h2 style={{ margin: 5 }}>Rounded Box</h2>
         <h4>class component</h4>
         <ButtonComponent id="button-component">Button Component</ButtonComponent>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { DatasetAttribute, TrackerElementMetadata } from './tracker';
+import { DatasetAttribute, traverseAndCollectParentsMetadata } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
 
 const rootPath = 'home/surai/Projects/objectiv/objectiv-analytics/tracker/developer-tools/tests/cra-app-for-fixtures/';
@@ -137,17 +137,4 @@ export const ElementContext = (
       </aside>
     </div>
   );
-};
-
-const traverseAndCollectParentsMetadata = (
-  element?: Element | null,
-  parentElements: TrackerElementMetadata[] = []
-): TrackerElementMetadata[] => {
-  if (!element) {
-    return parentElements;
-  }
-  if (element instanceof HTMLElement && element.getAttribute(DatasetAttribute.objectivElementId)) {
-    parentElements.push(element.dataset);
-  }
-  return traverseAndCollectParentsMetadata(element.parentElement, parentElements);
 };

@@ -1,7 +1,7 @@
 import React, { CSSProperties, ReactNode } from 'react';
 import ButtonComponent from './ButtonComponent';
 import detectPosition from './detectPosition';
-import { trackButton, trackDiv } from './tracker';
+import { trackButton, trackElement } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
 
 const boxStyle = (color: string): CSSProperties => ({
@@ -21,7 +21,7 @@ export default ({ children, id, color }: { children?: ReactNode; id: string; col
   const { setElementContext } = useElementContext();
 
   return (
-    <div {...trackDiv(id)} style={boxStyle(color)}>
+    <div {...trackElement(id)} style={boxStyle(color)}>
       <h2 style={{ margin: 5 }}>Box</h2>
       <h4>export default anonymous arrow function</h4>
       <ButtonComponent id="button-component">Button Component</ButtonComponent>
