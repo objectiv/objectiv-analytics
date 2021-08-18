@@ -1,5 +1,5 @@
 import React from 'react';
-import { DatasetAttribute, traverseAndCollectParentsMetadata } from './tracker';
+import { TrackingAttribute, traverseAndCollectParentsTrackingAttributes } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
 
 const rootPath = 'home/surai/Projects/objectiv/objectiv-analytics/tracker/developer-tools/tests/cra-app-for-fixtures/';
@@ -10,11 +10,11 @@ export const ElementContext = (
   const { elementContext } = useElementContext();
 
   const element = document.querySelector(
-    `[${DatasetAttribute.objectivElementId}='${elementContext.elementMetadata?.objectivElementId}']`
+    `[${TrackingAttribute.objectivElementId}='${elementContext.elementMetadata?.objectivElementId}']`
   );
-  const parentElementsMetadata = traverseAndCollectParentsMetadata(element);
+  const parentElementsMetadata = traverseAndCollectParentsTrackingAttributes(element);
 
-  document.querySelectorAll(`[${DatasetAttribute.objectivElementId}]`).forEach((trackedElement) => {
+  document.querySelectorAll(`[${TrackingAttribute.objectivElementId}]`).forEach((trackedElement) => {
     if (trackedElement instanceof HTMLElement) {
       trackedElement.style.boxShadow = '';
       trackedElement.style.opacity = elementContext.elementMetadata ? '.7' : '1';
@@ -23,7 +23,7 @@ export const ElementContext = (
 
   parentElementsMetadata.forEach((parentMetadata) => {
     const parentElement = document.querySelector(
-      `[${DatasetAttribute.objectivElementId}='${parentMetadata.objectivElementId}']`
+      `[${TrackingAttribute.objectivElementId}='${parentMetadata.objectivElementId}']`
     );
     if (parentElement instanceof HTMLElement) {
       parentElement.style.opacity = '1';
