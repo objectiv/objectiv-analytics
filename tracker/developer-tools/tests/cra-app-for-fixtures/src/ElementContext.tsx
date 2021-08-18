@@ -67,9 +67,9 @@ export const ElementContext = (
               <code>
                 Element Id: <strong>{elementContext.elementMetadata.objectivElementId}</strong>
                 <br />
-                Context Type: <strong>{elementContext.elementMetadata.objectivContextType}</strong>
+                Context Type: <strong>{JSON.parse(elementContext.elementMetadata.objectivContext ?? '')?.__context_type}</strong>
                 <br />
-                Context Id: <strong>{elementContext.elementMetadata.objectivContextId}</strong>
+                Context Id: <strong>{JSON.parse(elementContext.elementMetadata.objectivContext ?? '')?.id}</strong>
                 <br />
                 Component Name: <strong>{elementContext.elementMetadata.objectivComponent}</strong>
               </code>
@@ -82,8 +82,8 @@ export const ElementContext = (
                   {parentElementsMetadata?.reverse().map((parentElementMetadata, index) => (
                     <li key={index} style={{ marginLeft: 12, marginTop: 5 }}>
                       {parentElementMetadata.objectivComponent} -{' '}
-                      <strong>{parentElementMetadata.objectivContextType}</strong> with id{' '}
-                      <strong>{parentElementMetadata.objectivContextId}</strong>
+                      <strong>{JSON.parse(parentElementMetadata.objectivContext ?? '')?.__context_type}</strong> with id{' '}
+                      <strong>{JSON.parse(parentElementMetadata.objectivContext ?? '')?.id}</strong>
                     </li>
                   ))}
                 </ul>

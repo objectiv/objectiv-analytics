@@ -2770,10 +2770,10 @@ __metadata:
   dependencies:
     "@craco/craco": ^6.2.0
     "@objectiv/developer-tools": ~0.0.1
-    "@types/babel-plugin-syntax-jsx": ^6.18.0
     "@types/node": ^15.0.2
     "@types/react": ^17.0.0
     "@types/react-dom": ^17.0.0
+    "@types/serialize-javascript": ^5.0.1
     babel-plugin-objectiv: "workspace:developer-tools/tests/cra-app-for-fixtures/babel-plugin-objectiv"
     html-react-parser: ^1.2.7
     prettier: ^2.3.2
@@ -2781,6 +2781,7 @@ __metadata:
     react-dom: ^17.0.2
     react-scripts: 4.0.3
     rimraf: ^3.0.2
+    serialize-javascript: ^6.0.0
     serve: ^12.0.0
     typescript: ^4.2.4
     uuid: ^8.3.2
@@ -3348,13 +3349,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/babel-plugin-syntax-jsx@npm:^6.18.0":
-  version: 6.18.0
-  resolution: "@types/babel-plugin-syntax-jsx@npm:6.18.0"
-  checksum: b6c22493673efdd4352482c05ab872aaba45bda7adff52ea7ca39904a92109737d0c982c06260ce052565a8868113f2577fd917e8bd0b82d071189680ace9783
-  languageName: node
-  linkType: hard
-
 "@types/babel__core@npm:^7.0.0, @types/babel__core@npm:^7.1.14, @types/babel__core@npm:^7.1.7":
   version: 7.1.14
   resolution: "@types/babel__core@npm:7.1.14"
@@ -3646,6 +3640,13 @@ __metadata:
   version: 7.3.6
   resolution: "@types/semver@npm:7.3.6"
   checksum: 36776caed9a5d80cc7e0dd32fc08ac762918273bef849c369a300895646f9126e9857c9235e130493cf1fb2ee77e44cd1b599eded4fcbd11803962936771506a
+  languageName: node
+  linkType: hard
+
+"@types/serialize-javascript@npm:^5.0.1":
+  version: 5.0.1
+  resolution: "@types/serialize-javascript@npm:5.0.1"
+  checksum: ba7a3354b6566d331a0dc3888d70684d78f37a709e98daad281254a7d7e5dd4fbeb74bac4620e9a5ab5b448e7d0e14daa2d9bd7d5a50f731723f69bbc2615070
   languageName: node
   linkType: hard
 
@@ -4926,7 +4927,6 @@ __metadata:
   resolution: "babel-plugin-objectiv@workspace:developer-tools/tests/cra-app-for-fixtures/babel-plugin-objectiv"
   dependencies:
     "@babel/preset-react": ^7.14.5
-    "@types/babel-plugin-syntax-jsx": ^6.18.0
     babel-core: ^6.26.3
   languageName: unknown
   linkType: soft
@@ -15896,6 +15896,15 @@ resolve@^2.0.0-next.3:
   dependencies:
     randombytes: ^2.1.0
   checksum: 97eef70a33c75e690b0c6aa2ffe622ecdfc888d3f181a5cf129e5778228dcd100febabc0f41ff793199ee79acd14cbbad0c69f1348a3893580fe424c4718889b
+  languageName: node
+  linkType: hard
+
+"serialize-javascript@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "serialize-javascript@npm:6.0.0"
+  dependencies:
+    randombytes: ^2.1.0
+  checksum: e086a40bfcb9d341c37a4e52bc200d143b54397cf1bb486f38cd40cdbaac4b82437d981472df94dbcff6334269e0d82daffbd6b75dd50fe54a5a5da2273f2360
   languageName: node
   linkType: hard
 

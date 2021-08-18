@@ -1,9 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
+import serialize from 'serialize-javascript';
 
 export const TrackingAttribute = {
   objectivElementId: 'data-objectiv-element-id',
-  objectivContextType: 'data-objectiv-context-type',
-  objectivContextId: 'data-objectiv-context-id',
+  objectivContext: 'data-objectiv-context',
   objectivComponent: 'data-objectiv-component',
   objectivTrackClick: 'data-objectiv-track-click',
 };
@@ -15,27 +15,26 @@ export enum ContextType {
   link = 'LinkContext',
 }
 
-export type TrackerElementMetadata = {
+export type TrackedElementMetadata = {
   objectivElementId?: string;
-  objectivContextType?: ContextType;
-  objectivContextId?: string;
+  objectivContext?: string;
   objectivComponent?: string;
+};
+
+type ContextInstance = {
+  id: string;
+  __context_type: string;
 };
 
 const makeTrackingAttributes = (contextType: string, contextId: string) => {
   const elementId = uuidv4();
+  const serializedContext = serialize({ __context_type: contextType, id: contextId });
 
   return {
     [TrackingAttribute.objectivElementId]: elementId,
-    [TrackingAttribute.objectivContextType]: contextType,
-    [TrackingAttribute.objectivContextId]: contextId
+    [TrackingAttribute.objectivContext]: serializedContext
   }
 }
-
-type ContextInstance = {
-  id: string;
-  type: string;
-};
 
 type trackElementReturnType = ReturnType<typeof makeTrackingAttributes>
 
@@ -45,7 +44,7 @@ export function trackElement(context: string | ContextInstance, contextType?: Co
   if (typeof context === 'string') {
     return makeTrackingAttributes(contextType ?? ContextType.section, context);
   } else {
-    return makeTrackingAttributes(context.type, context.id);
+    return makeTrackingAttributes(context.__context_type, context.id);
   }
 }
 
@@ -65,7 +64,13 @@ const track = (event: Event, element: HTMLElement) => {
   const meta = element.dataset;
   console.log(
     `Tracking ${meta.objectivComponent} - Location Stack`,
-    metadata.map((meta) => `${meta.objectivContextType}:${meta.objectivContextId}`)
+    metadata.map((meta) => {
+      const contextInstance = meta.objectivContext ? JSON.parse(meta.objectivContext) : null;
+      if (contextInstance) {
+        return `${contextInstance.__context_type}:${contextInstance.id}`
+      }
+      return null;
+    })
   );
 };
 
@@ -95,11 +100,12 @@ mutationObserver.observe(document, { childList: true, subtree: true });
 
 export const traverseAndCollectParentsTrackingAttributes = (
   element?: Element | null,
-  parentElements: TrackerElementMetadata[] = []
-): TrackerElementMetadata[] => {
+  parentElements: TrackedElementMetadata[] = []
+): TrackedElementMetadata[] => {
   if (!element) {
     return parentElements;
   }
+  // TODO write a type guard to determine if this is a complete tracked element, only the ID means nothing
   if (element instanceof HTMLElement && element.getAttribute(TrackingAttribute.objectivElementId)) {
     parentElements.push(element.dataset);
   }
