@@ -1,17 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
 
-export const DATASET_ATTRIBUTE_PREFIX = `data-objectiv`;
-export const DATASET_ATTRIBUTE_ELEMENT_ID = `${DATASET_ATTRIBUTE_PREFIX}-element-id`;
-export const DATASET_ATTRIBUTE_CONTEXT_TYPE = `${DATASET_ATTRIBUTE_PREFIX}-context-type`;
-export const DATASET_ATTRIBUTE_CONTEXT_ID = `${DATASET_ATTRIBUTE_PREFIX}-context-id`;
-export const DATASET_ATTRIBUTE_COMPONENT = `${DATASET_ATTRIBUTE_PREFIX}-component`;
-export const DATASET_ATTRIBUTE_TRACK_CLICK = `${DATASET_ATTRIBUTE_PREFIX}-track-click`;
 export const DatasetAttribute = {
-  objectivElementId: DATASET_ATTRIBUTE_ELEMENT_ID,
-  objectivContextType: DATASET_ATTRIBUTE_CONTEXT_TYPE,
-  objectivContextId: DATASET_ATTRIBUTE_CONTEXT_ID,
-  objectivComponent: DATASET_ATTRIBUTE_COMPONENT,
-  objectivTrackClick: DATASET_ATTRIBUTE_TRACK_CLICK,
+  objectivElementId: `data-objectiv-element-id`,
+  objectivContextType: `data-objectiv-context-type`,
+  objectivContextId: `data-objectiv-context-id`,
+  objectivComponent: `data-objectiv-component`,
+  objectivTrackClick: `data-objectiv-track-click`,
 };
 
 // TODO get this from Schema._context_type literals
@@ -26,10 +20,6 @@ export type TrackerElementMetadata = {
   objectivContextType?: ContextType;
   objectivContextId?: string;
   objectivComponent?: string;
-};
-
-export type TrackerElementTarget = EventTarget & {
-  objectiv: string;
 };
 
 export const trackElement = (contextId: string, contextType: ContextType = ContextType.section) => {
@@ -63,9 +53,9 @@ function trackInteractiveElements(node: HTMLElement) {
   const elements = node.querySelectorAll(`[${DatasetAttribute.objectivElementId}]`);
   elements.forEach((element) => {
     if (element instanceof HTMLElement) {
-      const trackClick = element.getAttribute(DatasetAttribute.objectivTrackClick) === 'true';
+      const trackClick = element.dataset.objectivTrackClick === 'true';
       if (trackClick) {
-        element.addEventListener('click', (event: Event) => track(event, element), element.dataset)
+        element.addEventListener('click', (event: Event) => track(event, element))
       }
     }
   });
