@@ -1,12 +1,12 @@
 import { StackFrame } from '@objectiv/developer-tools';
 import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState } from 'react';
-import { TrackerElementMetadata } from './tracker';
+import { TrackedElementMetadata } from './tracker';
 
 type TrackerElementContextState = {
   stackTrace?: string;
   rawStackFrames?: StackFrame[];
   mappedStackFrames?: StackFrame[];
-  elementMetadata?: TrackerElementMetadata;
+  elementMetadata?: TrackedElementMetadata;
 };
 
 export const TrackerElementContext = createContext<{

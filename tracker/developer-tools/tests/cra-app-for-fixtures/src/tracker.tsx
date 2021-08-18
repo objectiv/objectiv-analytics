@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-// TODO Switch to superjson since it supports generics both when serializing and parsing
-import serialize from 'serialize-javascript';
+import superjson from 'superjson';
 
 export const TrackingAttribute = {
   objectivElementId: 'data-objectiv-element-id',
@@ -22,14 +21,14 @@ export type TrackedElementMetadata = {
   objectivComponent?: string;
 };
 
-type ContextInstance = {
+export type ContextInstance = {
   id: string;
   __context_type: string;
 };
 
 const makeTrackingAttributes = (contextType: string, contextId: string) => {
   const elementId = uuidv4();
-  const serializedContext = serialize({ __context_type: contextType, id: contextId });
+  const serializedContext = superjson.stringify({ __context_type: contextType, id: contextId });
 
   return {
     [TrackingAttribute.objectivElementId]: elementId,

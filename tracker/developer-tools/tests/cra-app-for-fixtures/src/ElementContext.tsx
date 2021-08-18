@@ -1,5 +1,6 @@
 import React from 'react';
-import { TrackingAttribute, traverseAndCollectParentsTrackingAttributes } from './tracker';
+import superjson from "superjson";
+import { ContextInstance, TrackingAttribute, traverseAndCollectParentsTrackingAttributes } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
 
 const rootPath = 'home/surai/Projects/objectiv/objectiv-analytics/tracker/developer-tools/tests/cra-app-for-fixtures/';
@@ -67,9 +68,9 @@ export const ElementContext = (
               <code>
                 Element Id: <strong>{elementContext.elementMetadata.objectivElementId}</strong>
                 <br />
-                Context Type: <strong>{JSON.parse(elementContext.elementMetadata.objectivContext ?? '')?.__context_type}</strong>
+                Context Type: <strong>{superjson.parse<ContextInstance>(elementContext.elementMetadata.objectivContext ?? '').__context_type}</strong>
                 <br />
-                Context Id: <strong>{JSON.parse(elementContext.elementMetadata.objectivContext ?? '')?.id}</strong>
+                Context Id: <strong>{superjson.parse<ContextInstance>(elementContext.elementMetadata.objectivContext ?? '').id}</strong>
                 <br />
                 Component Name: <strong>{elementContext.elementMetadata.objectivComponent}</strong>
               </code>
@@ -82,8 +83,8 @@ export const ElementContext = (
                   {parentElementsMetadata?.reverse().map((parentElementMetadata, index) => (
                     <li key={index} style={{ marginLeft: 12, marginTop: 5 }}>
                       {parentElementMetadata.objectivComponent} -{' '}
-                      <strong>{JSON.parse(parentElementMetadata.objectivContext ?? '')?.__context_type}</strong> with id{' '}
-                      <strong>{JSON.parse(parentElementMetadata.objectivContext ?? '')?.id}</strong>
+                      <strong>{superjson.parse<ContextInstance>(parentElementMetadata.objectivContext ?? '').__context_type}</strong> with id{' '}
+                      <strong>{superjson.parse<ContextInstance>(parentElementMetadata.objectivContext ?? '').id}</strong>
                     </li>
                   ))}
                 </ul>
