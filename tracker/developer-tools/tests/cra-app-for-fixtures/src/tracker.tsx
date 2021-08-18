@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+// TODO Switch to superjson since it supports generics both when serializing and parsing
 import serialize from 'serialize-javascript';
 
 export const TrackingAttribute = {
