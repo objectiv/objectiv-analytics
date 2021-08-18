@@ -1,7 +1,7 @@
 import React, { CSSProperties } from 'react';
 import ButtonComponent from './ButtonComponent';
 import detectPosition from './detectPosition';
-import { trackButton, trackElement } from './tracker';
+import { ContextType, trackElement } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
 
 const boxStyle = (color: string): CSSProperties => ({
@@ -29,7 +29,7 @@ function CircleComponent({ id, color }: { id: string; color: string }) {
       <ButtonComponent id="button-component">Button Component</ButtonComponent>
       <br />
       <button
-        {...trackButton('inline-button')}
+        {...trackElement('inline-button', ContextType.button)}
         onClick={async ({ target }) => {
           const position = await detectPosition(target);
           setElementContext(position);

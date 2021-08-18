@@ -7,7 +7,7 @@ import { ElementContext } from './ElementContext';
 import RoundedBoxComponent from './RoundedBoxComponent';
 import ThickBoxComponent from './ThickBoxComponent';
 import ThirdPartyComponent from './ThirdPartyComponent';
-import { trackButton, trackElement } from './tracker';
+import { ContextType, trackElement } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
 
 const appStyle: CSSProperties = {
@@ -47,7 +47,7 @@ function App() {
         <header {...trackElement('header')} style={headerStyle}>
           <ButtonComponent id="button-component">Button Component</ButtonComponent>{' '}
           <button
-            {...trackButton('inline-button')}
+            {...trackElement('inline-button', ContextType.button)}
             onClick={async ({ target }) => {
               const position = await detectPosition(target);
               setElementContext(position);
@@ -74,7 +74,7 @@ function App() {
               button1={<ButtonComponent id="button-component-2">Button Component</ButtonComponent>}
               button2={
                 <button
-                  {...trackButton('inline-button')}
+                  {...trackElement('inline-button', ContextType.button)}
                   onClick={async ({ target }) => {
                     const position = await detectPosition(target);
                     setElementContext(position);

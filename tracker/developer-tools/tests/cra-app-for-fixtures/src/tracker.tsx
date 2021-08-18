@@ -15,7 +15,7 @@ export const DatasetAttribute = {
 };
 
 // TODO get this from Schema._context_type literals
-enum ContextType {
+export enum ContextType {
   section = 'SectionContext',
   button = 'ButtonContext',
   link = 'LinkContext',
@@ -41,9 +41,6 @@ export const trackElement = (contextId: string, contextType: ContextType = Conte
     [DatasetAttribute.objectivContextId]: contextId,
   };
 };
-
-export const trackButton = (contextId: string) => trackElement(contextId, ContextType.button);
-export const trackLink = (contextId: string) => trackElement(contextId, ContextType.link);
 
 const track = (event: Event, element: HTMLElement) => {
   if (!(event.target instanceof HTMLElement)) {

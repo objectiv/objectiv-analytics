@@ -1,7 +1,7 @@
 import React, { CSSProperties, ReactNode } from 'react';
 import ButtonComponent from './ButtonComponent';
 import detectPosition from './detectPosition';
-import { trackButton, trackElement } from './tracker';
+import { ContextType, trackElement } from './tracker';
 import { useElementContext } from './TrackerElementContextProvider';
 
 const boxStyle = (color: string): CSSProperties => ({
@@ -27,7 +27,7 @@ export default ({ children, id, color }: { children?: ReactNode; id: string; col
       <ButtonComponent id="button-component">Button Component</ButtonComponent>
       <br />
       <button
-        {...trackButton('inline-button')}
+        {...trackElement('inline-button', ContextType.button)}
         onClick={async ({ target }) => {
           const position = await detectPosition(target);
           setElementContext(position);
