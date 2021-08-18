@@ -135,7 +135,7 @@ module.exports = function ({ types }) {
                       node: returnValue,
                       component: classDeclaration.node.id.name,
                       fileName,
-                      types
+                      types,
                     });
                   }
                 },
@@ -146,4 +146,4 @@ module.exports = function ({ types }) {
       },
     },
   };
-}
+};
