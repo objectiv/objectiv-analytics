@@ -6690,6 +6690,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"docs@workspace:docs":
+  version: 0.0.0-use.local
+  resolution: "docs@workspace:docs"
+  dependencies:
+    "@docusaurus/core": 2.0.0-beta.6
+    "@docusaurus/module-type-aliases": 2.0.0-beta.6
+    "@docusaurus/preset-classic": 2.0.0-beta.6
+    "@mdx-js/react": ^1.6.21
+    "@svgr/webpack": ^5.5.0
+    "@tsconfig/docusaurus": ^1.0.4
+    "@types/react": ^17.0.14
+    "@types/react-helmet": ^6.1.2
+    "@types/react-router-dom": ^5.1.8
+    clsx: ^1.1.1
+    file-loader: ^6.2.0
+    prism-react-renderer: ^1.2.1
+    react: ^17.0.1
+    react-dom: ^17.0.1
+    typescript: ^4.3.5
+    url-loader: ^4.1.1
+  languageName: unknown
+  linkType: soft
+
 "dom-converter@npm:^0.2.0":
   version: 0.2.0
   resolution: "dom-converter@npm:0.2.0"
@@ -11728,29 +11751,6 @@ fsevents@^1.2.7:
   checksum: 1a2f1e9d0bcfc299b8491170a50e6e7ca23392641d7781a8528e96c72f0013ba7ee731792ff8586c8eaec0328acda16c59622924c82c58bd0eb5c4ee67794856
   languageName: node
   linkType: hard
-
-"objectiv-tracker-docs@workspace:docs":
-  version: 0.0.0-use.local
-  resolution: "objectiv-tracker-docs@workspace:docs"
-  dependencies:
-    "@docusaurus/core": 2.0.0-beta.6
-    "@docusaurus/module-type-aliases": 2.0.0-beta.6
-    "@docusaurus/preset-classic": 2.0.0-beta.6
-    "@mdx-js/react": ^1.6.21
-    "@svgr/webpack": ^5.5.0
-    "@tsconfig/docusaurus": ^1.0.4
-    "@types/react": ^17.0.14
-    "@types/react-helmet": ^6.1.2
-    "@types/react-router-dom": ^5.1.8
-    clsx: ^1.1.1
-    file-loader: ^6.2.0
-    prism-react-renderer: ^1.2.1
-    react: ^17.0.1
-    react-dom: ^17.0.1
-    typescript: ^4.3.5
-    url-loader: ^4.1.1
-  languageName: unknown
-  linkType: soft
 
 "obuf@npm:^1.0.0, obuf@npm:^1.1.2":
   version: 1.1.2
