@@ -29,6 +29,8 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          - 5432:5432
     env:
       # tell tests to use the above defined postgres service
       OBJ_DB_TEST_URL: 'postgresql://objectiv:no_password_set@postgres:5432/objectiv'
