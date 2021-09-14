@@ -13,6 +13,7 @@ from buhtuh.types import get_series_type_from_dtype, arg_to_type
 
 DataFrameOrSeries = Union['BuhTuhDataFrame', 'BuhTuhSeries']
 
+
 class BuhTuhDataFrame:
     def __init__(
         self,
@@ -133,7 +134,7 @@ class BuhTuhDataFrame:
         df.to_sql(name=name, con=conn, if_exists=if_exists, index_label=index)
         conn.close()
 
-        ## Todo, this should use from_table from here on.
+        # Todo, this should use from_table from here on.
         model = CustomSqlModel(sql=f'SELECT * FROM {name}').instantiate()
 
         dtypes = {column_name: dtype.name for column_name, dtype in df.dtypes.items()}
@@ -185,7 +186,8 @@ class BuhTuhDataFrame:
 
     def _df_or_series(self, df: 'BuhTuhDataFrame') -> DataFrameOrSeries:
         """
-        Figure out whether there is just one series in our data, and return that series instead of the whole frame
+        Figure out whether there is just one series in our data, and return that series instead of the
+        whole frame.
         :param df: the df
         :return: BuhTuhDataFrame, BuhTuhSeries
         """
@@ -250,7 +252,8 @@ class BuhTuhDataFrame:
                     dtypes={name: series.dtype for name, series in self.data.items()}
                 )
             )
-        raise NotImplementedError(f"Only int, str, (set|list|tuple)[str], slice or BuhTuhSeriesBoolean are supported, but got {type(key)}")
+        raise NotImplementedError(f"Only int, str, (set|list|tuple)[str], slice or BuhTuhSeriesBoolean "
+                                  f"are supported, but got {type(key)}")
 
     def __setitem__(self,
                     key: Union[str, List[str]],
@@ -304,13 +307,12 @@ class BuhTuhDataFrame:
             for n in remove:
                 del(self._data[n])
             return
-        if isinstance(key, (list,tuple,set)):
+        if isinstance(key, (list, tuple, set)):
             for k in key:
                 self.__delitem__(k)
             return
         else:
             raise NotImplementedError(f'Unsupported type {type(key)}')
-
 
     def astype(self, dtype: Union[str, Dict[str, str]]) -> 'BuhTuhDataFrame':
         # Check and/or convert parameters
@@ -338,7 +340,10 @@ class BuhTuhDataFrame:
             series=new_data
         )
 
-    def groupby(self, by: Union[str, 'BuhTuhSeries', List[str], List['BuhTuhSeries']] = None) -> 'BuhTuhGroupBy':
+    def groupby(
+            self,
+            by: Union[str, 'BuhTuhSeries', List[str], List['BuhTuhSeries']] = None
+    ) -> 'BuhTuhGroupBy':
         """
         Group by any of the series currently in this dataframe, both from index
         as well as data.
@@ -365,7 +370,14 @@ class BuhTuhDataFrame:
 
         return BuhTuhGroupBy(buh_tuh=self, group_by_columns=group_by_columns)
 
-    def sort_values(self, sort_order: Union[str,List[str],Dict[str,bool]] = None, ascending: List[bool] = None) -> 'BuhTuhDataFrame':
+    def sort_values(
+            self,
+            sort_order: Union[str, List[str], Dict[str, bool]] = None,
+            ascending: List[bool] = None
+    ) -> 'BuhTuhDataFrame':
+        """
+        TODO: comments
+        """
         if sort_order is None:
             return self
         if isinstance(sort_order, str):
@@ -399,7 +411,10 @@ class BuhTuhDataFrame:
         conn.close()
         return df
 
-    def get_current_node(self, limit: Union[int,slice] = None, order: Dict[str, bool] = None) -> SqlModel[CustomSqlModel]:
+    def get_current_node(
+            self,
+            limit: Union[int, slice] = None, order: Dict[str, bool] = None
+    ) -> SqlModel[CustomSqlModel]:
         """
         Wrap the current set op series in a model builder
         :param limit: The limit to use
@@ -409,7 +424,7 @@ class BuhTuhDataFrame:
         """
 
         if isinstance(limit, int):
-            limit = slice(0,limit)
+            limit = slice(0, limit)
 
         limit_str = 'limit all'
         if limit is not None:
@@ -457,8 +472,8 @@ class BuhTuhDataFrame:
 
     def merge(self, other: DataFrameOrSeries,
               conditions: List[
-                  Union['BuhTuhSeries', str,
-                        Tuple[Union['BuhTuhSeries', str], Union['BuhTuhSeries', str]]
+                  Union[
+                      'BuhTuhSeries', str, Tuple[Union['BuhTuhSeries', str], Union['BuhTuhSeries', str]]
                   ]
               ] = None,
               how: str = 'inner') -> 'BuhTuhDataFrame':
@@ -469,10 +484,10 @@ class BuhTuhDataFrame:
         :param conditions:
                     None (default): merge on index
                     List of conditions to use:
-                        str: use the series that exist on both sides with the same name to merge
-                        BuhTuhSeries: use the name of this series to find the series on both sides
-                        Tuple (str, str), (str, BuhTuhSeries), (BuhTuhSeries, str) or (BuhTuhSeries,BuhTuhSeries):
-                            match the combinations as specified
+                        * str: use the series that exist on both sides with the same name to merge
+                        * BuhTuhSeries: use the name of this series to find the series on both sides
+                        * Tuple (str, str), (str, BuhTuhSeries), (BuhTuhSeries, str),
+                            or (BuhTuhSeries,BuhTuhSeries): match the combinations as specified
 
         :param how: left, right, inner (default)
         :return: a freshly merged df
@@ -488,7 +503,8 @@ class BuhTuhDataFrame:
             if other_index == self_index:
                 conditions = list(zip(self.index.values(), other.index.values()))
             else:
-                raise NotImplementedError(f"Merge without conditions without matching indices not supported: {self_index} != {other_index}")
+                raise NotImplementedError(f"Merge without conditions without matching indices "
+                                          f"not supported: {self_index} != {other_index}")
 
         left_all = {**self.index, **self.data}
         if isinstance(other, BuhTuhSeries):
@@ -526,9 +542,9 @@ class BuhTuhDataFrame:
                     column_sql.append(left_uq.get_column_expression(table_alias='l'))
 
                     right_uq = BuhTuhSeries.get_instance(base=self,
-                                                        name=name + '_right',
-                                                        dtype=right.dtype,
-                                                        expression=right.expression)
+                                                         name=name + '_right',
+                                                         dtype=right.dtype,
+                                                         expression=right.expression)
                     new_series[name + '_right'] = right_uq
                     column_sql.append(right_uq.get_column_expression(table_alias='r'))
                 else:
@@ -564,11 +580,15 @@ class BuhTuhDataFrame:
             if isinstance(right, str):
                 right = right_all[right]
 
-            # Make sure the series are actually there (will actually raise KeyError before raising AssertionError)
+            # Make sure the series are actually there (will actually raise KeyError before raising
+            # AssertionError)
             assert left_all[left.name] and right_all[right.name]
 
-            # if names are not equal, or one of the series is actually an expression, we can not using "USING(...)"
-            if left.name != right.name or left.name != left.get_expression() or right.name != right.get_expression():
+            # if names are not equal, or one of the series is actually an expression, we cannot use
+            # "USING(...)"
+            if left.name != right.name or \
+                    left.name != left.get_expression() or \
+                    right.name != right.get_expression():
                 use_using = False
 
             on_conditions.append((left, right))
@@ -781,7 +801,7 @@ class BuhTuhSeries(ABC):
     def __mul__(self, other) -> 'BuhTuhSeries':
         raise NotImplementedError()
 
-    ## What about __matmul__?
+    # TODO, answer: What about __matmul__?
 
     def __truediv__(self, other) -> 'BuhTuhSeries':
         raise NotImplementedError()
@@ -792,7 +812,7 @@ class BuhTuhSeries(ABC):
     def __mod__(self, other) -> 'BuhTuhSeries':
         raise NotImplementedError()
 
-    ## What about __divmod__?
+    # TODO, answer: What about __divmod__?
 
     def __pow__(self, other, modulo=None) -> 'BuhTuhSeries':
         raise NotImplementedError()
@@ -1002,7 +1022,7 @@ class BuhTuhSeriesString(BuhTuhSeries):
         expression = f'({self.expression}) {comparator} ({other.expression})'
         return self._get_derived_series('bool', expression)
 
-    def slice(self, start: Union[int,slice], stop: int = None) -> 'BuhTuhSeriesString':
+    def slice(self, start: Union[int, slice], stop: int = None) -> 'BuhTuhSeriesString':
         """
         Get a python string slice using DB functions. Format follows standard slice format
         Note: this is called 'slice' to not destroy index selection logic
@@ -1054,7 +1074,6 @@ class BuhTuhSeriesString(BuhTuhSeries):
         return self._get_derived_series('string', expression)
 
 
-
 class BuhTuhSeriesTimestamp(BuhTuhSeries):
     """
     Types in PG that we want to support: https://www.postgresql.org/docs/9.1/datatype-datetime.html
@@ -1070,7 +1089,8 @@ class BuhTuhSeriesTimestamp(BuhTuhSeries):
         if isinstance(value, (datetime.datetime, datetime.date, numpy.timedelta64)):
             value = str(value)
         if not isinstance(value, str):
-            raise TypeError(f'value should be str or (datetime.datetime, datetime.date, numpy.timedelta64), actual type: {type(value)}')
+            raise TypeError(f'value should be str or (datetime.datetime, datetime.date, numpy.timedelta64)'
+                            f', actual type: {type(value)}')
         # TODO: fix sql injection!
         # Maybe we should do some checking on syntax here?
         return f"'{value}'"
@@ -1104,12 +1124,13 @@ class BuhTuhSeriesTimestamp(BuhTuhSeries):
         expression = f'({self.expression}) - ({other.expression})'
         return self._get_derived_series('timedelta', expression)
 
+
 class BuhTuhSeriesDate(BuhTuhSeriesTimestamp):
     """
     Types in PG that we want to support: https://www.postgresql.org/docs/9.1/datatype-datetime.html
         date
     """
-    dtype ='date'
+    dtype = 'date'
     db_dtype = 'date'
 
     @staticmethod
@@ -1125,7 +1146,7 @@ class BuhTuhSeriesTime(BuhTuhSeriesTimestamp):
     Types in PG that we want to support: https://www.postgresql.org/docs/9.1/datatype-datetime.html
         time without time zone
     """
-    dtype ='time'
+    dtype = 'time'
     db_dtype = 'time without time zone'
 
     @staticmethod
@@ -1137,7 +1158,7 @@ class BuhTuhSeriesTime(BuhTuhSeriesTimestamp):
 
 
 class BuhTuhSeriesTimedelta(BuhTuhSeries):
-    dtype ='timedelta'
+    dtype = 'timedelta'
     db_dtype = 'interval'
 
     @staticmethod
@@ -1145,7 +1166,8 @@ class BuhTuhSeriesTimedelta(BuhTuhSeries):
         if isinstance(value, (numpy.timedelta64, datetime.timedelta)):
             value = str(value)
         if not isinstance(value, str):
-            raise TypeError(f'value should be str or (datetime.datetime, datetime.date, numpy.timedelta64), actual type: {type(value)}')
+            raise TypeError(f'value should be str or (datetime.datetime, datetime.date, numpy.timedelta64)'
+                            f', actual type: {type(value)}')
         # TODO: fix sql injection!
         # Maybe we should do some checking on syntax here?
         return f"'{value}'"
@@ -1205,7 +1227,6 @@ class BuhTuhGroupBy:
             assert col.base_node == buh_tuh.base_node
             self.groupby[col.name] = col
 
-
         if len(group_by_columns) == 0:
             # create new dummy column so we can aggregate over everything
             self.groupby = {
@@ -1215,16 +1236,21 @@ class BuhTuhGroupBy:
                                                         expression='1')
             }
 
-        self.aggregated_data = {name: series for name, series in buh_tuh.all_series.items() if name not in self.groupby.keys()}
+        self.aggregated_data = {name: series
+                                for name, series in buh_tuh.all_series.items()
+                                if name not in self.groupby.keys()}
 
-
-    def aggregate(self, series: Union[Dict[str, str], List[str]], aggregations: List[str] = None) -> BuhTuhDataFrame:
+    def aggregate(
+            self,
+            series: Union[Dict[str, str], List[str]],
+            aggregations: List[str] = None
+    ) -> BuhTuhDataFrame:
         """
         Execute requested aggregations on this groupby
 
         :param series: a dict containing 'name': 'aggregation_method'.
-            In case you need duplicates: a list of 'name's is also supported, but aggregations should have the same
-            length list with the aggregation methods requested
+            In case you need duplicates: a list of 'name's is also supported, but aggregations should have
+            the same length list with the aggregation methods requested
         :param aggregations: The aggregation methods requested in case series is a list.
         :return: a new BuhTuhDataFrame containing the requested aggregations
         """
@@ -1287,7 +1313,8 @@ class BuhTuhGroupBy:
 
     def __getitem__(self, key: Union[str, List[str]]) -> 'BuhTuhGroupBy':
 
-        assert isinstance(key, (str, list, tuple)), f'a buhtuh `selection` should be a str or list but got {type(key)} instead.'
+        assert isinstance(key, (str, list, tuple)), f'a buhtuh `selection` should be a str or list but ' \
+                                                    f'got {type(key)} instead.'
 
         if isinstance(key, str):
             key = [key]
