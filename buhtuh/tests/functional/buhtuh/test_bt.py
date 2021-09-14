@@ -4,6 +4,7 @@ Copyright 2021 Objectiv B.V.
 Tests for BuhTuhDataFrame using a very simple dataset.
 
 """
+import os
 from typing import List, Union
 
 import pytest
@@ -11,6 +12,10 @@ import sqlalchemy
 from sqlalchemy.engine import ResultProxy
 
 from buhtuh import BuhTuhDataFrame, BuhTuhSeries, BuhTuhSeriesBoolean, BuhTuhSeriesString
+
+
+DB_TEST_URL = os.environ.get('OBJ_DB_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
+
 
 FULL_TEST_DATA = [
     [1, 'Ljouwert', 'Leeuwarden', 93485, 1285],
@@ -43,7 +48,7 @@ MERGE_INDEX_AND_COLUMNS = ['_index_skating_order'] + MERGE_COLUMNS
 
 
 def _get_bt(table, dataset, columns) -> BuhTuhDataFrame:
-    engine = sqlalchemy.create_engine('postgresql://objectiv:@localhost:5432/objectiv')
+    engine = sqlalchemy.create_engine(DB_TEST_URL)
     import pandas as pd
     df = pd.DataFrame.from_records(dataset, columns=columns)
     # by default the strings are marked as 'object' not as string type, fix that:

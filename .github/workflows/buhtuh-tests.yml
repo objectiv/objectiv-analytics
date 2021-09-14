@@ -15,23 +15,23 @@ jobs:
         python-version: [3.7, 3.8, 3.9]
     services:
       # based on https://docs.github.com/en/actions/guides/creating-postgresql-service-containers
-      # Label used to access the service container
       postgres:
         image: postgres
         env:
           POSTGRES_USER: 'objectiv'
           POSTGRES_PASSWORD: 'no_password_set'
           POSTGRES_DB: 'objectiv'
-          POSTGRES_HOSTNAME: 'objectiv_postgres'
+          POSTGRES_HOSTNAME: 'postgres'
           POSTGRES_PORT: 5432
-          # WARNING: Disabling authentication here. This is OK for our CI environment
-          POSTGRES_HOST_AUTH_METHOD: 'trust'
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    env:
+      # tell tests to use the above defined postgres service
+      OBJ_DB_TEST_URL: 'postgresql://objectiv:no_password_set@postgres:5432/objectiv'
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
