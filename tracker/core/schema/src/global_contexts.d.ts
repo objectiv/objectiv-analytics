@@ -8,7 +8,7 @@ export interface ApplicationContext extends AbstractGlobalContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'ApplicationContext';
+  readonly _type: 'ApplicationContext';
 }
 
 /**
@@ -19,7 +19,7 @@ export interface DeviceContext extends AbstractGlobalContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'DeviceContext';
+  readonly _type: 'DeviceContext';
 
   /**
    * String describing the user-agent that emitted the event
@@ -35,7 +35,7 @@ export interface ErrorContext extends AbstractGlobalContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'ErrorContext';
+  readonly _type: 'ErrorContext';
 
   /**
    * Error message
@@ -51,7 +51,7 @@ export interface CookieIdContext extends AbstractGlobalContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'CookieIdContext';
+  readonly _type: 'CookieIdContext';
 
   /**
    * Unique identifier from the session cookie
@@ -67,7 +67,7 @@ export interface SessionContext extends AbstractGlobalContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'SessionContext';
+  readonly _type: 'SessionContext';
 
   /**
    * Hit counter relative to the current session, this event originated in.
@@ -83,7 +83,7 @@ export interface HttpContext extends AbstractGlobalContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'HttpContext';
+  readonly _type: 'HttpContext';
 
   /**
    * Full URL to HTTP referrer of the current page.

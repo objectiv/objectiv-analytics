@@ -19,15 +19,15 @@ class AbstractContext(SchemaEntity, ABC):
 
         Attributes:
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'AbstractContext'
+    _type = 'AbstractContext'
 
     def __init__(self, id: str, **kwargs: Optional[Any]):
         """
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         SchemaEntity.__init__(self, id=id, **kwargs)
@@ -41,15 +41,15 @@ class AbstractLocationContext(AbstractContext, ABC):
 
         Attributes:
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'AbstractLocationContext'
+    _type = 'AbstractLocationContext'
 
     def __init__(self, id: str, **kwargs: Optional[Any]):
         """
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         AbstractContext.__init__(self, id=id, **kwargs)
@@ -62,15 +62,15 @@ class AbstractGlobalContext(AbstractContext, ABC):
 
         Attributes:
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'AbstractGlobalContext'
+    _type = 'AbstractGlobalContext'
 
     def __init__(self, id: str, **kwargs: Optional[Any]):
         """
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         AbstractContext.__init__(self, id=id, **kwargs)
@@ -82,15 +82,15 @@ class ApplicationContext(AbstractGlobalContext):
 
         Attributes:
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'ApplicationContext'
+    _type = 'ApplicationContext'
 
     def __init__(self, id: str, **kwargs: Optional[Any]):
         """
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         AbstractGlobalContext.__init__(self, id=id, **kwargs)
@@ -104,15 +104,15 @@ class SectionContext(AbstractLocationContext):
 
         Attributes:
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'SectionContext'
+    _type = 'SectionContext'
 
     def __init__(self, id: str, **kwargs: Optional[Any]):
         """
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         AbstractLocationContext.__init__(self, id=id, **kwargs)
@@ -126,17 +126,17 @@ class WebDocumentContext(SectionContext):
         url (str):
                 Property containing a (valid) URL
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'WebDocumentContext'
+    _type = 'WebDocumentContext'
 
     def __init__(self, url: str, id: str, **kwargs: Optional[Any]):
         """
         :param url: 
             Property containing a (valid) URL
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         SectionContext.__init__(self, url=url, id=id, **kwargs)
@@ -150,17 +150,17 @@ class ScreenContext(SectionContext):
         screen (str):
                 name of the screen
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'ScreenContext'
+    _type = 'ScreenContext'
 
     def __init__(self, screen: str, id: str, **kwargs: Optional[Any]):
         """
         :param screen: 
             name of the screen
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         SectionContext.__init__(self, screen=screen, id=id, **kwargs)
@@ -172,15 +172,15 @@ class ExpandableSectionContext(SectionContext):
 
         Attributes:
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'ExpandableSectionContext'
+    _type = 'ExpandableSectionContext'
 
     def __init__(self, id: str, **kwargs: Optional[Any]):
         """
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         SectionContext.__init__(self, id=id, **kwargs)
@@ -192,15 +192,15 @@ class MediaPlayerContext(SectionContext):
 
         Attributes:
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'MediaPlayerContext'
+    _type = 'MediaPlayerContext'
 
     def __init__(self, id: str, **kwargs: Optional[Any]):
         """
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         SectionContext.__init__(self, id=id, **kwargs)
@@ -212,15 +212,15 @@ class NavigationContext(SectionContext):
 
         Attributes:
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'NavigationContext'
+    _type = 'NavigationContext'
 
     def __init__(self, id: str, **kwargs: Optional[Any]):
         """
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         SectionContext.__init__(self, id=id, **kwargs)
@@ -232,15 +232,15 @@ class OverlayContext(SectionContext):
 
         Attributes:
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'OverlayContext'
+    _type = 'OverlayContext'
 
     def __init__(self, id: str, **kwargs: Optional[Any]):
         """
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         SectionContext.__init__(self, id=id, **kwargs)
@@ -253,15 +253,15 @@ class ItemContext(AbstractLocationContext):
 
         Attributes:
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'ItemContext'
+    _type = 'ItemContext'
 
     def __init__(self, id: str, **kwargs: Optional[Any]):
         """
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         AbstractLocationContext.__init__(self, id=id, **kwargs)
@@ -273,15 +273,15 @@ class InputContext(ItemContext):
 
         Attributes:
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'InputContext'
+    _type = 'InputContext'
 
     def __init__(self, id: str, **kwargs: Optional[Any]):
         """
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         ItemContext.__init__(self, id=id, **kwargs)
@@ -296,17 +296,17 @@ class ActionContext(ItemContext):
         text (str):
                 The text of the interactive element or, for visuals, a string describing it
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'ActionContext'
+    _type = 'ActionContext'
 
     def __init__(self, text: str, id: str, **kwargs: Optional[Any]):
         """
         :param text: 
             The text of the interactive element or, for visuals, a string describing it
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         ItemContext.__init__(self, text=text, id=id, **kwargs)
@@ -320,17 +320,17 @@ class ButtonContext(ActionContext):
         text (str):
                 The text of the interactive element or, for visuals, a string describing it
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'ButtonContext'
+    _type = 'ButtonContext'
 
     def __init__(self, text: str, id: str, **kwargs: Optional[Any]):
         """
         :param text: 
             The text of the interactive element or, for visuals, a string describing it
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         ActionContext.__init__(self, text=text, id=id, **kwargs)
@@ -346,10 +346,10 @@ class LinkContext(ActionContext):
         text (str):
                 The text of the interactive element or, for visuals, a string describing it
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'LinkContext'
+    _type = 'LinkContext'
 
     def __init__(self,
                  href: str,
@@ -362,7 +362,7 @@ class LinkContext(ActionContext):
         :param text: 
             The text of the interactive element or, for visuals, a string describing it
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         ActionContext.__init__(self, href=href, text=text, id=id, **kwargs)
@@ -376,17 +376,17 @@ class DeviceContext(AbstractGlobalContext):
         user_agent (str):
                 String describing the user-agent that emitted the event
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'DeviceContext'
+    _type = 'DeviceContext'
 
     def __init__(self, user_agent: str, id: str, **kwargs: Optional[Any]):
         """
         :param user_agent: 
             String describing the user-agent that emitted the event
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         AbstractGlobalContext.__init__(
@@ -401,17 +401,17 @@ class ErrorContext(AbstractGlobalContext):
         message (str):
                 Error message
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'ErrorContext'
+    _type = 'ErrorContext'
 
     def __init__(self, message: str, id: str, **kwargs: Optional[Any]):
         """
         :param message: 
             Error message
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         AbstractGlobalContext.__init__(self, message=message, id=id, **kwargs)
@@ -425,17 +425,17 @@ class CookieIdContext(AbstractGlobalContext):
         cookie_id (str):
                 Unique identifier from the session cookie
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'CookieIdContext'
+    _type = 'CookieIdContext'
 
     def __init__(self, cookie_id: str, id: str, **kwargs: Optional[Any]):
         """
         :param cookie_id: 
             Unique identifier from the session cookie
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         AbstractGlobalContext.__init__(
@@ -450,17 +450,17 @@ class SessionContext(AbstractGlobalContext):
         hit_number (int):
                 Hit counter relative to the current session, this event originated in.
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'SessionContext'
+    _type = 'SessionContext'
 
     def __init__(self, hit_number: int, id: str, **kwargs: Optional[Any]):
         """
         :param hit_number: 
             Hit counter relative to the current session, this event originated in.
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         AbstractGlobalContext.__init__(
@@ -479,10 +479,10 @@ class HttpContext(AbstractGlobalContext):
         remote_address (str):
                 (public) IP address of the agent that sent the event.
         id (str):
-                A unique string identifier to be combined with the Context Type (`_context_type`)
+                A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
-    _context_type = 'HttpContext'
+    _type = 'HttpContext'
 
     def __init__(self,
                  referer: str,
@@ -498,7 +498,7 @@ class HttpContext(AbstractGlobalContext):
         :param remote_address: 
             (public) IP address of the agent that sent the event.
         :param id: 
-            A unique string identifier to be combined with the Context Type (`_context_type`)
+            A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
         AbstractGlobalContext.__init__(self,
@@ -531,7 +531,7 @@ class AbstractEvent(SchemaEntity, ABC):
         time (int):
                 Timestamp indicating when the event was generated
     """
-    event = 'AbstractEvent'
+    _type = 'AbstractEvent'
 
     def __init__(self,
                  location_stack: List[AbstractLocationContext],
@@ -586,7 +586,7 @@ class NonInteractiveEvent(AbstractEvent):
         time (int):
                 Timestamp indicating when the event was generated
     """
-    event = 'NonInteractiveEvent'
+    _type = 'NonInteractiveEvent'
 
     def __init__(self,
                  location_stack: List[AbstractLocationContext],
@@ -641,7 +641,7 @@ class DocumentLoadedEvent(NonInteractiveEvent):
         time (int):
                 Timestamp indicating when the event was generated
     """
-    event = 'DocumentLoadedEvent'
+    _type = 'DocumentLoadedEvent'
 
     def __init__(self,
                  location_stack: List[AbstractLocationContext],
@@ -694,7 +694,7 @@ class URLChangeEvent(NonInteractiveEvent):
         time (int):
                 Timestamp indicating when the event was generated
     """
-    event = 'URLChangeEvent'
+    _type = 'URLChangeEvent'
 
     def __init__(self,
                  location_stack: List[AbstractLocationContext],
@@ -747,7 +747,7 @@ class ApplicationLoadedEvent(NonInteractiveEvent):
         time (int):
                 Timestamp indicating when the event was generated
     """
-    event = 'ApplicationLoadedEvent'
+    _type = 'ApplicationLoadedEvent'
 
     def __init__(self,
                  location_stack: List[AbstractLocationContext],
@@ -799,7 +799,7 @@ class SectionVisibleEvent(NonInteractiveEvent):
         time (int):
                 Timestamp indicating when the event was generated
     """
-    event = 'SectionVisibleEvent'
+    _type = 'SectionVisibleEvent'
 
     def __init__(self,
                  location_stack: List[AbstractLocationContext],
@@ -851,7 +851,7 @@ class SectionHiddenEvent(NonInteractiveEvent):
         time (int):
                 Timestamp indicating when the event was generated
     """
-    event = 'SectionHiddenEvent'
+    _type = 'SectionHiddenEvent'
 
     def __init__(self,
                  location_stack: List[AbstractLocationContext],
@@ -903,7 +903,7 @@ class VideoEvent(NonInteractiveEvent):
         time (int):
                 Timestamp indicating when the event was generated
     """
-    event = 'VideoEvent'
+    _type = 'VideoEvent'
 
     def __init__(self,
                  location_stack: List[AbstractLocationContext],
@@ -955,7 +955,7 @@ class VideoLoadEvent(VideoEvent):
         time (int):
                 Timestamp indicating when the event was generated
     """
-    event = 'VideoLoadEvent'
+    _type = 'VideoLoadEvent'
 
     def __init__(self,
                  location_stack: List[AbstractLocationContext],
@@ -1007,7 +1007,7 @@ class VideoStartEvent(VideoEvent):
         time (int):
                 Timestamp indicating when the event was generated
     """
-    event = 'VideoStartEvent'
+    _type = 'VideoStartEvent'
 
     def __init__(self,
                  location_stack: List[AbstractLocationContext],
@@ -1059,7 +1059,7 @@ class VideoStopEvent(VideoEvent):
         time (int):
                 Timestamp indicating when the event was generated
     """
-    event = 'VideoStopEvent'
+    _type = 'VideoStopEvent'
 
     def __init__(self,
                  location_stack: List[AbstractLocationContext],
@@ -1111,7 +1111,7 @@ class VideoPauseEvent(VideoEvent):
         time (int):
                 Timestamp indicating when the event was generated
     """
-    event = 'VideoPauseEvent'
+    _type = 'VideoPauseEvent'
 
     def __init__(self,
                  location_stack: List[AbstractLocationContext],
@@ -1163,7 +1163,7 @@ class InteractiveEvent(AbstractEvent):
         time (int):
                 Timestamp indicating when the event was generated
     """
-    event = 'InteractiveEvent'
+    _type = 'InteractiveEvent'
 
     def __init__(self,
                  location_stack: List[AbstractLocationContext],
@@ -1215,7 +1215,7 @@ class ClickEvent(InteractiveEvent):
         time (int):
                 Timestamp indicating when the event was generated
     """
-    event = 'ClickEvent'
+    _type = 'ClickEvent'
 
     def __init__(self,
                  location_stack: List[AbstractLocationContext],
@@ -1267,7 +1267,7 @@ class InputChangeEvent(InteractiveEvent):
         time (int):
                 Timestamp indicating when the event was generated
     """
-    event = 'InputChangeEvent'
+    _type = 'InputChangeEvent'
 
     def __init__(self,
                  location_stack: List[AbstractLocationContext],
@@ -1299,88 +1299,88 @@ class InputChangeEvent(InteractiveEvent):
                                   **kwargs)
 
 
-def make_context(_context_type: str, **kwargs) -> AbstractContext:
-    if _context_type == "AbstractContext":
+def make_context(_type: str, **kwargs) -> AbstractContext:
+    if _type == "AbstractContext":
         return AbstractContext(**kwargs)
-    if _context_type == "AbstractLocationContext":
+    if _type == "AbstractLocationContext":
         return AbstractLocationContext(**kwargs)
-    if _context_type == "AbstractGlobalContext":
+    if _type == "AbstractGlobalContext":
         return AbstractGlobalContext(**kwargs)
-    if _context_type == "ApplicationContext":
+    if _type == "ApplicationContext":
         return ApplicationContext(**kwargs)
-    if _context_type == "SectionContext":
+    if _type == "SectionContext":
         return SectionContext(**kwargs)
-    if _context_type == "WebDocumentContext":
+    if _type == "WebDocumentContext":
         return WebDocumentContext(**kwargs)
-    if _context_type == "ScreenContext":
+    if _type == "ScreenContext":
         return ScreenContext(**kwargs)
-    if _context_type == "ExpandableSectionContext":
+    if _type == "ExpandableSectionContext":
         return ExpandableSectionContext(**kwargs)
-    if _context_type == "MediaPlayerContext":
+    if _type == "MediaPlayerContext":
         return MediaPlayerContext(**kwargs)
-    if _context_type == "NavigationContext":
+    if _type == "NavigationContext":
         return NavigationContext(**kwargs)
-    if _context_type == "OverlayContext":
+    if _type == "OverlayContext":
         return OverlayContext(**kwargs)
-    if _context_type == "ItemContext":
+    if _type == "ItemContext":
         return ItemContext(**kwargs)
-    if _context_type == "InputContext":
+    if _type == "InputContext":
         return InputContext(**kwargs)
-    if _context_type == "ActionContext":
+    if _type == "ActionContext":
         return ActionContext(**kwargs)
-    if _context_type == "ButtonContext":
+    if _type == "ButtonContext":
         return ButtonContext(**kwargs)
-    if _context_type == "LinkContext":
+    if _type == "LinkContext":
         return LinkContext(**kwargs)
-    if _context_type == "DeviceContext":
+    if _type == "DeviceContext":
         return DeviceContext(**kwargs)
-    if _context_type == "ErrorContext":
+    if _type == "ErrorContext":
         return ErrorContext(**kwargs)
-    if _context_type == "CookieIdContext":
+    if _type == "CookieIdContext":
         return CookieIdContext(**kwargs)
-    if _context_type == "SessionContext":
+    if _type == "SessionContext":
         return SessionContext(**kwargs)
-    if _context_type == "HttpContext":
+    if _type == "HttpContext":
         return HttpContext(**kwargs)
     return AbstractContext(**kwargs)
 
 
-def make_event(event: str, **kwargs) -> AbstractEvent:
-    if event == "AbstractEvent":
+def make_event(_type: str, **kwargs) -> AbstractEvent:
+    if _type == "AbstractEvent":
         return AbstractEvent(**kwargs)
-    if event == "NonInteractiveEvent":
+    if _type == "NonInteractiveEvent":
         return NonInteractiveEvent(**kwargs)
-    if event == "DocumentLoadedEvent":
+    if _type == "DocumentLoadedEvent":
         return DocumentLoadedEvent(**kwargs)
-    if event == "URLChangeEvent":
+    if _type == "URLChangeEvent":
         return URLChangeEvent(**kwargs)
-    if event == "ApplicationLoadedEvent":
+    if _type == "ApplicationLoadedEvent":
         return ApplicationLoadedEvent(**kwargs)
-    if event == "SectionVisibleEvent":
+    if _type == "SectionVisibleEvent":
         return SectionVisibleEvent(**kwargs)
-    if event == "SectionHiddenEvent":
+    if _type == "SectionHiddenEvent":
         return SectionHiddenEvent(**kwargs)
-    if event == "VideoEvent":
+    if _type == "VideoEvent":
         return VideoEvent(**kwargs)
-    if event == "VideoLoadEvent":
+    if _type == "VideoLoadEvent":
         return VideoLoadEvent(**kwargs)
-    if event == "VideoStartEvent":
+    if _type == "VideoStartEvent":
         return VideoStartEvent(**kwargs)
-    if event == "VideoStopEvent":
+    if _type == "VideoStopEvent":
         return VideoStopEvent(**kwargs)
-    if event == "VideoPauseEvent":
+    if _type == "VideoPauseEvent":
         return VideoPauseEvent(**kwargs)
-    if event == "InteractiveEvent":
+    if _type == "InteractiveEvent":
         return InteractiveEvent(**kwargs)
-    if event == "ClickEvent":
+    if _type == "ClickEvent":
         return ClickEvent(**kwargs)
-    if event == "InputChangeEvent":
+    if _type == "InputChangeEvent":
         return InputChangeEvent(**kwargs)
     return AbstractEvent(**kwargs)
 
 
 def make_event_from_dict(obj: Dict[str, Any]) -> AbstractEvent:
-    if not ('event' in obj and 'location_stack' in obj and 'global_contexts' in obj):
+    if not ('_type' in obj and 'location_stack' in obj and 'global_contexts' in obj):
         raise Exception('missing arguments')
     obj['location_stack'] = [make_context(**c) for c in obj['location_stack']]
     obj['global_contexts'] = [make_context(

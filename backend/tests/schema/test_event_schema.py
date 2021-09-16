@@ -131,7 +131,7 @@ def test_all_required_contexts():
         assert schema.get_all_required_contexts(event_type) == expected
 
 
-def test_list_context_types():
+def test_list_types():
     schema = _get_schema()
     assert schema.list_context_types() == ['BaseContext', 'ExtraContext', 'OtherContext']
 

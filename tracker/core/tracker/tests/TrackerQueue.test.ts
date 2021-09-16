@@ -1,5 +1,4 @@
 import { TrackerEvent, TrackerQueue, TrackerQueueMemoryStore } from '../src';
-import spyOn = jest.spyOn;
 
 beforeEach(() => {
   jest.useFakeTimers();
@@ -10,9 +9,9 @@ afterEach(() => {
 });
 
 describe('TrackerQueueMemoryStore', () => {
-  const TrackerEvent1 = new TrackerEvent({ event: 'a' });
-  const TrackerEvent2 = new TrackerEvent({ event: 'b' });
-  const TrackerEvent3 = new TrackerEvent({ event: 'c' });
+  const TrackerEvent1 = new TrackerEvent({ _type: 'a' });
+  const TrackerEvent2 = new TrackerEvent({ _type: 'b' });
+  const TrackerEvent3 = new TrackerEvent({ _type: 'c' });
 
   it('should read all Events', async () => {
     const trackerQueueStore = new TrackerQueueMemoryStore();
@@ -21,7 +20,7 @@ describe('TrackerQueueMemoryStore', () => {
 
     const events = await trackerQueueStore.read();
 
-    expect(events.map((event) => event.event)).toStrictEqual(['a', 'b', 'c']);
+    expect(events.map((event) => event._type)).toStrictEqual(['a', 'b', 'c']);
   });
 
   it('should allow filtering when reading Events', async () => {
@@ -29,16 +28,16 @@ describe('TrackerQueueMemoryStore', () => {
     await trackerQueueStore.write(TrackerEvent1, TrackerEvent2, TrackerEvent3);
     expect(trackerQueueStore.length).toBe(3);
 
-    const events = await trackerQueueStore.read(Infinity, (event) => event.event !== 'a');
+    const events = await trackerQueueStore.read(Infinity, (event) => event._type !== 'a');
 
-    expect(events.map((event) => event.event)).toStrictEqual(['b', 'c']);
+    expect(events.map((event) => event._type)).toStrictEqual(['b', 'c']);
   });
 });
 
 describe('TrackerQueue', () => {
-  const TrackerEvent1 = new TrackerEvent({ event: 'a' });
-  const TrackerEvent2 = new TrackerEvent({ event: 'b' });
-  const TrackerEvent3 = new TrackerEvent({ event: 'c' });
+  const TrackerEvent1 = new TrackerEvent({ _type: 'a' });
+  const TrackerEvent2 = new TrackerEvent({ _type: 'b' });
+  const TrackerEvent3 = new TrackerEvent({ _type: 'c' });
 
   it('should instantiate to a 0 length Queue', () => {
     const testQueue = new TrackerQueue();
@@ -125,10 +124,10 @@ describe('TrackerQueue', () => {
   });
 
   it('should support concurrent batches', async () => {
-    const TrackerEvent4 = new TrackerEvent({ event: 'd' });
-    const TrackerEvent5 = new TrackerEvent({ event: 'e' });
-    const TrackerEvent6 = new TrackerEvent({ event: 'f' });
-    const TrackerEvent7 = new TrackerEvent({ event: 'g' });
+    const TrackerEvent4 = new TrackerEvent({ _type: 'd' });
+    const TrackerEvent5 = new TrackerEvent({ _type: 'e' });
+    const TrackerEvent6 = new TrackerEvent({ _type: 'f' });
+    const TrackerEvent7 = new TrackerEvent({ _type: 'g' });
     const processFunctionSpy = jest.fn(() => Promise.resolve());
     const testQueue = new TrackerQueue({ batchSize: 3, concurrency: 3 });
     testQueue.setProcessFunction(processFunctionSpy);
@@ -158,7 +157,7 @@ describe('TrackerQueue', () => {
     const testQueue = new TrackerQueue();
     testQueue.setProcessFunction(processFunctionSpy);
 
-    spyOn(testQueue, 'run');
+    jest.spyOn(testQueue, 'run');
     expect(testQueue.run).not.toHaveBeenCalled();
 
     testQueue.startRunner();

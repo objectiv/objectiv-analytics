@@ -62,16 +62,13 @@ def _get_event_data(request: Request) -> EventList:
     Parse the requests data as json and return as a list
 
     :raise ValueError:
-        1) data is not valid json
-        2) The parsed data is a dictionary with more than DATA_MAX_EVENT_COUNT entries
-        3) The parsed data is not a dictionary, as expected
-        4) The key 'events' could not be found
-        5) The data at key 'events' is not a list
-        6) the key 'transport_time' could not be found
-        7) the key 'transport_time' is not a valid integer
-        8) data is bigger than DATA_MAX_SIZE_BYTES
-        9) The parsed data is not structured as a list of events. This only does basic validation, see
-            the validate_structure_data function for more information
+        1) the data structure is bigger than DATA_MAX_SIZE_BYTES
+        2) the data could not be parsed as JSON
+        3) the parsed data isn't a valid dictionary
+        4) the key 'events' could not be found in the dictionary
+        5) event_data['events'] is not a list
+        6) there are more than DATA_MAX_EVENT_COUNT events in the event list
+        7) the structure did not validate as a valid EventList (validate_structure_event_list()
 
     :param request: Request from which to parse the data
     :return: the parsed data, an EventList (structure as sent by the tracker)
@@ -83,6 +80,10 @@ def _get_event_data(request: Request) -> EventList:
     event_data: EventList = json.loads(post_data)
     if not isinstance(event_data, dict):
         raise ValueError('Parsed post data is not a dict')
+    if 'events' not in event_data:
+        raise ValueError('Could not find events key in event_data')
+    if not isinstance(event_data['events'], list):
+        raise ValueError('events is not a list')
     if len(event_data['events']) > DATA_MAX_EVENT_COUNT:
         raise ValueError('Events exceeds limit')
     error_info = validate_structure_event_list(event_data=event_data)

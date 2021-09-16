@@ -10,7 +10,7 @@ export interface SectionContext extends AbstractSectionContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'SectionContext';
+  readonly _type: 'SectionContext';
 }
 
 /**
@@ -21,7 +21,7 @@ export interface WebDocumentContext extends AbstractSectionContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'WebDocumentContext';
+  readonly _type: 'WebDocumentContext';
 
   /**
    * Property containing a (valid) URL
@@ -37,7 +37,7 @@ export interface ScreenContext extends AbstractSectionContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'ScreenContext';
+  readonly _type: 'ScreenContext';
 
   /**
    * name of the screen
@@ -53,7 +53,7 @@ export interface ExpandableSectionContext extends AbstractSectionContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'ExpandableSectionContext';
+  readonly _type: 'ExpandableSectionContext';
 }
 
 /**
@@ -64,7 +64,7 @@ export interface MediaPlayerContext extends AbstractSectionContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'MediaPlayerContext';
+  readonly _type: 'MediaPlayerContext';
 }
 
 /**
@@ -75,7 +75,7 @@ export interface NavigationContext extends AbstractSectionContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'NavigationContext';
+  readonly _type: 'NavigationContext';
 }
 
 /**
@@ -86,7 +86,7 @@ export interface OverlayContext extends AbstractSectionContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'OverlayContext';
+  readonly _type: 'OverlayContext';
 }
 
 /**
@@ -98,7 +98,7 @@ export interface ItemContext extends AbstractItemContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'ItemContext';
+  readonly _type: 'ItemContext';
 }
 
 /**
@@ -109,7 +109,7 @@ export interface InputContext extends AbstractItemContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'InputContext';
+  readonly _type: 'InputContext';
 }
 
 /**
@@ -121,7 +121,7 @@ export interface ActionContext extends AbstractActionContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'ActionContext';
+  readonly _type: 'ActionContext';
 }
 
 /**
@@ -132,7 +132,7 @@ export interface ButtonContext extends AbstractActionContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'ButtonContext';
+  readonly _type: 'ButtonContext';
 }
 
 /**
@@ -143,7 +143,7 @@ export interface LinkContext extends AbstractActionContext {
   /**
    * Typescript discriminator
    */
-  readonly _context_type: 'LinkContext';
+  readonly _type: 'LinkContext';
 
   /**
    * URL (href) the link points to

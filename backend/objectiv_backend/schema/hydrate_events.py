@@ -15,23 +15,23 @@ def hydrate_types_into_event(event_schema: EventSchema, event: EventData) -> Eve
     """
     Modifies the given event:
         1. adds a "events" field: a list of all inherited event-types (including the event)
-        2. For each context adds a "_context_types" fields: a list of all inherited context-types
+        2. For each context adds a "_types" fields: a list of all inherited context-types
     :param event_schema: schema to use for type-hydration
     :param event: event object. Must have passed event validation by validate_events.validate_event_data.
     :return: The modified event object.
     """
-    event_name = event['event']
+    event_name = event['_type']
     all_event_types = event_schema.get_all_parent_event_types(event_name)
-    event["events"] = sorted(all_event_types)
+    event["_types"] = sorted(all_event_types)
     global_contexts = event['global_contexts']
     for context in global_contexts:
-        context["_context_types"] = sorted(
-            event_schema.get_all_parent_context_types(context["_context_type"])
+        context["_types"] = sorted(
+            event_schema.get_all_parent_context_types(context["_type"])
         )
     location_stack = event['location_stack']
     for context in location_stack:
-        context["_context_types"] = sorted(
-            event_schema.get_all_parent_context_types(context["_context_type"])
+        context["_types"] = sorted(
+            event_schema.get_all_parent_context_types(context["_type"])
         )
     return event
 

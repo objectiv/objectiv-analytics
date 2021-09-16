@@ -12,27 +12,27 @@ CLICK_EVENT_JSON = '''
 {
     "events":[
         {
-            "event":"ClickEvent",
+            "_type":"ClickEvent",
             "location_stack":[
                 {
-                    "_context_type":"WebDocumentContext",
+                    "_type":"WebDocumentContext",
                     "id":"#document",
                     "url":"http://localhost:3000/"
                 },{
-                    "_context_type":"NavigationContext",
+                    "_type":"NavigationContext",
                     "id":"navigation"
                 },{
-                    "_context_type":"ButtonContext",
+                    "_type":"ButtonContext",
                     "id":"open-drawer",
                     "text":"open drawer"
                 }
             ],
             "global_contexts":[
                 {
-                    "_context_type":"ApplicationContext",
+                    "_type":"ApplicationContext",
                     "id":"rod-web-demo"
                 },{
-                    "_context_type":"DeviceContext",
+                    "_type":"DeviceContext",
                     "id":"device",
                     "user_agent":"mozilla"
                 }
@@ -87,7 +87,7 @@ def test_make_event_from_dict():
 def test_make_section_context():
     section_context = {
         'id': 'section_id',
-        '_context_type': 'SectionContext'
+        '_type': 'SectionContext'
     }
 
     context = SectionContext(**section_context)
@@ -100,7 +100,7 @@ def test_make_section_context():
 def test_add_global_context():
 
     context_vars = {
-        '_context_type': 'HttpContext',
+        '_type': 'HttpContext',
         'id': 'test-http-context-id',
         'referer': 'test-referer',
         'remote_address': 'test-address',
@@ -126,7 +126,7 @@ def test_add_global_context():
 
 def test_add_context_to_incorrect_scope():
     context_vars = {
-        '_context_type': 'HttpContext',
+        '_type': 'HttpContext',
         'id': 'test-http-context-id',
         'referer': 'test-referer',
         'remote_address': 'test-address',

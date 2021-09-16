@@ -15,7 +15,7 @@ Listens to [DOMContentLoaded](https://developer.mozilla.org/en-US/docs/Web/API/W
 
 ```typescript
 {
-  _context_type: 'WebDocumentContext';
+  _type: 'WebDocumentContext';
   id: string;
   url: string; 
 };
@@ -28,7 +28,7 @@ Listens to [DOMContentLoaded](https://developer.mozilla.org/en-US/docs/Web/API/W
   event: 'URLChangedEvent';
   location_stack: [
     {
-      _context_type: 'WebDocumentContext',
+      _type: 'WebDocumentContext',
       id: string,
       url: string,
     }   
@@ -43,7 +43,7 @@ Listens to [DOMContentLoaded](https://developer.mozilla.org/en-US/docs/Web/API/W
   event: 'DocumentLoadedEvent';
   location_stack: [
     {
-      _context_type: 'WebDocumentContext',
+      _type: 'WebDocumentContext',
       id: string,
       url: string,
     }   

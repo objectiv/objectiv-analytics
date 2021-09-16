@@ -31,7 +31,7 @@
             "type":"AbstractGlobalContext"
           }
         },
-        "event": {
+        "_type": {
           "description": "String containing the name of the event type. (eg. ClickEvent)",
           "type": "string"
         },
@@ -149,11 +149,11 @@
        ",
       "properties": {
         "id": {
-          "description":"A unique string identifier to be combined with the Context Type (`_context_type`) \n\
+          "description":"A unique string identifier to be combined with the Context Type (`_type`) \n\
            for Context instance uniqueness.",
           "type": "string"
         },
-        "_context_type": {
+        "_type": {
           "description": "A string literal used during serialization. Should always match the Context interface name.",
           "type": "string"
         }

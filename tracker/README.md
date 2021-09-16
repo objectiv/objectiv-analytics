@@ -26,8 +26,7 @@ This is a complete list of the currently available packages.
 | @objectiv/utilities                   | core    | /core/utilities               | [README](/tracker/core/utilities/README.md)               |
 | @objectiv/plugin-web-device-context   | plugin  | /plugins/web-device-context   | [README](/tracker/plugins/web-device-context/README.md)   |
 | @objectiv/plugin-web-document-context | plugin  | /plugins/web-document-context | [README](/tracker/plugins/web-document-context/README.md) |
-| @objectiv/tracker-web                 | tracker | /trackers/web                 | [README](/tracker/trackers/web/README.md)                 |
-| @objectiv/tracker-react               | tracker | /trackers/react               | [README](/tracker/trackers/react/README.md)               |
+| @objectiv/tracker-browser             | tracker | /trackers/browser             | [README](/tracker/trackers/browser/README.md)             |
 
 >Note: Packages may be completely independent of each other. Currently, many of them share the same testing framework or bundler but that's not required. Each has its own local configurations and may diverge if needed.
 

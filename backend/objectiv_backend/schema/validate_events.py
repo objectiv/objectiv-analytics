@@ -78,7 +78,7 @@ def get_event_list_schema() -> Dict[str, Any]:
 def validate_structure_event_list(event_data: Any) -> List[ErrorInfo]:
     """
     Checks that event_data is a list of events, that each event has the required fields, and that all
-        contexts have the base required fields (id and _context_type).
+        contexts have the base required fields (id and _type).
     Does not perform any schema-dependent validation, e.g. doesn't check that the event type is valid,
     that an event has the right contexts, or that contexts have the right fields. For those checks call
     validate_event_adheres_to_schema on each individual event.
@@ -127,7 +127,7 @@ def validate_event_adheres_to_schema(event_schema: EventSchema, event: EventData
     :param event: Structural correct event.
     :return: list of found errors
     """
-    event_name = event['event']
+    event_name = event['_type']
     if not event_schema.is_valid_event_type(event_name):
         return [ErrorInfo(event, f'Unknown event: {event_name}')]
 
@@ -149,22 +149,22 @@ def _validate_required_contexts(event_schema: EventSchema, event: EventData) -> 
     :param event: event object
     :return: list of found errors. Will contain 1 item with all missing contexts if any are missing.
     """
-    event_name = event['event']
+    event_name = event['_type']
     global_contexts = event['global_contexts']
     location_stack = event['location_stack']
     required_context_types = event_schema.get_all_required_contexts(event_name)
-    actual_context_types = set()
+    actual_types = set()
     for context in global_contexts:
-        actual_context_types |= event_schema.get_all_parent_context_types(context['_context_type'])
+        actual_types |= event_schema.get_all_parent_context_types(context['_type'])
     for context in location_stack:
-        actual_context_types |= event_schema.get_all_parent_context_types(context['_context_type'])
+        actual_types |= event_schema.get_all_parent_context_types(context['_type'])
 
-    if not required_context_types.issubset(actual_context_types):
+    if not required_context_types.issubset(actual_types):
         error_info = ErrorInfo(
             event,
-            f'Required contexts missing: {required_context_types - actual_context_types} '
+            f'Required contexts missing: {required_context_types - actual_types} '
             f'required_contexts: {required_context_types} - '
-            f'found: {actual_context_types}'
+            f'found: {actual_types}'
         )
         return [error_info]
     return []
@@ -179,13 +179,13 @@ def _validate_contexts(event_schema: EventSchema, event: EventData) -> List[Erro
     errors = []
     for context in global_contexts:
         errors_context = _validate_context_item(event_schema=event_schema, context=context)
-        if 'AbstractGlobalContext' not in event_schema.get_all_parent_context_types(context['_context_type']):
+        if 'AbstractGlobalContext' not in event_schema.get_all_parent_context_types(context['_type']):
             errors.append(ErrorInfo(context, 'Not an instance of GlobalContext'))
 
         errors.extend(errors_context)
     for context in location_stack:
         errors_context = _validate_context_item(event_schema=event_schema, context=context)
-        if 'AbstractLocationContext' not in event_schema.get_all_parent_context_types(context['_context_type']):
+        if 'AbstractLocationContext' not in event_schema.get_all_parent_context_types(context['_type']):
             errors.append(ErrorInfo(context, 'Not an instance of LocationContext'))
 
         errors.extend(errors_context)
@@ -198,7 +198,7 @@ def _validate_context_item(event_schema: EventSchema, context) -> List[ErrorInfo
     :param context: objects
     :return: list of found errors
     """
-    context_type = context['_context_type']
+    context_type = context['_type']
     # theoretically we could generate some json schema with if-then that we could just validate, without
     # having to select the right sub-schema here, but that would be very complex and not very readable.
     schema = event_schema.get_context_schema(context_type)
@@ -213,7 +213,7 @@ def _validate_context_item(event_schema: EventSchema, context) -> List[ErrorInfo
 
 
 def _validate_event_item(event_schema: EventSchema, event) -> List[ErrorInfo]:
-    event_type = event['event']
+    event_type = event['_type']
     schema = event_schema.get_event_schema(event_type=event_type)
     try:
         jsonschema.validate(instance=event, schema=schema)

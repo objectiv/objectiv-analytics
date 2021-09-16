@@ -9,7 +9,7 @@ describe('Tracker', () => {
     expect(testTracker.plugins).toEqual({
       list: [
         {
-          applicationContext: { __global_context: true, _context_type: 'ApplicationContext', id: 'app-id' },
+          applicationContext: { __global_context: true, _type: 'ApplicationContext', id: 'app-id' },
           pluginName: 'ApplicationContextPlugin',
         },
       ],
@@ -27,7 +27,7 @@ describe('Tracker', () => {
     expect(testTracker.plugins).toEqual({
       list: [
         {
-          applicationContext: { __global_context: true, _context_type: 'ApplicationContext', id: 'app-id' },
+          applicationContext: { __global_context: true, _type: 'ApplicationContext', id: 'app-id' },
           pluginName: 'ApplicationContextPlugin',
         },
       ],
@@ -40,12 +40,12 @@ describe('Tracker', () => {
     const initialContextsState: TrackerConfig = {
       applicationId: 'app-id',
       location_stack: [
-        { __location_context: true, _context_type: 'section', id: 'root' },
-        { __location_context: true, _context_type: 'section', id: 'A' },
+        { __location_context: true, _type: 'section', id: 'root' },
+        { __location_context: true, _type: 'section', id: 'A' },
       ],
       global_contexts: [
-        { __global_context: true, _context_type: 'global', id: 'A' },
-        { __global_context: true, _context_type: 'global', id: 'B' },
+        { __global_context: true, _type: 'global', id: 'A' },
+        { __global_context: true, _type: 'global', id: 'B' },
       ],
     };
 
@@ -60,7 +60,7 @@ describe('Tracker', () => {
     expect(newTestTracker).toEqual(testTracker);
 
     // Refine Location Stack of the new Tracker with an extra Section
-    newTestTracker.location_stack.push({ __location_context: true, _context_type: 'section', id: 'X' });
+    newTestTracker.location_stack.push({ __location_context: true, _type: 'section', id: 'X' });
 
     // The old tracker should be unaffected
     expect(testTracker.location_stack).toEqual(initialContextsState.location_stack);
@@ -68,13 +68,13 @@ describe('Tracker', () => {
 
     // While the new Tracker should now have a deeper Location Stack
     expect(newTestTracker.location_stack).toEqual([
-      { __location_context: true, _context_type: 'section', id: 'root' },
-      { __location_context: true, _context_type: 'section', id: 'A' },
-      { __location_context: true, _context_type: 'section', id: 'X' },
+      { __location_context: true, _type: 'section', id: 'root' },
+      { __location_context: true, _type: 'section', id: 'A' },
+      { __location_context: true, _type: 'section', id: 'X' },
     ]);
     expect(newTestTracker.global_contexts).toEqual([
-      { __global_context: true, _context_type: 'global', id: 'A' },
-      { __global_context: true, _context_type: 'global', id: 'B' },
+      { __global_context: true, _type: 'global', id: 'A' },
+      { __global_context: true, _type: 'global', id: 'B' },
     ]);
   });
 
@@ -82,12 +82,12 @@ describe('Tracker', () => {
     const mainTrackerContexts: TrackerConfig = {
       applicationId: 'app-id',
       location_stack: [
-        { __location_context: true, _context_type: 'section', id: 'root' },
-        { __location_context: true, _context_type: 'section', id: 'A' },
+        { __location_context: true, _type: 'section', id: 'root' },
+        { __location_context: true, _type: 'section', id: 'A' },
       ],
       global_contexts: [
-        { __global_context: true, _context_type: 'global', id: 'X' },
-        { __global_context: true, _context_type: 'global', id: 'Y' },
+        { __global_context: true, _type: 'global', id: 'X' },
+        { __global_context: true, _type: 'global', id: 'Y' },
       ],
     };
     const mainTracker = new Tracker(mainTrackerContexts);
@@ -96,11 +96,11 @@ describe('Tracker', () => {
     const sectionTracker = new Tracker(
       mainTracker,
       {
-        location_stack: [{ __location_context: true, _context_type: 'section', id: 'B' }],
-        global_contexts: [{ __global_context: true, _context_type: 'global', id: 'Z' }],
+        location_stack: [{ __location_context: true, _type: 'section', id: 'B' }],
+        global_contexts: [{ __global_context: true, _type: 'global', id: 'Z' }],
       },
       {
-        location_stack: [{ __location_context: true, _context_type: 'section', id: 'C' }],
+        location_stack: [{ __location_context: true, _type: 'section', id: 'C' }],
       },
       // These last two configurations are useless, but we want to make sure nothing breaks with them
       {
@@ -115,32 +115,32 @@ describe('Tracker', () => {
 
     // The new Tracker, instead, should have all of the Contexts of the mainTracker + the extra Config provided
     expect(sectionTracker.location_stack).toEqual([
-      { __location_context: true, _context_type: 'section', id: 'root' },
-      { __location_context: true, _context_type: 'section', id: 'A' },
-      { __location_context: true, _context_type: 'section', id: 'B' },
-      { __location_context: true, _context_type: 'section', id: 'C' },
+      { __location_context: true, _type: 'section', id: 'root' },
+      { __location_context: true, _type: 'section', id: 'A' },
+      { __location_context: true, _type: 'section', id: 'B' },
+      { __location_context: true, _type: 'section', id: 'C' },
     ]);
     expect(sectionTracker.global_contexts).toEqual([
-      { __global_context: true, _context_type: 'global', id: 'X' },
-      { __global_context: true, _context_type: 'global', id: 'Y' },
-      { __global_context: true, _context_type: 'global', id: 'Z' },
+      { __global_context: true, _type: 'global', id: 'X' },
+      { __global_context: true, _type: 'global', id: 'Y' },
+      { __global_context: true, _type: 'global', id: 'Z' },
     ]);
   });
 
   describe('trackEvent', () => {
     const eventContexts: ContextsConfig = {
       location_stack: [
-        { __location_context: true, _context_type: 'section', id: 'B' },
-        { __location_context: true, _context_type: 'item', id: 'C' },
+        { __location_context: true, _type: 'section', id: 'B' },
+        { __location_context: true, _type: 'item', id: 'C' },
       ],
       global_contexts: [
-        { __global_context: true, _context_type: 'global', id: 'W' },
-        { __global_context: true, _context_type: 'global', id: 'X' },
+        { __global_context: true, _type: 'global', id: 'W' },
+        { __global_context: true, _type: 'global', id: 'X' },
       ],
     };
     const testEvent = new TrackerEvent(
       {
-        event: 'test-event',
+        _type: 'test-event',
       },
       eventContexts
     );
@@ -149,12 +149,12 @@ describe('Tracker', () => {
       const trackerContexts: TrackerConfig = {
         applicationId: 'app-id',
         location_stack: [
-          { __location_context: true, _context_type: 'section', id: 'root' },
-          { __location_context: true, _context_type: 'section', id: 'A' },
+          { __location_context: true, _type: 'section', id: 'root' },
+          { __location_context: true, _type: 'section', id: 'A' },
         ],
         global_contexts: [
-          { __global_context: true, _context_type: 'global', id: 'Y' },
-          { __global_context: true, _context_type: 'global', id: 'Z' },
+          { __global_context: true, _type: 'global', id: 'Y' },
+          { __global_context: true, _type: 'global', id: 'Z' },
         ],
       };
       const testTracker = new Tracker(trackerContexts);
@@ -166,17 +166,17 @@ describe('Tracker', () => {
       expect(testTracker.location_stack).toStrictEqual(trackerContexts.location_stack);
       expect(testTracker.global_contexts).toStrictEqual(trackerContexts.global_contexts);
       expect(trackedEvent.location_stack).toStrictEqual([
-        { __location_context: true, _context_type: 'section', id: 'root' },
-        { __location_context: true, _context_type: 'section', id: 'A' },
-        { __location_context: true, _context_type: 'section', id: 'B' },
-        { __location_context: true, _context_type: 'item', id: 'C' },
+        { __location_context: true, _type: 'section', id: 'root' },
+        { __location_context: true, _type: 'section', id: 'A' },
+        { __location_context: true, _type: 'section', id: 'B' },
+        { __location_context: true, _type: 'item', id: 'C' },
       ]);
       expect(trackedEvent.global_contexts).toStrictEqual([
-        { __global_context: true, _context_type: 'global', id: 'W' },
-        { __global_context: true, _context_type: 'global', id: 'X' },
-        { __global_context: true, _context_type: 'global', id: 'Y' },
-        { __global_context: true, _context_type: 'global', id: 'Z' },
-        { __global_context: true, _context_type: 'ApplicationContext', id: 'app-id' },
+        { __global_context: true, _type: 'global', id: 'W' },
+        { __global_context: true, _type: 'global', id: 'X' },
+        { __global_context: true, _type: 'global', id: 'Y' },
+        { __global_context: true, _type: 'global', id: 'Z' },
+        { __global_context: true, _type: 'ApplicationContext', id: 'app-id' },
       ]);
     });
 
@@ -202,7 +202,7 @@ describe('Tracker', () => {
       jest.spyOn(testTransport, 'handle');
       const testTracker = new Tracker({ applicationId: 'app-id', transport: testTransport });
       testTracker.trackEvent(testEvent);
-      expect(testTransport.handle).toHaveBeenCalledWith(expect.objectContaining({ event: testEvent.event }));
+      expect(testTransport.handle).toHaveBeenCalledWith(expect.objectContaining({ _type: testEvent._type }));
     });
 
     it("should not send the Event via the given TrackerTransport if it's not usable", () => {

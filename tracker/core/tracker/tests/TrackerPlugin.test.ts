@@ -80,7 +80,7 @@ describe('Plugin', () => {
     const testPlugins = new TrackerPlugins(plugins);
     expect(pluginA.beforeTransport).not.toHaveBeenCalled();
     expect(pluginB.beforeTransport).not.toHaveBeenCalled();
-    const testEvent = new TrackerEvent({ event: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event' });
     testPlugins.beforeTransport(testEvent);
     expect(pluginA.beforeTransport).toHaveBeenCalledWith(testEvent);
     expect(pluginB.beforeTransport).toHaveBeenCalledWith(testEvent);
@@ -99,7 +99,7 @@ describe('Plugin', () => {
     expect(pluginA.beforeTransport).not.toHaveBeenCalled();
     expect(pluginB.beforeTransport).not.toHaveBeenCalled();
     expect(pluginC.beforeTransport).not.toHaveBeenCalled();
-    const testEvent = new TrackerEvent({ event: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event' });
     testPlugins.beforeTransport(testEvent);
     expect(pluginA.beforeTransport).toHaveBeenCalledWith(testEvent);
     expect(pluginB.beforeTransport).not.toHaveBeenCalled();

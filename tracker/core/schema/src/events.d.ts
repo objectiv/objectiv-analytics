@@ -11,7 +11,7 @@ export interface NonInteractiveEvent extends AbstractNonInteractiveEvent {
   /**
    * Typescript discriminator
    */
-  readonly event: 'NonInteractiveEvent';
+  readonly _type: 'NonInteractiveEvent';
 }
 
 /**
@@ -24,7 +24,7 @@ export interface DocumentLoadedEvent extends AbstractNonInteractiveEvent {
   /**
    * Typescript discriminator
    */
-  readonly event: 'DocumentLoadedEvent';
+  readonly _type: 'DocumentLoadedEvent';
 }
 
 /**
@@ -36,7 +36,7 @@ export interface URLChangeEvent extends AbstractNonInteractiveEvent {
   /**
    * Typescript discriminator
    */
-  readonly event: 'URLChangeEvent';
+  readonly _type: 'URLChangeEvent';
 }
 
 /**
@@ -48,7 +48,7 @@ export interface ApplicationLoadedEvent extends AbstractNonInteractiveEvent {
   /**
    * Typescript discriminator
    */
-  readonly event: 'ApplicationLoadedEvent';
+  readonly _type: 'ApplicationLoadedEvent';
 }
 
 /**
@@ -59,7 +59,7 @@ export interface SectionVisibleEvent extends AbstractNonInteractiveEvent {
   /**
    * Typescript discriminator
    */
-  readonly event: 'SectionVisibleEvent';
+  readonly _type: 'SectionVisibleEvent';
 }
 
 /**
@@ -70,7 +70,7 @@ export interface SectionHiddenEvent extends AbstractNonInteractiveEvent {
   /**
    * Typescript discriminator
    */
-  readonly event: 'SectionHiddenEvent';
+  readonly _type: 'SectionHiddenEvent';
 }
 
 /**
@@ -81,7 +81,7 @@ export interface VideoEvent extends AbstractVideoEvent {
   /**
    * Typescript discriminator
    */
-  readonly event: 'VideoEvent';
+  readonly _type: 'VideoEvent';
 }
 
 /**
@@ -92,7 +92,7 @@ export interface VideoLoadEvent extends AbstractVideoEvent {
   /**
    * Typescript discriminator
    */
-  readonly event: 'VideoLoadEvent';
+  readonly _type: 'VideoLoadEvent';
 }
 
 /**
@@ -103,7 +103,7 @@ export interface VideoStartEvent extends AbstractVideoEvent {
   /**
    * Typescript discriminator
    */
-  readonly event: 'VideoStartEvent';
+  readonly _type: 'VideoStartEvent';
 }
 
 /**
@@ -114,7 +114,7 @@ export interface VideoStopEvent extends AbstractVideoEvent {
   /**
    * Typescript discriminator
    */
-  readonly event: 'VideoStopEvent';
+  readonly _type: 'VideoStopEvent';
 }
 
 /**
@@ -125,7 +125,7 @@ export interface VideoPauseEvent extends AbstractVideoEvent {
   /**
    * Typescript discriminator
    */
-  readonly event: 'VideoPauseEvent';
+  readonly _type: 'VideoPauseEvent';
 }
 
 /**
@@ -136,7 +136,7 @@ export interface InteractiveEvent extends AbstractInteractiveEvent {
   /**
    * Typescript discriminator
    */
-  readonly event: 'InteractiveEvent';
+  readonly _type: 'InteractiveEvent';
 }
 
 /**
@@ -147,7 +147,7 @@ export interface ClickEvent extends AbstractInteractiveEvent {
   /**
    * Typescript discriminator
    */
-  readonly event: 'ClickEvent';
+  readonly _type: 'ClickEvent';
 }
 
 /**
@@ -158,5 +158,5 @@ export interface InputChangeEvent extends AbstractInteractiveEvent {
   /**
    * Typescript discriminator
    */
-  readonly event: 'InputChangeEvent';
+  readonly _type: 'InputChangeEvent';
 }

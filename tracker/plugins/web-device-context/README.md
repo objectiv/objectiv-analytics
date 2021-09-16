@@ -6,7 +6,7 @@ The Context is then attached to each `TrackerEvent`'s `global_contexts` during i
 ### WebDeviceContext
 ```typescript
 {
-  _context_type: 'WebDeviceContext';
+  _type: 'WebDeviceContext';
   id: 'device';
   user_agent: string;               
 }

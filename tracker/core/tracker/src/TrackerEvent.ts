@@ -13,7 +13,7 @@ import { generateUUID, getObjectKeys } from './helpers';
  * Contexts are entirely optional, although Collectors will mostly likely enforce minimal requirements around them.
  * Eg. An interactive TrackerEvent without a Location Stack is probably not descriptive enough to be acceptable.
  */
-export type TrackerEventConfig = Pick<AbstractEvent, 'event'> &
+export type TrackerEventConfig = Pick<AbstractEvent, '_type'> &
   ContextsConfig & {
     // Unless the Event config has been preconfigured with an id the TrackerEvent will generate one for us
     id?: string;
@@ -30,7 +30,7 @@ export type UntrackedEvent = Omit<AbstractEvent, 'id' | 'time'>;
  */
 export class TrackerEvent implements UntrackedEvent, Contexts {
   // Event interface
-  readonly event: string;
+  readonly _type: string;
   id: string;
   time?: number;
 
@@ -46,9 +46,9 @@ export class TrackerEvent implements UntrackedEvent, Contexts {
    * ContextConfigs are used to configure location_stack and global_contexts. If multiple configurations have been
    * provided they will be merged onto each other to produce a single location_stack and global_contexts.
    */
-  constructor({ event, id, ...otherEventProps }: TrackerEventConfig, ...contextConfigs: ContextsConfig[]) {
+  constructor({ _type, id, ...otherEventProps }: TrackerEventConfig, ...contextConfigs: ContextsConfig[]) {
     // Let's copy the entire eventConfiguration in state
-    this.event = event;
+    this._type = _type;
     Object.assign(this, otherEventProps);
 
     // If the Event does not have an id yet, generate one

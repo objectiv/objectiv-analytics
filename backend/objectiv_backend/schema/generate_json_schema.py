@@ -52,7 +52,7 @@ def get_schema_base_properties() -> SchemaDefinitionTuple:
     """
     Return a json-schema to validate that the data is a list of events, and each event has the base
     properties (event and contexts) and that they are of the right type. Also check that each context
-    has the properties id and _context_type.
+    has the properties id and _type.
     """
     return SchemaDefinitionTuple(
         schema=get_event_list_schema(),
@@ -72,7 +72,7 @@ def get_schema_context_validation(event_schema: EventSchema) -> SchemaDefinition
         definition = event_schema.get_context_schema(context_type)
         # help mypy; we are iterating result of list_context_types, so definition should exist
         assert definition is not None
-        definition["properties"]["_context_type"] = {"type": "string", "const": context_type}
+        definition["properties"]["_type"] = {"type": "string", "const": context_type}
         definitions[context_type] = definition
         references.append({"$ref":  f"#/definitions/{context_type}"})
     schema = {
@@ -99,7 +99,7 @@ def get_schema_context_validation(event_schema: EventSchema) -> SchemaDefinition
 def get_schema_event_required_contexts(event_schema: EventSchema) -> SchemaDefinitionTuple:
     """
     Return a json-schema to validate that all events have the required contexts.
-    Only checks the context by _context_type (=name), doesn't check that the contexts themselves are
+    Only checks the context by _type (=name), doesn't check that the contexts themselves are
     correct.
     """
     definitions = {}
@@ -118,12 +118,12 @@ def get_schema_event_required_contexts(event_schema: EventSchema) -> SchemaDefin
                     "contains": {
                         "type": "object",
                         "properties": {
-                            "_context_type": {
+                            "_type": {
                                 "type": "string",
                                 "enum": child_contexts,
                             }
                         },
-                        "required": ["_context_type"]
+                        "required": ["_type"]
                     }
                 }
             )

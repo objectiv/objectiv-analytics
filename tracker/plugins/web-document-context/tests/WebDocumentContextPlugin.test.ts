@@ -25,11 +25,11 @@ describe('WebDocumentContextPlugin', () => {
     });
     const eventContexts: ContextsConfig = {
       location_stack: [
-        { __location_context: true, _context_type: 'section', id: 'A' },
-        { __location_context: true, _context_type: 'section', id: 'B' },
+        { __location_context: true, _type: 'section', id: 'A' },
+        { __location_context: true, _type: 'section', id: 'B' },
       ],
     };
-    const testEvent = new TrackerEvent({ event: 'test-event', ...eventContexts });
+    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts });
     expect(testEvent.location_stack).toHaveLength(2);
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(3);
@@ -38,7 +38,7 @@ describe('WebDocumentContextPlugin', () => {
         {
           __location_context: true,
           __section_context: true,
-          _context_type: 'WebDocumentContext',
+          _type: 'WebDocumentContext',
           id: '#document',
           url: 'http://localhost/',
         },

@@ -7,18 +7,17 @@
     "trackers/**"
   ],
   "scripts": {
-    "clean": "yarn exec make clean",
-    "build": "yarn workspaces foreach --exclude root --exclude @objectiv/tracker-react-live-testing-app --verbose run build",
+    "clean": "yarn exec make clean && yarn test --clearCache && yarn cache clean",
+    "build": "yarn workspaces foreach --exclude root --verbose run build",
     "build:dev": "dev=true yarn build",
-    "prettify": "yarn workspaces foreach --exclude root --exclude @objectiv/tracker-react-live-testing-app --verbose run prettify",
+    "prettify": "yarn workspaces foreach --exclude root --verbose run prettify",
     "prettify:generated": "yarn workspace @objectiv/schema prettify:generated && yarn workspace @objectiv/tracker-core prettify:generated",
     "list": "yarn workspaces list",
-    "tsc": "yarn workspaces foreach --exclude root --exclude @objectiv/tracker-react-live-testing-app --verbose run tsc",
-    "test": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-react-live-testing-app --verbose run test",
-    "test:live": "yarn workspace @objectiv/tracker-react-live-testing-app start",
-    "test:ci": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-react-live-testing-app --verbose run test:ci",
-    "test:coverage": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-react-live-testing-app --verbose run test:coverage",
-    "publish": "yarn workspaces foreach --exclude root --exclude @objectiv/utilities --exclude @objectiv/tracker-react-live-testing-app --verbose exec npm publish",
+    "tsc": "yarn workspaces foreach --exclude root  --verbose run tsc",
+    "test": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities  --verbose run test",
+    "test:ci": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities  --verbose run test:ci",
+    "test:coverage": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities  --verbose run test:coverage",
+    "publish": "yarn workspaces foreach --exclude root --exclude @objectiv/utilities --verbose exec npm publish",
     "utils:generate": "yarn workspace @objectiv/utilities generate && yarn prettify:generated && yarn tsc"
   }
 }

@@ -21,7 +21,7 @@ export abstract class AbstractEvent {
   /**
    * String containing the name of the event type. (eg. ClickEvent)
    */
-  event: string;
+  _type: string;
 
   /**
    * Unique identifier for a specific instance of an event. Typically UUID's are a good way of
@@ -48,7 +48,7 @@ export abstract class AbstractEvent {
  */
 export abstract class AbstractContext {
   /**
-   * A unique string identifier to be combined with the Context Type (`_context_type`)
+   * A unique string identifier to be combined with the Context Type (`_type`)
    *for Context instance uniqueness.
    */
   id: string;
@@ -56,7 +56,7 @@ export abstract class AbstractContext {
   /**
    * A string literal used during serialization. Should always match the Context interface name.
    */
-  _context_type: string;
+  _type: string;
 }
 
 /**

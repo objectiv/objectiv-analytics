@@ -83,9 +83,9 @@ def get_event_factory(objects: Dict[str, dict]) -> List[str]:
     :return: str - function to instantiate classes
     """
     factory: List[str] = [
-        'def make_event(event: str, **kwargs) -> AbstractEvent:']
+        'def make_event(_type: str, **kwargs) -> AbstractEvent:']
     for obj_name, obj in objects.items():
-        factory.append(f'    if event == "{obj_name}":\n'
+        factory.append(f'    if _type == "{obj_name}":\n'
                        f'        return {obj_name}(**kwargs)')
     factory.append(f'    return AbstractEvent(**kwargs)')
     return factory
@@ -98,9 +98,9 @@ def get_context_factory(objects: Dict[str, dict]) -> List[str]:
     :return: str - function to instantiate classes
     """
     factory: List[str] = [
-        'def make_context(_context_type: str, **kwargs) -> AbstractContext:']
+        'def make_context(_type: str, **kwargs) -> AbstractContext:']
     for obj_name, obj in objects.items():
-        factory.append(f'    if _context_type == "{obj_name}":\n'
+        factory.append(f'    if _type == "{obj_name}":\n'
                        f'        return {obj_name}(**kwargs)')
     factory.append(f'    return AbstractContext(**kwargs)')
     return factory
@@ -112,7 +112,7 @@ def get_event_maker() -> str:
     :return:
     """
     return (f"def make_event_from_dict(obj: Dict[str, Any]) -> AbstractEvent:\n"
-            f"    if not ('event' in obj and 'location_stack' in obj and 'global_contexts' in obj):\n"
+            f"    if not ('_type' in obj and 'location_stack' in obj and 'global_contexts' in obj):\n"
             f"        raise Exception('missing arguments')\n"
             f"    obj['location_stack'] = [make_context(**c) for c in obj['location_stack']]\n"
             f"    obj['global_contexts'] = [make_context(**c) for c in obj['global_contexts']]\n\n"
@@ -242,11 +242,9 @@ def get_class(obj_name: str, obj: Dict[str, Any], all_properties: Dict[str, Any]
         parents.append('ABC')
 
     property_meta: Dict[str, Dict[str, str]] = {}
-    instance_type = ''
+    instance_type = f"_type = '{obj_name}'"
     for property_name, property_description in all_properties.items():
-        if property_name in ['_context_type', 'event']:
-            instance_type = f"{property_name} = '{obj_name}'"
-            # ignore these properties, as they are reflected in the class name
+        if property_name == '_type':
             continue
 
         # create dict with properties and meta info

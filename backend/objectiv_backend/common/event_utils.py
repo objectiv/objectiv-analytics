@@ -28,8 +28,8 @@ def get_contexts(event: EventData, context_type: ContextType) -> List[ContextDat
     contexts = get_global_contexts(event) + get_location_stack(event)
     result = []
     for context in contexts:
-        _contexts_types = cast(List[ContextType], context.get("_context_types", []))
-        if context.get("_context_type") == context_type or context_type in _contexts_types:
+        _contexts_types = cast(List[ContextType], context.get("_types", []))
+        if context.get("_type") == context_type or context_type in _contexts_types:
             result.append(context)
     return result
 

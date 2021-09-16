@@ -13,6 +13,27 @@ jobs:
     strategy:
       matrix:
         python-version: [3.7, 3.8, 3.9]
+    services:
+      # based on https://docs.github.com/en/actions/guides/creating-postgresql-service-containers
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: 'objectiv'
+          POSTGRES_PASSWORD: 'no_password_set'
+          POSTGRES_DB: 'objectiv'
+          POSTGRES_HOSTNAME: 'postgres'
+          POSTGRES_PORT: 5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      # tell tests to use the above defined postgres service
+      OBJ_DB_TEST_URL: 'postgresql://objectiv:no_password_set@localhost:5432/objectiv'
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -40,8 +61,11 @@ jobs:
         run: |
           cd buhtuh
           pycodestyle --max-line-length=110 buhtuh sql_models
-      - name: Test with pytest
+      - name: Unit tests
         run: |
           cd buhtuh
           pytest tests/unit/
-# TODO: also add the functional tests that rely on Postgres being available
+      - name: Functional tests
+        run: |
+          cd buhtuh
+          pytest tests/functional/

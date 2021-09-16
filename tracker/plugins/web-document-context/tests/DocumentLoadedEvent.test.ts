@@ -7,7 +7,7 @@ const UUID_REGEX = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[a-f0-9]{4}-[a-f0-9]{1
 describe('WebDocumentLoadedEvent', () => {
   it('should track as expected when document has been loaded already', () => {
     const spyTransport = new SpyTransport();
-    spyOn(spyTransport, 'handle');
+    jest.spyOn(spyTransport, 'handle');
 
     const testTracker = new Tracker({
       applicationId: 'app-id',
@@ -24,12 +24,12 @@ describe('WebDocumentLoadedEvent', () => {
 
     expect(spyTransport.handle).toHaveBeenCalledWith({
       __non_interactive_event: true,
-      event: 'DocumentLoadedEvent',
+      _type: 'DocumentLoadedEvent',
       id: expect.stringMatching(UUID_REGEX),
       global_contexts: [
         {
           __global_context: true,
-          _context_type: 'ApplicationContext',
+          _type: 'ApplicationContext',
           id: 'app-id',
         },
       ],
@@ -37,7 +37,7 @@ describe('WebDocumentLoadedEvent', () => {
         {
           __location_context: true,
           __section_context: true,
-          _context_type: 'WebDocumentContext',
+          _type: 'WebDocumentContext',
           id: '#document',
           url: '/test',
         },
@@ -48,7 +48,7 @@ describe('WebDocumentLoadedEvent', () => {
 
   it('should track as expected when document has yet to load', async () => {
     const spyTransport = new SpyTransport();
-    spyOn(spyTransport, 'handle');
+    jest.spyOn(spyTransport, 'handle');
 
     const testTracker = new Tracker({
       applicationId: 'app-id',
@@ -80,12 +80,12 @@ describe('WebDocumentLoadedEvent', () => {
 
     expect(spyTransport.handle).toHaveBeenCalledWith({
       __non_interactive_event: true,
-      event: 'DocumentLoadedEvent',
+      _type: 'DocumentLoadedEvent',
       id: expect.stringMatching(UUID_REGEX),
       global_contexts: [
         {
           __global_context: true,
-          _context_type: 'ApplicationContext',
+          _type: 'ApplicationContext',
           id: 'app-id',
         },
       ],
@@ -93,7 +93,7 @@ describe('WebDocumentLoadedEvent', () => {
         {
           __location_context: true,
           __section_context: true,
-          _context_type: 'WebDocumentContext',
+          _type: 'WebDocumentContext',
           id: '#document',
           url: '/test',
         },

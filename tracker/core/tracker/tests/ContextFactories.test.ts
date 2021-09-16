@@ -23,7 +23,7 @@ describe('Context Factories', () => {
     expect(makeSectionContext({ id: 'section-A' })).toStrictEqual({
       __location_context: true,
       __section_context: true,
-      _context_type: 'SectionContext',
+      _type: 'SectionContext',
       id: 'section-A',
     });
   });
@@ -32,7 +32,7 @@ describe('Context Factories', () => {
     expect(makeWebDocumentContext({ id: '#document-a', url: '/test' })).toStrictEqual({
       __location_context: true,
       __section_context: true,
-      _context_type: 'WebDocumentContext',
+      _type: 'WebDocumentContext',
       id: '#document-a',
       url: '/test',
     });
@@ -42,7 +42,7 @@ describe('Context Factories', () => {
     expect(makeScreenContext({ id: 'home-screen', screen: 'home-screen' })).toStrictEqual({
       __location_context: true,
       __section_context: true,
-      _context_type: 'ScreenContext',
+      _type: 'ScreenContext',
       id: 'home-screen',
       screen: 'home-screen',
     });
@@ -52,7 +52,7 @@ describe('Context Factories', () => {
     expect(makeExpandableSectionContext({ id: 'accordion-a' })).toStrictEqual({
       __location_context: true,
       __section_context: true,
-      _context_type: 'ExpandableSectionContext',
+      _type: 'ExpandableSectionContext',
       id: 'accordion-a',
     });
   });
@@ -61,7 +61,7 @@ describe('Context Factories', () => {
     expect(makeMediaPlayerContext({ id: 'player-1' })).toStrictEqual({
       __location_context: true,
       __section_context: true,
-      _context_type: 'MediaPlayerContext',
+      _type: 'MediaPlayerContext',
       id: 'player-1',
     });
   });
@@ -70,7 +70,7 @@ describe('Context Factories', () => {
     expect(makeNavigationContext({ id: 'top-nav' })).toStrictEqual({
       __location_context: true,
       __section_context: true,
-      _context_type: 'NavigationContext',
+      _type: 'NavigationContext',
       id: 'top-nav',
     });
   });
@@ -79,7 +79,7 @@ describe('Context Factories', () => {
     expect(makeOverlayContext({ id: 'top-menu' })).toStrictEqual({
       __location_context: true,
       __section_context: true,
-      _context_type: 'OverlayContext',
+      _type: 'OverlayContext',
       id: 'top-menu',
     });
   });
@@ -88,7 +88,7 @@ describe('Context Factories', () => {
     expect(makeItemContext({ id: 'item-1' })).toStrictEqual({
       __location_context: true,
       __item_context: true,
-      _context_type: 'ItemContext',
+      _type: 'ItemContext',
       id: 'item-1',
     });
   });
@@ -97,7 +97,7 @@ describe('Context Factories', () => {
     expect(makeInputContext({ id: 'input-1' })).toStrictEqual({
       __location_context: true,
       __item_context: true,
-      _context_type: 'InputContext',
+      _type: 'InputContext',
       id: 'input-1',
     });
   });
@@ -107,7 +107,7 @@ describe('Context Factories', () => {
       __location_context: true,
       __item_context: true,
       __action_context: true,
-      _context_type: 'ActionContext',
+      _type: 'ActionContext',
       id: 'chevron-right',
       text: 'Next Slide',
     });
@@ -118,7 +118,7 @@ describe('Context Factories', () => {
       __location_context: true,
       __item_context: true,
       __action_context: true,
-      _context_type: 'ButtonContext',
+      _type: 'ButtonContext',
       id: 'confirm-data',
       text: 'Confirm',
     });
@@ -129,7 +129,7 @@ describe('Context Factories', () => {
       __location_context: true,
       __item_context: true,
       __action_context: true,
-      _context_type: 'LinkContext',
+      _type: 'LinkContext',
       id: 'confirm-data',
       href: '/some/url',
       text: 'Click for Details',
@@ -139,7 +139,7 @@ describe('Context Factories', () => {
   it('DeviceContext', () => {
     expect(makeDeviceContext({ id: 'test device', user_agent: 'user agent string' })).toStrictEqual({
       __global_context: true,
-      _context_type: 'DeviceContext',
+      _type: 'DeviceContext',
       id: 'test device',
       user_agent: 'user agent string',
     });
@@ -148,7 +148,7 @@ describe('Context Factories', () => {
   it('ErrorContext', () => {
     expect(makeErrorContext({ id: 'error-id', message: 'error description' })).toStrictEqual({
       __global_context: true,
-      _context_type: 'ErrorContext',
+      _type: 'ErrorContext',
       id: 'error-id',
       message: 'error description',
     });
@@ -157,7 +157,7 @@ describe('Context Factories', () => {
   it('CookieIdContext', () => {
     expect(makeCookieIdContext({ id: 'error-id', cookie_id: '12345' })).toStrictEqual({
       __global_context: true,
-      _context_type: 'CookieIdContext',
+      _type: 'CookieIdContext',
       id: 'error-id',
       cookie_id: '12345', // Note: the cookieId parameter is mapped to cookie_id
     });
@@ -166,7 +166,7 @@ describe('Context Factories', () => {
   it('SessionContext', () => {
     expect(makeSessionContext({ id: 'session-id', hit_number: 123 })).toStrictEqual({
       __global_context: true,
-      _context_type: 'SessionContext',
+      _type: 'SessionContext',
       id: 'session-id',
       hit_number: 123,
     });
@@ -177,7 +177,7 @@ describe('Context Factories', () => {
       makeHttpContext({ id: 'http', referer: 'referer', user_agent: 'ua', remote_address: '0.0.0.0' })
     ).toStrictEqual({
       __global_context: true,
-      _context_type: 'HttpContext',
+      _type: 'HttpContext',
       id: 'http',
       referer: 'referer',
       user_agent: 'ua',
