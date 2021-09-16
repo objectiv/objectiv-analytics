@@ -100,9 +100,10 @@ def assert_equals_data(
     if len(expected_data) == 0:
         raise ValueError("Cannot check data if 0 rows are expected.")
 
-    bt_sorted = bt.sort_values(order_by)
-    sql = bt_sorted.view_sql()
-    db_rows = run_query(bt_sorted.engine, sql)
+    if order_by:
+        bt = bt.sort_values(order_by)
+    sql = bt.view_sql()
+    db_rows = run_query(bt.engine, sql)
     column_names = list(db_rows.keys())
     db_values = [list(row) for row in db_rows]
     print(db_values)
@@ -112,6 +113,10 @@ def assert_equals_data(
     for i, df_row in enumerate(db_values):
         expected_row = expected_data[i]
         assert df_row == expected_row, f'row {i} is not equal: {expected_row} != {df_row}'
+
+def df_to_list(df):
+    data_list = df.reset_index().to_numpy().tolist()
+    return(data_list)
 
 
 def test_get_item_single():
@@ -179,6 +184,26 @@ def test_get_item_multiple():
         ]
     )
 
+def test_positional_slicing():
+    bt = _get_bt_with_test_data(full_data_set=True)
+    class ReturnSlice:
+        def __getitem__(self, key):
+            return key
+    return_slice = ReturnSlice()
+
+    slice_list = [return_slice[:4],
+                  return_slice[4:],
+                  return_slice[4:7],
+                  return_slice[:]
+                  ]
+    for slice in slice_list:
+        assert_equals_data(
+            bt[slice],
+            expected_columns=['_index_skating_order', 'skating_order', 'city', 'municipality', 'inhabitants',
+                              'founding'],
+            expected_data=df_to_list(bt.to_df()[slice])
+        )
+
 
 def test_set_const_int():
     bt = _get_bt_with_test_data()
@@ -196,6 +221,7 @@ def test_set_const_int():
             [3, 3, 'Drylts', 'Súdwest-Fryslân', 3055, 1268, 5]
         ]
     )
+    assert bt.new_column == bt['new_column']
 
 
 def test_set_const_float():
@@ -214,6 +240,7 @@ def test_set_const_float():
             [3, 3, 'Drylts', 'Súdwest-Fryslân', 3055, 1268, 5.1]
         ]
     )
+    assert bt.new_column == bt['new_column']
 
 
 def test_set_const_str():
@@ -232,6 +259,7 @@ def test_set_const_str():
             [3, 3, 'Drylts', 'Súdwest-Fryslân', 3055, 1268, 'keatsen']
         ]
     )
+    assert bt.alternative_sport == bt['alternative_sport']
 
 def test_set_const_int_from_series():
     bt = _get_bt_with_test_data()[['founding']]
@@ -251,6 +279,7 @@ def test_set_const_int_from_series():
             [1, 1285, 4009], [2, 1456, 4009], [3, 1268, 4009]
         ]
     )
+    assert bt.max_founding == bt['max_founding']
 
 
 def test_set_series_column():
@@ -268,6 +297,7 @@ def test_set_series_column():
             [3, 3, 'Drylts', 'Súdwest-Fryslân', 3055, 1268, 1268],
         ]
     )
+    assert bt.duplicated_column == bt['duplicated_column']
 
     bt['spaces in column'] = bt['founding']
     assert_equals_data(
@@ -295,6 +325,7 @@ def test_set_series_column():
             [1, 1, 'Ljouwert', 'Leeuwarden', 93485, 1285, 1285, 1285, 'Ljouwert']
         ]
     )
+    assert filtered_bt.town == filtered_bt['town']
 
 
 def test_set_multiple():
@@ -311,6 +342,9 @@ def test_set_multiple():
             [3, 3, 'Drylts', 'Súdwest-Fryslân', 3055, 1268, 1268, 'keatsen', 1337]
         ]
     )
+    assert bt.duplicated_column == bt['duplicated_column']
+    assert bt.alternative_sport == bt['alternative_sport']
+    assert bt.leet == bt['leet']
 
 
 def test_set_existing():
@@ -325,6 +359,7 @@ def test_set_existing():
             [3, 3, 1268, 'Súdwest-Fryslân', 3055, 1268]
         ]
     )
+    assert bt.city == bt['city']
 
 
 def test_set_existing_referencing_other_column_experience():
@@ -339,6 +374,7 @@ def test_set_existing_referencing_other_column_experience():
             [3, 3, 'Drylts test', 'Súdwest-Fryslân', 3055, 1268]
         ]
     )
+    assert bt.city == bt['city']
 
     bt = _get_bt_with_test_data()
     a = bt['city'] + ' test1'
@@ -366,6 +402,8 @@ def test_set_existing_referencing_other_column_experience():
             [3, 6, 'Drylts test1 - Drylts test2', 'Súdwest-Fryslân', 3055, 1268]
         ]
     )
+    assert bt.skating_order == bt['skating_order']
+    assert bt.city == bt['city']
 
 
 def test_set_series_expression():
@@ -380,24 +418,18 @@ def test_set_series_expression():
             [3, 3, 'Drylts', 'Súdwest-Fryslân', 3055, 1268, 2268]
         ]
     )
+    assert bt.time_travel == bt['time_travel']
 
 def test_del_item():
     bt = _get_bt_with_test_data()
 
     del(bt['founding'])
     assert 'founding' not in bt.data.keys()
+    with pytest.raises(KeyError):
+        bt.founding
 
-    # It will not choke un columns not there, is that okay?
     with pytest.raises(KeyError):
         del(bt['non existing column'])
-
-    del(bt['city', 'municipality'])
-    assert 'city' not in bt.data.keys()
-    assert 'municipality' not in bt.data.keys()
-
-    inh = bt['inhabitants']
-    del(bt[inh])
-    assert inh not in bt.data.values()
 
 def test_add_int_constant():
     bt = _get_bt_with_test_data()
@@ -595,6 +627,20 @@ def test_integer_divide_constant():
         ]
     )
 
+def test_sort_values():
+    bt = _get_bt_with_test_data(full_data_set=True)
+    kwargs_list = [{'by':'city'},
+                   {'by':['municipality','city']},
+                   {'by':['municipality','city'], 'ascending':False},
+                   {'by':['municipality', 'city'], 'ascending':[False,True]},
+                   ]
+    for kwargs in kwargs_list:
+        assert_equals_data(
+            bt.sort_values(**kwargs),
+            expected_columns=['_index_skating_order', 'skating_order', 'city', 'municipality', 'inhabitants',
+                              'founding'],
+            expected_data=df_to_list(bt.to_df().sort_values(**kwargs))
+        )
 
 def test_group_by_basics():
     bt = _get_bt_with_test_data(full_data_set=True)
@@ -793,6 +839,7 @@ def test_combined_operations1():
             ['Waadhoeke some string', 1],
         ]
     )
+
     result_bt['z'] = result_bt['y_count'] + 10
     result_bt['y_count'] = result_bt['y_count'] + (-1)
     assert_equals_data(
@@ -808,6 +855,7 @@ def test_combined_operations1():
             ['Waadhoeke some string', 0, 11],
         ]
     )
+    assert result_bt.y_count == result_bt['y_count']
 
 
 def test_boolean_indexing_same_node():
@@ -950,7 +998,7 @@ def test_merge_differently_named_columns():
     bt = _get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
     mt =  _get_bt_with_merge_data()[['skating_order', 'food']]
 
-    # create a 'skating_order_min' column to merge on
+    # create a 'skating_order_sum' column to merge on
     agg = mt.groupby('_index_skating_order')[['skating_order']].sum()
     result = bt.merge(agg, [('skating_order', 'skating_order_sum')])
     assert_equals_data(
@@ -994,7 +1042,7 @@ def test_merge_differently_named_columns():
     )
 
     # another one, but slightly more cool :)
-    result = bt.merge(mt, [(bt['city'].slice(0,1), mt['food'].slice(0,1))])['city', 'food']
+    result = bt.merge(mt, [(bt['city'].slice(0,1), mt['food'].slice(0,1))])[['city', 'food']]
     assert_equals_data(
         result,
         expected_columns=['_index_skating_order', 'city', 'food'],
