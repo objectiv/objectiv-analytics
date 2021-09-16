@@ -7,6 +7,13 @@ on:
       # Also run if we update this file, or any other workflow
       - '.github/**'
 
+postgres_settings: &postgres_settings
+  POSTGRES_USER: 'objectiv'
+  POSTGRES_PASSWORD: 'no_password_set'
+  POSTGRES_DB: 'objectiv'
+  POSTGRES_HOSTNAME: 'postgres'
+  POSTGRES_PORT: 5432
+
 jobs:
   typecheck-and-run-tests:
     runs-on: ubuntu-latest
@@ -17,12 +24,8 @@ jobs:
       # based on https://docs.github.com/en/actions/guides/creating-postgresql-service-containers
       postgres:
         image: postgres
-        env: &postgres_settings
-          POSTGRES_USER: 'objectiv'
-          POSTGRES_PASSWORD: 'no_password_set'
-          POSTGRES_DB: 'objectiv'
-          POSTGRES_HOSTNAME: 'postgres'
-          POSTGRES_PORT: 5432
+        env:
+          <<: *postgres_settings
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
