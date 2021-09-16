@@ -17,7 +17,7 @@ jobs:
       # based on https://docs.github.com/en/actions/guides/creating-postgresql-service-containers
       postgres:
         image: postgres
-        env:
+        env: &postgres_settings
           POSTGRES_USER: 'objectiv'
           POSTGRES_PASSWORD: 'no_password_set'
           POSTGRES_DB: 'objectiv'
@@ -34,6 +34,7 @@ jobs:
     env:
       # tell tests to use the above defined postgres service
       OBJ_DB_TEST_URL: 'postgresql://objectiv:no_password_set@localhost:5432/objectiv'
+      <<: *postgres_settings
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}

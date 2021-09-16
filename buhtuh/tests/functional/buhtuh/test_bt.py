@@ -48,6 +48,7 @@ MERGE_INDEX_AND_COLUMNS = ['_index_skating_order'] + MERGE_COLUMNS
 
 
 def _get_bt(table, dataset, columns) -> BuhTuhDataFrame:
+    print(os.environ)
     engine = sqlalchemy.create_engine(DB_TEST_URL)
     import pandas as pd
     df = pd.DataFrame.from_records(dataset, columns=columns)
