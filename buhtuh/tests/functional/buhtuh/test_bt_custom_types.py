@@ -5,12 +5,12 @@ import pytest
 
 from buhtuh import BuhTuhSeries
 from buhtuh.types import register_dtype, get_series_type_from_dtype, arg_to_type
-from tests.functional.buhtuh.test_bt import _get_bt_with_test_data, assert_equals_data
+from tests.functional.buhtuh.test_bt import get_bt_with_test_data, assert_equals_data
 
 
 def test_astype_dtypes():
     # case 1: cast all columns to a type
-    bt = _get_bt_with_test_data()
+    bt = get_bt_with_test_data()
     bt_int = bt[['inhabitants', 'founding']]
     bt_float = bt_int.astype('float64')
     assert bt_int.dtypes == {'founding': 'Int64', 'inhabitants': 'Int64'}
@@ -62,7 +62,7 @@ def test_astype_dtypes():
 
 
 def test_astype_to_int():
-    bt = _get_bt_with_test_data()
+    bt = get_bt_with_test_data()
     bt = bt[['inhabitants']]
     bt['inhabitants'] = bt['inhabitants'] / 1000
     bt_int = bt.astype('int64')
@@ -157,7 +157,7 @@ class ReversedStringType(BuhTuhSeries):
 
 
 def test_custom_type():
-    bt = _get_bt_with_test_data()
+    bt = get_bt_with_test_data()
     bt_city = bt[['city']]
     with pytest.raises(Exception):
         # 'reversed_string' has not be registerd yet
