@@ -4,7 +4,9 @@ from copy import copy
 from typing import List, Set, Union, Dict, Any, Optional, Tuple, cast
 
 import numpy
+import pandas
 import pandas as pd
+from sqlalchemy.engine import Engine
 
 from sql_models.model import SqlModel, CustomSqlModel
 from sql_models.sql_generator import to_sql
@@ -16,17 +18,41 @@ ColumnNames = Union[str, List[str]]
 
 
 class BuhTuhDataFrame:
+    """
+    A mutable DataFrame representing tabular data in a database and enabling operations on that data.
+
+    The data of this DataFrame is always held in the database and operations on the data are performed
+    by the database, not in local memory. Data will only be transferred to local memory when an
+    explicit call is made to one of the functions that transfers data:
+    * head()
+    * to_df()
+    Other functions will not transfer data, nor will they trigger any operations to run on the database.
+    Operations on the DataFrame are combined and translated to a single SQL query, which is executed
+    only when one of the above mentioned data-transfer functions is called.
+
+    The initial data of the DataFrame is the result of the SQL query that the `source_node` parameter
+    contains. That can be a simple query on a table, but also a complicated query in itself. Operations
+    on the data will result in SQL queries that build on top of the query of the source_node. The
+    index and series parameters contain meta information about the data in the source_node.
+
+    The API of this DataFrame is partially compatible with Pandas DataFrames. For more on Pandas
+    DataFrames see https://pandas.pydata.org/docs/reference/frame.html
+    """
     def __init__(
         self,
-        engine,
+        engine: Engine,
         source_node: SqlModel,
         index: Dict[str, 'BuhTuhSeries'],
         series: Dict[str, 'BuhTuhSeries']
     ):
         """
-        TODO: improve this docstring
+        Instantiate a new BuhTuhDataFrame.
+        There are utility class methods to easily create a BuhTuhDataFrame from existing data such as a
+        table (`from_table()`) or already instantiated sql-model (`from_model()`).
+
         :param engine: db connection
-        :param source_node: sqlmodel, must contain all expressions in series
+        :param source_node: sql-model of a select statement that must contain all columns/expressions that
+            are present in the series parameter.
         :param index: Dictionary mapping the name of each index-column to a Series object representing
             the column.
         :param series: Dictionary mapping the name of each data-column to a Series object representing
@@ -99,11 +125,22 @@ class BuhTuhDataFrame:
 
     @classmethod
     def from_table(cls, engine, table_name: str, index: List[str]) -> 'BuhTuhDataFrame':
+        """
+        Instantiate a new BuhTuhDataFrame based on the content of an existing table in the database.
+        This will create and remove a temporary table to asses meta data.
+        """
+        # todo: don't create a temporary table, the real table (and its meta data) already exists
         model = CustomSqlModel(sql=f'SELECT * FROM {table_name}').instantiate()
         return cls._from_node(engine, model, index)
 
     @classmethod
     def from_model(cls, engine, model: SqlModel, index: List[str]) -> 'BuhTuhDataFrame':
+        """
+        Instantiate a new BuhTuhDataFrame based on the result of the query defines in `model`
+        :param engine: db connection
+        :param model: sql model.
+        :param index: list of column names that make up the index.
+        """
         # Wrap the model in a simple select, so we know for sure that the top-level model has no unexpected
         # select expressions, where clauses, or limits
         wrapped_model = CustomSqlModel(sql='SELECT * FROM {{model}}')(model=model)
@@ -125,7 +162,12 @@ class BuhTuhDataFrame:
         )
 
     @classmethod
-    def from_dataframe(cls, df, name, engine, if_exists: str = 'fail'):
+    def from_dataframe(cls, df: pandas.DataFrame, name: str, engine: Engine, if_exists: str = 'fail'):
+        """
+        Instantiate a new BuhTuhDataFrame based on the content of a Pandas DataFrame. This will first load
+        the data into the database using pandas' df.to_sql() method.
+        """
+
         if df.index.name is None:  # for now only one index allowed
             index = '_index_0'
         else:
@@ -238,7 +280,7 @@ class BuhTuhDataFrame:
                 sql='select {index_str}, {columns_sql_str} from {{_last_node}} where {where}'
             )
             model = model_builder(
-                columns_sql_str=self.get_all_column_expressions(),
+                columns_sql_str=self._get_all_column_expressions(),
                 index_str=', '.join(self.index.keys()),
                 _last_node=self.base_node,
                 where=key.get_expression(),
@@ -260,6 +302,9 @@ class BuhTuhDataFrame:
     def __setitem__(self,
                     key: Union[str, List[str]],
                     value: Union['BuhTuhSeries', int, str, float]):
+        """
+        TODO: Comments
+        """
         if isinstance(key, str):
             if not isinstance(value, BuhTuhSeries):
                 series = const_to_series(base=self, value=value, name=key)
@@ -301,7 +346,8 @@ class BuhTuhDataFrame:
         else:
             raise ValueError(f'Key should be either a string or a list of strings, value: {key}')
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str):
+        """ TODO: comments """
         if isinstance(key, str):
             del(self._data[key])
             return
@@ -309,6 +355,17 @@ class BuhTuhDataFrame:
             raise TypeError(f'Unsupported type {type(key)}')
 
     def astype(self, dtype: Union[str, Dict[str, str]]) -> 'BuhTuhDataFrame':
+        """
+        Cast all or some of the data columns to a certain type.
+
+        Only data columns can be cast, index columns cannot be cast.
+
+        This does not modify the current DataFrame, instead it returns a new DataFrame.
+        :param dtype: either
+            * A single str, in which case all data columns are cast to this dtype
+            * A dictionary mapping column labels to dtype.
+        :return: New DataFrame with the specified column(s) cast to the specified type
+        """
         # Check and/or convert parameters
         if isinstance(dtype, str):
             dtype = {column: dtype for column in self.data_columns}
@@ -370,7 +427,14 @@ class BuhTuhDataFrame:
             ascending: Union[bool, List[bool]] = True
     ) -> 'BuhTuhDataFrame':
         """
-        TODO: comments
+        Create a new DataFrame with the specified sorting order.
+
+        This does not modify the current DataFrame, instead it returns a new DataFrame.
+
+        :param by: column label or list of labels to sort by.
+        :param ascending: Whether to sort ascending (True) or descending (False). If this is a list, then the
+            by must also be a list and len(ascending) == len(by)
+        :return: a new DataFrame with the specified ordering
         """
         # TODO needs type check?
         if isinstance(by, str):
@@ -393,16 +457,26 @@ class BuhTuhDataFrame:
             dtypes={name: series.dtype for name, series in self.data.items()}
         )
 
-    def to_df(self):
+    def to_df(self) -> pandas.DataFrame:
+        """
+        Run a SQL query representing the current state of this DataFrame against the database and return the
+        resulting data as a Pandas DataFrame.
+
+        This function queries the database.
+        """
         conn = self.engine.connect()
         sql = self.view_sql()
         df = pd.read_sql_query(sql, conn, index_col=list(self.index.keys()))
         conn.close()
         return df
 
-    def head(self, n: int = 5):
+    def head(self, n: int = 5) -> pandas.DataFrame:
         """
-        Return the first `n` rows.
+        Similar to `to_df` but only returns the first `n` rows.
+
+        This function queries the database.
+
+        :param n: number of rows to query from database.
         """
         conn = self.engine.connect()
         sql = self.view_sql(limit=n)
@@ -415,11 +489,11 @@ class BuhTuhDataFrame:
             limit: Union[int, slice] = None, order: Dict[str, bool] = None
     ) -> SqlModel[CustomSqlModel]:
         """
-        Wrap the current set op series in a model builder
+        Translate the current state of this DataFrame into a SqlModel.
         :param limit: The limit to use
         :param order: The data series to order by, where the bool specifies ASC or DESC.
                       If missing will use index ASC otherwise)
-        :return: The model builder for the current state
+        :return: SQL query as a SqlModel that represents the current state of this DataFrame.
         """
 
         if isinstance(limit, int):
@@ -456,7 +530,7 @@ class BuhTuhDataFrame:
         )
 
         return model_builder(
-            columns_sql_str=self.get_all_column_expressions(),
+            columns_sql_str=self._get_all_column_expressions(),
             index_str=', '.join(self.index.keys()),
             _last_node=self.base_node,
             limit='' if limit_str is None else f'{limit_str}',
@@ -464,11 +538,16 @@ class BuhTuhDataFrame:
         )
 
     def view_sql(self, limit: Union[int, slice] = None) -> str:
+        """
+        Translate the current state of this DataFrame into a SQL query.
+        :param limit: limit on which rows to select in the query
+        :return: SQL query
+        """
         model = self.get_current_node(limit=limit)
         sql = to_sql(model)
         return sql
 
-    def get_all_column_expressions(self, table_alias=''):
+    def _get_all_column_expressions(self, table_alias=''):
         column_expressions = []
         for column in self.data_columns:
             series = self.data[column]
@@ -480,7 +559,7 @@ class BuhTuhDataFrame:
             right: DataFrameOrSeries,
             how: str = 'inner',
             on: ColumnNames = None,
-            left_on: ColumnNames = None,      # todo: also support array-like arguments?
+            left_on: ColumnNames = None,
             right_on: ColumnNames = None,
             left_index: bool = False,
             right_index: bool = False,
