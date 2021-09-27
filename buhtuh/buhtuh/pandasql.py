@@ -228,7 +228,11 @@ class BuhTuhDataFrame:
 
         if isinstance(key, BuhTuhSeriesBoolean):
             # We only support first level boolean indices for now
-            assert(key.base_node == self._base_node)
+            if key.base_node != self.base_node:
+                raise ValueError('Cannot apply Boolean series with a different base_node to DataFrame.'
+                                 'Hint: make sure the Boolean series is derived from this DataFrame. '
+                                 'Alternative: use df.merge(series) to merge the series with the df first,'
+                                 'and then create a new Boolean series on the resulting merged data.')
             model_builder = CustomSqlModel(
                 name='boolean_selection',
                 sql='select {index_str}, {columns_sql_str} from {{_last_node}} where {where}'
@@ -634,7 +638,10 @@ class BuhTuhSeries(ABC):
     def _check_supported(self, operation_name: str, supported_dtypes: List[str], other: 'BuhTuhSeries'):
 
         if self.base_node != other.base_node:
-            raise NotImplementedError("Operations on different graph nodes are currently not supported.")
+            raise ValueError(f'Cannot apply {operation_name} on two series with different base_node. '
+                             f'Hint: make sure both series belong to or are derived from the same '
+                             f'DataFrame. '
+                             f'Alternative: use merge() to create a DataFrame with both series. ')
 
         if other.dtype.lower() not in supported_dtypes:
             raise ValueError(f'{operation_name} not supported between {self.dtype} and {other.dtype}.')
