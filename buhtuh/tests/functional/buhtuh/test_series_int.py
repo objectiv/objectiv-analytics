@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 from buhtuh import BuhTuhSeries
-from tests.functional.buhtuh.test_bt import assert_equals_data, get_bt_with_test_data
+from tests.functional.buhtuh.data_and_utils import assert_equals_data, get_bt_with_test_data
 
 
 def test_add_int_constant():

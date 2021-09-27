@@ -1,7 +1,7 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-from tests.functional.buhtuh.test_bt import assert_equals_data, get_bt_with_food_data
+from tests.functional.buhtuh.data_and_utils import assert_equals_data, get_bt_with_food_data
 
 
 def test_timedelta():

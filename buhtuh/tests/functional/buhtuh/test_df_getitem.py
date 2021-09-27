@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 from buhtuh import BuhTuhSeriesString, BuhTuhDataFrame, BuhTuhSeries
-from tests.functional.buhtuh.test_bt import get_bt_with_test_data, assert_equals_data, df_to_list
+from tests.functional.buhtuh.data_and_utils import get_bt_with_test_data, assert_equals_data, df_to_list
 
 
 def test_get_item_single():

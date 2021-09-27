@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 from buhtuh import BuhTuhSeries
-from tests.functional.buhtuh.test_bt import get_bt_with_test_data, assert_equals_data
+from tests.functional.buhtuh.data_and_utils import get_bt_with_test_data, assert_equals_data
 
 
 def test_string_slice():

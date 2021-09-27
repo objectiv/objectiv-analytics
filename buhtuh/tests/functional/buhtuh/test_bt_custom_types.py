@@ -5,7 +5,7 @@ import pytest
 
 from buhtuh import BuhTuhSeries
 from buhtuh.types import register_dtype, get_series_type_from_dtype, arg_to_type
-from tests.functional.buhtuh.test_bt import get_bt_with_test_data, assert_equals_data
+from tests.functional.buhtuh.data_and_utils import get_bt_with_test_data, assert_equals_data
 
 
 def test_astype_dtypes():

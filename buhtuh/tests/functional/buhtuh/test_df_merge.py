@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 from buhtuh import BuhTuhDataFrame
-from tests.functional.buhtuh.test_bt import get_bt_with_test_data, get_bt_with_food_data, \
+from tests.functional.buhtuh.data_and_utils import get_bt_with_test_data, get_bt_with_food_data, \
     assert_equals_data, get_bt_with_railway_data
 
 
