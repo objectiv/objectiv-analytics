@@ -18,7 +18,7 @@ export class ApplicationContextPlugin implements TrackerPlugin {
       id: config.applicationId,
     });
 
-    console.groupCollapsed(`Objectiv: ${this.pluginName} initialized`);
+    console.groupCollapsed(`｢objectiv:${this.pluginName}｣ Initialized`);
     console.log(`Application ID: ${config.applicationId}`);
     console.group(`Application Context:`);
     console.log(this.applicationContext);

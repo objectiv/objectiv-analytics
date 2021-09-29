@@ -15,7 +15,7 @@ import {
 } from 'superstruct';
 import { validate as validateUuid } from 'uuid';
 import { AnyLocationContext } from './Contexts';
-import { TrackingAttribute } from './TrackingAttributes';
+import { TaggingAttribute } from './TaggingAttribute';
 
 /**
  * A custom Struct describing v4 UUIDs
@@ -67,97 +67,97 @@ export const parseBoolean = (stringifiedBoolean: string | null) => {
 };
 
 /**
- * Custom Structs for the Visibility Tracking Attribute + their Stringifier and Parser
+ * Custom Structs for the Visibility Tagging Attribute + their Stringifier and Parser
  */
-export const TrackingAttributeVisibilityAuto = object({ mode: literal('auto') });
-export type TrackingAttributeVisibilityAuto = Infer<typeof TrackingAttributeVisibilityAuto>;
-export const TrackingAttributeVisibilityManual = object({ mode: literal('manual'), isVisible: boolean() });
-export type TrackingAttributeVisibilityManual = Infer<typeof TrackingAttributeVisibilityManual>;
-export const TrackingAttributeVisibility = union([TrackingAttributeVisibilityAuto, TrackingAttributeVisibilityManual]);
-export type TrackingAttributeVisibility = Infer<typeof TrackingAttributeVisibility>;
+export const TaggingAttributeVisibilityAuto = object({ mode: literal('auto') });
+export type TaggingAttributeVisibilityAuto = Infer<typeof TaggingAttributeVisibilityAuto>;
+export const TaggingAttributeVisibilityManual = object({ mode: literal('manual'), isVisible: boolean() });
+export type TaggingAttributeVisibilityManual = Infer<typeof TaggingAttributeVisibilityManual>;
+export const TaggingAttributeVisibility = union([TaggingAttributeVisibilityAuto, TaggingAttributeVisibilityManual]);
+export type TaggingAttributeVisibility = Infer<typeof TaggingAttributeVisibility>;
 
-export const stringifyVisibilityAttribute = (visibility: TrackingAttributeVisibility) => {
+export const stringifyVisibilityAttribute = (visibility: TaggingAttributeVisibility) => {
   if (!(typeof visibility === 'object')) {
     throw new Error(`Visibility must be an object, received: ${JSON.stringify(visibility)}`);
   }
-  return stringifyStruct(visibility, TrackingAttributeVisibility);
+  return stringifyStruct(visibility, TaggingAttributeVisibility);
 };
 
 export const parseVisibilityAttribute = (stringifiedVisibility: string | null) => {
-  return parseStruct(stringifiedVisibility, TrackingAttributeVisibility);
+  return parseStruct(stringifiedVisibility, TaggingAttributeVisibility);
 };
 
 /**
- * The object that `track` calls return
+ * The object that Location Taggers return
  */
-export const TrackingAttributes = object({
-  [TrackingAttribute.elementId]: Uuid,
-  [TrackingAttribute.parentElementId]: optional(Uuid),
-  [TrackingAttribute.context]: AnyLocationContext,
-  [TrackingAttribute.trackClicks]: optional(boolean()),
-  [TrackingAttribute.trackBlurs]: optional(boolean()),
-  [TrackingAttribute.trackVisibility]: optional(TrackingAttributeVisibility),
+export const TaggingAttributes = object({
+  [TaggingAttribute.elementId]: Uuid,
+  [TaggingAttribute.parentElementId]: optional(Uuid),
+  [TaggingAttribute.context]: AnyLocationContext,
+  [TaggingAttribute.trackClicks]: optional(boolean()),
+  [TaggingAttribute.trackBlurs]: optional(boolean()),
+  [TaggingAttribute.trackVisibility]: optional(TaggingAttributeVisibility),
 });
-export type TrackingAttributes = Infer<typeof TrackingAttributes>;
+export type TaggingAttributes = Infer<typeof TaggingAttributes>;
 
 /**
- * The object that `track` calls return, stringified
+ * The object that Location Taggers return, stringified
  */
-export const StringifiedTrackingAttributes = object({
-  [TrackingAttribute.elementId]: Uuid,
-  [TrackingAttribute.parentElementId]: optional(Uuid),
-  [TrackingAttribute.context]: string(),
-  [TrackingAttribute.trackClicks]: optional(StringBoolean),
-  [TrackingAttribute.trackBlurs]: optional(StringBoolean),
-  [TrackingAttribute.trackVisibility]: optional(string()),
+export const StringifiedTaggingAttributes = object({
+  [TaggingAttribute.elementId]: Uuid,
+  [TaggingAttribute.parentElementId]: optional(Uuid),
+  [TaggingAttribute.context]: string(),
+  [TaggingAttribute.trackClicks]: optional(StringBoolean),
+  [TaggingAttribute.trackBlurs]: optional(StringBoolean),
+  [TaggingAttribute.trackVisibility]: optional(string()),
 });
-export type StringifiedTrackingAttributes = Infer<typeof StringifiedTrackingAttributes>;
+export type StringifiedTaggingAttributes = Infer<typeof StringifiedTaggingAttributes>;
 
 /**
- * The object that `trackChildren` calls return
+ * The object that `tagChildren` calls return
  */
-export const TrackChildrenQuery = object({
+export const ChildrenTaggingQuery = object({
   queryAll: string(),
-  trackAs: optional(StringifiedTrackingAttributes),
+  tagAs: optional(StringifiedTaggingAttributes),
 });
-export const ValidTrackChildrenQuery = object({
+export const ValidChildrenTaggingQuery = object({
   queryAll: string(),
-  trackAs: StringifiedTrackingAttributes,
+  tagAs: StringifiedTaggingAttributes,
 });
-export type TrackChildrenQuery = Infer<typeof TrackChildrenQuery>;
+export type ChildrenTaggingQuery = Infer<typeof ChildrenTaggingQuery>;
 
-export const ChildrenTrackingAttributes = object({
-  [TrackingAttribute.trackChildren]: array(TrackChildrenQuery),
+export const ChildrenTaggingAttributes = object({
+  [TaggingAttribute.tagChildren]: array(ChildrenTaggingQuery),
 });
-export type ChildrenTrackingAttributes = Infer<typeof ChildrenTrackingAttributes>;
+export type ChildrenTaggingAttributes = Infer<typeof ChildrenTaggingAttributes>;
 
-export const TrackChildrenParameters = array(TrackChildrenQuery);
-export type TrackChildrenParameters = Infer<typeof TrackChildrenParameters>;
+export const ChildrenTaggingQueries = array(ChildrenTaggingQuery);
+export type ChildrenTaggingQueries = Infer<typeof ChildrenTaggingQueries>;
 
 /**
- * The object that `trackChildren` calls return, stringified
+ * The object that `tagChildren` calls return, stringified
  */
-export const StringifiedChildrenTrackingAttributes = object({
-  [TrackingAttribute.trackChildren]: string(),
+export const StringifiedChildrenTaggingAttributes = object({
+  [TaggingAttribute.tagChildren]: string(),
 });
-export type StringifiedChildrenTrackingAttributes = Infer<typeof StringifiedChildrenTrackingAttributes>;
+export type StringifiedChildrenTaggingAttributes = Infer<typeof StringifiedChildrenTaggingAttributes>;
 
 /**
- * Children Tracking Attribute Stringifier and Parser
+ * Children Tagging Attribute Stringifier and Parser
  */
-export const stringifyChildrenAttribute = (queries: TrackChildrenParameters) => {
+export const stringifyChildrenTaggingAttribute = (queries: ChildrenTaggingQueries) => {
   if (!(typeof queries === 'object')) {
     throw new Error(`Visibility must be an object, received: ${JSON.stringify(queries)}`);
   }
-  queries.forEach((query) => assert(query, ValidTrackChildrenQuery));
+  queries.forEach((query) => assert(query, ValidChildrenTaggingQuery));
   return create(JSON.stringify(queries), string());
 };
 
-export const parseChildrenAttribute = (stringifiedChildrenAttribute: string | null) => {
-  if (stringifiedChildrenAttribute === null) {
-    throw new Error('Received `null` while attempting to parse children tracking attribute');
+export const parseChildrenTaggingAttribute = (stringifiedChildrenTaggingAttribute: string | null) => {
+  if (stringifiedChildrenTaggingAttribute === null) {
+    throw new Error('Received `null` while attempting to parse Children Tagging Attribute');
   }
 
-  const queries = create(JSON.parse(stringifiedChildrenAttribute), TrackChildrenParameters);
-  return create(queries, array(ValidTrackChildrenQuery));
+  const queries = create(JSON.parse(stringifiedChildrenTaggingAttribute), ChildrenTaggingQueries);
+  return create(queries, array(ValidChildrenTaggingQuery));
 };

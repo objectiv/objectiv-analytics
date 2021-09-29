@@ -16,7 +16,8 @@
     "tsc": "tsc --noEmit",
     "test": "jest --silent --runInBand",
     "test:ci": "jest --silent --ci --runInBand",
-    "test:coverage": "jest --silent --coverage --runInBand"
+    "test:coverage": "jest --silent --coverage --runInBand",
+    "npm-publish": "npm publish"
   },
   "devDependencies": {
     "@objectiv/schema": "~0.0.1",

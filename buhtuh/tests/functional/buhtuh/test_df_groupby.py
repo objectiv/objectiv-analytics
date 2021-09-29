@@ -26,11 +26,11 @@ def test_group_by_basics():
         'municipality': 'string'
     }
     assert result_bt.dtypes == {
-        '_index_skating_order_count': 'Int64',
-        'city_count': 'Int64',
-        'founding_count': 'Int64',
-        'inhabitants_count': 'Int64',
-        'skating_order_count': 'Int64'
+        '_index_skating_order_count': 'int64',
+        'city_count': 'int64',
+        'founding_count': 'int64',
+        'inhabitants_count': 'int64',
+        'skating_order_count': 'int64'
     }
 
     # now test multiple different aggregations
@@ -53,11 +53,11 @@ def test_group_by_basics():
         'municipality': 'string'
     }
     assert result_bt.dtypes == {
-        '_index_skating_order_nunique': 'Int64',
-        'city_count': 'Int64',
-        'founding_max': 'Int64',
-        'inhabitants_min': 'Int64',
-        'skating_order_sum': 'Int64'
+        '_index_skating_order_nunique': 'int64',
+        'city_count': 'int64',
+        'founding_max': 'int64',
+        'inhabitants_min': 'int64',
+        'skating_order_sum': 'int64'
     }
 
 
@@ -75,15 +75,15 @@ def test_group_by_all():
         ]
     )
     assert result_bt.index_dtypes == {
-        'index': 'Int64'
+        'index': 'int64'
     }
     assert result_bt.dtypes == {
-        '_index_skating_order_nunique': 'Int64',
-        'city_nunique': 'Int64',
-        'founding_nunique': 'Int64',
-        'inhabitants_nunique': 'Int64',
-        'municipality_nunique': 'Int64',
-        'skating_order_nunique': 'Int64'
+        '_index_skating_order_nunique': 'int64',
+        'city_nunique': 'int64',
+        'founding_nunique': 'int64',
+        'inhabitants_nunique': 'int64',
+        'municipality_nunique': 'int64',
+        'skating_order_nunique': 'int64'
     }
 
 
@@ -105,11 +105,11 @@ def test_group_by_expression():
         'city': 'string'
     }
     assert result_bt.dtypes == {
-        '_index_skating_order_nunique': 'Int64',
-        'municipality_nunique': 'Int64',
-        'founding_nunique': 'Int64',
-        'inhabitants_nunique': 'Int64',
-        'skating_order_nunique': 'Int64'
+        '_index_skating_order_nunique': 'int64',
+        'municipality_nunique': 'int64',
+        'founding_nunique': 'int64',
+        'inhabitants_nunique': 'int64',
+        'skating_order_nunique': 'int64'
     }
 
 
@@ -135,7 +135,7 @@ def test_group_by_basics_series():
         'municipality': 'string'
     }
     assert result_bt.dtypes == {
-        'inhabitants_count': 'Int64',
+        'inhabitants_count': 'int64',
     }
 
     btg_series = btg['inhabitants', 'founding']
@@ -157,8 +157,8 @@ def test_group_by_basics_series():
         'municipality': 'string'
     }
     assert result_bt.dtypes == {
-        'inhabitants_count': 'Int64',
-        'founding_count': 'Int64'
+        'inhabitants_count': 'int64',
+        'founding_count': 'int64'
     }
 
 
@@ -180,6 +180,6 @@ def test_group_by_multiple_aggregations_on_same_series():
         'municipality': 'string'
     }
     assert result_bt.dtypes == {
-        'inhabitants_min': 'Int64',
-        'inhabitants_max': 'Int64',
+        'inhabitants_min': 'int64',
+        'inhabitants_max': 'int64',
     }

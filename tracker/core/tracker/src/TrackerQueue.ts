@@ -40,7 +40,7 @@ export class TrackerQueueMemoryStore implements TrackerQueueStoreInterface {
   events: TrackerEvent[] = [];
 
   constructor() {
-    console.log(`%cObjectiv: ${this.queueStoreName} initialized`, 'font-weight: bold');
+    console.log(`%c｢objectiv:${this.queueStoreName}｣ Initialized`, 'font-weight: bold');
   }
 
   async read(size?: number, filterPredicate?: (event: TrackerEvent) => boolean): Promise<TrackerEvent[]> {
@@ -160,7 +160,7 @@ export class TrackerQueue implements TrackerQueueInterface {
     this.batchDelayMs = config?.batchDelayMs ?? 1000;
     this.concurrency = config?.concurrency ?? 4;
 
-    console.groupCollapsed(`Objectiv: ${this.queueName} initialized`);
+    console.groupCollapsed(`｢objectiv:${this.queueName}｣ initialized`);
     console.log(`Store: ${this.store.queueStoreName}`);
     console.log(`Batch Size: ${this.batchSize}`);
     console.log(`Batch Delay (ms): ${this.batchDelayMs}`);
@@ -207,7 +207,7 @@ export class TrackerQueue implements TrackerQueueInterface {
         return;
       }
 
-      console.groupCollapsed(`Objectiv: ${this.queueName} batch read`);
+      console.groupCollapsed(`｢objectiv:${this.queueName}｣ Batch read`);
       console.log(`Events:`);
       console.log(eventsBatch);
       console.groupEnd();

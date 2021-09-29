@@ -94,7 +94,7 @@ export class TrackerPlugins implements PluginCallbacks {
   constructor(plugins: TrackerPluginsConfiguration) {
     this.list = plugins.map((plugin) => (typeof plugin === 'object' ? plugin : new plugin()));
 
-    console.groupCollapsed(`Objectiv: TrackerPlugins initialized`);
+    console.groupCollapsed(`｢objectiv:TrackerPlugins｣ Initialized`);
     console.group(`Plugins:`);
     console.log(this.list.map((plugin) => plugin.pluginName).join(', '));
     console.groupEnd();

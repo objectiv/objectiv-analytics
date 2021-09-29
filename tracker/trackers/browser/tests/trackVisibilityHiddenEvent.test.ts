@@ -1,7 +1,7 @@
 import { makeSectionHiddenEvent } from '@objectiv/tracker-core';
-import { BrowserTracker, configureTracker, TrackingAttribute } from '../src';
-import trackVisibilityHiddenEvent from '../src/observer/trackVisibilityHiddenEvent';
-import makeTrackedElement from './mocks/makeTrackedElement';
+import { BrowserTracker, configureTracker, TaggingAttribute } from '../src';
+import { trackVisibilityHiddenEvent } from '../src/observer/trackVisibilityHiddenEvent';
+import { makeTaggedElement } from './mocks/makeTaggedElement';
 
 describe('trackVisibilityHiddenEvent', () => {
   beforeEach(() => {
@@ -11,17 +11,17 @@ describe('trackVisibilityHiddenEvent', () => {
     jest.spyOn(window.objectiv.tracker, 'trackEvent');
   });
 
-  it('should not track elements without visibility tracking attributes', async () => {
-    const trackedDiv = makeTrackedElement('div-id', null, 'div');
+  it('should not track elements without visibility tagging attributes', async () => {
+    const trackedDiv = makeTaggedElement('div-id', null, 'div');
 
     trackVisibilityHiddenEvent(trackedDiv, window.objectiv.tracker);
 
     expect(window.objectiv.tracker.trackEvent).not.toHaveBeenCalled();
   });
 
-  it('should not track elements with invalid visibility tracking attributes', async () => {
-    const trackedDiv = makeTrackedElement('div-id', null, 'div');
-    trackedDiv.setAttribute(TrackingAttribute.trackVisibility, 'null');
+  it('should not track elements with invalid visibility tagging attributes', async () => {
+    const trackedDiv = makeTaggedElement('div-id', null, 'div');
+    trackedDiv.setAttribute(TaggingAttribute.trackVisibility, 'null');
 
     trackVisibilityHiddenEvent(trackedDiv, window.objectiv.tracker);
 
@@ -29,8 +29,8 @@ describe('trackVisibilityHiddenEvent', () => {
   });
 
   it('should not track in mode:auto', async () => {
-    const trackedDiv = makeTrackedElement('div-id', null, 'div');
-    trackedDiv.setAttribute(TrackingAttribute.trackVisibility, '{"mode":"auto"}');
+    const trackedDiv = makeTaggedElement('div-id', null, 'div');
+    trackedDiv.setAttribute(TaggingAttribute.trackVisibility, '{"mode":"auto"}');
 
     trackVisibilityHiddenEvent(trackedDiv, window.objectiv.tracker);
 
@@ -38,8 +38,8 @@ describe('trackVisibilityHiddenEvent', () => {
   });
 
   it('should not track in mode:manual with isVisible:true', async () => {
-    const trackedDiv = makeTrackedElement('div-id', null, 'div');
-    trackedDiv.setAttribute(TrackingAttribute.trackVisibility, '{"mode":"manual","isVisible":true}');
+    const trackedDiv = makeTaggedElement('div-id', null, 'div');
+    trackedDiv.setAttribute(TaggingAttribute.trackVisibility, '{"mode":"manual","isVisible":true}');
 
     trackVisibilityHiddenEvent(trackedDiv, window.objectiv.tracker);
 
@@ -47,8 +47,8 @@ describe('trackVisibilityHiddenEvent', () => {
   });
 
   it('should track in mode:manual with isVisible:false', async () => {
-    const trackedDiv = makeTrackedElement('div-id', null, 'div');
-    trackedDiv.setAttribute(TrackingAttribute.trackVisibility, '{"mode":"manual","isVisible":false}');
+    const trackedDiv = makeTaggedElement('div-id', null, 'div');
+    trackedDiv.setAttribute(TaggingAttribute.trackVisibility, '{"mode":"manual","isVisible":false}');
 
     trackVisibilityHiddenEvent(trackedDiv, window.objectiv.tracker);
 
@@ -60,8 +60,8 @@ describe('trackVisibilityHiddenEvent', () => {
     const trackerOverride = new BrowserTracker({ applicationId: 'override', endpoint: 'override' });
     jest.spyOn(trackerOverride, 'trackEvent');
 
-    const trackedDiv = makeTrackedElement('div-id', null, 'div');
-    trackedDiv.setAttribute(TrackingAttribute.trackVisibility, '{"mode":"manual","isVisible":false}');
+    const trackedDiv = makeTaggedElement('div-id', null, 'div');
+    trackedDiv.setAttribute(TaggingAttribute.trackVisibility, '{"mode":"manual","isVisible":false}');
 
     trackVisibilityHiddenEvent(trackedDiv, trackerOverride);
 

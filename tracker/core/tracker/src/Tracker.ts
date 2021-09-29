@@ -66,7 +66,7 @@ export class Tracker implements Contexts {
     this.global_contexts = new_global_contexts;
 
     console.groupCollapsed(
-      `Objectiv: Tracker initialized ${
+      `｢objectiv:Tracker｣ Initialized ${
         this.location_stack.length
           ? '(' +
             this.location_stack.map((context) => `${context._type.replace('Context', '')}:${context.id}`).join(' > ') +
@@ -108,7 +108,7 @@ export class Tracker implements Contexts {
     if (this.transport && this.transport.isUsable()) {
       // istanbul ignore next
       console.groupCollapsed(
-        `Objectiv: Tracking ${trackedEvent._type} ${
+        `｢objectiv:Tracker｣ Tracking ${trackedEvent._type} ${
           this.location_stack.length
             ? '(' +
               this.location_stack

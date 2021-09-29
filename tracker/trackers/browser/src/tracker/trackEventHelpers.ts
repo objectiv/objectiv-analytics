@@ -9,6 +9,7 @@ import {
   makeVideoStartEvent,
 } from '@objectiv/tracker-core';
 import { trackEvent } from '../tracker/trackEvent';
+import { TaggableElement } from '../typeGuards';
 import { BrowserTracker } from './BrowserTracker';
 import { trackerErrorHandler, TrackOnErrorCallback } from './trackerErrorHandler';
 
@@ -16,50 +17,57 @@ import { trackerErrorHandler, TrackOnErrorCallback } from './trackerErrorHandler
  * The parameters of the Event helper functions
  */
 export type TrackEventHelperParameters = {
-  element: HTMLElement | EventTarget;
+  element: TaggableElement | EventTarget;
   tracker?: BrowserTracker;
+  onError?: TrackOnErrorCallback;
 };
 
 /**
  * Event specific helpers. To make it easier to track common Events
  */
-export const trackClick = ({ element, tracker }: TrackEventHelperParameters) => {
-  return trackEvent({ eventFactory: makeClickEvent, element, tracker });
+export const trackClick = ({ element, tracker, onError }: TrackEventHelperParameters) => {
+  return trackEvent({ eventFactory: makeClickEvent, element, tracker, onError });
 };
 
-export const trackInputChange = ({ element, tracker }: TrackEventHelperParameters) => {
-  return trackEvent({ eventFactory: makeInputChangeEvent, element, tracker });
+export const trackInputChange = ({ element, tracker, onError }: TrackEventHelperParameters) => {
+  return trackEvent({ eventFactory: makeInputChangeEvent, element, tracker, onError });
 };
 
-export const trackSectionVisible = ({ element, tracker }: TrackEventHelperParameters) => {
-  return trackEvent({ eventFactory: makeSectionVisibleEvent, element, tracker });
+export const trackSectionVisible = ({ element, tracker, onError }: TrackEventHelperParameters) => {
+  return trackEvent({ eventFactory: makeSectionVisibleEvent, element, tracker, onError });
 };
 
-export const trackSectionHidden = ({ element, tracker }: TrackEventHelperParameters) => {
-  return trackEvent({ eventFactory: makeSectionHiddenEvent, element, tracker });
+export const trackSectionHidden = ({ element, tracker, onError }: TrackEventHelperParameters) => {
+  return trackEvent({ eventFactory: makeSectionHiddenEvent, element, tracker, onError });
 };
 
-export const trackVideoStart = ({ element, tracker }: TrackEventHelperParameters) => {
-  return trackEvent({ eventFactory: makeVideoStartEvent, element, tracker });
+export const trackVideoStart = ({ element, tracker, onError }: TrackEventHelperParameters) => {
+  return trackEvent({ eventFactory: makeVideoStartEvent, element, tracker, onError });
 };
 
-export const trackVideoPause = ({ element, tracker }: TrackEventHelperParameters) => {
-  return trackEvent({ eventFactory: makeVideoPauseEvent, element, tracker });
+export const trackVideoPause = ({ element, tracker, onError }: TrackEventHelperParameters) => {
+  return trackEvent({ eventFactory: makeVideoPauseEvent, element, tracker, onError });
 };
 
 export const trackVisibility = ({
   element,
   tracker,
   isVisible,
+  onError,
 }: TrackEventHelperParameters & { isVisible: boolean }) => {
-  return trackEvent({ eventFactory: isVisible ? makeSectionVisibleEvent : makeSectionHiddenEvent, element, tracker });
+  return trackEvent({
+    eventFactory: isVisible ? makeSectionVisibleEvent : makeSectionHiddenEvent,
+    element,
+    tracker,
+    onError,
+  });
 };
 
 /**
  * The parameters of the Application Loaded and URLChange Event helper functions
  */
 export type NonInteractiveTrackHelperParameters = {
-  element?: HTMLElement | EventTarget;
+  element?: TaggableElement | EventTarget;
   tracker?: BrowserTracker;
   onError?: TrackOnErrorCallback;
 };

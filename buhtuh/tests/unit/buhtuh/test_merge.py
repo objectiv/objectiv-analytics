@@ -114,38 +114,38 @@ def test__determine_left_on_right_df_serie_happy():
 
 
 def test__determine_result_columns():
-    left = get_fake_df(['a'], ['b', 'c'], 'Int64')
-    right = get_fake_df(['a'], ['c', 'd'], 'Float64')
+    left = get_fake_df(['a'], ['b', 'c'], 'int64')
+    right = get_fake_df(['a'], ['c', 'd'], 'float64')
     result = _determine_result_columns(left, right, ['a'], ['a'], ('_x', '_y'))
     assert result == (
         [
-            ResultColumn(name='a', expression='a', dtype='Int64'),
+            ResultColumn(name='a', expression='a', dtype='int64'),
         ], [
-            ResultColumn(name='b', expression='b', dtype='Int64'),
-            ResultColumn(name='c_x', expression='c', dtype='Int64'),
-            ResultColumn(name='c_y', expression='c', dtype='Float64'),
-            ResultColumn(name='d', expression='d', dtype='Float64')
+            ResultColumn(name='b', expression='b', dtype='int64'),
+            ResultColumn(name='c_x', expression='c', dtype='int64'),
+            ResultColumn(name='c_y', expression='c', dtype='float64'),
+            ResultColumn(name='d', expression='d', dtype='float64')
         ]
     )
     result = _determine_result_columns(left, right, ['c'], ['c'], ('_x', '_y'))
     assert result == (
         [
-            ResultColumn(name='a_x', expression='a', dtype='Int64'),
-            ResultColumn(name='a_y', expression='a', dtype='Float64'),
+            ResultColumn(name='a_x', expression='a', dtype='int64'),
+            ResultColumn(name='a_y', expression='a', dtype='float64'),
         ], [
-            ResultColumn(name='b', expression='b', dtype='Int64'),
-            ResultColumn(name='c', expression='c', dtype='Int64'),
-            ResultColumn(name='d', expression='d', dtype='Float64')
+            ResultColumn(name='b', expression='b', dtype='int64'),
+            ResultColumn(name='c', expression='c', dtype='int64'),
+            ResultColumn(name='d', expression='d', dtype='float64')
         ]
     )
     result = _determine_result_columns(left, right, ['a', 'c'], ['a', 'c'], ('_x', '_y'))
     assert result == (
         [
-            ResultColumn(name='a', expression='a', dtype='Int64'),
+            ResultColumn(name='a', expression='a', dtype='int64'),
         ], [
-            ResultColumn(name='b', expression='b', dtype='Int64'),
-            ResultColumn(name='c', expression='c', dtype='Int64'),
-            ResultColumn(name='d', expression='d', dtype='Float64')
+            ResultColumn(name='b', expression='b', dtype='int64'),
+            ResultColumn(name='c', expression='c', dtype='int64'),
+            ResultColumn(name='d', expression='d', dtype='float64')
         ]
     )
 

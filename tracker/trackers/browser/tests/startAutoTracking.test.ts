@@ -1,6 +1,6 @@
 import { makeSectionContext, makeSectionVisibleEvent, makeURLChangeEvent } from '@objectiv/tracker-core';
-import { BrowserTracker, configureTracker, makeMutationCallback, startAutoTracking, TrackingAttribute } from '../src';
-import makeTrackedElement from './mocks/makeTrackedElement';
+import { BrowserTracker, configureTracker, makeMutationCallback, startAutoTracking, TaggingAttribute } from '../src';
+import { makeTaggedElement } from './mocks/makeTaggedElement';
 
 describe('startAutoTracking', () => {
   beforeEach(() => {
@@ -66,15 +66,15 @@ describe('makeMutationCallback - new nodes', () => {
     const mutationObserver = new MutationObserver(mutationCallback);
 
     const sectionContext = makeSectionContext({ id: 'div' });
-    const trackedDiv = makeTrackedElement('div', 'div', 'div');
-    trackedDiv.setAttribute(TrackingAttribute.trackVisibility, '{"mode":"auto"}');
+    const trackedDiv = makeTaggedElement('div', 'div', 'div');
+    trackedDiv.setAttribute(TaggingAttribute.trackVisibility, '{"mode":"auto"}');
 
     const mockedMutationRecord: MutationRecord = {
       // @ts-ignore
       addedNodes: [document.createComment('comment'), trackedDiv],
       // @ts-ignore
       removedNodes: [document.createComment('comment')],
-      attributeName: TrackingAttribute.trackVisibility,
+      attributeName: TaggingAttribute.trackVisibility,
       target: trackedDiv,
     };
     mutationCallback([mockedMutationRecord], mutationObserver);

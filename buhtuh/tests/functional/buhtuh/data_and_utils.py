@@ -10,8 +10,7 @@ from typing import List, Union
 import sqlalchemy
 from sqlalchemy.engine import ResultProxy
 
-from buhtuh import BuhTuhDataFrame, BuhTuhSeries
-
+from buhtuh import BuhTuhDataFrame, BuhTuhSeries, types
 
 DB_TEST_URL = os.environ.get('OBJ_DB_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
 
@@ -139,3 +138,15 @@ def assert_equals_data(
 def df_to_list(df):
     data_list = df.reset_index().to_numpy().tolist()
     return(data_list)
+
+
+def check_expected_db_type(bt, expected_series_type, column_name='new_column'):
+    sql = bt[column_name].view_sql()
+    sql = f"with buh as ({sql}) select pg_typeof({column_name}) from buh limit 1"
+    db_rows = run_query(sqlalchemy.create_engine(DB_TEST_URL), sql)
+    db_values = [list(row) for row in db_rows]
+    registi = types.TypeRegistry()
+    registi._real_init()
+    a = registi.dtype_series[db_values[0][0]]
+    b = a(None,None,None,None)
+    assert isinstance(b, expected_series_type)

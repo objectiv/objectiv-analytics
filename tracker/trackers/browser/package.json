@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "description": "Objectiv Browser Tracker",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
@@ -15,7 +15,8 @@
     "tsc": "tsc --noEmit",
     "test": "jest --silent --runInBand",
     "test:ci": "jest --silent --ci --runInBand",
-    "test:coverage": "jest --silent --coverage --runInBand"
+    "test:coverage": "jest --silent --coverage --runInBand",
+    "npm-publish": "npm publish"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^20.0.0",
@@ -37,6 +38,10 @@
     "xhr-mock": "^2.5.1"
   },
   "dependencies": {
+    "@objectiv/plugin-web-device-context": "~0.0.1",
+    "@objectiv/plugin-web-document-context": "~0.0.1",
+    "@objectiv/schema": "~0.0.1",
+    "@objectiv/tracker-core": "~0.0.1",
     "superstruct": "^0.15.2",
     "uuid": "^8.3.2"
   }

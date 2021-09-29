@@ -1,7 +1,7 @@
 import { makeSectionContext, makeSectionHiddenEvent } from '@objectiv/tracker-core';
-import { BrowserTracker, configureTracker, TrackingAttribute } from '../src';
-import trackRemovedElements from '../src/observer/trackRemovedElements';
-import makeTrackedElement from './mocks/makeTrackedElement';
+import { BrowserTracker, configureTracker, TaggingAttribute } from '../src';
+import { trackRemovedElements } from '../src/observer/trackRemovedElements';
+import { makeTaggedElement } from './mocks/makeTaggedElement';
 
 describe('trackRemovedElements', () => {
   beforeEach(() => {
@@ -25,10 +25,10 @@ describe('trackRemovedElements', () => {
     expect(window.objectiv.tracker.trackEvent).not.toHaveBeenCalled();
   });
 
-  it('should skip all Elements that do not have visibility tracking attributes', async () => {
-    const trackedDiv = makeTrackedElement('div1', 'div1', 'div');
-    const trackedChildDiv = makeTrackedElement('div2', 'div2', 'div');
-    const trackedButton = makeTrackedElement('button', 'button', 'button');
+  it('should skip all Elements that do not have visibility tagging attributes', async () => {
+    const trackedDiv = makeTaggedElement('div1', 'div1', 'div');
+    const trackedChildDiv = makeTaggedElement('div2', 'div2', 'div');
+    const trackedButton = makeTaggedElement('button', 'button', 'button');
 
     trackedDiv.appendChild(trackedChildDiv);
     trackedChildDiv.appendChild(trackedButton);
@@ -42,9 +42,9 @@ describe('trackRemovedElements', () => {
   it('should trigger a visibility:hidden Event for Tracked Elements with visibility:auto attributes', async () => {
     const div = document.createElement('div');
     const sectionContext = makeSectionContext({ id: 'div' });
-    const trackedDiv = makeTrackedElement('div', 'div', 'div');
-    trackedDiv.setAttribute(TrackingAttribute.trackVisibility, '{"mode":"auto"}');
-    const trackedButton = makeTrackedElement('button', null, 'button');
+    const trackedDiv = makeTaggedElement('div', 'div', 'div');
+    trackedDiv.setAttribute(TaggingAttribute.trackVisibility, '{"mode":"auto"}');
+    const trackedButton = makeTaggedElement('button', null, 'button');
 
     trackedDiv.appendChild(trackedButton);
     div.appendChild(trackedDiv);
@@ -61,9 +61,9 @@ describe('trackRemovedElements', () => {
 
   it('should not trigger a visibility:hidden Event for Tracked Elements with visibility:manual attributes', async () => {
     const div = document.createElement('div');
-    const trackedDiv = makeTrackedElement('div', 'div', 'div');
-    trackedDiv.setAttribute(TrackingAttribute.trackVisibility, '{"mode":"manual","isVisible":true}');
-    const trackedButton = makeTrackedElement('button', null, 'button');
+    const trackedDiv = makeTaggedElement('div', 'div', 'div');
+    trackedDiv.setAttribute(TaggingAttribute.trackVisibility, '{"mode":"manual","isVisible":true}');
+    const trackedButton = makeTaggedElement('button', null, 'button');
 
     trackedDiv.appendChild(trackedButton);
     div.appendChild(trackedDiv);
@@ -77,9 +77,9 @@ describe('trackRemovedElements', () => {
   it('should console error', async () => {
     jest.spyOn(console, 'error');
     const div = document.createElement('div');
-    const trackedDiv = makeTrackedElement('div', 'div', 'div');
-    trackedDiv.setAttribute(TrackingAttribute.trackVisibility, '{"mode":"broken"}');
-    const trackedButton = makeTrackedElement('button', null, 'button');
+    const trackedDiv = makeTaggedElement('div', 'div', 'div');
+    trackedDiv.setAttribute(TaggingAttribute.trackVisibility, '{"mode":"broken"}');
+    const trackedButton = makeTaggedElement('button', null, 'button');
 
     trackedDiv.appendChild(trackedButton);
     div.appendChild(trackedDiv);

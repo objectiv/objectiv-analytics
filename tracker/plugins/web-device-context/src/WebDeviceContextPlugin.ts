@@ -17,6 +17,12 @@ export class WebDeviceContextPlugin implements TrackerPlugin {
       id: 'device',
       user_agent: this.isUsable() ? navigator.userAgent : 'unknown',
     });
+
+    console.groupCollapsed(`｢objectiv:${this.pluginName}｣ Initialized`);
+    console.group(`Device Context:`);
+    console.log(this.webDeviceContext);
+    console.groupEnd();
+    console.groupEnd();
   }
 
   /**

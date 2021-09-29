@@ -1,18 +1,18 @@
 import { makeSectionContext } from '@objectiv/tracker-core';
 import {
+  ChildrenTaggingQueries,
   parseBoolean,
-  parseChildrenAttribute,
+  parseChildrenTaggingAttribute,
   parseLocationContext,
   parseVisibilityAttribute,
   stringifyBoolean,
-  stringifyChildrenAttribute,
+  stringifyChildrenTaggingAttribute,
   stringifyLocationContext,
   stringifyVisibilityAttribute,
-  TrackChildrenParameters,
-  trackElement,
-  TrackingAttribute,
-  TrackingAttributeVisibilityAuto,
-  TrackingAttributeVisibilityManual,
+  TaggingAttribute,
+  TaggingAttributeVisibilityAuto,
+  TaggingAttributeVisibilityManual,
+  tagElement,
 } from '../src';
 
 describe('Custom structs', () => {
@@ -36,9 +36,9 @@ describe('Custom structs', () => {
     });
   });
 
-  describe('Visibility Tracking Attribute', () => {
+  describe('Visibility Tagging Attribute', () => {
     it('Should stringify and parse Visibility:auto Attributes', () => {
-      const visibilityAuto: TrackingAttributeVisibilityAuto = { mode: 'auto' };
+      const visibilityAuto: TaggingAttributeVisibilityAuto = { mode: 'auto' };
       const stringifiedVisibilityAuto = stringifyVisibilityAttribute(visibilityAuto);
       expect(stringifiedVisibilityAuto).toStrictEqual(JSON.stringify(visibilityAuto));
 
@@ -47,7 +47,7 @@ describe('Custom structs', () => {
     });
 
     it('Should stringify and parse Visibility:manual:visible Attributes', () => {
-      const visibilityManualVisible: TrackingAttributeVisibilityManual = { mode: 'manual', isVisible: true };
+      const visibilityManualVisible: TaggingAttributeVisibilityManual = { mode: 'manual', isVisible: true };
       const stringifiedVisibilityManualVisible = stringifyVisibilityAttribute(visibilityManualVisible);
       expect(stringifiedVisibilityManualVisible).toStrictEqual(JSON.stringify(visibilityManualVisible));
 
@@ -56,7 +56,7 @@ describe('Custom structs', () => {
     });
 
     it('Should stringify and parse Visibility:manual:hidden Attributes', () => {
-      const visibilityManualHidden: TrackingAttributeVisibilityManual = { mode: 'manual', isVisible: false };
+      const visibilityManualHidden: TaggingAttributeVisibilityManual = { mode: 'manual', isVisible: false };
       const stringifiedVisibilityManualHidden = stringifyVisibilityAttribute(visibilityManualHidden);
       expect(stringifiedVisibilityManualHidden).toStrictEqual(JSON.stringify(visibilityManualHidden));
 
@@ -162,42 +162,42 @@ describe('Custom structs', () => {
     });
   });
 
-  describe('Children Tracking Attribute', () => {
+  describe('Children Tagging Attribute', () => {
     it('Should stringify and parse empty Children Attributes', () => {
-      const stringifiedEmptyChildren = stringifyChildrenAttribute([]);
+      const stringifiedEmptyChildren = stringifyChildrenTaggingAttribute([]);
       expect(stringifiedEmptyChildren).toStrictEqual('[]');
 
-      const parsedEmptyChildren = parseChildrenAttribute(stringifiedEmptyChildren);
+      const parsedEmptyChildren = parseChildrenTaggingAttribute(stringifiedEmptyChildren);
       expect(parsedEmptyChildren).toStrictEqual([]);
     });
 
     it('Should stringify and parse Children Attributes', () => {
-      const elementTrackingAttributes = trackElement({ id: 'test' });
-      const children: TrackChildrenParameters = [
+      const elementTaggingAttributes = tagElement({ id: 'test' });
+      const children: ChildrenTaggingQueries = [
         {
           queryAll: '#id',
-          trackAs: elementTrackingAttributes,
+          tagAs: elementTaggingAttributes,
         },
       ];
-      const stringifiedChildren = stringifyChildrenAttribute(children);
+      const stringifiedChildren = stringifyChildrenTaggingAttribute(children);
       expect(stringifiedChildren).toStrictEqual(
         JSON.stringify([
           {
             queryAll: '#id',
-            trackAs: elementTrackingAttributes,
+            tagAs: elementTaggingAttributes,
           },
         ])
       );
 
-      const parsedChildren = parseChildrenAttribute(stringifiedChildren);
+      const parsedChildren = parseChildrenTaggingAttribute(stringifiedChildren);
       expect(parsedChildren).toStrictEqual(
         children?.map((childQuery) => ({
           ...childQuery,
-          trackAs: {
-            ...childQuery.trackAs,
-            [TrackingAttribute.parentElementId]: undefined,
-            [TrackingAttribute.trackBlurs]: undefined,
-            [TrackingAttribute.trackClicks]: undefined,
+          tagAs: {
+            ...childQuery.tagAs,
+            [TaggingAttribute.parentElementId]: undefined,
+            [TaggingAttribute.trackBlurs]: undefined,
+            [TaggingAttribute.trackClicks]: undefined,
           },
         }))
       );
@@ -221,7 +221,7 @@ describe('Custom structs', () => {
       // @ts-ignore
       expect(() => stringifyChildrenAttribute([{ queryAll: '#id' }])).toThrow();
       // @ts-ignore
-      expect(() => stringifyChildrenAttribute([{ queryAll: '#id', trackAs: 'invalid' }])).toThrow();
+      expect(() => stringifyChildrenAttribute([{ queryAll: '#id', tagAs: 'invalid' }])).toThrow();
     });
 
     it('Should not parse strings that are not Visibility Attributes or malformed', () => {

@@ -13,17 +13,17 @@ def test_astype_dtypes():
     bt = get_bt_with_test_data()
     bt_int = bt[['inhabitants', 'founding']]
     bt_float = bt_int.astype('float64')
-    assert bt_int.dtypes == {'founding': 'Int64', 'inhabitants': 'Int64'}
-    assert bt_float.dtypes == {'founding': 'Float64', 'inhabitants': 'Float64'}
+    assert bt_int.dtypes == {'founding': 'int64', 'inhabitants': 'int64'}
+    assert bt_float.dtypes == {'founding': 'float64', 'inhabitants': 'float64'}
 
     # case 2: cast specific columns to a type
     # pre-test check
     assert bt.dtypes == {
         'city': 'string',
-        'founding': 'Int64',
-        'inhabitants': 'Int64',
+        'founding': 'int64',
+        'inhabitants': 'int64',
         'municipality': 'string',
-        'skating_order': 'Int64'
+        'skating_order': 'int64'
     }
     # 2.1: no columns specified
     bt_none_changed = bt.astype({})
@@ -34,10 +34,10 @@ def test_astype_dtypes():
     })
     assert bt_astype1.dtypes == {
         'city': 'string',
-        'founding': 'Int64',
-        'inhabitants': 'Float64',   # changed
+        'founding': 'int64',
+        'inhabitants': 'float64',   # changed
         'municipality': 'string',
-        'skating_order': 'Int64'
+        'skating_order': 'int64'
     }
 
     # 2.2: Multiple columns specified
@@ -49,7 +49,7 @@ def test_astype_dtypes():
     })
     assert bt_astype2.dtypes == {
         'city': 'string',
-        'founding': 'Float64',
+        'founding': 'float64',
         'inhabitants': 'string',
         'municipality': 'string',
         'skating_order': 'string'
@@ -66,8 +66,8 @@ def test_astype_to_int():
     bt = bt[['inhabitants']]
     bt['inhabitants'] = bt['inhabitants'] / 1000
     bt_int = bt.astype('int64')
-    assert bt.dtypes == {'inhabitants': 'Float64'}
-    assert bt_int.dtypes == {'inhabitants': 'Int64'}
+    assert bt.dtypes == {'inhabitants': 'float64'}
+    assert bt_int.dtypes == {'inhabitants': 'int64'}
     assert_equals_data(
         bt,
         expected_columns=['_index_skating_order', 'inhabitants'],

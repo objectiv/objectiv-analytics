@@ -1,6 +1,6 @@
 import { makeSectionVisibleEvent } from '@objectiv/tracker-core';
-import { BrowserTracker, configureTracker, trackButton, trackElement, TrackingAttribute } from '../src';
-import trackNewElements from '../src/observer/trackNewElements';
+import { BrowserTracker, configureTracker, tagButton, tagElement, TaggingAttribute } from '../src';
+import { trackNewElements } from '../src/observer/trackNewElements';
 
 describe('trackNewElements', () => {
   beforeEach(() => {
@@ -10,13 +10,13 @@ describe('trackNewElements', () => {
     jest.spyOn(window.objectiv.tracker, 'trackEvent');
   });
 
-  it('should apply tracking attributes to Elements tracked via Children Tracking and track them right away', async () => {
+  it('should apply tagging attributes to Elements tracked via Children Tracking and track them right away', async () => {
     const div1 = document.createElement('div');
     div1.setAttribute(
-      TrackingAttribute.trackChildren,
+      TaggingAttribute.tagChildren,
       JSON.stringify([
-        { queryAll: '#button', trackAs: trackButton({ id: 'button', text: 'button' }) },
-        { queryAll: '#child-div', trackAs: trackElement({ id: 'child-div' }) },
+        { queryAll: '#button', tagAs: tagButton({ id: 'button', text: 'button' }) },
+        { queryAll: '#child-div', tagAs: tagElement({ id: 'child-div' }) },
       ])
     );
 

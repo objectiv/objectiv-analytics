@@ -1,28 +1,26 @@
+import { TaggingAttribute } from '../TaggingAttribute';
 import { BrowserTracker } from '../tracker/BrowserTracker';
 import { trackerErrorHandler } from '../tracker/trackerErrorHandler';
-import { TrackingAttribute } from '../TrackingAttributes';
-import processChildrenTrackingElement from './processChildrenTrackingElement';
-import trackNewElement from './trackNewElement';
+import { processChildrenTaggingElement } from './processChildrenTaggingElement';
+import { trackNewElement } from './trackNewElement';
 
 /**
  * Given a Mutation Observer node containing newly added nodes it will track visibility and attach events to them:
  */
-function trackNewElements(element: Element, tracker: BrowserTracker) {
+export const trackNewElements = (element: Element, tracker: BrowserTracker) => {
   try {
-    // Process `track` attributes
-    const trackedElements = element.querySelectorAll(`[${TrackingAttribute.context}]`);
+    // Process `tagLocation`, and its helpers, attributes
+    const trackedElements = element.querySelectorAll(`[${TaggingAttribute.context}]`);
     [element, ...Array.from(trackedElements)].forEach((element) => trackNewElement(element, tracker));
 
-    // Process `trackChildren` attributes
-    const childrenTrackingElements = element.querySelectorAll(`[${TrackingAttribute.trackChildren}]`);
+    // Process `tagChildren` attributes
+    const childrenTrackingElements = element.querySelectorAll(`[${TaggingAttribute.tagChildren}]`);
     [element, ...Array.from(childrenTrackingElements)].forEach((element) => {
-      processChildrenTrackingElement(element).forEach((queriedElement) => {
+      processChildrenTaggingElement(element).forEach((queriedElement) => {
         trackNewElement(queriedElement, tracker);
       });
     });
   } catch (error) {
     trackerErrorHandler(error);
   }
-}
-
-export default trackNewElements;
+};

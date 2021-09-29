@@ -15,7 +15,8 @@
     "tsc": "tsc --noEmit",
     "test": "jest --silent --runInBand",
     "test:ci": "jest --silent --ci --runInBand",
-    "test:coverage": "jest --silent --coverage --runInBand"
+    "test:coverage": "jest --silent --coverage --runInBand",
+    "npm-publish": "npm publish"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^20.0.0",

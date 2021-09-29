@@ -1,20 +1,20 @@
+import { TaggingAttribute } from '../TaggingAttribute';
 import { trackerErrorHandler } from '../tracker/trackerErrorHandler';
-import { TrackingAttribute } from '../TrackingAttributes';
-import { isTrackedElement, TrackedElement } from '../typeGuards';
+import { isTaggedElement, TaggedElement } from '../typeGuards';
 
 /**
- * Checks if the given origin Tracked Element and the Event Target are the same Tracked Element.
+ * Checks if the given origin TaggedElement and the Event Target are the same Element.
  * TODO: make this behavior configurable per event type
  */
-export const isBubbledEvent = (originElement: TrackedElement, eventTarget: EventTarget | null): boolean => {
+export const isBubbledEvent = (originElement: TaggedElement, eventTarget: EventTarget | null): boolean => {
   try {
     // Let Events originating from non Tracked Elements bubble up to, possibly, a parent Tracked Element
-    if (!isTrackedElement(eventTarget)) {
+    if (!isTaggedElement(eventTarget)) {
       return false;
     }
 
-    const originElementId = originElement.getAttribute(TrackingAttribute.elementId);
-    const targetElementId = eventTarget.getAttribute(TrackingAttribute.elementId);
+    const originElementId = originElement.getAttribute(TaggingAttribute.elementId);
+    const targetElementId = eventTarget.getAttribute(TaggingAttribute.elementId);
 
     return originElementId !== targetElementId;
   } catch (error) {
@@ -22,5 +22,3 @@ export const isBubbledEvent = (originElement: TrackedElement, eventTarget: Event
   }
   return false;
 };
-
-export default isBubbledEvent;

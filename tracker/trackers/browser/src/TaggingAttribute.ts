@@ -1,7 +1,7 @@
 /**
  * All the attributes that are added to a DOM Element to make it trackable
  */
-export enum TrackingAttribute {
+export enum TaggingAttribute {
   // A unique identifier used internally to pinpoint to a specific instance of a tracked element
   elementId = 'data-objectiv-element-id',
 
@@ -20,6 +20,6 @@ export enum TrackingAttribute {
   // Determines how we will track visibility events for this tracked element.
   trackVisibility = 'data-objectiv-track-visibility',
 
-  // A list of serialized ChildTrackingQuery objects
-  trackChildren = 'data-objectiv-track-children',
+  // A list of serialized ChildrenTaggingQuery objects
+  tagChildren = 'data-objectiv-tag-children',
 }

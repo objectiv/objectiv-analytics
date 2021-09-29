@@ -33,7 +33,7 @@ export const defaultFetchFunction = async ({
   parameters?: typeof defaultFetchParameters;
 }): Promise<Response> => {
   return new Promise(function (resolve, reject) {
-    console.groupCollapsed(`Objectiv: FetchAPITransport sending`);
+    console.groupCollapsed(`｢objectiv:FetchAPITransport｣ Sending`);
     console.log(`Events:`);
     console.log(events);
     console.groupEnd();
@@ -49,14 +49,14 @@ export const defaultFetchFunction = async ({
     })
       .then((response) => {
         if (response.status === 200) {
-          console.groupCollapsed(`Objectiv: FetchAPITransport success`);
+          console.groupCollapsed(`｢objectiv:FetchAPITransport｣ Succeeded`);
           console.log(`Events:`);
           console.log(events);
           console.groupEnd();
 
           resolve(response);
         } else {
-          console.groupCollapsed(`Objectiv: FetchAPITransport failure`);
+          console.groupCollapsed(`｢objectiv:FetchAPITransport｣ Failed`);
           console.log(`Events:`);
           console.log(events);
           console.log(`Response: ${response}`);
@@ -66,7 +66,7 @@ export const defaultFetchFunction = async ({
         }
       })
       .catch(() => {
-        console.groupCollapsed(`Objectiv: FetchAPITransport error`);
+        console.groupCollapsed(`｢objectiv:FetchAPITransport｣ Error`);
         console.log(`Events:`);
         console.log(events);
         console.groupEnd();

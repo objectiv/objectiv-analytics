@@ -21,6 +21,10 @@ export class WebDocumentContextPlugin implements TrackerPlugin {
    */
   constructor(config?: WebDocumentContextPluginConfig) {
     this.documentContextId = config?.documentContextId ?? (this.isUsable() ? document.nodeName : 'unknown');
+
+    console.groupCollapsed(`｢objectiv:${this.pluginName}｣ Initialized`);
+    console.log(`Application ID: ${this.documentContextId}`);
+    console.groupEnd();
   }
 
   /**

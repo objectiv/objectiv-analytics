@@ -1,0 +1,34 @@
+{
+  "name": "@objectiv/tracker-angular",
+  "version": "0.0.1",
+  "description": "Objectiv Angular Tracker",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "scripts": {
+    "build": "ng-packagr -p package.json && node postbuild.js",
+    "prettify": "prettier --write .",
+    "tsc": "tsc --noEmit",
+    "npm-publish": "(cd dist && npm publish)"
+  },
+  "peerDependencies": {
+    "@objectiv/tracker-browser": "0.0.1"
+  },
+  "devDependencies": {
+    "@angular/compiler": "^12.2.7",
+    "@angular/compiler-cli": "^12.2.7",
+    "@angular/core": "^12.2.7",
+    "@objectiv/tracker-browser": "0.0.1",
+    "ng-packagr": "^12.2.2",
+    "prettier": "^2.3.2",
+    "rxjs": "^6.5.4",
+    "typescript": "4.3"
+  },
+  "ngPackage": {
+    "lib": {
+      "entryFile": "src/index.ts",
+      "umdModuleIds": {
+        "@objectiv/tracker-browser": "objectivTrackerBrowser"
+      }
+    }
+  }
+}

@@ -71,9 +71,12 @@ class TypeRegistry:
         import numpy
 
         self.dtype_series = {
+            'boolean': BuhTuhSeriesBoolean,
             'bool': BuhTuhSeriesBoolean,
+            'integer': BuhTuhSeriesInt64,
             'bigint': BuhTuhSeriesInt64,
             'int64': BuhTuhSeriesInt64,
+            'double precision': BuhTuhSeriesFloat64,
             'float64': BuhTuhSeriesFloat64,
             'string': BuhTuhSeriesString,
             'text': BuhTuhSeriesString,
@@ -84,15 +87,19 @@ class TypeRegistry:
             'timestamp without time zone': BuhTuhSeriesTimestamp,
             'datetime64[ns]': BuhTuhSeriesTimestamp,
             'date': BuhTuhSeriesDate,
+            'time without time zone': BuhTuhSeriesTime,
             'time': BuhTuhSeriesTime,
 
+            'interval': BuhTuhSeriesTimedelta,
             'timedelta': BuhTuhSeriesTimedelta
         }
+        # note that order can be important here. value_to_dtype starts at end of this list and for example a
+        # bool can become and 'int64' if int would be later in this list.
         self.value_type_dtype = [
-            (bool, 'bool'),
             (int, 'int64'),
             (numpy.int64, 'int64'),
             (float, 'float64'),
+            (bool, 'bool'),
             (str, 'string'),
 
             (datetime.date, 'date'),

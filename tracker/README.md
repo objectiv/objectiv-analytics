@@ -26,6 +26,7 @@ This is a complete list of the currently available packages.
 | @objectiv/utilities                   | core    | /core/utilities               | [README](/tracker/core/utilities/README.md)               |
 | @objectiv/plugin-web-device-context   | plugin  | /plugins/web-device-context   | [README](/tracker/plugins/web-device-context/README.md)   |
 | @objectiv/plugin-web-document-context | plugin  | /plugins/web-document-context | [README](/tracker/plugins/web-document-context/README.md) |
+| @objectiv/tracker-angular             | tracker | /trackers/angular             | [README](/tracker/trackers/angular/README.md)             |
 | @objectiv/tracker-browser             | tracker | /trackers/browser             | [README](/tracker/trackers/browser/README.md)             |
 
 >Note: Packages may be completely independent of each other. Currently, many of them share the same testing framework or bundler but that's not required. Each has its own local configurations and may diverge if needed.
@@ -170,6 +171,10 @@ Build output will be produced in a `/dist` folder under each package.
 
 ### `yarn publish`
 Publishes all public packages.
+> **Note**:  
+> To publish a single package the command name is `npm-publish` to avoid conflicting with the default command 
+> 
+> Example: `yarn workspace @objectiv/tracker-core npm-publish`
 
 ### `yarn utils:generate`
 Runs the generator utility. This will generate:

@@ -1,5 +1,5 @@
-import { TrackingAttributes } from './structs';
-import { TrackingAttribute } from './TrackingAttributes';
+import { ChildrenTaggingAttributes, TaggingAttributes } from './structs';
+import { TaggingAttribute } from './TaggingAttribute';
 
 /**
  * The type of Elements the type guards can work with
@@ -9,45 +9,47 @@ export type GuardElement = Node | EventTarget | null;
 /**
  * A Trackable Element is an HTMLElement or an SVGElement
  */
-export type TrackableElement = HTMLElement | SVGElement;
+export type TaggableElement = HTMLElement | SVGElement;
 
 /**
  * A type guard to determine if a the given Element is an HTMLElement or SVGElement.
- * In general we can only track Elements supporting dataset attributes.
+ * In general we can only tag Elements supporting dataset attributes.
  */
-export const isTrackableElement = (element: GuardElement): element is TrackableElement =>
+export const isTaggableElement = (element: GuardElement): element is TaggableElement =>
   element instanceof HTMLElement || element instanceof SVGElement;
 
 /**
- * A Tracked Element is a TrackableElement with our TrackingAttributes
+ * A TaggedElement is a TaggableElement already decorated with our TaggingAttributes
  */
-export type TrackedElement = TrackableElement & { dataset: TrackingAttributes };
+export type TaggedElement = TaggableElement & { dataset: TaggingAttributes };
 
 /**
- * A type guard to determine if the given Element is a TrackableElement decorated with TrackingAttributes.
+ * A type guard to determine if the given Element is a TaggableElement decorated with TaggingAttributes.
  * Note: For performance and simplicity we only check if `context` is present. Assume all other attributes are there.
  */
-export const isTrackedElement = (element: GuardElement): element is TrackedElement =>
-  isTrackableElement(element) && element.hasAttribute(TrackingAttribute.context);
+export const isTaggedElement = (element: GuardElement): element is TaggedElement =>
+  isTaggableElement(element) && element.hasAttribute(TaggingAttribute.context);
 
 /**
- * A Children Tracking Element is a TrackableElement with our ChildrenTrackingAttributes
+ * A ChildrenTaggingElement is a TaggableElement already decorated with our ChildrenTaggingAttributes
  */
-export type ChildrenTrackingElement = TrackableElement & { dataset: TrackingAttributes };
+export type ChildrenTaggingElement = TaggableElement & { dataset: ChildrenTaggingAttributes };
 
 /**
- * A type guard to determine if the given Element is a TrackableElement decorated with ChildrenTrackingAttributes.
+ * A type guard to determine if the given Element is a TaggableElement decorated with ChildrenTaggingAttributes.
  */
-export const isChildrenTrackingElement = (element: GuardElement): element is ChildrenTrackingElement =>
-  isTrackableElement(element) && element.hasAttribute(TrackingAttribute.trackChildren);
+export const isChildrenTaggingElement = (element: GuardElement): element is ChildrenTaggingElement =>
+  isTaggableElement(element) && element.hasAttribute(TaggingAttribute.tagChildren);
 
 /**
- * A Custom Parent Tracking Element is a TrackedElement with the TrackingAttribute.parentElementId
+ * A CustomParentTaggedElement is a TaggedElement with the TaggingAttribute.parentElementId
  */
-export type CustomParentTrackedElement = TrackableElement & { dataset: TrackingAttributes };
+export type CustomParentTaggedElement = TaggableElement & {
+  dataset: Pick<TaggingAttributes, TaggingAttribute.parentElementId>;
+};
 
 /**
- * A type guard to determine if the given Element is a TrackableElement decorated with ChildrenTrackingAttributes.
+ * A type guard to determine if the given Element is a TaggableElement decorated with TaggingAttributes.parentElementId.
  */
-export const isCustomParentTrackedElement = (element: GuardElement): element is CustomParentTrackedElement =>
-  isTrackedElement(element) && element.hasAttribute(TrackingAttribute.parentElementId);
+export const isCustomParentTaggedElement = (element: GuardElement): element is CustomParentTaggedElement =>
+  isTaggedElement(element) && element.hasAttribute(TaggingAttribute.parentElementId);

@@ -1,13 +1,13 @@
 import { getLocationHref } from '../globals';
+import { TaggingAttribute } from '../TaggingAttribute';
 import { BrowserTracker, BrowserTrackerConfig } from '../tracker/BrowserTracker';
 import { trackerErrorHandler } from '../tracker/trackerErrorHandler';
 import { trackApplicationLoaded, trackURLChange } from '../tracker/trackEventHelpers';
-import { TrackingAttribute } from '../TrackingAttributes';
-import { isTrackedElement } from '../typeGuards';
-import trackNewElements from './trackNewElements';
-import trackRemovedElements from './trackRemovedElements';
-import trackVisibilityHiddenEvent from './trackVisibilityHiddenEvent';
-import trackVisibilityVisibleEvent from './trackVisibilityVisibleEvent';
+import { isTaggedElement } from '../typeGuards';
+import { trackNewElements } from './trackNewElements';
+import { trackRemovedElements } from './trackRemovedElements';
+import { trackVisibilityHiddenEvent } from './trackVisibilityHiddenEvent';
+import { trackVisibilityVisibleEvent } from './trackVisibilityVisibleEvent';
 
 /**
  * Global state to track if we already triggered an Application Loaded Event and to keep track of URLs
@@ -33,7 +33,7 @@ export const startAutoTracking = (options: AutoTrackingOptions, tracker: Browser
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: [TrackingAttribute.trackVisibility],
+      attributeFilter: [TaggingAttribute.trackVisibility],
     });
 
     if (trackApplicationLoadedEvents && !applicationLoaded) {
@@ -97,7 +97,7 @@ export const makeMutationCallback = (trackURLChangeEvents: boolean, tracker: Bro
         });
 
         // Visibility attribute mutation (programmatic visibility change): determine and track visibility events
-        if (attributeName && isTrackedElement(target)) {
+        if (attributeName && isTaggedElement(target)) {
           trackVisibilityVisibleEvent(target, tracker);
           trackVisibilityHiddenEvent(target, tracker);
         }

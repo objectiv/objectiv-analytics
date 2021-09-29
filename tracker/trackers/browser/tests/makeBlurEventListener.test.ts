@@ -1,7 +1,7 @@
 import { makeInputChangeEvent } from '@objectiv/tracker-core';
 import { BrowserTracker, configureTracker } from '../src/';
-import makeBlurEventListener from '../src/observer/makeBlurEventListener';
-import makeTrackedElement from './mocks/makeTrackedElement';
+import { makeBlurEventListener } from '../src/observer/makeBlurEventListener';
+import { makeTaggedElement } from './mocks/makeTaggedElement';
 
 describe('makeBlurEventListener', () => {
   beforeEach(() => {
@@ -12,7 +12,7 @@ describe('makeBlurEventListener', () => {
   });
 
   it('should track Input Change when invoked from a valid target', () => {
-    const trackedInput = makeTrackedElement('input', null, 'input');
+    const trackedInput = makeTaggedElement('input', null, 'input');
     const blurEventListener = makeBlurEventListener(trackedInput);
 
     trackedInput.addEventListener('blur', blurEventListener);
@@ -23,8 +23,8 @@ describe('makeBlurEventListener', () => {
   });
 
   it('should not track Input Change when invoked from a bubbling target', () => {
-    const trackedInput = makeTrackedElement('input1', null, 'input');
-    const unrelatedInput = makeTrackedElement('input2', null, 'input');
+    const trackedInput = makeTaggedElement('input1', null, 'input');
+    const unrelatedInput = makeTaggedElement('input2', null, 'input');
     const blurEventListener = makeBlurEventListener(trackedInput);
 
     trackedInput.addEventListener('blur', blurEventListener);

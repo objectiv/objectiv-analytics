@@ -96,6 +96,16 @@ Requirements:
 make all
 ```
 
+By default all images will be tagged with `latest`.
+
+## Running Contain Images Locally
+By default the docker-compose file will try to get images from our container registry. By setting 
+`OBJECTIV_CONTAINER_URL` we can tell it to use local images.
+
+```console
+OBJECTIV_CONTAINER_URL=objectiv
+docker-compose up
+```
 
 ## Running the Objectiv Pipeline in Production
 TODO
@@ -121,7 +131,7 @@ docker logs objectiv_notebook 2>&1|grep http.*token\=
 It's also possible to only start parts of the stack. For example, to only run the collector; run:
 
 ```bash
-docker-compose up collector
+docker-compose up objectiv_collector
 ```
 
 This will start the collector, and any dependencies it has (eg. postgres).

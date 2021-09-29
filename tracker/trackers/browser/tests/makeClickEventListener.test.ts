@@ -1,7 +1,7 @@
 import { makeClickEvent } from '@objectiv/tracker-core';
 import { BrowserTracker, configureTracker } from '../src/';
-import makeClickEventListener from '../src/observer/makeClickEventListener';
-import makeTrackedElement from './mocks/makeTrackedElement';
+import { makeClickEventListener } from '../src/observer/makeClickEventListener';
+import { makeTaggedElement } from './mocks/makeTaggedElement';
 
 describe('makeClickEventListener', () => {
   beforeEach(() => {
@@ -12,7 +12,7 @@ describe('makeClickEventListener', () => {
   });
 
   it('should track Button Click when invoked from a valid target', () => {
-    const trackedButton = makeTrackedElement('button', null, 'button');
+    const trackedButton = makeTaggedElement('button', null, 'button');
     const clickEventListener = makeClickEventListener(trackedButton, window.objectiv.tracker);
 
     trackedButton.addEventListener('click', clickEventListener);
@@ -23,8 +23,8 @@ describe('makeClickEventListener', () => {
   });
 
   it('should not track Div Click when invoked from a bubbling target', () => {
-    const trackedButton = makeTrackedElement('button', null, 'button');
-    const trackedDiv = makeTrackedElement('div', null, 'div');
+    const trackedButton = makeTaggedElement('button', null, 'button');
+    const trackedDiv = makeTaggedElement('div', null, 'div');
     const divClickEventListener = jest.fn(makeClickEventListener(trackedDiv, window.objectiv.tracker));
 
     trackedDiv.addEventListener('click', divClickEventListener);

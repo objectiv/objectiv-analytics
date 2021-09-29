@@ -4,9 +4,9 @@ import {
   makeSectionContext,
   makeSectionVisibleEvent,
 } from '@objectiv/tracker-core';
-import { BrowserTracker, configureTracker, TrackingAttribute } from '../src';
-import trackNewElement from '../src/observer/trackNewElement';
-import makeTrackedElement from './mocks/makeTrackedElement';
+import { BrowserTracker, configureTracker, TaggingAttribute } from '../src';
+import { trackNewElement } from '../src/observer/trackNewElement';
+import { makeTaggedElement } from './mocks/makeTaggedElement';
 
 describe('trackNewElement', () => {
   beforeEach(() => {
@@ -28,8 +28,8 @@ describe('trackNewElement', () => {
 
   it('should track visibility: visible event', async () => {
     const sectionContext = makeSectionContext({ id: 'test' });
-    const trackedDiv = makeTrackedElement('div-id-1', 'test', 'div');
-    trackedDiv.setAttribute(TrackingAttribute.trackVisibility, '{"mode":"auto"}');
+    const trackedDiv = makeTaggedElement('div-id-1', 'test', 'div');
+    trackedDiv.setAttribute(TaggingAttribute.trackVisibility, '{"mode":"auto"}');
     jest.spyOn(trackedDiv, 'addEventListener');
 
     trackNewElement(trackedDiv, window.objectiv.tracker);
@@ -44,9 +44,9 @@ describe('trackNewElement', () => {
 
   it('should attach click event listener', async () => {
     const buttonContext = makeButtonContext({ id: 'test', text: 'test' });
-    const trackedButton = makeTrackedElement('button-id-1', JSON.stringify(buttonContext), 'button');
+    const trackedButton = makeTaggedElement('button-id-1', JSON.stringify(buttonContext), 'button');
     trackedButton.setAttribute('data-testid', 'test-button');
-    trackedButton.setAttribute(TrackingAttribute.trackClicks, 'true');
+    trackedButton.setAttribute(TaggingAttribute.trackClicks, 'true');
     document.body.appendChild(trackedButton);
     jest.spyOn(trackedButton, 'addEventListener');
 
@@ -59,8 +59,8 @@ describe('trackNewElement', () => {
 
   it('should attach blur event listener', async () => {
     const inputContext = makeInputContext({ id: 'test' });
-    const trackedInput = makeTrackedElement('input-id-1', JSON.stringify(inputContext), 'input');
-    trackedInput.setAttribute(TrackingAttribute.trackBlurs, 'true');
+    const trackedInput = makeTaggedElement('input-id-1', JSON.stringify(inputContext), 'input');
+    trackedInput.setAttribute(TaggingAttribute.trackBlurs, 'true');
     jest.spyOn(trackedInput, 'addEventListener');
 
     trackNewElement(trackedInput, window.objectiv.tracker);
@@ -73,8 +73,8 @@ describe('trackNewElement', () => {
   it('should console error', async () => {
     jest.spyOn(console, 'error');
     const inputContext = makeInputContext({ id: 'test' });
-    const trackedInput = makeTrackedElement('input-id-1', JSON.stringify(inputContext), 'input');
-    trackedInput.setAttribute(TrackingAttribute.trackBlurs, 'true');
+    const trackedInput = makeTaggedElement('input-id-1', JSON.stringify(inputContext), 'input');
+    trackedInput.setAttribute(TaggingAttribute.trackBlurs, 'true');
     jest.spyOn(trackedInput, 'addEventListener').mockImplementation(() => {
       throw new Error('nope');
     });
