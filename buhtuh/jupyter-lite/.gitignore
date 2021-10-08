@@ -1,0 +1,4 @@
+venv
+jupyter-lite/_output
+.jupyterlite.doit.db
+
