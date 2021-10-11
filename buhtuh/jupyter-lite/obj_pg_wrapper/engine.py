@@ -3,17 +3,36 @@ from pyodide import to_js
 from js import fetch, Object
 from typing import List, Dict, Any
 
+"""
+simple http/json based wrapper to remotely run pg queries
+
+TODO:
+- *__make synchronous__*
+- fix sessions /cookies for transactions
+- send close connection on close of connection (__exit__ / close())
+- proper typing (serialization is JSON for now (UUID / Timestamps / JSON))
+- probably lots of other stuff
+"""
 
 class Result:
 
     def __init__(self, rows: List):
-        self.result = []
-        for row in rows:
-            self.result.append({key: getattr(row, key) for key in Object.keys(row)})
+        self.rows = rows
 
-    def fetchall(self) -> List[Dict[str, Any]]:
-        return self.result
+    def fetchall(self) -> List[List]:
+        result = []
+        for row in self.rows:
+            result.append([getattr(row, key) for key in Object.keys(row)])
 
+        return result
+    
+    def fetchall_dict(self) -> List[Dict[str, Any]]:
+        result = []
+        for row in self.rows:
+            result.append({key: getattr(row, key) for key in Object.keys(row)})
+
+        return result
+    
 
 class Connection:
 
@@ -35,13 +54,25 @@ class Connection:
         return Result(result)
 
 
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def close(self):
+        # TODO: implement closing connection / transaction server-side
+        pass
+
 class Engine:
 
     def __init__(self, dsn: str):
         self.dsn = dsn
+        self.connection = Null
 
     def connect(self) -> Connection:
-        return Connection(self.dsn)
+        self.connection = Connection(self.dsn)
+        return self.connection()
 
     def close(self):
-        pass
+        self.connection.close()
