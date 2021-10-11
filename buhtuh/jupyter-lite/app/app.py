@@ -62,9 +62,8 @@ def index():
 @app.route("/query", methods=["post"])
 def query():
     raw_data = request.data
-    print(f'trying to decode"{raw_data}"')
+    
     data = json.loads(raw_data)
-    print(f'parsed data {data}')
     query = data['query']
     
     cur.execute(query)
@@ -75,8 +74,10 @@ def query():
         result.append({k:v for k,v in row.items()})
     
 
-    print(f'got: {query}')
+    print(f'got query: {query}')
     response = json_encode(result)
+    print(f'sending result: {response}')
+
     return make_response(response, 200, {"Content-type": "application/json"})
 
 
