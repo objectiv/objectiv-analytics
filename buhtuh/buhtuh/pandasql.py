@@ -1,10 +1,8 @@
-import datetime
 from abc import abstractmethod, ABC
 from copy import copy
-from typing import List, Set, Union, Dict, Any, Optional, Tuple, cast, Type, NamedTuple
+from typing import List, Set, Union, Dict, Any, Optional, Tuple, cast, Type, NamedTuple, TYPE_CHECKING
 from uuid import UUID
 
-import numpy
 import pandas
 import pandas as pd
 from sqlalchemy.engine import Engine
@@ -20,6 +18,10 @@ ColumnNames = Union[str, List[str]]
 class SortColumn(NamedTuple):
     expression: str
     asc: bool
+
+
+if TYPE_CHECKING:
+    from buhtuh import BuhTuhSeriesBoolean
 
 
 class BuhTuhDataFrame:
@@ -369,7 +371,7 @@ class BuhTuhDataFrame:
                     order_by=self._order_by
                 )
             )
-
+        from buhtuh import BuhTuhSeriesBoolean
         if isinstance(key, BuhTuhSeriesBoolean):
             # We only support first level boolean indices for now
             if key.base_node != self.base_node:
@@ -1065,136 +1067,6 @@ class BuhTuhSeries(ABC):
         return self._get_derived_series('int64', f'count(distinct {self.expression})')
 
 
-class BuhTuhSeriesBoolean(BuhTuhSeries, ABC):
-    dtype = 'bool'
-    dtype_aliases = ('boolean', '?', bool)
-    supported_db_dtype = 'boolean'
-    supported_value_types = (bool, )
-
-    @classmethod
-    def value_to_sql(cls, value: bool) -> str:
-        if not isinstance(value, cls.supported_value_types):
-            raise TypeError(f'value should be bool, actual type: {type(value)}')
-        return str(value)
-
-    @staticmethod
-    def from_dtype_to_sql(source_dtype: str, expression: str) -> str:
-        if source_dtype == 'bool':
-            return expression
-        else:
-            if source_dtype not in ['int64', 'string']:
-                raise ValueError(f'cannot convert {source_dtype} to bool')
-            return f'({expression})::bool'
-
-    def _comparator_operator(self, other, comparator):
-        other = const_to_series(base=self, value=other)
-        self._check_supported(f"comparator '{comparator}'", ['bool'], other)
-        expression = f'({self.expression}) {comparator} ({other.expression})'
-        return self._get_derived_series('bool', expression)
-
-    def _boolean_operator(self, other, operator) -> 'BuhTuhSeriesBoolean':
-        # TODO maybe "other" should have a way to tell us it can be a bool?
-        # TODO we're missing "NOT" here. https://www.postgresql.org/docs/13/functions-logical.html
-        other = const_to_series(base=self, value=other)
-        self._check_supported(f"boolean operator '{operator}'", ['bool', 'int64', 'float'], other)
-        if other.dtype != 'bool':
-            expression = f'(({self.expression}) {operator} ({other.expression}::bool))'
-        else:
-            expression = f'(({self.expression}) {operator} ({other.expression}))'
-        return self._get_derived_series('bool', expression)
-
-    def __and__(self, other) -> 'BuhTuhSeriesBoolean':
-        return self._boolean_operator(other, 'AND')
-
-    def __or__(self, other) -> 'BuhTuhSeriesBoolean':
-        return self._boolean_operator(other, 'OR')
-
-
-class BuhTuhSeriesAbstractNumeric(BuhTuhSeries, ABC):
-    """
-    Base class that defines shared logic between BuhTuhSeriesInt64 and BuhTuhSeriesFloat64
-    """
-    def __add__(self, other) -> 'BuhTuhSeries':
-        other = const_to_series(base=self, value=other)
-        self._check_supported('add', ['int64', 'float64'], other)
-        expression = f'({self.expression}) + ({other.expression})'
-        new_dtype = 'float64' if 'float64' in (self.dtype, other.dtype) else 'int64'
-        return self._get_derived_series(new_dtype, expression)
-
-    def __sub__(self, other) -> 'BuhTuhSeries':
-        other = const_to_series(base=self, value=other)
-        self._check_supported('sub', ['int64', 'float64'], other)
-        expression = f'({self.expression}) - ({other.expression})'
-        new_dtype = 'float64' if 'float64' in (self.dtype, other.dtype) else 'int64'
-        return self._get_derived_series(new_dtype, expression)
-
-    def _comparator_operator(self, other, comparator):
-        other = const_to_series(base=self, value=other)
-        self._check_supported(f"comparator '{comparator}'", ['int64', 'float64'], other)
-        expression = f'({self.expression}) {comparator} ({other.expression})'
-        return self._get_derived_series('bool', expression)
-
-    def __truediv__(self, other):
-        other = const_to_series(base=self, value=other)
-        self._check_supported('division', ['int64', 'float64'], other)
-        expression = f'({self.expression})::float / ({other.expression})'
-        return self._get_derived_series('float64', expression)
-
-    def __floordiv__(self, other):
-        other = const_to_series(base=self, value=other)
-        self._check_supported('division', ['int64', 'float64'], other)
-        expression = f'({self.expression})::int / ({other.expression})::int'
-        return self._get_derived_series('int64', expression)
-
-    def sum(self):
-        # TODO: This cast here is rather nasty
-        return self._get_derived_series('int64', f'sum({self.expression})::int')
-
-
-class BuhTuhSeriesInt64(BuhTuhSeriesAbstractNumeric):
-    dtype = 'int64'
-    dtype_aliases = ('integer', 'bigint', 'i8', int, numpy.int64)
-    supported_db_dtype = 'bigint'
-    supported_value_types = (int, numpy.int64)
-
-    @classmethod
-    def value_to_sql(cls, value: int) -> str:
-        if not isinstance(value, cls.supported_value_types):
-            raise TypeError(f'value should be int, actual type: {type(value)}')
-        return f'{value}::bigint'
-
-    @staticmethod
-    def from_dtype_to_sql(source_dtype: str, expression: str) -> str:
-        if source_dtype == 'int64':
-            return expression
-        else:
-            if source_dtype not in ['float64', 'bool', 'string']:
-                raise ValueError(f'cannot convert {source_dtype} to int64')
-            return f'({expression})::bigint'
-
-
-class BuhTuhSeriesFloat64(BuhTuhSeriesAbstractNumeric):
-    dtype = 'float64'
-    dtype_aliases = ('float', 'double', 'f8', float, numpy.float64, 'double precision')
-    supported_db_dtype = 'double precision'
-    supported_value_types = (float, numpy.float64)
-
-    @classmethod
-    def value_to_sql(cls, value: Union[float, numpy.float64]) -> str:
-        if not isinstance(value, cls.supported_value_types):
-            raise TypeError(f'value should be float, actual type: {type(value)}')
-        return f'{value}::float'
-
-    @staticmethod
-    def from_dtype_to_sql(source_dtype: str, expression: str) -> str:
-        if source_dtype == 'float64':
-            return expression
-        else:
-            if source_dtype not in ['int64', 'string']:
-                raise ValueError(f'cannot convert {source_dtype} to float64')
-            return f'({expression})::float'
-
-
 class BuhTuhSeriesString(BuhTuhSeries):
     dtype = 'string'
     dtype_aliases = ('text', str)
@@ -1278,63 +1150,6 @@ class BuhTuhSeriesString(BuhTuhSeries):
         return self._get_derived_series('string', expression)
 
 
-class BuhTuhSeriesUuid(BuhTuhSeries):
-    """
-    Series representing UUID values.
-    """
-    dtype = 'uuid'
-    dtype_aliases = ()
-    supported_db_dtype = 'uuid'
-    supported_value_types = (UUID, )
-
-    @classmethod
-    def value_to_sql(cls, value: UUID) -> str:
-        if not isinstance(value, cls.supported_value_types):
-            raise TypeError(f'value should be uuid, actual type: {type(value)}')
-        return f"cast('{value}' as uuid)"
-
-    @classmethod
-    def from_dtype_to_sql(cls, source_dtype: str, expression: str) -> str:
-        if source_dtype == 'uuid':
-            return expression
-        if source_dtype == 'string':
-            # If the format is wrong, then this will give an error later on, but there is not much we can
-            # do about that here.
-            return f'cast(({expression}) as uuid)'
-        # As far as we know the other types we support cannot be directly cast to uuid.
-        raise ValueError(f'cannot convert {source_dtype} to uuid.')
-
-    @classmethod
-    def sql_gen_random_uuid(cls, base: DataFrameOrSeries) -> 'BuhTuhSeriesUuid':
-        """
-        Create a new Series object with for every row the `gen_random_uuid()` expression, which will
-        evaluate to a random uuid for each row.
-
-        Note that this is non-deterministic expression, it will give a different result each time it is run.
-        This can have some unexpected consequences. Considers the following code:
-            df['x'] = BuhTuhSeriesUuid.sql_gen_random_uuid(df)
-            df['y'] = df['x']
-            df['different'] = df['y'] != df['x']
-        The df['different'] column will be True for all rows, because the second statement copies the
-        unevaluated expression, not the result of the expression. So at evaluation time the expression will
-        be evaluated twice for each row, for the 'x' column and the 'y' column, giving different results both
-        times. One way to work around this is to materialize the dataframe in its current state (using
-        get_df_materialized_model()), before adding any columns that reference a column that's created with
-        this function.
-        """
-        return cls.get_class_instance(
-            base=base,
-            name='__tmp',
-            expression='gen_random_uuid()'
-        )
-
-    def _comparator_operator(self, other, comparator):
-        other = const_to_series(base=self, value=other)
-        self._check_supported(f"comparator '{comparator}'", ['uuid'], other)
-        expression = f'({self.expression}) {comparator} ({other.expression})'
-        return self._get_derived_series('uuid', expression)
-
-
 class BuhTuhSeriesJson(BuhTuhSeriesString):
     """
     TODO: make this a proper class, not just a string subclass
@@ -1343,185 +1158,6 @@ class BuhTuhSeriesJson(BuhTuhSeriesString):
     dtype_aliases = ()  # type: ignore
     supported_db_dtype = 'json'
     supported_value_types = (dict, list, str, int, float)  # type: ignore
-
-
-class BuhTuhSeriesTimestamp(BuhTuhSeries):
-    """
-    Types in PG that we want to support: https://www.postgresql.org/docs/9.1/datatype-datetime.html
-        timestamp without time zone
-    """
-    dtype = 'timestamp'
-    dtype_aliases = ('datetime64', 'datetime64[ns]', numpy.datetime64)
-    supported_db_dtype = 'timestamp without time zone'
-    supported_value_types = (datetime.datetime, datetime.date, str)
-
-    @classmethod
-    def value_to_sql(cls, value: Union[str, datetime.datetime]) -> str:
-        if isinstance(value, datetime.date):
-            value = str(value)
-        if not isinstance(value, str):
-            raise TypeError(f'value should be str or datetime.datetime, actual type: {type(value)}')
-        # TODO: fix sql injection!
-        # Maybe we should do some checking on syntax here?
-        return f"'{value}'::{BuhTuhSeriesTimestamp.supported_db_dtype}"
-
-    @staticmethod
-    def from_dtype_to_sql(source_dtype: str, expression: str) -> str:
-        if source_dtype == 'timestamp':
-            return expression
-        else:
-            if source_dtype not in ['string', 'date']:
-                raise ValueError(f'cannot convert {source_dtype} to timestamp')
-            return f'({expression}::{BuhTuhSeriesTimestamp.supported_db_dtype})'
-
-    def _comparator_operator(self, other, comparator):
-        other = const_to_series(base=self, value=other)
-        self._check_supported(f"comparator '{comparator}'", ['timestamp', 'date', 'string'], other)
-        expression = f'({self.expression}) {comparator} ({other.expression})'
-        return self._get_derived_series('bool', expression)
-
-    def format(self, format) -> 'BuhTuhSeriesString':
-        """
-        Allow standard PG formatting of this Series (to a string type)
-
-        :param format: The format as defined in https://www.postgresql.org/docs/14/functions-formatting.html
-        :return: a derived Series that accepts and returns formatted timestamp strings
-        """
-        expr = f"to_char({self.expression}, '{format}')"
-        return self._get_derived_series('string', expr)
-
-    def __sub__(self, other) -> 'BuhTuhSeriesTimestamp':
-        other = const_to_series(base=self, value=other)
-        self._check_supported('sub', ['timestamp', 'date', 'time'], other)
-        expression = f'({self.expression}) - ({other.expression})'
-        return self._get_derived_series('timedelta', expression)
-
-
-class BuhTuhSeriesDate(BuhTuhSeriesTimestamp):
-    """
-    Types in PG that we want to support: https://www.postgresql.org/docs/9.1/datatype-datetime.html
-        date
-    """
-    dtype = 'date'
-    dtype_aliases = tuple()  # type: ignore
-    supported_db_dtype = 'date'
-    supported_value_types = (datetime.datetime, datetime.date, str)
-
-    @classmethod
-    def value_to_sql(cls, value: Union[str, datetime.date]) -> str:
-        if isinstance(value, datetime.date):
-            value = str(value)
-        if not isinstance(value, str):
-            raise TypeError(f'value should be str or datetime.date, actual type: {type(value)}')
-        # TODO: fix sql injection!
-        # Maybe we should do some checking on syntax here?
-        return f"'{value}'::{BuhTuhSeriesDate.supported_db_dtype}"
-
-    @staticmethod
-    def from_dtype_to_sql(source_dtype: str, expression: str) -> str:
-        if source_dtype == 'date':
-            return expression
-        else:
-            if source_dtype not in ['string', 'timestamp']:
-                raise ValueError(f'cannot convert {source_dtype} to date')
-            return f'({expression}::{BuhTuhSeriesDate.supported_db_dtype})'
-
-
-class BuhTuhSeriesTime(BuhTuhSeries):
-    """
-    Types in PG that we want to support: https://www.postgresql.org/docs/9.1/datatype-datetime.html
-        time without time zone
-    """
-    dtype = 'time'
-    dtype_aliases = tuple()  # type: ignore
-    supported_db_dtype = 'time without time zone'
-    supported_value_types = (datetime.time, str)
-
-    @classmethod
-    def value_to_sql(cls, value: Union[str, datetime.time]) -> str:
-        if isinstance(value, datetime.time):
-            value = str(value)
-        if not isinstance(value, str):
-            raise TypeError(f'value should be str or datetime.time, actual type: {type(value)}')
-        # TODO: fix sql injection!
-        # Maybe we should do some checking on syntax here?
-        return f"'{value}'::{BuhTuhSeriesTime.supported_db_dtype}"
-
-    @staticmethod
-    def from_dtype_to_sql(source_dtype: str, expression: str) -> str:
-        if source_dtype == 'time':
-            return expression
-        else:
-            if source_dtype not in ['string', 'timestamp']:
-                raise ValueError(f'cannot convert {source_dtype} to time')
-            return f'({expression}::{BuhTuhSeriesTime.supported_db_dtype})'
-
-    def _comparator_operator(self, other, comparator):
-        other = const_to_series(base=self, value=other)
-        self._check_supported(f"comparator '{comparator}'", ['time', 'string'], other)
-        expression = f'({self.expression}) {comparator} ({other.expression})'
-        return self._get_derived_series('bool', expression)
-
-
-class BuhTuhSeriesTimedelta(BuhTuhSeries):
-    dtype = 'timedelta'
-    dtype_aliases = ('interval',)
-    supported_db_dtype = 'interval'
-    supported_value_types = (datetime.timedelta, numpy.timedelta64, str)
-
-    @classmethod
-    def value_to_sql(cls, value: Union[str, numpy.timedelta64, datetime.timedelta]) -> str:
-        if isinstance(value, (numpy.timedelta64, datetime.timedelta)):
-            value = str(value)
-        if not isinstance(value, str):
-            raise TypeError(f'value should be str or (numpy.timedelta64, datetime.timedelta), '
-                            f'actual type: {type(value)}')
-        # TODO: fix sql injection!
-        # Maybe we should do some checking on syntax here?
-        return f"'{value}'::{BuhTuhSeriesTimedelta.supported_db_dtype}"
-
-    @staticmethod
-    def from_dtype_to_sql(source_dtype: str, expression: str) -> str:
-        if source_dtype == 'timedelta':
-            return expression
-        else:
-            if not source_dtype == 'string':
-                raise ValueError(f'cannot convert {source_dtype} to timedelta')
-            return f'({expression}::{BuhTuhSeriesTimedelta.supported_db_dtype})'
-
-    def _comparator_operator(self, other, comparator):
-        other = const_to_series(base=self, value=other)
-        self._check_supported(f"comparator '{comparator}'", ['timedelta', 'date', 'time', 'string'], other)
-        expression = f'({self.expression}) {comparator} ({other.expression})'
-        return self._get_derived_series('bool', expression)
-
-    def format(self, format) -> 'BuhTuhSeriesString':
-        """
-        Allow standard PG formatting of this Series (to a string type)
-
-        :param format: The format as defined in https://www.postgresql.org/docs/9.1/functions-formatting.html
-        :return: a derived Series that accepts and returns formatted timestamp strings
-        """
-        expr = f"to_char({self.expression}, '{format}')"
-        return self._get_derived_series('string', expr)
-
-    def __add__(self, other) -> 'BuhTuhSeriesTimedelta':
-        other = const_to_series(base=self, value=other)
-        self._check_supported('add', ['timedelta', 'timestamp', 'date', 'time'], other)
-        expression = f'({self.expression}) + ({other.expression})'
-        return self._get_derived_series('timedelta', expression)
-
-    def __sub__(self, other) -> 'BuhTuhSeriesTimedelta':
-        other = const_to_series(base=self, value=other)
-        self._check_supported('sub', ['timedelta', 'timestamp', 'date', 'time'], other)
-        expression = f'({self.expression}) - ({other.expression})'
-        return self._get_derived_series('timedelta', expression)
-
-    def sum(self) -> 'BuhTuhSeriesTimedelta':
-        return self._get_derived_series('timedelta', f'sum({self.expression})')
-
-    def average(self) -> 'BuhTuhSeriesTimedelta':
-        return self._get_derived_series('timedelta', f'avg({self.expression})')
 
 
 class BuhTuhGroupBy:
@@ -1539,6 +1175,7 @@ class BuhTuhGroupBy:
 
         if len(group_by_columns) == 0:
             # create new dummy column so we can aggregate over everything
+            from buhtuh import BuhTuhSeriesInt64
             self.groupby = {
                 'index': BuhTuhSeriesInt64.get_class_instance(base=buh_tuh,
                                                               name='index',
@@ -1646,7 +1283,7 @@ class BuhTuhGroupBy:
         return BuhTuhGroupBy(buh_tuh=buh_tuh, group_by_columns=list(self.groupby.values()))
 
 
-def const_to_series(base: Union[BuhTuhSeries, BuhTuhDataFrame],
+def const_to_series(base: DataFrameOrSeries,
                     value: Union[BuhTuhSeries, int, float, str, UUID],
                     name: str = None) -> BuhTuhSeries:
     """

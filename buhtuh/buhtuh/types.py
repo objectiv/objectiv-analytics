@@ -1,4 +1,4 @@
-from typing import Type, Tuple, Any, TypeVar, List, TYPE_CHECKING, Dict, Hashable, cast, Union
+from typing import Type, Tuple, Any, TypeVar, List, TYPE_CHECKING, Dict, cast, Union
 import datetime
 from uuid import UUID
 
@@ -96,7 +96,7 @@ class TypeRegistry:
             return
 
         # Import locally to prevent cyclic imports
-        from buhtuh.pandasql import BuhTuhSeriesBoolean, BuhTuhSeriesInt64, \
+        from buhtuh import BuhTuhSeriesBoolean, BuhTuhSeriesInt64, \
             BuhTuhSeriesFloat64, BuhTuhSeriesString, BuhTuhSeriesTimestamp, \
             BuhTuhSeriesDate, BuhTuhSeriesTime, BuhTuhSeriesTimedelta, BuhTuhSeriesUuid, BuhTuhSeriesJson
         standard_types: List[Type[BuhTuhSeries]] = [
