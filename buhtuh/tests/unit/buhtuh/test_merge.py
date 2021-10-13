@@ -1,11 +1,8 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-from typing import List
-
 import pytest
 
-from buhtuh import BuhTuhDataFrame, get_series_type_from_dtype
 from buhtuh.merge import _determine_left_on_right_on, _determine_result_columns, ResultColumn, merge, How
 from tests.unit.buhtuh.util import get_fake_df
 
@@ -119,33 +116,33 @@ def test__determine_result_columns():
     result = _determine_result_columns(left, right, ['a'], ['a'], ('_x', '_y'))
     assert result == (
         [
-            ResultColumn(name='a', expression='a', dtype='int64'),
+            ResultColumn(name='a', dtype='int64', source_table='l', source_name='a'),
         ], [
-            ResultColumn(name='b', expression='b', dtype='int64'),
-            ResultColumn(name='c_x', expression='c', dtype='int64'),
-            ResultColumn(name='c_y', expression='c', dtype='float64'),
-            ResultColumn(name='d', expression='d', dtype='float64')
+            ResultColumn(name='b', dtype='int64', source_table='l', source_name='b'),
+            ResultColumn(name='c_x', dtype='int64', source_table='l', source_name='c'),
+            ResultColumn(name='c_y', dtype='float64', source_table='r', source_name='c'),
+            ResultColumn(name='d', dtype='float64', source_table='r', source_name='d')
         ]
     )
     result = _determine_result_columns(left, right, ['c'], ['c'], ('_x', '_y'))
     assert result == (
         [
-            ResultColumn(name='a_x', expression='a', dtype='int64'),
-            ResultColumn(name='a_y', expression='a', dtype='float64'),
+            ResultColumn(name='a_x', dtype='int64', source_table='l', source_name='a'),
+            ResultColumn(name='a_y', dtype='float64', source_table='r', source_name='a'),
         ], [
-            ResultColumn(name='b', expression='b', dtype='int64'),
-            ResultColumn(name='c', expression='c', dtype='int64'),
-            ResultColumn(name='d', expression='d', dtype='float64')
+            ResultColumn(name='b', dtype='int64', source_table='l', source_name='b'),
+            ResultColumn(name='c', dtype='int64', source_table='l', source_name='c'),
+            ResultColumn(name='d', dtype='float64', source_table='r', source_name='d')
         ]
     )
     result = _determine_result_columns(left, right, ['a', 'c'], ['a', 'c'], ('_x', '_y'))
     assert result == (
         [
-            ResultColumn(name='a', expression='a', dtype='int64'),
+            ResultColumn(name='a', dtype='int64', source_table='l', source_name='a'),
         ], [
-            ResultColumn(name='b', expression='b', dtype='int64'),
-            ResultColumn(name='c', expression='c', dtype='int64'),
-            ResultColumn(name='d', expression='d', dtype='float64')
+            ResultColumn(name='b', dtype='int64', source_table='l', source_name='b'),
+            ResultColumn(name='c', dtype='int64', source_table='l', source_name='c'),
+            ResultColumn(name='d', dtype='float64', source_table='r', source_name='d')
         ]
     )
 

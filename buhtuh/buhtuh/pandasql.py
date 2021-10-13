@@ -391,7 +391,7 @@ class BuhTuhDataFrame:
                 columns_sql_str=self._get_all_column_expressions(),
                 index_str=', '.join(self.index.keys()),
                 _last_node=self.base_node,
-                where=key.get_expression(),
+                where=key.expression,
             )
             return self._df_or_series(
                 BuhTuhDataFrame.get_instance(
@@ -576,7 +576,7 @@ class BuhTuhDataFrame:
             raise KeyError(f'Some series could not be found in current frame: {missing}')
 
         by_series_list = [self.all_series[by_name] for by_name in by]
-        order_by = [SortColumn(expression=by_series.get_expression(), asc=asc_item)
+        order_by = [SortColumn(expression=by_series.expression, asc=asc_item)
                     for by_series, asc_item in zip(by_series_list, ascending)]
         return self.copy_override(order_by=order_by)
 
@@ -672,11 +672,11 @@ class BuhTuhDataFrame:
         sql = to_sql(model)
         return sql
 
-    def _get_all_column_expressions(self, table_alias=''):
+    def _get_all_column_expressions(self):
         column_expressions = []
         for column in self.data_columns:
             series = self.data[column]
-            column_expressions.append(series.get_column_expression(table_alias))
+            column_expressions.append(series.get_column_expression())
         return ', '.join(column_expressions)
 
     def merge(
@@ -740,12 +740,10 @@ class BuhTuhSeries(ABC):
         self._base_node = base_node
         self._index = index
         self._name = name
-        # todo: change expression in an ast-like object, that can be a constant, column, operator, and/or
-        #   refer other series
         if expression:
             self._expression = expression
         else:
-            self._expression = f'{{table_alias}}"{self.name}"'
+            self._expression = f'"{self.name}"'
         self._sorted_ascending = sorted_ascending
 
     @property
@@ -863,7 +861,7 @@ class BuhTuhSeries(ABC):
         if self.index is None:
             raise Exception('to_frame() is not supported for Series that do not have an index')
         if self._sorted_ascending is not None:
-            order_by = [SortColumn(expression=self.get_expression(), asc=self._sorted_ascending)]
+            order_by = [SortColumn(expression=self.expression, asc=self._sorted_ascending)]
         else:
             order_by = []
         return BuhTuhDataFrame(
@@ -913,21 +911,12 @@ class BuhTuhSeries(ABC):
             sorted_ascending=sorted_ascending
         )
 
-    def get_expression(self, table_alias='') -> str:
+    def get_column_expression(self) -> str:
         # TODO BLOCKER! escape the stuff
-
-        if table_alias != '' and table_alias[-1] != '.':
-            table_alias = table_alias + '.'
-
-        return self.expression.format(table_alias=table_alias)
-
-    def get_column_expression(self, table_alias='') -> str:
-        # TODO BLOCKER! escape the stuff
-        expression = self.get_expression(table_alias)
+        expression = self.expression
         if expression != self.name:
             return f'{expression} as "{self.name}"'
-        else:
-            return expression
+        return expression
 
     def _check_supported(self, operation_name: str, supported_dtypes: List[str], other: 'BuhTuhSeries'):
 
@@ -952,7 +941,7 @@ class BuhTuhSeries(ABC):
         if dtype == self.dtype or dtype in self.dtype_aliases:
             return self
         series_type = get_series_type_from_dtype(dtype)
-        expression = series_type.from_dtype_to_sql(self.dtype, self.get_expression())
+        expression = series_type.from_dtype_to_sql(self.dtype, self.expression)
         # get the real dtype, in case the provided dtype was an alias. mypy needs some help
         new_dtype = cast(str, series_type.dtype)
         return self._get_derived_series(new_dtype=new_dtype, expression=expression)
@@ -1175,7 +1164,7 @@ class BuhTuhSeries(ABC):
         default_sql = self.value_to_sql(default)
         return self._window_or_agg_func(
             window,
-            f'lag({self.get_expression()}, {offset}, {default_sql})', self.dtype
+            f'lag({self.expression}, {offset}, {default_sql})', self.dtype
         )
 
     def window_lead(self, window: 'BuhTuhWindow', offset: int = 1, default: Any = None):
@@ -1191,7 +1180,7 @@ class BuhTuhSeries(ABC):
         default_sql = self.value_to_sql(default)
         return self._window_or_agg_func(
             window,
-            f'lead({self.get_expression()}, {offset}, {default_sql})', self.dtype
+            f'lead({self.expression}, {offset}, {default_sql})', self.dtype
         )
 
     def window_first_value(self, window: 'BuhTuhWindow'):
@@ -1201,7 +1190,7 @@ class BuhTuhSeries(ABC):
         from buhtuh.partitioning import BuhTuhWindow
         if not isinstance(window, BuhTuhWindow):
             raise ValueError("Window functions need a BuhTuhWindow")
-        return self._window_or_agg_func(window, f'first_value({self.get_expression()})', self.dtype)
+        return self._window_or_agg_func(window, f'first_value({self.expression})', self.dtype)
 
     def window_last_value(self, window: 'BuhTuhWindow'):
         """
@@ -1210,7 +1199,7 @@ class BuhTuhSeries(ABC):
         from buhtuh.partitioning import BuhTuhWindow
         if not isinstance(window, BuhTuhWindow):
             raise ValueError("Window functions need a BuhTuhWindow")
-        return self._window_or_agg_func(window, f'last_value({self.get_expression()})', self.dtype)
+        return self._window_or_agg_func(window, f'last_value({self.expression})', self.dtype)
 
     def window_nth_value(self, window: 'BuhTuhWindow', n: int):
         """
@@ -1222,7 +1211,7 @@ class BuhTuhSeries(ABC):
             raise ValueError("Window functions need a BuhTuhWindow")
         return self._window_or_agg_func(
             window,
-            f'nth_value({self.get_expression()}, {n})', self.dtype
+            f'nth_value({self.expression}, {n})', self.dtype
         )
 
 

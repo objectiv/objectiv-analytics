@@ -112,8 +112,9 @@ def _get_x_on(on: ColumnNames, x_on: Optional[ColumnNames], var_name: str) -> Li
 
 class ResultColumn(NamedTuple):
     name: str
-    expression: str
     dtype: str
+    source_table: str
+    source_name: str
 
 
 def _determine_result_columns(
@@ -195,7 +196,14 @@ def _get_column_name_expr_dtype(
         new_name = index_name
         if index_name in conflicting_names:
             new_name = index_name + suffix
-        new_index_list.append(ResultColumn(new_name, series.get_expression(table_alias), series.dtype))
+        new_index_list.append(
+            ResultColumn(
+                name=new_name,
+                dtype=series.dtype,
+                source_table=table_alias,
+                source_name=index_name
+            )
+        )
     return new_index_list
 
 
@@ -250,28 +258,25 @@ def merge(
     )
 
     sql = _get_merge_sql(
-        left=left,
-        right=right,
         how=real_how,
         real_left_on=real_left_on,
         real_right_on=real_right_on,
         new_column_list=new_index_list + new_data_list
     )
     model_builder = CustomSqlModel(name='merge_sql', sql=sql)
-    model = model_builder(left_node=left.base_node, right_node=right.base_node)
+    right_df = right if isinstance(right, BuhTuhDataFrame) else right.to_frame()
+    model = model_builder(left_node=left.get_current_node(), right_node=right_df.get_current_node())
 
     return BuhTuhDataFrame.get_instance(
         engine=left.engine,
         base_node=model,
-        index_dtypes={name: dtype for name, _expr, dtype in new_index_list},
-        dtypes={name: dtype for name, _expr, dtype in new_data_list},
+        index_dtypes={rc.name: rc.dtype for rc in new_index_list},
+        dtypes={rc.name: rc.dtype for rc in new_data_list},
         order_by=[]  # merging resets any sorting
     )
 
 
 def _get_merge_sql(
-        left: BuhTuhDataFrame,
-        right: DataFrameOrSeries,
         how: How,
         real_left_on: List[str],
         real_right_on: List[str],
@@ -286,11 +291,9 @@ def _get_merge_sql(
     # todo: sql escaping where needed
     merge_conditions = []
     for l_label, r_label in zip(real_left_on, real_right_on):
-        l_expr = _get_expression(df_series=left, label=l_label, table_alias='l')
-        r_expr = _get_expression(df_series=right, label=r_label, table_alias='r')
-        merge_conditions.append(f'({l_expr} = {r_expr})')
+        merge_conditions.append(f'(l.{l_label} = r.{r_label})')
 
-    columns_str = ', '.join(f'{expr} as "{name}"' for name, expr, _dtype in new_column_list)
+    columns_str = ', '.join(f'{rc.source_table}.{rc.source_name} as "{rc.name}"' for rc in new_column_list)
     join_type = 'full outer' if how == How.outer else how.value
     on_str = 'on ' + ' and '.join(merge_conditions) if merge_conditions else ''
 
@@ -300,14 +303,3 @@ def _get_merge_sql(
         join {{{{right_node}}}} as r {on_str}
         '''
     return sql
-
-
-def _get_expression(df_series: DataFrameOrSeries, label: str, table_alias: str) -> str:
-    """ Helper of merge: give the expression for the column with the given label in df_series as a string """
-    if df_series.index and label in df_series.index:
-        return df_series.index[label].get_expression(table_alias)
-    if isinstance(df_series, BuhTuhDataFrame):
-        return df_series.data[label].get_expression(table_alias)
-    if isinstance(df_series, BuhTuhSeries):
-        return df_series.get_expression(table_alias)
-    raise TypeError(f'df_series should be DataFrameOrSeries. type: {type(df_series)}')

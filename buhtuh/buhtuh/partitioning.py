@@ -32,7 +32,7 @@ class BuhTuhGroupBy:
                                 if name not in self.groupby.keys()}
 
     def _get_partition_expression(self):
-        return ', '.join(g.get_expression() for g in self.groupby.values())
+        return ', '.join(g.expression for g in self.groupby.values())
 
     def aggregate(
             self,
