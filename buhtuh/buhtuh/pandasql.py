@@ -1,20 +1,27 @@
 import datetime
 from abc import abstractmethod, ABC
 from copy import copy
-from typing import List, Set, Union, Dict, Any, Optional, Tuple, cast, Type
+from typing import List, Set, Union, Dict, Any, Optional, Tuple, cast, Type, NamedTuple, TYPE_CHECKING
 from uuid import UUID
 
 import numpy
 import pandas
-import pandas as pd
 from sqlalchemy.engine import Engine
 
+from buhtuh.types import get_series_type_from_dtype, value_to_dtype, get_dtype_from_db_dtype
 from sql_models.model import SqlModel, CustomSqlModel
 from sql_models.sql_generator import to_sql
-from buhtuh.types import get_series_type_from_dtype, value_to_dtype, get_dtype_from_db_dtype
+
+if TYPE_CHECKING:
+    from buhtuh.partitioning import BuhTuhWindow, BuhTuhGroupBy
 
 DataFrameOrSeries = Union['BuhTuhDataFrame', 'BuhTuhSeries']
 ColumnNames = Union[str, List[str]]
+
+
+class SortColumn(NamedTuple):
+    expression: str
+    asc: bool
 
 
 class BuhTuhDataFrame:
@@ -30,10 +37,10 @@ class BuhTuhDataFrame:
     Operations on the DataFrame are combined and translated to a single SQL query, which is executed
     only when one of the above mentioned data-transfer functions is called.
 
-    The initial data of the DataFrame is the result of the SQL query that the `source_node` parameter
+    The initial data of the DataFrame is the result of the SQL query that the `base_node` parameter
     contains. That can be a simple query on a table, but also a complicated query in itself. Operations
-    on the data will result in SQL queries that build on top of the query of the source_node. The
-    index and series parameters contain meta information about the data in the source_node.
+    on the data will result in SQL queries that build on top of the query of the base_node. The
+    index and series parameters contain meta information about the data in the base_node.
 
     The API of this DataFrame is partially compatible with Pandas DataFrames. For more on Pandas
     DataFrames see https://pandas.pydata.org/docs/reference/frame.html
@@ -41,9 +48,10 @@ class BuhTuhDataFrame:
     def __init__(
         self,
         engine: Engine,
-        source_node: SqlModel,
+        base_node: SqlModel,
         index: Dict[str, 'BuhTuhSeries'],
-        series: Dict[str, 'BuhTuhSeries']
+        series: Dict[str, 'BuhTuhSeries'],
+        order_by: List[SortColumn] = None
     ):
         """
         Instantiate a new BuhTuhDataFrame.
@@ -51,17 +59,19 @@ class BuhTuhDataFrame:
         table (`from_table()`) or already instantiated sql-model (`from_model()`).
 
         :param engine: db connection
-        :param source_node: sql-model of a select statement that must contain all columns/expressions that
+        :param base_node: sql-model of a select statement that must contain all columns/expressions that
             are present in the series parameter.
         :param index: Dictionary mapping the name of each index-column to a Series object representing
             the column.
         :param series: Dictionary mapping the name of each data-column to a Series object representing
             the column.
+        :param order_by: Optional list of sort-columns to order the DataFrame by
         """
         self._engine = engine
-        self._base_node = source_node
+        self._base_node = base_node
         self._index = copy(index)
         self._data: Dict[str, BuhTuhSeries] = {}
+        self._order_by = order_by if order_by is not None else []
         for key, value in series.items():
             if key != value.name:
                 raise ValueError(f'Keys in `series` should match the name of series. '
@@ -70,6 +80,24 @@ class BuhTuhDataFrame:
         if set(index.keys()) & set(series.keys()):
             raise ValueError(f"The names of the index series and data series should not intersect. "
                              f"Index series: {sorted(index.keys())} data series: {sorted(series.keys())}")
+
+    def copy_override(
+            self,
+            engine: Engine = None,
+            base_node: SqlModel = None,
+            index: Dict[str, 'BuhTuhSeries'] = None,
+            series: Dict[str, 'BuhTuhSeries'] = None,
+            order_by: List[SortColumn] = None) -> 'BuhTuhDataFrame':
+        """
+        Create a copy of self, with the given arguments overriden
+        """
+        return BuhTuhDataFrame(
+            engine=engine if engine is not None else self.engine,
+            base_node=base_node if base_node is not None else self._base_node,
+            index=index if index is not None else self._index,
+            series=series if series is not None else self._data,
+            order_by=order_by if order_by is not None else self._order_by
+        )
 
     @property
     def engine(self):
@@ -120,7 +148,10 @@ class BuhTuhDataFrame:
         for key in self.all_series.keys():
             if not self.all_series[key].equals(other.all_series[key]):
                 return False
-        return self.engine == other.engine and self.base_node == other.base_node
+        return \
+            self.engine == other.engine and \
+            self.base_node == other.base_node and \
+            self._order_by == other._order_by
 
     @classmethod
     def _get_dtypes(cls, engine: Engine, node: SqlModel) -> Dict[str, str]:
@@ -171,9 +202,10 @@ class BuhTuhDataFrame:
         # Should this also use _df_or_series?
         return cls.get_instance(
             engine=engine,
-            source_node=model,
+            base_node=model,
             index_dtypes=index_dtypes,
-            dtypes=series_dtypes
+            dtypes=series_dtypes,
+            order_by=[]
         )
 
     @classmethod
@@ -242,7 +274,7 @@ class BuhTuhDataFrame:
         # Should this also use _df_or_series?
         return cls.get_instance(
             engine=engine,
-            source_node=model,
+            base_node=model,
             index_dtypes={index: index_dtype},
             dtypes=dtypes
         )
@@ -251,13 +283,14 @@ class BuhTuhDataFrame:
     def get_instance(
             cls,
             engine,
-            source_node: SqlModel,
+            base_node: SqlModel,
             index_dtypes: Dict[str, str],
-            dtypes: Dict[str, str]
+            dtypes: Dict[str, str],
+            order_by: List[SortColumn] = None
     ) -> 'BuhTuhDataFrame':
         """
         Get an instance with the right series instantiated based on the dtypes array. This assumes that
-        source_node has a column for all names in index_dtypes and dtypes.
+        base_node has a column for all names in index_dtypes and dtypes.
         """
 
         index: Dict[str, BuhTuhSeries] = {}
@@ -265,7 +298,7 @@ class BuhTuhDataFrame:
             index_type = get_series_type_from_dtype(value)
             index[key] = index_type(
                 engine=engine,
-                base_node=source_node,
+                base_node=base_node,
                 index=None,  # No index for index
                 name=key
             )
@@ -274,15 +307,16 @@ class BuhTuhDataFrame:
             series_type = get_series_type_from_dtype(value)
             series[key] = series_type(
                 engine=engine,
-                base_node=source_node,
+                base_node=base_node,
                 index=index,
                 name=key
             )
         return BuhTuhDataFrame(
             engine=engine,
-            source_node=source_node,
+            base_node=base_node,
             index=index,
-            series=series
+            series=series,
+            order_by=order_by
         )
 
     def _df_or_series(self, df: 'BuhTuhDataFrame') -> DataFrameOrSeries:
@@ -295,6 +329,30 @@ class BuhTuhDataFrame:
         if len(df.data) > 1:
             return df
         return list(df.data.values())[0]
+
+    def get_df_materialized_model(self) -> 'BuhTuhDataFrame':
+        """
+        Create a copy of this DataFrame with as base_node the current DataFrame's state.
+
+        This effectively adds a node to the underlying SqlModel graph. Generally adding nodes increases
+        the size of the generated SQL query. But this can be useful if the current DataFrame contains
+        expressions that you want to evaluate before further expressions are build on top of them. This might
+        make sense for very large expressions, or for non-deterministic expressions (e.g. see
+        BuhTuhSeriesUuid.sql_gen_random_uuid()).
+
+        :return: New DataFrame with the current DataFrame's state as base_node
+        """
+        model = self.get_current_node()
+        index_dtypes = {k: v.dtype for k, v in self.index.items()}
+        series_dtypes = {k: v.dtype for k, v in self.data.items()}
+
+        return self.get_instance(
+            engine=self.engine,
+            base_node=model,
+            index_dtypes=index_dtypes,
+            dtypes=series_dtypes,
+            order_by=[]
+        )
 
     def __getitem__(self,
                     key: Union[str, List[str], Set[str], slice, 'BuhTuhSeriesBoolean']) -> DataFrameOrSeries:
@@ -312,23 +370,11 @@ class BuhTuhDataFrame:
                 raise KeyError(f"Keys {key_set.difference(set(self.data_columns))} not in data_columns")
             selected_data = {key: data for key, data in self.data.items() if key in key_set}
 
-            return BuhTuhDataFrame(
-                    engine=self.engine,
-                    source_node=self.base_node,
-                    index=self.index,
-                    series=selected_data
-                )
+            return self.copy_override(series=selected_data)
 
         if isinstance(key, slice):
             model = self.get_current_node(limit=key)
-            return self._df_or_series(
-                df=BuhTuhDataFrame(
-                    engine=self.engine,
-                    source_node=model,
-                    index=self.index,
-                    series=self.data
-                )
-            )
+            return self._df_or_series(df=self.copy_override(base_node=model))
 
         if isinstance(key, BuhTuhSeriesBoolean):
             # We only support first level boolean indices for now
@@ -350,9 +396,10 @@ class BuhTuhDataFrame:
             return self._df_or_series(
                 BuhTuhDataFrame.get_instance(
                     engine=self.engine,
-                    source_node=model,
+                    base_node=model,
                     index_dtypes={name: series.dtype for name, series in self.index.items()},
-                    dtypes={name: series.dtype for name, series in self.data.items()}
+                    dtypes={name: series.dtype for name, series in self.data.items()},
+                    order_by=[]  # filtering rows resets any sorting
                 )
             )
         raise NotImplementedError(f"Only str, (set|list)[str], slice or BuhTuhSeriesBoolean are supported, "
@@ -363,7 +410,7 @@ class BuhTuhDataFrame:
 
     def __setitem__(self,
                     key: Union[str, List[str]],
-                    value: Union['BuhTuhSeries', int, str, float]):
+                    value: Union['BuhTuhSeries', int, str, float, UUID]):
         """
         TODO: Comments
         """
@@ -445,22 +492,12 @@ class BuhTuhDataFrame:
             else:
                 new_data[column] = series
 
-        return BuhTuhDataFrame(
-            engine=self.engine,
-            source_node=self.base_node,
-            index=self.index,
-            series=new_data
-        )
+        return self.copy_override(series=new_data)
 
-    def groupby(
-            self,
-            by: Union[str, 'BuhTuhSeries', List[str], List['BuhTuhSeries']] = None
-    ) -> 'BuhTuhGroupBy':
+    def _partition_by_columns(self, by: Union[str, 'BuhTuhSeries', List[str], List['BuhTuhSeries'], None]
+                              ) -> List['BuhTuhSeries']:
         """
-        Group by any of the series currently in this dataframe, both from index
-        as well as data.
-        :param by: The series to group by
-        :return: an object to perform aggregations on
+        Helper method to check and compile a partitioning list
         """
         group_by_columns: List['BuhTuhSeries'] = []
         if isinstance(by, str):
@@ -478,9 +515,33 @@ class BuhTuhDataFrame:
         else:
             raise ValueError(f'Value of "by" should be either None, a string, or a Series.')
 
-        # TODO We used to create a new instance of this df before passing it on. Did that have value?
+        return group_by_columns
 
-        return BuhTuhGroupBy(buh_tuh=self, group_by_columns=group_by_columns)
+    def groupby(
+            self,
+            by: Union[str, 'BuhTuhSeries', List[str], List['BuhTuhSeries'], None] = None
+    ) -> 'BuhTuhGroupBy':
+        """
+        Group by any of the series currently in this dataframe, both from index
+        as well as data.
+        :param by: The series to group by
+        :return: an object to perform aggregations on
+        """
+        from buhtuh.partitioning import BuhTuhGroupBy
+        return BuhTuhGroupBy(buh_tuh=self.copy_override(), group_by_columns=self._partition_by_columns(by))
+
+    def window(self,
+               by: Union[str, 'BuhTuhSeries', List[str], List['BuhTuhSeries'], None] = None,
+               **frame_args):
+        """
+        Create a window on the current dataframe and its sorting.
+        TODO Better argument typing, needs fancy import logic
+        :see: BuhTuhWindow __init__ for frame args
+        """
+        from buhtuh.partitioning import BuhTuhWindow
+        return BuhTuhWindow(buh_tuh=self.copy_override(),
+                            group_by_columns=self._partition_by_columns(by),
+                            **frame_args)
 
     def sort_values(
             self,
@@ -492,31 +553,32 @@ class BuhTuhDataFrame:
 
         This does not modify the current DataFrame, instead it returns a new DataFrame.
 
+        The sorting will remain in the returned DataFrame as long as no operations are performed on that
+        frame that materially change the selected data. Operations that materially change the selected data
+        are for example groupby(), merge(), get_df_materialized_model(), and filtering out rows. Adding or
+        removing a column does not materially change the selected data.
+
         :param by: column label or list of labels to sort by.
         :param ascending: Whether to sort ascending (True) or descending (False). If this is a list, then the
             by must also be a list and len(ascending) == len(by)
         :return: a new DataFrame with the specified ordering
         """
-        # TODO needs type check?
         if isinstance(by, str):
             by = [by]
+        elif not isinstance(by, list) or not all(isinstance(by_item, str) for by_item in by):
+            raise TypeError('by should be a str, or a list of str')
         if isinstance(ascending, bool):
             ascending = [ascending] * len(by)
         if len(by) != len(ascending):
             raise ValueError(f'Length of ascending ({len(ascending)}) != length of by ({len(by)})')
-        sort_order = dict(zip(by, ascending))
-        possible_names = list(self.index.keys()) + list(self.data.keys())
-        missing = [name for name in sort_order.keys() if name not in possible_names]
+        missing = set(by) - set(self.all_series.keys())
         if len(missing) > 0:
-            raise ValueError(f'Some series could not be found in current frame: {missing}')
+            raise KeyError(f'Some series could not be found in current frame: {missing}')
 
-        model = self.get_current_node(order=sort_order)
-        return BuhTuhDataFrame.get_instance(
-            engine=self.engine,
-            source_node=model,
-            index_dtypes={name: series.dtype for name, series in self.index.items()},
-            dtypes={name: series.dtype for name, series in self.data.items()}
-        )
+        by_series_list = [self.all_series[by_name] for by_name in by]
+        order_by = [SortColumn(expression=by_series.get_expression(), asc=asc_item)
+                    for by_series, asc_item in zip(by_series_list, ascending)]
+        return self.copy_override(order_by=order_by)
 
     def to_df(self) -> pandas.DataFrame:
         """
@@ -527,7 +589,7 @@ class BuhTuhDataFrame:
         """
         conn = self.engine.connect()
         sql = self.view_sql()
-        df = pd.read_sql_query(sql, conn, index_col=list(self.index.keys()))
+        df = pandas.read_sql_query(sql, conn, index_col=list(self.index.keys()))
         conn.close()
         return df
 
@@ -541,19 +603,27 @@ class BuhTuhDataFrame:
         """
         conn = self.engine.connect()
         sql = self.view_sql(limit=n)
-        df = pd.read_sql_query(sql, conn, index_col=list(self.index.keys()))
+        df = pandas.read_sql_query(sql, conn, index_col=list(self.index.keys()))
         conn.close()
         return df
 
-    def get_current_node(
-            self,
-            limit: Union[int, slice] = None, order: Dict[str, bool] = None
-    ) -> SqlModel[CustomSqlModel]:
+    def get_order_by_expression(self):
+        """
+        Get a properly formatted order by expression based on this df's order_by.
+        Will return an empty string in case ordering in not requested.
+        """
+        if self._order_by:
+            order_str = ", ".join(f"{sc.expression} {'asc' if sc.asc else 'desc'}" for sc in self._order_by)
+            order_str = f'order by {order_str}'
+        else:
+            order_str = ''
+
+        return order_str
+
+    def get_current_node(self, limit: Union[int, slice] = None) -> SqlModel[CustomSqlModel]:
         """
         Translate the current state of this DataFrame into a SqlModel.
         :param limit: The limit to use
-        :param order: The data series to order by, where the bool specifies ASC or DESC.
-                      If missing will use index ASC otherwise)
         :return: SQL query as a SqlModel that represents the current state of this DataFrame.
         """
 
@@ -579,12 +649,6 @@ class BuhTuhDataFrame:
                 if limit.stop is not None:
                     limit_str = f'limit {limit.stop}'
 
-        if order:
-            order_str = ", ".join(f"{name} {'asc' if asc else 'desc'}" for name, asc in order.items())
-            order_str = f'order by {order_str}'
-        else:
-            order_str = ''
-
         model_builder = CustomSqlModel(
             name='view_sql',
             sql='select {index_str}, {columns_sql_str} from {{_last_node}} {order} {limit}'
@@ -595,7 +659,7 @@ class BuhTuhDataFrame:
             index_str=', '.join(f'"{index_column}"' for index_column in self.index.keys()),
             _last_node=self.base_node,
             limit='' if limit_str is None else f'{limit_str}',
-            order=order_str
+            order=self.get_order_by_expression()
         )
 
     def view_sql(self, limit: Union[int, slice] = None) -> str:
@@ -660,7 +724,8 @@ class BuhTuhSeries(ABC):
                  base_node: SqlModel,
                  index: Optional[Dict[str, 'BuhTuhSeries']],
                  name: str,
-                 expression: str = None):
+                 expression: str = None,
+                 sorted_ascending: Optional[bool] = None):
         """
         TODO: docstring
         :param engine:
@@ -669,6 +734,7 @@ class BuhTuhSeries(ABC):
                         this Series' index
         :param name:
         :param expression:
+        :param sorted_ascending: None for no sorting, True for sorted ascending, False for sorted descending
         """
         self._engine = engine
         self._base_node = base_node
@@ -680,6 +746,7 @@ class BuhTuhSeries(ABC):
             self._expression = expression
         else:
             self._expression = f'{{table_alias}}"{self.name}"'
+        self._sorted_ascending = sorted_ascending
 
     @property
     @classmethod
@@ -775,8 +842,19 @@ class BuhTuhSeries(ABC):
         return self.to_frame().head(n)[self.name]
 
     def sort_values(self, ascending=True):
-        # TODO sort series directly instead of ripping it out of the df?
-        return self.to_frame().sort_values(by=self.name, ascending=ascending)[self.name]
+        """
+        Returns a copy of this Series that is sorted by its values. Returns self if self is already sorted
+        in that way.
+        :param ascending: Whether to sort ascending (True) or descending (False)
+        """
+        if self._sorted_ascending is not None and self._sorted_ascending == ascending:
+            return self
+        return self.get_class_instance(
+            base=self,
+            name=self.name,
+            expression=self.expression,
+            sorted_ascending=ascending
+        )
 
     def view_sql(self):
         return self.to_frame().view_sql()
@@ -784,11 +862,16 @@ class BuhTuhSeries(ABC):
     def to_frame(self) -> BuhTuhDataFrame:
         if self.index is None:
             raise Exception('to_frame() is not supported for Series that do not have an index')
+        if self._sorted_ascending is not None:
+            order_by = [SortColumn(expression=self.get_expression(), asc=self._sorted_ascending)]
+        else:
+            order_by = []
         return BuhTuhDataFrame(
             engine=self.engine,
-            source_node=self.base_node,
+            base_node=self.base_node,
             index=self.index,
-            series={self.name: self}
+            series={self.name: self},
+            order_by=order_by
         )
 
     @classmethod
@@ -797,19 +880,37 @@ class BuhTuhSeries(ABC):
             base: DataFrameOrSeries,
             name: str,
             dtype: str,
-            expression: str = None
+            expression: str = None,
+            sorted_ascending: Optional[bool] = None
     ) -> 'BuhTuhSeries':
         """
         Create an instance of the right sub-class of BuhTuhSeries.
         The subclass is based on the provided dtype. See docstring of __init__ for other parameters.
         """
         series_type = get_series_type_from_dtype(dtype=dtype)
-        return series_type(
+        return series_type.get_class_instance(
+            base=base,
+            name=name,
+            expression=expression,
+            sorted_ascending=sorted_ascending
+        )
+
+    @classmethod
+    def get_class_instance(
+            cls,
+            base: DataFrameOrSeries,
+            name: str,
+            expression: str = None,
+            sorted_ascending: Optional[bool] = None
+    ):
+        """ Create an instance of this class. """
+        return cls(
             engine=base.engine,
             base_node=base.base_node,
             index=base.index,
             name=name,
-            expression=expression
+            expression=expression,
+            sorted_ascending=sorted_ascending
         )
 
     def get_expression(self, table_alias='') -> str:
@@ -837,7 +938,7 @@ class BuhTuhSeries(ABC):
                              f'Alternative: use merge() to create a DataFrame with both series. ')
 
         if other.dtype.lower() not in supported_dtypes:
-            raise ValueError(f'{operation_name} not supported between {self.dtype} and {other.dtype}.')
+            raise TypeError(f'{operation_name} not supported between {self.dtype} and {other.dtype}.')
 
     def _get_derived_series(self, new_dtype: str, expression: str):
         return BuhTuhSeries.get_instance(
@@ -861,11 +962,9 @@ class BuhTuhSeries(ABC):
                    base: DataFrameOrSeries,
                    value: Any,
                    name: str) -> 'BuhTuhSeries':
-        dtype = cast(str, cls.dtype)  # needed for mypy
-        result = BuhTuhSeries.get_instance(
+        result = cls.get_class_instance(
             base=base,
             name=name,
-            dtype=dtype,
             expression=cls.value_to_sql(value)
         )
         return result
@@ -890,7 +989,8 @@ class BuhTuhSeries(ABC):
         return self.engine == other.engine and \
             self.base_node == other.base_node and \
             self.name == other.name and \
-            self.expression == other.expression
+            self.expression == other.expression and \
+            self._sorted_ascending == other._sorted_ascending
 
     # Below methods are not abstract, as they can be optionally be implemented by subclasses.
     def __add__(self, other) -> 'BuhTuhSeries':
@@ -970,19 +1070,147 @@ class BuhTuhSeries(ABC):
         # this is massively ugly
         return series.head(1).values[0]
 
+    def _window_or_agg_func(self, partition: Union['BuhTuhGroupBy', None], func: str, derived_dtype: str):
+
+        from buhtuh.partitioning import BuhTuhWindow
+
+        if partition is None or not isinstance(partition, BuhTuhWindow):
+            return self._get_derived_series(derived_dtype, func)
+        else:
+            return self._get_derived_series(derived_dtype, partition.get_window_expression(func))
+
     # Maybe the aggregation methods should be defined on a more subclass of the actual Series call
     # so we can be more restrictive in calling these.
-    def min(self):
-        return self._get_derived_series(self.dtype, f'min({self.expression})')
+    def min(self, partition: 'BuhTuhGroupBy' = None):
+        return self._window_or_agg_func(partition, f'min({self.expression})', self.dtype)
 
-    def max(self):
-        return self._get_derived_series(self.dtype, f'max({self.expression})')
+    def max(self, partition: 'BuhTuhGroupBy' = None):
+        return self._window_or_agg_func(partition, f'max({self.expression})', self.dtype)
 
-    def count(self):
-        return self._get_derived_series('int64', f'count({self.expression})')
+    def count(self, partition: 'BuhTuhGroupBy' = None):
+        return self._window_or_agg_func(partition, f'count({self.expression})', 'int64')
 
-    def nunique(self):
+    def nunique(self, partition: 'BuhTuhGroupBy' = None):
+        if partition is not None and isinstance(partition, BuhTuhWindow):
+            raise Exception("unique counts in window functions not supported (by PG at least)")
         return self._get_derived_series('int64', f'count(distinct {self.expression})')
+
+    # Window functions applicable for all types of data, but only with a window
+    # TODO more specific docs
+    # TODO make group_by optional, but for that we need some way to access the series' underlying
+    #      df to access sorting
+
+    def _check_window(self, partition: Any):
+        """
+        Validate that the given partition is a true BuhTuhWindow or raise an exception
+        """
+        from buhtuh.partitioning import BuhTuhWindow
+        if not isinstance(partition, BuhTuhWindow):
+            raise ValueError("Window functions need a BuhTuhWindow")
+
+    def window_row_number(self, window: 'BuhTuhWindow'):
+        """
+        Returns the number of the current row within its partition, counting from 1.
+        """
+        self._check_window(window)
+        return self._window_or_agg_func(window, f'row_number()', 'int64')
+
+    def window_rank(self, window: 'BuhTuhWindow'):
+        """
+        Returns the rank of the current row, with gaps; that is, the row_number of the first row
+        in its peer group.
+        """
+        self._check_window(window)
+        return self._window_or_agg_func(window, f'rank()', 'int64')
+
+    def window_dense_rank(self, window: 'BuhTuhWindow'):
+        """
+        Returns the rank of the current row, without gaps; this function effectively counts peer
+        groups.
+        """
+        self._check_window(window)
+        return self._window_or_agg_func(window, f'dense_rank()', "int64")
+
+    def window_percent_rank(self, window: 'BuhTuhWindow'):
+        """
+        Returns the relative rank of the current row, that is
+            (rank - 1) / (total partition rows - 1).
+        The value thus ranges from 0 to 1 inclusive.
+        """
+        self._check_window(window)
+        return self._window_or_agg_func(window, f'percent_rank()', "double precision")
+
+    def window_cume_dist(self, window: 'BuhTuhWindow'):
+        """
+        Returns the cumulative distribution, that is
+            (number of partition rows preceding or peers with current row) / (total partition rows).
+        The value thus ranges from 1/N to 1.
+        """
+        self._check_window(window)
+        return self._window_or_agg_func(window, f'cume_dist()', "double precision")
+
+    def window_ntile(self, window: 'BuhTuhWindow', num_buckets: int = 1):
+        """
+        Returns an integer ranging from 1 to the argument value,
+        dividing the partition as equally as possible.
+        """
+        self._check_window(window)
+        return self._window_or_agg_func(window, f'ntile({num_buckets})', "int64")
+
+    def window_lag(self, window: 'BuhTuhWindow', offset: int = 1, default: Any = None):
+        """
+        Returns value evaluated at the row that is offset rows before the current row
+        within the partition; if there is no such row, instead returns default
+        (which must be of the same type as value).
+
+        Both offset and default are evaluated with respect to the current row.
+        If omitted, offset defaults to 1 and default to None
+        """
+        self._check_window(window)
+        default_sql = self.value_to_sql(default)
+        return self._window_or_agg_func(
+            window,
+            f'lag({self.get_expression()}, {offset}, {default_sql})', self.dtype
+        )
+
+    def window_lead(self, window: 'BuhTuhWindow', offset: int = 1, default: Any = None):
+        """
+        Returns value evaluated at the row that is offset rows after the current row within the partition;
+        if there is no such row, instead returns default (which must be of the same type as value).
+        Both offset and default are evaluated with respect to the current row.
+        If omitted, offset defaults to 1 and default to None.
+        """
+        self._check_window(window)
+        default_sql = self.value_to_sql(default)
+        return self._window_or_agg_func(
+            window,
+            f'lead({self.get_expression()}, {offset}, {default_sql})', self.dtype
+        )
+
+    def window_first_value(self, window: 'BuhTuhWindow'):
+        """
+        Returns value evaluated at the row that is the first row of the window frame.
+        """
+        self._check_window(window)
+        return self._window_or_agg_func(window, f'first_value({self.get_expression()})', self.dtype)
+
+    def window_last_value(self, window: 'BuhTuhWindow'):
+        """
+        Returns value evaluated at the row that is the last row of the window frame.
+        """
+        self._check_window(window)
+        return self._window_or_agg_func(window, f'last_value({self.get_expression()})', self.dtype)
+
+    def window_nth_value(self, window: 'BuhTuhWindow', n: int):
+        """
+        Returns value evaluated at the row that is the n'th row of the window frame
+        (counting from 1); returns NULL if there is no such row.
+        """
+        self._check_window(window)
+        return self._window_or_agg_func(
+            window,
+            f'nth_value({self.get_expression()}, {n})', self.dtype
+        )
 
 
 class BuhTuhSeriesBoolean(BuhTuhSeries, ABC):
@@ -993,6 +1221,8 @@ class BuhTuhSeriesBoolean(BuhTuhSeries, ABC):
 
     @classmethod
     def value_to_sql(cls, value: bool) -> str:
+        if value is None:
+            return 'NULL'
         if not isinstance(value, cls.supported_value_types):
             raise TypeError(f'value should be bool, actual type: {type(value)}')
         return str(value)
@@ -1066,9 +1296,12 @@ class BuhTuhSeriesAbstractNumeric(BuhTuhSeries, ABC):
         expression = f'({self.expression})::int / ({other.expression})::int'
         return self._get_derived_series('int64', expression)
 
-    def sum(self):
+    def sum(self, partition: 'BuhTuhGroupBy' = None):
         # TODO: This cast here is rather nasty
-        return self._get_derived_series('int64', f'sum({self.expression})::int')
+        return self._window_or_agg_func(partition, f'sum({self.expression})::bigint', 'int64')
+
+    def average(self, partition: 'BuhTuhGroupBy' = None) -> 'BuhTuhSeriesFloat64':
+        return self._window_or_agg_func(partition, f'avg({self.expression})', 'double precision')
 
 
 class BuhTuhSeriesInt64(BuhTuhSeriesAbstractNumeric):
@@ -1079,6 +1312,9 @@ class BuhTuhSeriesInt64(BuhTuhSeriesAbstractNumeric):
 
     @classmethod
     def value_to_sql(cls, value: int) -> str:
+        # TODO validate this, should be part of Nullable logic?
+        if value is None:
+            return 'NULL'
         if not isinstance(value, cls.supported_value_types):
             raise TypeError(f'value should be int, actual type: {type(value)}')
         return f'{value}::bigint'
@@ -1101,6 +1337,8 @@ class BuhTuhSeriesFloat64(BuhTuhSeriesAbstractNumeric):
 
     @classmethod
     def value_to_sql(cls, value: Union[float, numpy.float64]) -> str:
+        if value is None:
+            return 'NULL'
         if not isinstance(value, cls.supported_value_types):
             raise TypeError(f'value should be float, actual type: {type(value)}')
         return f'{value}::float'
@@ -1123,6 +1361,8 @@ class BuhTuhSeriesString(BuhTuhSeries):
 
     @classmethod
     def value_to_sql(cls, value: str) -> str:
+        if value is None:
+            return 'NULL'
         if not isinstance(value, cls.supported_value_types):
             raise TypeError(f'value should be str, actual type: {type(value)}')
         # TODO: fix sql injection!
@@ -1132,8 +1372,7 @@ class BuhTuhSeriesString(BuhTuhSeries):
     def from_dtype_to_sql(source_dtype: str, expression: str) -> str:
         if source_dtype == 'string':
             return expression
-        else:
-            return f'({expression})::varchar'
+        return f'cast(({expression}) as text)'
 
     def __add__(self, other) -> 'BuhTuhSeries':
         other = const_to_series(base=self, value=other)
@@ -1199,14 +1438,61 @@ class BuhTuhSeriesString(BuhTuhSeries):
         return self._get_derived_series('string', expression)
 
 
-class BuhTuhSeriesUuid(BuhTuhSeriesString):
+class BuhTuhSeriesUuid(BuhTuhSeries):
     """
-    TODO: make this a proper class, not just a string subclass
+    Series representing UUID values.
     """
     dtype = 'uuid'
-    dtype_aliases = ()  # type: ignore
+    dtype_aliases = ()
     supported_db_dtype = 'uuid'
-    supported_value_types = (UUID, )  # type: ignore
+    supported_value_types = (UUID, )
+
+    @classmethod
+    def value_to_sql(cls, value: UUID) -> str:
+        if not isinstance(value, cls.supported_value_types):
+            raise TypeError(f'value should be uuid, actual type: {type(value)}')
+        return f"cast('{value}' as uuid)"
+
+    @classmethod
+    def from_dtype_to_sql(cls, source_dtype: str, expression: str) -> str:
+        if source_dtype == 'uuid':
+            return expression
+        if source_dtype == 'string':
+            # If the format is wrong, then this will give an error later on, but there is not much we can
+            # do about that here.
+            return f'cast(({expression}) as uuid)'
+        # As far as we know the other types we support cannot be directly cast to uuid.
+        raise ValueError(f'cannot convert {source_dtype} to uuid.')
+
+    @classmethod
+    def sql_gen_random_uuid(cls, base: DataFrameOrSeries) -> 'BuhTuhSeriesUuid':
+        """
+        Create a new Series object with for every row the `gen_random_uuid()` expression, which will
+        evaluate to a random uuid for each row.
+
+        Note that this is non-deterministic expression, it will give a different result each time it is run.
+        This can have some unexpected consequences. Considers the following code:
+            df['x'] = BuhTuhSeriesUuid.sql_gen_random_uuid(df)
+            df['y'] = df['x']
+            df['different'] = df['y'] != df['x']
+        The df['different'] column will be True for all rows, because the second statement copies the
+        unevaluated expression, not the result of the expression. So at evaluation time the expression will
+        be evaluated twice for each row, for the 'x' column and the 'y' column, giving different results both
+        times. One way to work around this is to materialize the dataframe in its current state (using
+        get_df_materialized_model()), before adding any columns that reference a column that's created with
+        this function.
+        """
+        return cls.get_class_instance(
+            base=base,
+            name='__tmp',
+            expression='gen_random_uuid()'
+        )
+
+    def _comparator_operator(self, other, comparator):
+        other = const_to_series(base=self, value=other)
+        self._check_supported(f"comparator '{comparator}'", ['uuid'], other)
+        expression = f'({self.expression}) {comparator} ({other.expression})'
+        return self._get_derived_series('uuid', expression)
 
 
 class BuhTuhSeriesJson(BuhTuhSeriesString):
@@ -1231,6 +1517,8 @@ class BuhTuhSeriesTimestamp(BuhTuhSeries):
 
     @classmethod
     def value_to_sql(cls, value: Union[str, datetime.datetime]) -> str:
+        if value is None:
+            return 'NULL'
         if isinstance(value, datetime.date):
             value = str(value)
         if not isinstance(value, str):
@@ -1283,6 +1571,8 @@ class BuhTuhSeriesDate(BuhTuhSeriesTimestamp):
 
     @classmethod
     def value_to_sql(cls, value: Union[str, datetime.date]) -> str:
+        if value is None:
+            return 'NULL'
         if isinstance(value, datetime.date):
             value = str(value)
         if not isinstance(value, str):
@@ -1313,6 +1603,8 @@ class BuhTuhSeriesTime(BuhTuhSeries):
 
     @classmethod
     def value_to_sql(cls, value: Union[str, datetime.time]) -> str:
+        if value is None:
+            return 'NULL'
         if isinstance(value, datetime.time):
             value = str(value)
         if not isinstance(value, str):
@@ -1345,6 +1637,8 @@ class BuhTuhSeriesTimedelta(BuhTuhSeries):
 
     @classmethod
     def value_to_sql(cls, value: Union[str, numpy.timedelta64, datetime.timedelta]) -> str:
+        if value is None:
+            return 'NULL'
         if isinstance(value, (numpy.timedelta64, datetime.timedelta)):
             value = str(value)
         if not isinstance(value, str):
@@ -1391,135 +1685,15 @@ class BuhTuhSeriesTimedelta(BuhTuhSeries):
         expression = f'({self.expression}) - ({other.expression})'
         return self._get_derived_series('timedelta', expression)
 
-    def sum(self) -> 'BuhTuhSeriesTimedelta':
-        return self._get_derived_series('timedelta', f'sum({self.expression})')
+    def sum(self, partition: 'BuhTuhGroupBy' = None) -> 'BuhTuhSeriesTimedelta':
+        return self._window_or_agg_func(partition, f'sum({self.expression})', 'timedelta')
 
-    def average(self) -> 'BuhTuhSeriesTimedelta':
-        return self._get_derived_series('timedelta', f'avg({self.expression})')
-
-
-class BuhTuhGroupBy:
-    def __init__(self,
-                 buh_tuh: BuhTuhDataFrame,
-                 group_by_columns: List['BuhTuhSeries']):
-        self.buh_tuh = buh_tuh
-
-        self.groupby = {}
-        for col in group_by_columns:
-            if not isinstance(col, BuhTuhSeries):
-                raise ValueError(f'Unsupported groupby argument type: {type(col)}')
-            assert col.base_node == buh_tuh.base_node
-            self.groupby[col.name] = col
-
-        if len(group_by_columns) == 0:
-            # create new dummy column so we can aggregate over everything
-            self.groupby = {
-                'index': BuhTuhSeriesInt64.get_instance(base=buh_tuh,
-                                                        name='index',
-                                                        dtype='int64',
-                                                        expression='1')
-            }
-
-        self.aggregated_data = {name: series
-                                for name, series in buh_tuh.all_series.items()
-                                if name not in self.groupby.keys()}
-
-    def aggregate(
-            self,
-            series: Union[Dict[str, str], List[str]],
-            aggregations: List[str] = None
-    ) -> BuhTuhDataFrame:
-        """
-        Execute requested aggregations on this groupby
-
-        :param series: a dict containing 'name': 'aggregation_method'.
-            In case you need duplicates: a list of 'name's is also supported, but aggregations should have
-            the same length list with the aggregation methods requested
-        :param aggregations: The aggregation methods requested in case series is a list.
-        :return: a new BuhTuhDataFrame containing the requested aggregations
-        """
-        new_series_dtypes = {}
-        aggregate_columns = []
-
-        if isinstance(series, list):
-            if not isinstance(aggregations, list):
-                raise ValueError('aggregations must be a list if series is a list')
-            if len(series) != len(aggregations):
-                raise ValueError(f'Length of series should match length of aggregations: '
-                                 f'{len(series)} != {len(aggregations)}')
-        elif isinstance(series, dict):
-            aggregations = list(series.values())
-            series = list(series.keys())
-        else:
-            raise TypeError()
-
-        for name, aggregation in list(zip(series, aggregations)):
-            data_series = self.aggregated_data[name]
-            func = getattr(data_series, aggregation)
-            agg_series = func()
-            name = f'{agg_series.name}_{aggregation}'
-            agg_series = BuhTuhSeries.get_instance(base=self.buh_tuh,
-                                                   name=name,
-                                                   dtype=agg_series.dtype,
-                                                   expression=agg_series.expression)
-            aggregate_columns.append(agg_series.get_column_expression())
-            new_series_dtypes[agg_series.name] = agg_series.dtype
-
-        model_builder = CustomSqlModel(  # setting this stuff could also be part of __init__
-            sql="""
-                select {group_by_columns}, {aggregate_columns}
-
-                from {{prev}}
-                group by {group_by_expression}
-                """
-        )
-        model = model_builder(
-            group_by_columns=', '.join(g.get_column_expression() for g in self.groupby.values()),
-            aggregate_columns=', '.join(aggregate_columns),
-            group_by_expression=', '.join(g.get_expression() for g in self.groupby.values()),
-            # TODO: get final node, or at least make sure we 'freeze' the node?
-            prev=self.buh_tuh.base_node
-        )
-
-        return BuhTuhDataFrame.get_instance(
-            engine=self.buh_tuh.engine,
-            source_node=model,
-            index_dtypes={n: t.dtype for n, t in self.groupby.items()},
-            dtypes=new_series_dtypes
-        )
-
-    def __getattr__(self, attr_name: str) -> Any:
-        """ All methods that do not exists yet are potential aggregation methods. """
-        try:
-            return super().__getattribute__(attr_name)
-        except AttributeError:
-            return lambda: self.aggregate({series_name: attr_name for series_name in self.aggregated_data})
-
-    def __getitem__(self, key: Union[str, List[str]]) -> 'BuhTuhGroupBy':
-
-        assert isinstance(key, (str, list, tuple)), f'a buhtuh `selection` should be a str or list but ' \
-                                                    f'got {type(key)} instead.'
-
-        if isinstance(key, str):
-            key = [key]
-
-        key_set = set(key)
-        # todo: check that the key_set is not in group_by_data, or make sure we fix the duplicate column
-        #  name problem?
-        assert key_set.issubset(set(self.aggregated_data.keys()))
-
-        selected_data = {key: data for key, data in self.aggregated_data.items() if key in key_set}
-        buh_tuh = BuhTuhDataFrame(
-            engine=self.buh_tuh.engine,
-            source_node=self.buh_tuh.base_node,
-            index=self.groupby,
-            series=selected_data
-        )
-        return BuhTuhGroupBy(buh_tuh=buh_tuh, group_by_columns=list(self.groupby.values()))
+    def average(self, partition: 'BuhTuhGroupBy' = None) -> 'BuhTuhSeriesTimedelta':
+        return self._window_or_agg_func(partition, f'avg({self.expression})', 'timedelta')
 
 
 def const_to_series(base: Union[BuhTuhSeries, BuhTuhDataFrame],
-                    value: Union[BuhTuhSeries, int, float, str],
+                    value: Union[BuhTuhSeries, int, float, str, UUID],
                     name: str = None) -> BuhTuhSeries:
     """
     Take a value and return a BuhTuhSeries representing a column with that value.

@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import uuid from 'uuid-random';
 
 /**
  * A TypeScript friendly Object.keys
@@ -20,4 +20,4 @@ export function isNonEmptyArray<T>(array: T[]): array is NonEmptyArray<T> {
 /**
  * A UUID v4 generator
  */
-export const generateUUID = () => uuidv4();
+export const generateUUID = () => uuid();

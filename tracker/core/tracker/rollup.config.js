@@ -18,6 +18,6 @@ export default [
         sourcemap: dev,
       },
     ],
-    plugins: [nodeResolve(), commonjs(), ts(), ...(dev ? [] : [terser()]), sizes(), filesize()],
+    plugins: [nodeResolve({ browser: true }), commonjs(), ts(), ...(dev ? [] : [terser()]), sizes(), filesize()],
   },
 ];

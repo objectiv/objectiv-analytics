@@ -2,6 +2,7 @@
 psycopg2-binary
 sqlalchemy
 pandas
+numpy
 
 # sql_models:
 sqlparse

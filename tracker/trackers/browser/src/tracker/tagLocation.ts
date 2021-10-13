@@ -1,6 +1,5 @@
-import { getObjectKeys } from '@objectiv/tracker-core';
+import { generateUUID, getObjectKeys } from '@objectiv/tracker-core';
 import { boolean, create, func, Infer, is, object, optional, union, validate } from 'superstruct';
-import { v4 } from 'uuid';
 import {
   AnyActionContext,
   AnyLocationContext,
@@ -75,7 +74,7 @@ export const tagLocation = (parameters: TagLocationParameters): TagLocationRetur
 
     // Create output attributes object
     const taggingAttributes = {
-      [TaggingAttribute.elementId]: v4(),
+      [TaggingAttribute.elementId]: generateUUID(),
       [TaggingAttribute.parentElementId]: parentElementId,
       [TaggingAttribute.context]: stringifyLocationContext(instance),
       [TaggingAttribute.trackClicks]: runIfNotUndefined(stringifyBoolean, trackClicks),

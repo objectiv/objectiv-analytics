@@ -48,7 +48,8 @@ _FILESYSTEM_OUTPUT_DIR = os.environ.get('FILESYSTEM_OUTPUT_DIR')
 
 # Cookie settings
 _OBJ_COOKIE = 'obj_user_id'
-_OBJ_COOKIE_DURATION = 60 * 60 * 24 * 365 * 5
+# default cookie duration is 1 year, can be overridden by setting `COOKIE_DURATION`
+_OBJ_COOKIE_DURATION = int(os.environ.get('COOKIE_DURATION', 60 * 60 * 24 * 365 * 1))
 
 # Maximum number of events that a worker will process in a single batch. Only relevant in async mode
 WORKER_BATCH_SIZE = 200

@@ -2381,7 +2381,6 @@ __metadata:
     ts-jest: ^27.0.5
     tslib: ^2.3.1
     typescript: ^4.4.2
-    uuid: ^8.3.2
     xhr-mock: ^2.5.1
   languageName: unknown
   linkType: soft
@@ -2394,7 +2393,6 @@ __metadata:
     "@rollup/plugin-commonjs": ^20.0.0
     "@rollup/plugin-node-resolve": ^13.0.4
     "@types/jest": ^27.0.1
-    "@types/uuid": ^8.3.1
     es6-error: ^4.1.1
     jest: ^27.1.0
     jest-standard-reporter: ^2.0.0
@@ -2406,9 +2404,8 @@ __metadata:
     rollup-plugin-terser: ^7.0.2
     rollup-plugin-ts: ^1.4.1
     ts-jest: ^27.0.5
-    tslib: ^2.3.1
     typescript: ^4.4.2
-    uuid: ^8.3.2
+    uuid-random: ^1.3.2
   languageName: unknown
   linkType: soft
 
@@ -2726,13 +2723,6 @@ __metadata:
   version: 0.7.36
   resolution: "@types/ua-parser-js@npm:0.7.36"
   checksum: 8c24d4dc12ed1b8b98195838093391c358c81bf75e9cae0ecec8f7824b441e069daaa17b974a3e257172caddb671439f0c0b44bf43bfcf409b7a574a25aab948
-  languageName: node
-  linkType: hard
-
-"@types/uuid@npm:^8.3.1":
-  version: 8.3.1
-  resolution: "@types/uuid@npm:8.3.1"
-  checksum: b41bdc5e86c6f0f1899306be10455636da0f2168c9489b869edd6837ddeb7c0e501b1ff7d857402462986bada2a379125743dd895fa801d03437cd632116a373
   languageName: node
   linkType: hard
 
@@ -9482,21 +9472,19 @@ typescript@^4.4.2:
   languageName: node
   linkType: hard
 
+"uuid-random@npm:^1.3.2":
+  version: 1.3.2
+  resolution: "uuid-random@npm:1.3.2"
+  checksum: c01b0150826752329a1ba7c58828d09c09672e8a7e06ee26624049ccf4c494c0b4adad072fac50616323e7f474feb9cea2ba784d792d18cc8c95c43e1dc37f2a
+  languageName: node
+  linkType: hard
+
 "uuid@npm:^3.3.2":
   version: 3.4.0
   resolution: "uuid@npm:3.4.0"
   bin:
     uuid: ./bin/uuid
   checksum: 58de2feed61c59060b40f8203c0e4ed7fd6f99d42534a499f1741218a1dd0c129f4aa1de797bcf822c8ea5da7e4137aa3673431a96dae729047f7aca7b27866f
-  languageName: node
-  linkType: hard
-
-"uuid@npm:^8.3.2":
-  version: 8.3.2
-  resolution: "uuid@npm:8.3.2"
-  bin:
-    uuid: dist/bin/uuid
-  checksum: 5575a8a75c13120e2f10e6ddc801b2c7ed7d8f3c8ac22c7ed0c7b2ba6383ec0abda88c905085d630e251719e0777045ae3236f04c812184b7c765f63a70e58df
   languageName: node
   linkType: hard
 

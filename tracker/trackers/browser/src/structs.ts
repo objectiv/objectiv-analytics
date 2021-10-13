@@ -13,14 +13,14 @@ import {
   Struct,
   union,
 } from 'superstruct';
-import { validate as validateUuid } from 'uuid';
+import uuid from 'uuid-random';
 import { AnyLocationContext } from './Contexts';
 import { TaggingAttribute } from './TaggingAttribute';
 
 /**
  * A custom Struct describing v4 UUIDs
  */
-export const Uuid = define<string>('Uuid', (value: any) => validateUuid(value));
+export const Uuid = define<string>('Uuid', (value: any) => uuid.test(value));
 
 /**
  * Generic structs to stringify and parse JSON via create + coerce

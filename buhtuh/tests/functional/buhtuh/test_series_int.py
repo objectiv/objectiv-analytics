@@ -177,3 +177,5 @@ def test_integer_divide_constant():
             [3, 3],   #  3055 // 1000
         ]
     )
+
+## TODO test aggregation functions

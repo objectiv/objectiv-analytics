@@ -262,9 +262,10 @@ def merge(
 
     return BuhTuhDataFrame.get_instance(
         engine=left.engine,
-        source_node=model,
+        base_node=model,
         index_dtypes={name: dtype for name, _expr, dtype in new_index_list},
-        dtypes={name: dtype for name, _expr, dtype in new_data_list}
+        dtypes={name: dtype for name, _expr, dtype in new_data_list},
+        order_by=[]  # merging resets any sorting
     )
 
 

@@ -42,7 +42,6 @@
     "@objectiv/plugin-web-document-context": "~0.0.1",
     "@objectiv/schema": "~0.0.1",
     "@objectiv/tracker-core": "~0.0.1",
-    "superstruct": "^0.15.2",
-    "uuid": "^8.3.2"
+    "superstruct": "^0.15.2"
   }
 }
