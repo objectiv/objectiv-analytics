@@ -126,6 +126,8 @@ class TypeRegistry:
         self._register_value_klass(datetime.timedelta, BuhTuhSeriesTimedelta)
         self._register_value_klass(numpy.timedelta64,  BuhTuhSeriesTimedelta)
         self._register_value_klass(UUID,               BuhTuhSeriesUuid)
+        self._register_value_klass(dict,               BuhTuhSeriesJson)
+        self._register_value_klass(list,               BuhTuhSeriesJson)
 
     def _register_dtype_klass(self, klass: Type['BuhTuhSeries'], override=False):
         dtype_and_aliases: List[Union[Type, str]] = [klass.dtype] + list(klass.dtype_aliases)  # type: ignore

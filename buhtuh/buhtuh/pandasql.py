@@ -11,9 +11,11 @@ from sqlalchemy.engine import Engine
 from buhtuh.types import get_series_type_from_dtype, value_to_dtype, get_dtype_from_db_dtype
 from sql_models.model import SqlModel, CustomSqlModel
 from sql_models.sql_generator import to_sql
+from buhtuh.json import Json
 
 if TYPE_CHECKING:
     from buhtuh.partitioning import BuhTuhWindow, BuhTuhGroupBy
+
 
 DataFrameOrSeries = Union['BuhTuhDataFrame', 'BuhTuhSeries']
 ColumnNames = Union[str, List[str]]
@@ -1495,14 +1497,55 @@ class BuhTuhSeriesUuid(BuhTuhSeries):
         return self._get_derived_series('uuid', expression)
 
 
-class BuhTuhSeriesJson(BuhTuhSeriesString):
+class BuhTuhSeriesJson(BuhTuhSeries):
     """
     TODO: make this a proper class, not just a string subclass
     """
     dtype = 'json'
-    dtype_aliases = ()  # type: ignore
+    dtype_aliases = (object, )  # type: ignore
     supported_db_dtype = 'json'
-    supported_value_types = (dict, list, str, int, float)  # type: ignore
+    supported_value_types = (dict, list)
+
+    def __init__(self,
+                 engine,
+                 base_node: SqlModel,
+                 index: Optional[Dict[str, 'BuhTuhSeries']],
+                 name: str,
+                 expression: str = None,
+                 sorted_ascending: Optional[bool] = None):
+        super().__init__(engine,
+                         base_node,
+                         index,
+                         name,
+                         expression,
+                         sorted_ascending)
+        self.json = Json(self)
+
+    @classmethod
+    def value_to_sql(cls, value: dict) -> str:
+        if not isinstance(value, cls.supported_value_types):
+            raise TypeError(f'value should be dict, actual type: {type(value)}')
+        # TODO: fix sql injection!
+        # todo: ugly and it still fails; multiple places where it wants to format
+        return f"'{value}'::{BuhTuhSeriesJson.supported_db_dtype}".replace('{', '{{').replace('}', '}}')
+
+    @staticmethod
+    def from_dtype_to_sql(source_dtype: str, expression: str) -> str:
+        if source_dtype == 'json':
+            return expression
+        else:
+            if source_dtype != 'string':
+                raise ValueError(f'cannot convert {source_dtype} to json')
+            return f'({expression})::{BuhTuhSeriesJson.supported_db_dtype}'
+
+    def _comparator_operator(self, other, comparator):
+        other = const_to_series(base=self, value=other)
+        self._check_supported(f"comparator '{comparator}'", ['json'], other)
+        expression = f'({self.expression})::jsonb {comparator} ({other.expression})::jsonb'
+        return self._get_derived_series('bool', expression)
+
+    def __le__(self, other) -> 'BuhTuhSeriesBoolean':
+        return self._comparator_operator(other, "<@")
 
 
 class BuhTuhSeriesTimestamp(BuhTuhSeries):
