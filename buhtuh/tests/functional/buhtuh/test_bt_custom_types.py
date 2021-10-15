@@ -1,9 +1,11 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+from typing import Optional
+
 import pytest
 
-from buhtuh import BuhTuhSeries, Expression
+from buhtuh import BuhTuhSeries
 from buhtuh.types import register_dtype, get_series_type_from_dtype, value_to_dtype, TypeRegistry
 from tests.functional.buhtuh.test_data_and_utils import get_bt_with_test_data, assert_equals_data
 
@@ -67,14 +69,14 @@ class ReversedStringType(BuhTuhSeries):
         # TODO: fix sql injection!
         return f"'{reversed(value)}'"
 
-    @staticmethod
-    def from_dtype_to_sql(source_dtype: str, expression: Expression) -> Expression:
+    @classmethod
+    def from_dtype_to_sql(cls, source_dtype: str) -> Optional[str]:
         if source_dtype == 'reversed_string':
-            return expression
+            return None
         elif source_dtype == 'String':
-            return Expression.construct('reverse({})', expression)
+            return 'reverse({})'
         else:
-            return Expression.construct('reverse(({})::text)', expression)
+            return 'reverse(({})::text)'
 
 
 def test_custom_type(monkeypatch):
