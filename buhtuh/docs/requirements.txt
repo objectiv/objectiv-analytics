@@ -1,0 +1,9 @@
+sphinx
+sphinx_markdown_builder
+
+## theme we load/adapt
+pydata_sphinx_theme
+
+## needed for rendering ipython codeblocks
+ipython
+

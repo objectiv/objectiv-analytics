@@ -1,6 +1,8 @@
 import {
+  makeAbortedEvent,
   makeApplicationLoadedEvent,
   makeClickEvent,
+  makeCompletedEvent,
   makeInputChangeEvent,
   makeSectionHiddenEvent,
   makeSectionVisibleEvent,
@@ -89,3 +91,21 @@ export const trackURLChange = (parameters: NonInteractiveTrackHelperParameters =
     trackerErrorHandler(error, parameters, parameters.onError);
   }
 };
+
+export const trackCompleted = (parameters: NonInteractiveTrackHelperParameters ={}) => {
+    try {
+    const { element = document, tracker } = parameters;
+    return trackEvent({ eventFactory: makeCompletedEvent, element, tracker });
+  } catch (error) {
+    trackerErrorHandler(error, parameters, parameters.onError);
+  }
+};
+
+export const trackAborted = (parameters: NonInteractiveTrackHelperParameters ={}) => {
+    try {
+    const { element = document, tracker } = parameters;
+    return trackEvent({ eventFactory: makeAbortedEvent, element, tracker });
+  } catch (error) {
+    trackerErrorHandler(error, parameters, parameters.onError);
+  }
+}

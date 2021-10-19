@@ -1,6 +1,8 @@
 import {
+  AbortedEvent,
   ApplicationLoadedEvent,
   ClickEvent,
+  CompletedEvent,
   DocumentLoadedEvent,
   InputChangeEvent,
   InteractiveEvent,
@@ -16,6 +18,26 @@ import {
   AbstractLocationContext,
   AbstractGlobalContext,
 } from '@objectiv/schema';
+
+/** Creates instance of AbortedEvent
+ * @param {Object} props - factory properties
+ * @param {AbstractLocationContext[]} props.location_stack - The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+ *         deterministically describes where an event took place from global to specific.
+ *         The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+ * @param {AbstractGlobalContext[]} props.global_contexts - Global contexts add global / general information about the event. They carry information that is not
+ *         related to where the Event originated (location), such as device, platform or business data.
+ * @returns {Omit<AbortedEvent, 'id' | 'time'>} - AbortedEvent: A non interactive event, that would be emitted when an action fails or is aborted, e.g. a form that
+ * 	is posted, but not successfully.
+ */
+export const makeAbortedEvent = (props?: {
+  location_stack?: AbstractLocationContext[];
+  global_contexts?: AbstractGlobalContext[];
+}): Omit<AbortedEvent, 'id' | 'time'> => ({
+  __non_interactive_event: true,
+  _type: 'AbortedEvent',
+  location_stack: props?.location_stack ?? [],
+  global_contexts: props?.global_contexts ?? [],
+});
 
 /** Creates instance of ApplicationLoadedEvent
  * @param {Object} props - factory properties
@@ -52,6 +74,26 @@ export const makeClickEvent = (props?: {
 }): Omit<ClickEvent, 'id' | 'time'> => ({
   __interactive_event: true,
   _type: 'ClickEvent',
+  location_stack: props?.location_stack ?? [],
+  global_contexts: props?.global_contexts ?? [],
+});
+
+/** Creates instance of CompletedEvent
+ * @param {Object} props - factory properties
+ * @param {AbstractLocationContext[]} props.location_stack - The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+ *         deterministically describes where an event took place from global to specific.
+ *         The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+ * @param {AbstractGlobalContext[]} props.global_contexts - Global contexts add global / general information about the event. They carry information that is not
+ *         related to where the Event originated (location), such as device, platform or business data.
+ * @returns {Omit<CompletedEvent, 'id' | 'time'>} - CompletedEvent: A non interactive event, that would be emitted when an action completes successfully, e.g. a form that
+ * 	is posted.
+ */
+export const makeCompletedEvent = (props?: {
+  location_stack?: AbstractLocationContext[];
+  global_contexts?: AbstractGlobalContext[];
+}): Omit<CompletedEvent, 'id' | 'time'> => ({
+  __non_interactive_event: true,
+  _type: 'CompletedEvent',
   location_stack: props?.location_stack ?? [],
   global_contexts: props?.global_contexts ?? [],
 });

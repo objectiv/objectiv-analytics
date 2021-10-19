@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Union, List, Tuple, Optional, Dict, Set, NamedTuple
 
 from buhtuh import DataFrameOrSeries, BuhTuhDataFrame, ColumnNames, BuhTuhSeries
-from sql_models.model import CustomSqlModel
+from sql_models.model import CustomSqlModel, SqlModel
 
 
 class How(Enum):
@@ -249,7 +249,7 @@ def merge(
         left=left, right=right, left_on=real_left_on, right_on=real_right_on, suffixes=suffixes
     )
 
-    sql = _get_merge_sql(
+    model = _get_merge_sql_model(
         left=left,
         right=right,
         how=real_how,
@@ -257,8 +257,8 @@ def merge(
         real_right_on=real_right_on,
         new_column_list=new_index_list + new_data_list
     )
-    model_builder = CustomSqlModel(name='merge_sql', sql=sql)
-    model = model_builder(left_node=left.base_node, right_node=right.base_node)
+    # model_builder = CustomSqlModel(name='merge_sql', sql=sql)
+    # model = model_builder(left_node=left.base_node, right_node=right.base_node)
 
     return BuhTuhDataFrame.get_instance(
         engine=left.engine,
@@ -269,19 +269,17 @@ def merge(
     )
 
 
-def _get_merge_sql(
+def _get_merge_sql_model(
         left: BuhTuhDataFrame,
         right: DataFrameOrSeries,
         how: How,
         real_left_on: List[str],
         real_right_on: List[str],
         new_column_list: List[ResultColumn],
-) -> str:
+) -> SqlModel:
     """
-    Give the sql to join left and right and select the new_column_list.
-    Left and right will be joined with the join type of how, matching rows on real_left_on and real_right_on.
-
-    The returned sql will have two place holders: '{{left_node}}' and '{{right_node}}'
+    Give the SqlModel to join left and right and select the new_column_list. This model also uses the
+    join-type of how, matching rows on real_left_on and real_right_on.
     """
     # todo: sql escaping where needed
     merge_conditions = []
@@ -294,12 +292,20 @@ def _get_merge_sql(
     join_type = 'full outer' if how == How.outer else how.value
     on_str = 'on ' + ' and '.join(merge_conditions) if merge_conditions else ''
 
-    sql = f'''
+    sql = '''
         select {columns_str}
-        from {{{{left_node}}}} as l {join_type}
-        join {{{{right_node}}}} as r {on_str}
+        from {{left_node}} as l {join_type}
+        join {{right_node}} as r {on_str}
         '''
-    return sql
+    model_builder = CustomSqlModel(name='merge_sql', sql=sql)
+    model = model_builder(
+        columns_str=columns_str,
+        join_type=join_type,
+        on_str=on_str,
+        left_node=left.base_node,
+        right_node=right.base_node
+    )
+    return model
 
 
 def _get_expression(df_series: DataFrameOrSeries, label: str, table_alias: str) -> str:

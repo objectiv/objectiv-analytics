@@ -1,7 +1,6 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-import uuid
 from unittest.mock import ANY
 
 import pytest

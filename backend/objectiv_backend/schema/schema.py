@@ -618,6 +618,112 @@ class NonInteractiveEvent(AbstractEvent):
                                **kwargs)
 
 
+class CompletedEvent(NonInteractiveEvent):
+    """
+        A non interactive event, that would be emitted when an action completes successfully, e.g. a form that
+    is posted.
+
+        Attributes:
+        location_stack (List[AbstractLocationContext]):
+                The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+                deterministically describes where an event took place from global to specific.
+                The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+
+        global_contexts (List[AbstractGlobalContext]):
+                Global contexts add global / general information about the event. They carry information that is not
+                related to where the Event originated (location), such as device, platform or business data.
+        id (str):
+                Unique identifier for a specific instance of an event. Typically UUID's are a good way of
+                implementing this. On the collector side, events should be unique, this means duplicate id's result
+                in `not ok` events.
+        time (int):
+                Timestamp indicating when the event was generated
+    """
+    _type = 'CompletedEvent'
+
+    def __init__(self,
+                 location_stack: List[AbstractLocationContext],
+                 global_contexts: List[AbstractGlobalContext],
+                 id: str,
+                 time: int,
+                 **kwargs: Optional[Any]):
+        """
+        :param location_stack: 
+            The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+            deterministically describes where an event took place from global to specific.
+            The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+
+        :param global_contexts: 
+            Global contexts add global / general information about the event. They carry information that is not
+            related to where the Event originated (location), such as device, platform or business data.
+        :param id: 
+            Unique identifier for a specific instance of an event. Typically UUID's are a good way of
+            implementing this. On the collector side, events should be unique, this means duplicate id's result
+            in `not ok` events.
+        :param time: 
+            Timestamp indicating when the event was generated
+        """
+        NonInteractiveEvent.__init__(self,
+                                     location_stack=location_stack,
+                                     global_contexts=global_contexts,
+                                     id=id,
+                                     time=time,
+                                     **kwargs)
+
+
+class AbortedEvent(NonInteractiveEvent):
+    """
+        A non interactive event, that would be emitted when an action fails or is aborted, e.g. a form that
+    is posted, but not successfully.
+
+        Attributes:
+        location_stack (List[AbstractLocationContext]):
+                The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+                deterministically describes where an event took place from global to specific.
+                The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+
+        global_contexts (List[AbstractGlobalContext]):
+                Global contexts add global / general information about the event. They carry information that is not
+                related to where the Event originated (location), such as device, platform or business data.
+        id (str):
+                Unique identifier for a specific instance of an event. Typically UUID's are a good way of
+                implementing this. On the collector side, events should be unique, this means duplicate id's result
+                in `not ok` events.
+        time (int):
+                Timestamp indicating when the event was generated
+    """
+    _type = 'AbortedEvent'
+
+    def __init__(self,
+                 location_stack: List[AbstractLocationContext],
+                 global_contexts: List[AbstractGlobalContext],
+                 id: str,
+                 time: int,
+                 **kwargs: Optional[Any]):
+        """
+        :param location_stack: 
+            The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
+            deterministically describes where an event took place from global to specific.
+            The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
+
+        :param global_contexts: 
+            Global contexts add global / general information about the event. They carry information that is not
+            related to where the Event originated (location), such as device, platform or business data.
+        :param id: 
+            Unique identifier for a specific instance of an event. Typically UUID's are a good way of
+            implementing this. On the collector side, events should be unique, this means duplicate id's result
+            in `not ok` events.
+        :param time: 
+            Timestamp indicating when the event was generated
+        """
+        NonInteractiveEvent.__init__(self,
+                                     location_stack=location_stack,
+                                     global_contexts=global_contexts,
+                                     id=id,
+                                     time=time,
+                                     **kwargs)
+
+
 class DocumentLoadedEvent(NonInteractiveEvent):
     """
         A non interactive event that is emitted after a document finishes loading. It should provide a
@@ -1350,6 +1456,10 @@ def make_event(_type: str, **kwargs) -> AbstractEvent:
         return AbstractEvent(**kwargs)
     if _type == "NonInteractiveEvent":
         return NonInteractiveEvent(**kwargs)
+    if _type == "CompletedEvent":
+        return CompletedEvent(**kwargs)
+    if _type == "AbortedEvent":
+        return AbortedEvent(**kwargs)
     if _type == "DocumentLoadedEvent":
         return DocumentLoadedEvent(**kwargs)
     if _type == "URLChangeEvent":

@@ -3,8 +3,8 @@ Copyright 2021 Objectiv B.V.
 """
 import pytest
 
-from sql_models.model import SqlModelBuilder
-from sql_models.sql_generator import to_sql
+from sql_models.model import SqlModelBuilder, CustomSqlModel
+from sql_models.sql_generator import to_sql, _escape_value
 from tests.unit.sql_models.test_graph_operations import get_simple_test_graph
 from tests.unit.sql_models.util import assert_roughly_equal_sql
 
@@ -16,7 +16,60 @@ def test_simple():
     assert result
 
 
+def assert_escape_compare_value(value):
+    """ helper for test__escape_value. Assert that the escaped value, after formatting equals the original"""
+    escaped = _escape_value(value)
+    assert escaped.format() == value
+
+
+def test__escape_value():
+    assert_escape_compare_value('test')
+    assert_escape_compare_value('te{s}t')
+    assert_escape_compare_value('te{{s}}t')
+    assert_escape_compare_value('te{st')
+    assert_escape_compare_value('te{{s}t')
+    assert_escape_compare_value('te{{st')
+    full_string = '{test}' + _escape_value('{test}') + '{test}'
+    assert full_string.format(test='x') == 'x{test}x'
+    full_string = '{test}' + _escape_value('{{test}}') + '{test}'
+    assert full_string.format(test='x') == 'x{{test}}x'
+
+
+def test_format_injection():
+    # Make sure that (parts of) format strings in the properties of a model don't mess up the sql generation.
+    mb = CustomSqlModel('select {a} from x')
+    result = to_sql(mb(a='y'))
+    assert result == 'select y from x'
+    result = to_sql(mb(a="'{y}'"))
+    assert result == "select '{y}' from x"
+    result = to_sql(mb(a="'{{y}}'"))
+    assert result == "select '{{y}}' from x"
+    result = to_sql(mb(a="'{{{y}}}'"))
+    assert result == "select '{{{y}}}' from x"
+    result = to_sql(mb(a="'{{{y}'"))
+    assert result == "select '{{{y}' from x"
+
+    model = mb(a="'{{y}}'")
+    mb = CustomSqlModel('select {a} from {{x}}')
+    result = to_sql(mb(a='y', x=model))
+    expected = 'with CustomSqlModel___0eece243b7a88bc997419498b4cdb1a1 as (select \'{{y}}\' from x)\n' \
+               'select y from CustomSqlModel___0eece243b7a88bc997419498b4cdb1a1'
+    assert result == expected
+
+    result = to_sql(mb(a="'{y}'", x=model))
+    expected = 'with CustomSqlModel___0eece243b7a88bc997419498b4cdb1a1 as (select \'{{y}}\' from x)\n' \
+               "select '{y}' from CustomSqlModel___0eece243b7a88bc997419498b4cdb1a1"
+    assert result == expected
+
+    result = to_sql(mb(a="'{{y}}'", x=model))
+    expected = 'with CustomSqlModel___0eece243b7a88bc997419498b4cdb1a1 as (select \'{{y}}\' from x)\n' \
+               "select '{{y}}' from CustomSqlModel___0eece243b7a88bc997419498b4cdb1a1"
+    assert result == expected
+
+
+# Below are more complex scenarios, first define SqlModels to use in the tests
 # todo: code to generate test classes?
+
 class SourceTable(SqlModelBuilder):
     @property
     def sql(self):

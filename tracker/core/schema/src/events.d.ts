@@ -15,6 +15,30 @@ export interface NonInteractiveEvent extends AbstractNonInteractiveEvent {
 }
 
 /**
+ * A non interactive event, that would be emitted when an action completes successfully, e.g. a form that
+ * is posted.
+ * Inheritance: CompletedEvent -> AbstractNonInteractiveEvent -> AbstractEvent
+ */
+export interface CompletedEvent extends AbstractNonInteractiveEvent {
+  /**
+   * Typescript discriminator
+   */
+  readonly _type: 'CompletedEvent';
+}
+
+/**
+ * A non interactive event, that would be emitted when an action fails or is aborted, e.g. a form that
+ * is posted, but not successfully.
+ * Inheritance: AbortedEvent -> AbstractNonInteractiveEvent -> AbstractEvent
+ */
+export interface AbortedEvent extends AbstractNonInteractiveEvent {
+  /**
+   * Typescript discriminator
+   */
+  readonly _type: 'AbortedEvent';
+}
+
+/**
  * A non interactive event that is emitted after a document finishes loading. It should provide a
  * `WebDocumentContext` which should describe the state (eg. URL) of the event.
  * NOTE: with SPA's this probably only happens once, as page (re)loads don't happen after the initial page load

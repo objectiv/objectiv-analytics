@@ -3,7 +3,7 @@ Copyright 2021 Objectiv B.V.
 """
 import pytest
 
-from buhtuh import BuhTuhSeries
+from buhtuh import BuhTuhSeries, Expression
 from buhtuh.types import register_dtype, get_series_type_from_dtype, value_to_dtype, TypeRegistry
 from tests.functional.buhtuh.test_data_and_utils import get_bt_with_test_data, assert_equals_data
 
@@ -68,13 +68,13 @@ class ReversedStringType(BuhTuhSeries):
         return f"'{reversed(value)}'"
 
     @staticmethod
-    def from_dtype_to_sql(source_dtype: str, expression: str) -> str:
+    def from_dtype_to_sql(source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'reversed_string':
             return expression
         elif source_dtype == 'String':
-            return f'reverse({expression})'
+            return Expression.construct('reverse({})', expression)
         else:
-            return f'reverse(({expression})::text)'
+            return Expression.construct('reverse(({})::text)', expression)
 
 
 def test_custom_type(monkeypatch):

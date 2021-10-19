@@ -1,6 +1,7 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+from buhtuh.partitioning import BuhTuhGroupingList, BuhTuhGroupingSet
 from tests.functional.buhtuh.test_data_and_utils import get_bt_with_test_data, assert_equals_data
 
 
@@ -183,3 +184,103 @@ def test_group_by_multiple_aggregations_on_same_series():
         'inhabitants_min': 'int64',
         'inhabitants_max': 'int64',
     }
+
+def test_cube_basics():
+    bt = get_bt_with_test_data(full_data_set=False)
+
+    # instant stonks through variable naming
+    btc = bt.groupby(['municipality','city']).cube()
+
+    result_bt = btc['inhabitants'].sum()
+    assert_equals_data(
+        result_bt,
+        order_by=['municipality','city'],
+        expected_columns=['municipality', 'city', 'inhabitants_sum'],
+        expected_data=[
+            ['Leeuwarden', 'Ljouwert', 93485],
+            ['Leeuwarden', None, 93485],
+            ['Súdwest-Fryslân', 'Drylts', 3055],
+            ['Súdwest-Fryslân', 'Snits', 33520],
+            ['Súdwest-Fryslân', None, 36575],
+            [None, 'Drylts', 3055],
+            [None, 'Ljouwert', 93485],
+            [None, 'Snits', 33520],
+            [None, None, 130060]
+        ]
+    )
+
+def test_rollup_basics():
+    bt = get_bt_with_test_data(full_data_set=False)
+
+    btc = bt.groupby(['municipality','city']).rollup()
+
+    result_bt = btc['inhabitants'].sum()
+    assert_equals_data(
+        result_bt,
+        order_by=['municipality','city'],
+        expected_columns=['municipality', 'city', 'inhabitants_sum'],
+        expected_data=[
+            ['Leeuwarden', 'Ljouwert', 93485],
+            ['Leeuwarden', None, 93485],
+            ['Súdwest-Fryslân', 'Drylts', 3055],
+            ['Súdwest-Fryslân', 'Snits', 33520],
+            ['Súdwest-Fryslân', None, 36575],
+            [None, None, 130060]
+        ]
+    )
+
+
+def test_rollup_basics():
+    bt = get_bt_with_test_data(full_data_set=False)
+
+    btr = bt.groupby(['municipality','city']).rollup()
+
+    result_bt = btr['inhabitants'].sum()
+    assert_equals_data(
+        result_bt,
+        order_by=['municipality','city'],
+        expected_columns=['municipality', 'city', 'inhabitants_sum'],
+        expected_data=[
+            ['Leeuwarden', 'Ljouwert', 93485],
+            ['Leeuwarden', None, 93485],
+            ['Súdwest-Fryslân', 'Drylts', 3055],
+            ['Súdwest-Fryslân', 'Snits', 33520],
+            ['Súdwest-Fryslân', None, 36575],
+            [None, None, 130060]
+        ]
+    )
+
+def test_grouping_list_basics():
+    bt = get_bt_with_test_data(full_data_set=False)
+
+    btm = bt.groupby(['municipality'])
+    btc = bt.groupby(['city'])
+    bts = BuhTuhGroupingList([btm,btc])
+
+    result_bt = bts['inhabitants'].sum()
+    assert_equals_data(
+        result_bt,
+        order_by=['municipality','city'],
+        expected_columns=['municipality', 'city', 'inhabitants_sum'],
+        expected_data=[
+            ['Leeuwarden', 'Ljouwert', 93485], ['Súdwest-Fryslân', 'Drylts', 3055], ['Súdwest-Fryslân', 'Snits', 33520]
+        ]
+    )
+
+def test_grouping_set_basics():
+    bt = get_bt_with_test_data(full_data_set=False)
+
+    btm = bt.groupby(['municipality'])
+    btc = bt.groupby(['city'])
+    bts = BuhTuhGroupingSet([btm, btc])
+
+    result_bt = bts['inhabitants'].sum()
+    assert_equals_data(
+        result_bt,
+        order_by=['municipality','city'],
+        expected_columns=['municipality', 'city', 'inhabitants_sum'],
+        expected_data=[
+            ['Leeuwarden', None, 93485], ['Súdwest-Fryslân', None, 36575],
+            [None, 'Drylts', 3055], [None, 'Ljouwert', 93485], [None, 'Snits', 33520]
+        ]
+    )

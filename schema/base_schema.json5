@@ -57,6 +57,22 @@
       "parents": ["AbstractEvent"],
       "requiresContext": []
     },
+    "CompletedEvent": {
+      "description": "\
+        A non interactive event, that would be emitted when an action completes successfully, e.g. a form that \n\
+        is posted. \
+      ",
+      "parents": ["NonInteractiveEvent"],
+      "requiresContext": []
+    },
+    "AbortedEvent": {
+      "description": "\
+        A non interactive event, that would be emitted when an action fails or is aborted, e.g. a form that \n\
+        is posted, but not successfully. \
+      ",
+      "parents": ["NonInteractiveEvent"],
+      "requiresContext": ["ErrorContext"]
+    },
     "DocumentLoadedEvent": {
       "description": "\
         A non interactive event that is emitted after a document finishes loading. It should provide a \n\

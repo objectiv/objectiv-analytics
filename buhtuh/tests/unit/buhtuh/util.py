@@ -12,12 +12,12 @@ def get_fake_df(index_names: List[str], data_names: List[str], dtype='int64'):
     series_type = get_series_type_from_dtype(dtype=dtype)
     index = {
         name: series_type(
-            engine=engine, base_node=base_node, index=None, name=name, expression=name
+            engine=engine, base_node=base_node, index=None, name=name, expression=None
         ) for name in index_names
     }
     data = {
         name: series_type(
-            engine=engine, base_node=base_node, index=index, name=name, expression=name
+            engine=engine, base_node=base_node, index=index, name=name, expression=None
         ) for name in data_names
     }
     return BuhTuhDataFrame(engine=engine, base_node=base_node, index=index, series=data)
