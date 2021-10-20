@@ -3,7 +3,8 @@ Copyright 2021 Objectiv B.V.
 """
 import numpy
 
-from tests.functional.buhtuh.test_data_and_utils import get_bt_with_test_data, assert_equals_data
+from tests.functional.buhtuh.test_data_and_utils import get_bt_with_test_data, assert_equals_data, \
+    get_bt_with_json_data
 
 
 def test_astype_dtypes():
@@ -85,6 +86,33 @@ def test_astype_to_int():
             [3, 3]
         ]
     )
+
+
+def test_astype_to_json():
+    bt = get_bt_with_json_data()
+    bt_json_dict = bt.dict_column.astype('jsonb')
+    bt_json_list = bt.list_column.astype('jsonb')
+    assert_equals_data(
+        bt_json_dict,
+        expected_columns=['_index_row', 'dict_column'],
+        expected_data=[
+            [0, {"a": "b"}],
+            [1, {"_type": "SectionContext", "id": "home"}],
+            [2, {"a": "b", "c": {"a": "c"}}],
+            [3, {"a": "b", "e": [{"a": "b"}, {"c": "d"}]}]
+        ]
+    )
+    assert_equals_data(
+        bt_json_list,
+        expected_columns=['_index_row', 'list_column'],
+        expected_data=[
+            [0, [{"a": "b"}, {"c": "d"}]],
+            [1, ["a","b","c","d"]],
+            [2, [{"_type": "a", "id": "b"},{"_type": "c", "id": "d"},{"_type": "e", "id": "f"}]],
+            [3, [{"_type":"WebDocumentContext","id":"#document"},{"_type":"SectionContext","id":"home"},{"_type":"SectionContext","id":"top-10"},{"_type":"ItemContext","id":"5o7Wv5Q5ZE"}]]
+        ]
+    )
+
 
 
 def test_astype_dtype_aliases():

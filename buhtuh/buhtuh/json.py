@@ -14,7 +14,7 @@ class Json:
     def __getitem__(self, key: Union[int, slice]):
         if isinstance(key, int):
             return self._series_object._get_derived_series(
-                'json',
+                'jsonb',
                 Expression.construct(f'{{}}->{key}', self._series_object.expression)
             )
         if isinstance(key, slice):
@@ -23,28 +23,48 @@ class Json:
                 raise NotImplementedError('slice steps not supported')
             if key.stop is not None:
                 negative_stop = ''
-                if key.stop < 0:
-                    negative_stop = f'json_array_length({{}})'
+                if isinstance(key.stop, int):
+                    if key.stop < 0:
+                        negative_stop = f'jsonb_array_length({{}})'
+                        expression_references += 1
+                    stop = f'{negative_stop} {key.stop} - 1'
+                elif isinstance(key.stop, (dict, str)):
+                    import json
+                    key_stop = json.dumps(key.stop)
+                    key_stop = key_stop.replace("'", "''")
+                    stop = f"""(select min(case when ('{key_stop}'::jsonb) <@ value then ordinality end) -1
+                    from jsonb_array_elements({{}}) with ordinality)"""
                     expression_references += 1
-                stop = f'{negative_stop} {key.stop} - 1'
+                else:
+                    TypeError('cant')
             if key.start is not None:
-                negative_start = ''
-                if key.start < 0:
-                    negative_start = f'json_array_length({{}})'
+                if isinstance(key.start, int):
+                    negative_start = ''
+                    if key.start < 0:
+                        negative_start = f'jsonb_array_length({{}})'
+                        expression_references += 1
+                    start = f'{negative_start} {key.start}'
+                elif isinstance(key.start, (dict, str)):
+                    import json
+                    key_start = json.dumps(key.start)
+                    key_start = key_start.replace("'", "''")
+                    start = f"""(select min(case when ('{key_start}'::jsonb) <@ value then ordinality end) -1
+                    from jsonb_array_elements({{}}) with ordinality)"""
                     expression_references += 1
-                start = f'{negative_start} {key.start}'
+                else:
+                    TypeError('cant')
                 if key.stop is not None:
                     where = f'between {start} and {stop}'
                 else:
                     where = f'>= {start}'
             else:
                 where = f'<= {stop}'
-            combined_expression = f"""(select json_agg(x.value)
-            from json_array_elements({{}}) with ordinality x
+            combined_expression = f"""(select jsonb_agg(x.value)
+            from jsonb_array_elements({{}}) with ordinality x
             where ordinality - 1 {where})"""
             expression_references += 1
             return self._series_object._get_derived_series(
-                'json',
+                'jsonb',
                 Expression.construct(
                     combined_expression,
                     *([self._series_object.expression] * expression_references)
@@ -59,6 +79,7 @@ class Json:
         return_dtype = 'json'
         if as_str:
             return_as_string_operator = '>'
+            return_dtype = 'string'
         expression = Expression.construct(
             f"{{}}->{return_as_string_operator}'{key}'",
             self._series_object.expression
@@ -70,7 +91,7 @@ class Json:
     def cookie_id(self):
         expression = Expression.construct(
             f"""(select (array_agg(value->>'cookie_id'))[1]
-            from json_array_elements({{}})
+            from jsonb_array_elements({{}})
             where value ->> '_type' = 'CookieIdContext')""",
             self._series_object.expression
         )
@@ -80,7 +101,7 @@ class Json:
     def user_agent(self):
         expression = Expression.construct(
             f"""(select (array_agg(value->>'user_agent'))[1]
-            from json_array_elements({{}})
+            from jsonb_array_elements({{}})
             where value ->> '_type' = 'HttpContext')""",
             self._series_object.expression
         )
@@ -97,9 +118,9 @@ class Json:
                     ' Context', '') || ': ' || (value ->> 'id')
                 ),
             ' => ')
-            from json_array_elements({{}}) with ordinality
-            where ordinality = json_array_length({{}})) || case
-                when json_array_length({{}}) > 1
+            from jsonb_array_elements({{}}) with ordinality
+            where ordinality = jsonb_array_length({{}})) || case
+                when jsonb_array_length({{}}) > 1
                     then ' located at ' || (select array_to_string(
                 array_agg(
                     replace(
@@ -107,8 +128,8 @@ class Json:
                     ' Context', '') || ': ' || (value ->> 'id')
                 ),
             ' => ')
-            from json_array_elements({{}}) with ordinality
-            where ordinality = json_array_length({{}})
+            from jsonb_array_elements({{}}) with ordinality
+            where ordinality = jsonb_array_length({{}})
             ) else '' end""",
             self._series_object.expression,
             self._series_object.expression,

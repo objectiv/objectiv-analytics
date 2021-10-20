@@ -21,6 +21,31 @@ def test_del_item():
         del(bt['non existing column'])
 
 
+def test_drop_items():
+    bt = get_bt_with_test_data()
+
+    nbt = bt.drop(columns=['founding'])
+    assert 'founding' not in nbt.data.keys()
+    assert 'founding' in bt.data.keys()
+
+    bt.founding
+    with pytest.raises(KeyError):
+        nbt.founding
+
+    nbt = bt.drop(columns=['founding'], inplace=True)
+    assert 'founding' not in nbt.data.keys()
+    assert 'founding' not in bt.data.keys()
+
+    bt.drop(columns=['inhabitants', 'city'], inplace=True)
+    assert 'inhabitants' not in bt.data.keys()
+    assert 'city' not in bt.data.keys()
+
+    with pytest.raises(KeyError):
+        bt.drop(columns=['non existing column'])
+
+    bt.drop(columns=['non existing column'], errors='ignore')
+
+
 def test_combined_operations1():
     bt = get_bt_with_test_data(full_data_set=True)
     bt['x'] = bt['municipality'] + ' some string'

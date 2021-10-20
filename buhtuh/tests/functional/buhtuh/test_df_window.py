@@ -1,3 +1,5 @@
+import numpy as np
+import pandas as pd
 import pytest
 
 from buhtuh.partitioning import BuhTuhWindow, BuhTuhWindowFrameMode, BuhTuhWindowFrameBoundary
@@ -13,7 +15,7 @@ def test_windowing_frame_clause():
     def frame_clause_equals(expected, **kwargs):
         w2 = w.set_frame_clause(**kwargs)
         assert(w2.frame_clause == expected)
-        ## Run a query to check whether the SQL is valid if we generated what we expected.
+        # Run a query to check whether the SQL is valid if we generated what we expected.
         bt.inhabitants.window_last_value(w2).head()
 
     # Again, check the default but through set_frame_clause in this case
@@ -274,4 +276,75 @@ def test_windowing_boolean_functions():
     pass
 
 
+def test_rolling_defaults_vs_pandas():
+    bt = get_bt_with_test_data(full_data_set=True)[['skating_order', 'founding', 'inhabitants']]
 
+    # Create a pandas version of this stuff
+    for series in bt.data_columns:
+        for center in [False, True]:
+            for window in range(1, 11):
+                for min_periods in range(0, window):
+                    pdf: pd.DataFrame = bt[[series]].to_df()
+                    pd_values = pdf.rolling(window=window, min_periods=min_periods, center=center)\
+                        .sum()
+                    bt_values = bt.rolling(window=window, min_periods=min_periods, center=center)\
+                        .sum()[[series + '_sum']].to_df()
+                    np.testing.assert_equal(pd_values.values, bt_values.values)
+
+
+def test_rolling_variations():
+    bt = get_bt_with_test_data(full_data_set=True)[['skating_order', 'founding', 'inhabitants']]
+
+    def _test_full_df_vs_selection(series, **kwargs):
+        r1 = bt.rolling(**kwargs).sum()[[series + '_sum']]
+        # the last [] is required because running this on a df will include the index as a series
+        r2 = bt[[series]].rolling(**kwargs).sum()[[series + '_sum']]
+        np.testing.assert_equal(r1.to_df().values, r2.to_df().values)
+
+    def _test_series_vs_full_df(series, **kwargs):
+        # get the series
+        r1 = bt[series].sum(bt.rolling(**kwargs)).to_frame()
+        # get the frame selection
+        # the last [] is required because running this on a df will include the index as a series
+        r2 = bt[[series]].rolling(**kwargs).sum()[[series + '_sum']]
+        np.testing.assert_equal(r1.to_df().values, r2.to_df().values)
+
+    for s in bt.data_columns:
+        for window in [1, 5, 11]:
+            _test_full_df_vs_selection(s, window=window)
+            _test_series_vs_full_df(s, window=window)
+
+
+def test_expanding_defaults_vs_pandas():
+    bt = get_bt_with_test_data(full_data_set=True)[['skating_order', 'founding', 'inhabitants']]
+
+    # Create a pandas version of this stuff
+    for series in bt.data_columns:
+        for min_periods in range(0, 11):
+            pdf: pd.DataFrame = bt[[series]].to_df()
+            pd_values = pdf.expanding(min_periods=min_periods).sum()
+            bt_values = bt.expanding(min_periods=min_periods).sum()[[series + '_sum']].to_df()
+            np.testing.assert_equal(pd_values.values, bt_values.values)
+
+
+def test_expanding_variations():
+    bt = get_bt_with_test_data(full_data_set=True)[['skating_order', 'founding', 'inhabitants']]
+
+    def _test_full_df_vs_selection(series, **kwargs):
+        r1 = bt.expanding(**kwargs).sum()[[series + '_sum']]
+        # the last [] is required because running this on a df will include the index as a series
+        r2 = bt[[series]].expanding(**kwargs).sum()[[series + '_sum']]
+        np.testing.assert_equal(r1.to_df().values, r2.to_df().values)
+
+    def _test_series_vs_full_df(series, **kwargs):
+        # get the series
+        r1 = bt[series].sum(bt.expanding(**kwargs)).to_frame()
+        # get the frame selection
+        # the last [] is required because running this on a df will include the index as a series
+        r2 = bt[[series]].expanding(**kwargs).sum()[[series + '_sum']]
+        np.testing.assert_equal(r1.to_df().values, r2.to_df().values)
+
+    for series in bt.data_columns:
+        for min_periods in [1,5,11]:
+            _test_full_df_vs_selection(series, min_periods=min_periods)
+            _test_series_vs_full_df(series, min_periods=min_periods)
