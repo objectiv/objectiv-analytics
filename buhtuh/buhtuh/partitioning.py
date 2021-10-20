@@ -113,10 +113,9 @@ class BuhTuhGroupBy:
         aggregations: Dict[str, List[Union[str, Callable]]] = {}
         if isinstance(func, dict):
             # make sure the keys are series we know
-            series = list(self.aggregated_data.keys())
             for k, v in func.items():
-                if k not in series:
-                    raise ValueError(f'{k} not found in group by series')
+                if k not in self.aggregated_data:
+                    raise KeyError(f'{k} not found in group by series')
                 if isinstance(v, str) or callable(v):
                     aggregations[k] = [v]
                 elif isinstance(v, list):
