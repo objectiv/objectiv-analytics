@@ -98,11 +98,12 @@ class TypeRegistry:
         # Import locally to prevent cyclic imports
         from buhtuh.pandasql import BuhTuhSeriesBoolean, BuhTuhSeriesInt64, \
             BuhTuhSeriesFloat64, BuhTuhSeriesString, BuhTuhSeriesTimestamp, \
-            BuhTuhSeriesDate, BuhTuhSeriesTime, BuhTuhSeriesTimedelta, BuhTuhSeriesUuid, BuhTuhSeriesJson
+            BuhTuhSeriesDate, BuhTuhSeriesTime, BuhTuhSeriesTimedelta, BuhTuhSeriesUuid, \
+            BuhTuhSeriesJsonb, BuhTuhSeriesJson
         standard_types: List[Type[BuhTuhSeries]] = [
             BuhTuhSeriesBoolean, BuhTuhSeriesInt64, BuhTuhSeriesFloat64, BuhTuhSeriesString,
             BuhTuhSeriesTimestamp, BuhTuhSeriesDate, BuhTuhSeriesTime, BuhTuhSeriesTimedelta,
-            BuhTuhSeriesUuid, BuhTuhSeriesJson
+            BuhTuhSeriesUuid, BuhTuhSeriesJsonb, BuhTuhSeriesJson
         ]
 
         for klass in standard_types:
@@ -126,8 +127,8 @@ class TypeRegistry:
         self._register_value_klass(datetime.timedelta, BuhTuhSeriesTimedelta)
         self._register_value_klass(numpy.timedelta64,  BuhTuhSeriesTimedelta)
         self._register_value_klass(UUID,               BuhTuhSeriesUuid)
-        self._register_value_klass(dict,               BuhTuhSeriesJson)
-        self._register_value_klass(list,               BuhTuhSeriesJson)
+        self._register_value_klass(dict,               BuhTuhSeriesJsonb)
+        self._register_value_klass(list,               BuhTuhSeriesJsonb)
 
     def _register_dtype_klass(self, klass: Type['BuhTuhSeries'], override=False):
         dtype_and_aliases: List[Union[Type, str]] = [klass.dtype] + list(klass.dtype_aliases)  # type: ignore

@@ -469,6 +469,47 @@ class BuhTuhDataFrame:
         else:
             raise TypeError(f'Unsupported type {type(key)}')
 
+    def drop(self,
+             labels: List[str] = None,
+             index: List[str] = None,
+             columns: List[str] = None,
+             level: int = None,
+             inplace: bool = False,
+             errors: str = 'raise') -> 'BuhTuhDataFrame':
+        """
+        Drop labels/columns from the dataframe
+
+        :param: labels: not supported
+        :param: index: not supported
+        :param: columns: the list of columns to drop
+        :param: level: not supported
+        :param: inplace: whether to update this df of make a copy first
+        :param: errors: 'raise' or 'ignore' missing key errors
+        """
+        if labels or index is not None:
+            # TODO we could do this using a boolean __series__
+            raise NotImplementedError('dropping labels from index not supported.')
+
+        if level is not None:
+            raise NotImplementedError('dropping index levels not supported.')
+
+        if columns is None:
+            raise ValueError("columns needs to be an (empty) list of strings.")
+
+        if inplace:
+            df = self
+        else:
+            df = self.copy_override()
+
+        try:
+            for key in columns:
+                del(df[key])
+        except Exception as e:
+            if errors == "raise":
+                raise e
+
+        return df
+
     def astype(self, dtype: Union[str, Dict[str, str]]) -> 'BuhTuhDataFrame':
         """
         Cast all or some of the data columns to a certain type.
@@ -547,6 +588,93 @@ class BuhTuhDataFrame:
         return BuhTuhWindow(buh_tuh=self.copy_override(),
                             group_by_columns=self._partition_by_columns(by),
                             **frame_args)
+
+    def rolling(self, window: int,
+                min_periods: int = None,
+                center: bool = False,
+                on: Union[str, 'BuhTuhSeries', List[str], List['BuhTuhSeries'], None] = None,
+                closed: str = 'right') -> 'BuhTuhWindow':
+        """
+        A rolling window of size 'window', by default right aligned
+
+        :param: window: the window size
+        :param: min_periods: the min amount of rows included in the window before an actual value is
+                returned
+        :param: center: center the result, or align the result on the right
+        :param: on: the partition to use, see window()
+        :param: closed:  Make the interval closed on the ‘right’, ‘left’, ‘both’ or ‘neither’
+                endpoints. Defaults to ‘right’, and the rest is currently unsupported.
+        :note:  win_type,axis and method parameters as supported by pandas, are currently not implemented.
+        :note:  the `on` parameter behaves differently from pandas, where it can be use to select to series
+                to iterate over.
+        """
+        from buhtuh.partitioning import BuhTuhWindowFrameBoundary, BuhTuhWindowFrameMode, BuhTuhWindow
+
+        if min_periods is None:
+            min_periods = window
+
+        if min_periods > window:
+            raise ValueError(f'min_periods {min_periods} must be <= window {window}')
+
+        if closed != 'right':
+            raise NotImplementedError("Only closed=right is supported")
+
+        mode = BuhTuhWindowFrameMode.ROWS
+        end_value: Optional[int]
+        if center:
+            end_value = (window - 1) // 2
+        else:
+            end_value = 0
+
+        start_boundary = BuhTuhWindowFrameBoundary.PRECEDING
+        start_value = (window - 1) - end_value
+
+        if end_value == 0:
+            end_boundary = BuhTuhWindowFrameBoundary.CURRENT_ROW
+            end_value = None
+        else:
+            end_boundary = BuhTuhWindowFrameBoundary.FOLLOWING
+
+        return BuhTuhWindow(buh_tuh=self.copy_override(),
+                            group_by_columns=self._partition_by_columns(on),
+                            mode=mode,
+                            start_boundary=start_boundary, start_value=start_value,
+                            end_boundary=end_boundary, end_value=end_value,
+                            min_values=min_periods)
+
+    def expanding(self,
+                  min_periods: int = 1,
+                  center: bool = False,
+                  on: Union[str, 'BuhTuhSeries', List[str], List['BuhTuhSeries'], None] = None
+                  ) -> 'BuhTuhWindow':
+        """
+        Create an expanding window starting with the first row in the group, with at least min_period
+        observations. The result will be right-aligned in the window
+
+        :param: min_periods:    The minimum amount of observations in the window before a value is reported
+        :param: center:         Whether to center the result, currently not supported
+        :param: on:             The partition that will be applied. Note: this is different from pandas, where
+                                The partition is determined earlier in the process.
+        """
+        # TODO We could move the partitioning to BuhTuhGroupBy
+        from buhtuh.partitioning import BuhTuhWindowFrameBoundary, BuhTuhWindowFrameMode, BuhTuhWindow
+
+        if center:
+            # Will never be implemented probably, as it's also deprecated in pandas
+            raise NotImplementedError("centering is not implemented.")
+
+        mode = BuhTuhWindowFrameMode.ROWS
+        start_boundary = BuhTuhWindowFrameBoundary.PRECEDING
+        start_value = None
+        end_boundary = BuhTuhWindowFrameBoundary.CURRENT_ROW
+        end_value = None
+
+        return BuhTuhWindow(buh_tuh=self.copy_override(),
+                            group_by_columns=self._partition_by_columns(on),
+                            mode=mode,
+                            start_boundary=start_boundary, start_value=start_value,
+                            end_boundary=end_boundary, end_value=end_value,
+                            min_values=min_periods)
 
     def sort_values(
             self,
@@ -1074,7 +1202,7 @@ class BuhTuhSeries(ABC):
         assert isinstance(series, self.__class__)
 
         # this is massively ugly
-        return series.head(1).values[0]
+        return series.head(1).astype(series.dtype).values[0]
 
     def _window_or_agg_func(
             self,
@@ -1107,6 +1235,7 @@ class BuhTuhSeries(ABC):
                                         'int64')
 
     def nunique(self, partition: 'BuhTuhGroupBy' = None):
+        from buhtuh.partitioning import BuhTuhWindow
         if partition is not None and isinstance(partition, BuhTuhWindow):
             raise Exception("unique counts in window functions not supported (by PG at least)")
 
@@ -1328,11 +1457,10 @@ class BuhTuhSeriesAbstractNumeric(BuhTuhSeries, ABC):
         return self._get_derived_series('int64', expression)
 
     def sum(self, partition: 'BuhTuhGroupBy' = None):
-        # TODO: This cast here is rather nasty
         return self._window_or_agg_func(
             partition,
-            Expression.construct('cast(sum({}) as bigint)', self.expression),
-            'int64'
+            Expression.construct('sum({})', self.expression),
+            self.dtype
         )
 
     def average(self, partition: 'BuhTuhGroupBy' = None) -> 'BuhTuhSeriesFloat64':
@@ -1489,7 +1617,7 @@ class BuhTuhSeriesUuid(BuhTuhSeries):
     dtype = 'uuid'
     dtype_aliases = ()
     supported_db_dtype = 'uuid'
-    supported_value_types = (UUID, )
+    supported_value_types = (UUID, str)
 
     @classmethod
     def value_to_sql(cls, value: UUID) -> str:
@@ -1534,18 +1662,25 @@ class BuhTuhSeriesUuid(BuhTuhSeries):
 
     def _comparator_operator(self, other, comparator):
         other = const_to_series(base=self, value=other)
-        self._check_supported(f"comparator '{comparator}'", ['uuid'], other)
-        expression = Expression.construct(f'({{}}) {comparator} ({{}})', self.expression, other.expression)
-        return self._get_derived_series('uuid', expression)
+        self._check_supported(f"comparator '{comparator}'", ['uuid', 'string'], other)
+        if other.dtype == 'uuid':
+            expression = Expression.construct(f'({{}}) {comparator} ({{}})',
+                                              self.expression, other.expression)
+        else:
+            expression = Expression.construct(f'({{}}) {comparator} (cast({{}} as uuid))',
+                                              self.expression, other.expression)
+
+        return self._get_derived_series('boolean', expression)
 
 
-class BuhTuhSeriesJson(BuhTuhSeries):
+class BuhTuhSeriesJsonb(BuhTuhSeries):
     """
-    TODO: make this a proper class, not just a string subclass
+    this a proper class, not just a string subclass
     """
-    dtype = 'json'
-    dtype_aliases = (object, )  # type: ignore
-    supported_db_dtype = 'json'
+    dtype = 'jsonb'
+    # todo can only assign a type to one series type, and object is quite generic
+    dtype_aliases = tuple()  # type: ignore
+    supported_db_dtype = 'jsonb'
     supported_value_types = (dict, list)
 
     def __init__(self,
@@ -1564,32 +1699,60 @@ class BuhTuhSeriesJson(BuhTuhSeries):
         self.json = Json(self)
 
     @classmethod
-    def value_to_sql(cls, value: dict) -> str:
+    def value_to_sql(cls, value: Union[dict, list]) -> str:
         if not isinstance(value, cls.supported_value_types):
             raise TypeError(f'value should be dict, actual type: {type(value)}')
         json_value = json.dumps(value)
         escaped_json_value = json_value.replace("'", "''")
-        return f"cast('{escaped_json_value}' to json)"
+        print(escaped_json_value)
+        return f"cast('{escaped_json_value}' as jsonb)"
 
     @classmethod
     def from_dtype_to_sql(cls, source_dtype: str, expression: Expression) -> Expression:
-        if source_dtype == 'json':
+        if source_dtype in ['jsonb', 'json']:
             return expression
         if source_dtype != 'string':
-            raise ValueError(f'cannot convert {source_dtype} to json')
-        return Expression.construct('cast({} as json)', expression)
+            raise ValueError(f'cannot convert {source_dtype} to jsonb')
+        return Expression.construct('cast({} as jsonb)', expression)
 
     def _comparator_operator(self, other, comparator):
         other = const_to_series(base=self, value=other)
-        self._check_supported(f"comparator '{comparator}'", ['json'], other)
+        self._check_supported(f"comparator '{comparator}'", ['json', 'jsonb'], other)
         expression = Expression.construct(
-            f'({{}})::jsonb {comparator} ({{}})::jsonb',
+            f'cast({{}} as jsonb) {comparator} cast({{}} as jsonb)',
             self.expression, other.expression
         )
         return self._get_derived_series('bool', expression)
 
     def __le__(self, other) -> 'BuhTuhSeriesBoolean':
         return self._comparator_operator(other, "<@")
+
+
+class BuhTuhSeriesJson(BuhTuhSeriesJsonb):
+    """
+    this a proper class, not just a string subclass
+    """
+    dtype = 'json'
+    dtype_aliases = tuple()  # type: ignore
+    supported_db_dtype = 'json'
+
+    def __init__(self,
+                 engine,
+                 base_node: SqlModel,
+                 index: Optional[Dict[str, 'BuhTuhSeries']],
+                 name: str,
+                 expression: Expression = None,
+                 sorted_ascending: Optional[bool] = None):
+
+        if expression is None:
+            expression = Expression.construct_table_field(name)
+
+        super().__init__(engine,
+                         base_node,
+                         index,
+                         name,
+                         Expression.construct(f'cast({{}} as jsonb)', expression),
+                         sorted_ascending)
 
 
 class BuhTuhSeriesTimestamp(BuhTuhSeries):
@@ -1776,7 +1939,7 @@ class BuhTuhSeriesTimedelta(BuhTuhSeries):
         result = self._window_or_agg_func(
             partition,
             Expression.construct('sum({})', self.expression),
-            'timedelta'
+            self.dtype
         )
         return cast('BuhTuhSeriesTimedelta', result)
 
@@ -1784,7 +1947,7 @@ class BuhTuhSeriesTimedelta(BuhTuhSeries):
         result = self._window_or_agg_func(
             partition,
             Expression.construct('avg({})', self.expression),
-            'timedelta'
+            self.dtype
         )
         return cast('BuhTuhSeriesTimedelta', result)
 
