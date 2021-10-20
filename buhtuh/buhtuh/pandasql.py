@@ -305,7 +305,8 @@ class BuhTuhDataFrame:
                 engine=engine,
                 base_node=base_node,
                 index=None,  # No index for index
-                name=key
+                name=key,
+                expression=Expression.column_reference(key)
             )
         series: Dict[str, BuhTuhSeries] = {}
         for key, value in dtypes.items():
@@ -314,7 +315,8 @@ class BuhTuhDataFrame:
                 engine=engine,
                 base_node=base_node,
                 index=index,
-                name=key
+                name=key,
+                expression=Expression.column_reference(key)
             )
         return BuhTuhDataFrame(
             engine=engine,
@@ -922,7 +924,7 @@ class BuhTuhSeries(ABC):
                  base_node: SqlModel,
                  index: Optional[Dict[str, 'BuhTuhSeries']],
                  name: str,
-                 expression: Expression = None,
+                 expression: Expression,
                  sorted_ascending: Optional[bool] = None):
         """
         Initialize a new BuhTuhSeries object.
@@ -939,18 +941,14 @@ class BuhTuhSeries(ABC):
         :param index: None if this Series is part of an index. Otherwise a dict with the Series that are
                         this Series' index
         :param name: name of this Series
-        :param expression: Expression. If not set this will default to a column_reference to name, i.e. this
-            Series will represent a straight select from the column with `name` as identifier.
+        :param expression: Expression that this Series represents
         :param sorted_ascending: None for no sorting, True for sorted ascending, False for sorted descending
         """
         self._engine = engine
         self._base_node = base_node
         self._index = index
         self._name = name
-        if expression:
-            self._expression = expression
-        else:
-            self._expression = Expression.column_reference(self.name)
+        self._expression = expression
         self._sorted_ascending = sorted_ascending
 
     @property
@@ -1056,7 +1054,7 @@ class BuhTuhSeries(ABC):
             base: DataFrameOrSeries,
             name: str,
             dtype: str,
-            expression: Expression = None,
+            expression: Expression,
             sorted_ascending: Optional[bool] = None
     ) -> 'BuhTuhSeries':
         """
@@ -1076,7 +1074,7 @@ class BuhTuhSeries(ABC):
             cls,
             base: DataFrameOrSeries,
             name: str,
-            expression: Expression = None,
+            expression: Expression,
             sorted_ascending: Optional[bool] = None
     ):
         """ Create an instance of this class. """
@@ -1763,7 +1761,7 @@ class BuhTuhSeriesJsonb(BuhTuhSeries):
                  base_node: SqlModel,
                  index: Optional[Dict[str, 'BuhTuhSeries']],
                  name: str,
-                 expression: Expression = None,
+                 expression: Expression,
                  sorted_ascending: Optional[bool] = None):
         super().__init__(engine,
                          base_node,
@@ -1812,7 +1810,7 @@ class BuhTuhSeriesJson(BuhTuhSeriesJsonb):
                  base_node: SqlModel,
                  index: Optional[Dict[str, 'BuhTuhSeries']],
                  name: str,
-                 expression: Expression = None,
+                 expression: Expression,
                  sorted_ascending: Optional[bool] = None):
 
         if expression is None:
