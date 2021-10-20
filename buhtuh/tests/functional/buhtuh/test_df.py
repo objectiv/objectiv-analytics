@@ -4,7 +4,7 @@ Copyright 2021 Objectiv B.V.
 from unittest.mock import ANY
 
 import pytest
-from buhtuh import BuhTuhDataFrame, BuhTuhSeriesBoolean, BuhTuhSeriesUuid
+from buhtuh import BuhTuhDataFrame, BuhTuhSeriesBoolean, BuhTuhSeriesUuid, BuhTuhSeriesInt64, BuhTuhSeriesString
 from sql_models.graph_operations import get_graph_nodes_info
 from tests.functional.buhtuh.test_data_and_utils import get_bt_with_test_data, assert_equals_data
 
@@ -44,6 +44,82 @@ def test_drop_items():
         bt.drop(columns=['non existing column'])
 
     bt.drop(columns=['non existing column'], errors='ignore')
+
+
+def test_rename():
+    bt = get_bt_with_test_data()
+
+    nbt = bt.rename(columns={'founding': 'fnd'})
+    assert 'founding' not in nbt.data.keys()
+    assert 'fnd' in nbt.data.keys()
+    assert 'founding' in bt.data.keys()
+    assert 'fnd' not in bt.data.keys()
+    assert bt.founding.get_expression() == nbt.fnd.get_expression()
+
+    # rename to self
+    bt = get_bt_with_test_data()
+    nbt = bt.rename(columns={'city': 'city'})
+    assert 'city' in nbt.data.keys()
+    assert 'city' in bt.data.keys()
+
+    # swap
+    bt = get_bt_with_test_data()
+    expr_inhabitants = bt.inhabitants.get_expression()
+    expr_city = bt.city.get_expression()
+    nbt = bt.rename(columns={'city': 'inhabitants', 'inhabitants': 'city'})
+    assert 'city' in nbt.data.keys()
+    assert 'inhabitants' in nbt.data.keys()
+    assert nbt.city.get_expression() == expr_inhabitants
+    assert nbt.inhabitants.get_expression() == expr_city
+
+    expr = bt.founding.get_expression()
+    nbt = bt.rename(columns={'founding': 'fnd'}, inplace=True)
+    assert 'founding' not in nbt.data.keys()
+    assert 'fnd' in nbt.data.keys()
+    assert 'founding' not in bt.data.keys()
+    assert 'fnd' in bt.data.keys()
+    assert bt.fnd.get_expression() == expr
+
+    # multiple
+    bt = get_bt_with_test_data()
+    nbt = bt.rename(columns={'founding': 'fnd', 'city': 'cty'})
+    assert 'founding' not in nbt.data.keys()
+    assert 'fnd' in nbt.data.keys()
+    assert 'founding' in bt.data.keys()
+    assert 'fnd' not in bt.data.keys()
+    assert 'city' not in nbt.data.keys()
+    assert 'cty' in nbt.data.keys()
+    assert 'city' in bt.data.keys()
+    assert 'cty' not in bt.data.keys()
+
+    # through mapper dict
+    bt = get_bt_with_test_data()
+    nbt = bt.rename(mapper={'city':'cty'}, axis = 1)
+    assert 'city' not in nbt.data.keys()
+    assert 'cty' in nbt.data.keys()
+    assert 'city' in bt.data.keys()
+    assert 'cty' not in bt.data.keys()
+
+    # through mapper lambda
+    bt = get_bt_with_test_data()
+    nbt = bt.rename(mapper=lambda x: x[::-1], axis = 1)
+    assert 'city' not in nbt.data.keys()
+    assert 'ytic' in nbt.data.keys()
+    assert 'city' in bt.data.keys()
+    assert 'ytic' not in bt.data.keys()
+
+    # mapper func no rename
+    expr = bt.city.get_expression()
+    bt = get_bt_with_test_data()
+    nbt = bt.rename(mapper=lambda x: x, axis = 1)
+    assert 'city' in nbt.data.keys()
+    assert 'city' in bt.data.keys()
+    assert bt.city.get_expression() == expr
+
+    bt.rename(columns={'non existing column': 'new name'}, errors='ignore')
+
+    with pytest.raises(KeyError):
+        bt.rename(columns={'non existing column': 'new name'}, errors='raise')
 
 
 def test_combined_operations1():

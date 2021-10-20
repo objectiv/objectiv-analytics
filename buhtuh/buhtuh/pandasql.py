@@ -462,6 +462,65 @@ class BuhTuhDataFrame:
         else:
             raise ValueError(f'Key should be either a string or a list of strings, value: {key}')
 
+    def rename(self, mapper: Union[Dict[str, str], Callable[[str], str]] = None,
+               index: Union[Dict[str, str], Callable[[str], str]] = None,
+               columns: Union[Dict[str, str], Callable[[str], str]] = None,
+               axis: int = 0,
+               inplace: bool = False,
+               level: int = None,
+               errors: str = 'ignore'):
+        """
+        :param: mapper: please use columns
+        :param: index: not supported
+        :param: columns: dict str:str to rename columns, or a function that takes column
+            names as an argument and returns the new one.
+        :param: axis: axis = 1 is supported, rest is not.
+        :param: inplace: update this df or make a copy first
+        :param: level: not supported
+        :param: errors: whether to raise or ignore errors. Errors throw in the mapper function
+            are not suppressed.
+        :note: copy parameter is not supported since it makes very little sense for db backed series
+        """
+        if level is not None or\
+            index is not None or\
+                (mapper is not None and axis == 0):
+            raise NotImplementedError("index renames not supported")
+
+        if mapper is not None:
+            columns = mapper
+
+        if inplace:
+            df = self
+        else:
+            df = self.copy_override()
+
+        if callable(columns):
+            columns = {source: columns(source) for source in df.data_columns}
+
+        if not isinstance(columns, dict):
+            raise TypeError(f'unsupported argument type for columns or mappers: {type(columns)}')
+
+        # copy, remove, add strategy to support swaps
+        copies: Dict[str, 'BuhTuhSeries'] = {}
+        for source, target in columns.items():
+            if source == target:
+                continue
+            try:
+                copies[target] = cast('BuhTuhSeries', df[source])
+                del(df[source])
+            except Exception as e:
+                if errors == "raise":
+                    raise e
+
+        for target, series in copies.items():
+            try:
+                df[target] = series
+            except Exception as e:
+                if errors == "raise":
+                    raise e
+
+        return df
+
     def __delitem__(self, key: str):
         """ TODO: comments """
         if isinstance(key, str):
