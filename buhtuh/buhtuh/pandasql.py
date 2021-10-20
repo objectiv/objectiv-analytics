@@ -2,7 +2,8 @@ import datetime
 import json
 from abc import abstractmethod, ABC
 from copy import copy
-from typing import List, Set, Union, Dict, Any, Optional, Tuple, cast, Type, NamedTuple, TYPE_CHECKING
+from typing import List, Set, Union, Dict, Any, Optional, Tuple, cast, Type, NamedTuple, \
+    TYPE_CHECKING, Callable
 from uuid import UUID
 
 import numpy
@@ -10,10 +11,10 @@ import pandas
 from sqlalchemy.engine import Engine
 
 from buhtuh.expression import Expression
+from buhtuh.json import Json
 from buhtuh.types import get_series_type_from_dtype, value_to_dtype, get_dtype_from_db_dtype
 from sql_models.model import SqlModel, CustomSqlModel
 from sql_models.sql_generator import to_sql
-from buhtuh.json import Json
 
 if TYPE_CHECKING:
     from buhtuh.partitioning import BuhTuhWindow, BuhTuhGroupBy
@@ -719,6 +720,54 @@ class BuhTuhDataFrame:
             suffixes=suffixes
         )
 
+    def aggregate(self,
+                  func: Union[str, Callable, List[Union[str, Callable]],
+                              Dict[str, Union[str, Callable, List[Union[str, Callable]]]]],
+                  axis: int = 1,
+                  numeric_only: bool = False,
+                  *args, **kwargs) -> 'BuhTuhDataFrame':
+        """
+        use agg(..)
+        """
+        return self.agg(func, axis, numeric_only, *args, **kwargs)
+
+    def agg(self,
+            func: Union[str, Callable, List[Union[str, Callable]],
+                        Dict[str, Union[str, Callable, List[Union[str, Callable]]]]],
+            axis: int = 1,
+            numeric_only: bool = False,
+            *args, **kwargs) -> 'BuhTuhDataFrame':
+        """
+        :param func: the aggregation function to look for on all series.
+            See BuhTuhGroupby.agg() for supported arguments
+        :param axis: the aggregation axis
+        :param numeric_only: Whether to aggregate numeric series only, or attempt all.
+        :param args: Positional arguments to pass through to the aggregation function
+        :param kwargs: Keyword arguments to pass through to the aggregation function
+        :note: Pandas has numeric_only=None to attempt all columns but ignore failing ones
+            silently. This is currently not implemented.
+        :note: axis defaults to 1, because 0 is currently unsupported
+        """
+        if axis == 0:
+            raise NotImplementedError("Only axis=1 is currently implemented")
+
+        if numeric_only is None:
+            raise NotImplementedError("numeric_only=None to attempt all columns but ignore "
+                                      "failing ones silently is currently not implemented.")
+
+        if isinstance(func, dict):
+            return self.groupby().aggregate(func, *args, **kwargs)
+        elif isinstance(func, (str, list)) or callable(func):
+            aggregation_series = {}
+            # check whether we need to exclude non-numeric
+            for name, series in self.data.items():
+                if numeric_only and not isinstance(series, BuhTuhSeriesAbstractNumeric):
+                    continue
+                aggregation_series[name] = func
+            return self.groupby().aggregate(aggregation_series, *args, **kwargs)
+        else:
+            raise TypeError(f'Unsupported type for func: {type(func)}')
+
 
 class BuhTuhSeries(ABC):
     """
@@ -1107,6 +1156,7 @@ class BuhTuhSeries(ABC):
                                         'int64')
 
     def nunique(self, partition: 'BuhTuhGroupBy' = None):
+        from buhtuh.partitioning import BuhTuhWindow
         if partition is not None and isinstance(partition, BuhTuhWindow):
             raise Exception("unique counts in window functions not supported (by PG at least)")
 
