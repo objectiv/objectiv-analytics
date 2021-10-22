@@ -23,7 +23,7 @@ _PG_PASSWORD = os.environ.get('POSTGRES_PASSWORD', '')
 dsn = f"dbname='{_PG_DATABASE_NAME}' user='{_PG_USER}' host='{_PG_HOSTNAME}' password='{_PG_PASSWORD}' port='{_PG_PORT}'"
 
 # keep track of open connections
-connections: Dict = {}
+connections: Dict[str, dict] = {}
 
 
 def serialize(data: Dict) -> str:
@@ -78,9 +78,9 @@ def db_connect() -> Response:
         result['connected'] = True
 
     except Exception as e:
-        print(f'db is b0rken {e}')
+        print(f'failed to connect to database {e}')
 
-    return make_response(serialize(result), 200, {"Content-Type": "application/json"})
+    return make_response(serialize(result), 200, {"Content-Type": "text/plain"})
 
 
 @app.route("/disconnect", methods=["post"])
@@ -103,7 +103,7 @@ def db_disconnect() -> Response:
     return make_response(serialize(result), 200, {"Content-Type": "application/json"})
 
 
-def _get_connection(connection_id: str) :
+def _get_connection(connection_id: str):
     if connection_id in connections:
         print(f"returning connection {connection_id} -> {connections[connection_id]}")
         return connections[connection_id]['connection']
@@ -125,22 +125,27 @@ def db_query() -> Response:
     query = data['query']
 
     # run query an get resulting rows
-    cur = _get_connection(connection_id=data['connection_id']).cursor()
-    cur.execute(query)
-    rows = cur.fetchall()
-
-    # get description of result table columns
-    column_fields = ('name', 'type_code', 'display_size', 'internal_size', 'precision', 'scale', 'null_ok', 'table_oid', 'table_column')
-    description = []
-    for column in cur.description:
-        description.append([getattr(column, f) for f in column_fields if hasattr(column, f)])
-
     result = {
-        'description': description,
-        'rows': []
+        'description': [],
+        'rows': [],
+        'result': 'failed'
     }
-    for row in rows:
-        result['rows'].append({k: v for k, v in row.items()})
+
+    try:
+        cur = _get_connection(connection_id=data['connection_id']).cursor()
+        cur.execute(query)
+        rows = cur.fetchall()
+        for row in rows:
+            result['rows'].append({k: v for k, v in row.items()})
+
+        # get description of result table columns
+        column_fields = ('name', 'type_code', 'display_size', 'internal_size', 'precision', 'scale', 'null_ok', 'table_oid', 'table_column')
+
+        for column in cur.description:
+            result['description'].append([getattr(column, f) for f in column_fields if hasattr(column, f)])
+        result['result'] = 'ok'
+    except Exception as e:
+        print(f'Query failed: {e}')
 
     print(f'got query: {query}')
     print(result)

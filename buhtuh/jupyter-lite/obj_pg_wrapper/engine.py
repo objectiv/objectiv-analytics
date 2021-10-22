@@ -1,7 +1,6 @@
 import pickle
 import base64
 import json
-from pyodide import open_url
 from js import XMLHttpRequest
 from typing import List, Dict, Any
 
@@ -31,7 +30,7 @@ class Result:
             result.append([row[c] for c in row])
 
         return result
-    
+
     def fetchall_dict(self) -> List[Dict[str, Any]]:
         self.rows
 
@@ -63,7 +62,7 @@ class Connection:
 
         self._do_connect()
 
-        self.description = ''
+        self.description = None
 
     @staticmethod
     def serialize(data: Dict[str, Any]) -> str:
@@ -81,27 +80,29 @@ class Connection:
         return pickle.loads(serialized)
 
     @staticmethod
-    def _do_http_request_sync(url: str, method: str = 'GET', headers: Dict = {}, body: str = '') -> str:
+    def _do_http_request_sync(url: str, method: str = 'GET', headers: Dict = {}, body: str = '',
+                              timeout: int = 200) -> str:
 
         req = XMLHttpRequest.new()
         req.open(method, url, False)
+        req.timeout = timeout
         for header, value in enumerate(headers):
             req.setRequestHeader(header, value)
         req.send(body)
         return req.response
 
-    def _do_command(self, command: str, body: str = '') -> Dict[str, Any]:
+    def _do_command(self, command: str, body: str = '', timeout: int = 200) -> Dict[str, Any]:
         url = f'{self._endpoint}/{command}'
         headers = {'Content-Type': 'application/json'}
 
-        response = self._do_http_request_sync(url=url, method='POST', headers=headers, body=body)
-        
+        response = self._do_http_request_sync(url=url, method='POST', headers=headers, body=body, timeout=timeout)
+
         return self.unserialize(response)
 
     def _do_connect(self):
         response = self._do_command(command='connect')
         self._connection_id = response['connection_id']
-    
+
     def _do_disconnect(self):
         if not self._connection_id:
             return
@@ -118,27 +119,31 @@ class Connection:
         body = self.serialize({
             'query': query,
             'connection_id': self._connection_id
-            })
-        
+        })
+
         return self._do_command(command='query', body=body)
-        
+
     def cursor(self) -> Cursor:
         return self._cursor
 
     def execute(self, query, timeout=10000, *args, **kwargs) -> Result:
-        result = self._do_query(query, timeout)
-        self.description = result['description']
-        return Result(result['rows'])
+        self.description = None
+        response = self._do_query(query, timeout)
+        if response['result'] == 'ok':
+            self.description = response['description']
+            return Result(response['rows'])
+        else:
+            raise Exception('Query Failed')
 
     def rollback(self):
         pass
-    
+
     def commit(self):
         pass
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
