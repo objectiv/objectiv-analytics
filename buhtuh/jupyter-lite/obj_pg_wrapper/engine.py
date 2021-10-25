@@ -32,7 +32,7 @@ class Result:
         return result
 
     def fetchall_dict(self) -> List[Dict[str, Any]]:
-        self.rows
+        return self.rows
 
 
 class Cursor:
@@ -56,13 +56,14 @@ class Cursor:
 
 class Connection:
 
-    def __init__(self, dsn: str):
+    def __init__(self, dsn: str, default_timeout=20000):
         self._endpoint = dsn
         self._cursor = Cursor(self)
 
         self._do_connect()
 
         self.description = None
+        self.default_timeout = default_timeout
 
     @staticmethod
     def serialize(data: Dict[str, Any]) -> str:
@@ -80,8 +81,10 @@ class Connection:
         return pickle.loads(serialized)
 
     @staticmethod
-    def _do_http_request_sync(url: str, method: str = 'GET', headers: Dict = {}, body: str = '',
+    def _do_http_request_sync(url: str, method: str = 'GET', headers: Dict = None, body: str = '',
                               timeout: int = 200) -> str:
+        if not headers:
+            headers = {}
 
         req = XMLHttpRequest.new()
         req.open(method, url, False)
@@ -111,7 +114,9 @@ class Connection:
         if response['result'] == 'ok':
             self._connection_id = False
 
-    def _do_query(self, query: str, timeout: int) -> Dict[str, Any]:
+    def _do_query(self, query: str, timeout: int = None) -> Dict[str, Any]:
+        if not timeout:
+            timeout = self.default_timeout
 
         if not self._connection_id:
             self._do_connect()
@@ -121,12 +126,12 @@ class Connection:
             'connection_id': self._connection_id
         })
 
-        return self._do_command(command='query', body=body)
+        return self._do_command(command='query', body=body, timeout=timeout)
 
     def cursor(self) -> Cursor:
         return self._cursor
 
-    def execute(self, query, timeout=10000, *args, **kwargs) -> Result:
+    def execute(self, query, timeout=10000) -> Result:
         self.description = None
         response = self._do_query(query, timeout)
         if response['result'] == 'ok':
@@ -159,7 +164,7 @@ class Engine(Connectable):
 
     def __init__(self, dsn: str):
         self._dsn = dsn
-        self._connection = False
+        self._connection = None
 
     def connect(self) -> Connection:
         self._connection = Connection(self._dsn)
