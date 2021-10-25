@@ -10,7 +10,6 @@
   ],
   "scripts": {
     "build": "rollup -c --silent --failAfterWarnings",
-    "build:dev": "dev=true run build",
     "prettify": "prettier --write .",
     "prettify:generated": "yarn prettier --write ./src/ContextFactories.ts ./src/EventFactories.ts",
     "tsc": "tsc --noEmit",

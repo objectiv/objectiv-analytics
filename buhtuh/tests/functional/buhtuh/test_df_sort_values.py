@@ -53,7 +53,6 @@ def test_sort_values_non_existing_column():
     )
 
 
-
 def test_sort_values_parameters():
     # call sort_values with different parameters, and compare with pandas output
     bt = get_bt_with_test_data(full_data_set=True)

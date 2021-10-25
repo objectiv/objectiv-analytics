@@ -10,9 +10,9 @@ afterEach(() => {
 });
 
 describe('TrackerQueueMemoryStore', () => {
-  const TrackerEvent1 = new TrackerEvent({ _type: 'a' });
-  const TrackerEvent2 = new TrackerEvent({ _type: 'b' });
-  const TrackerEvent3 = new TrackerEvent({ _type: 'c' });
+  const TrackerEvent1 = new TrackerEvent({ id: 'a', _type: 'a' });
+  const TrackerEvent2 = new TrackerEvent({ id: 'b', _type: 'b' });
+  const TrackerEvent3 = new TrackerEvent({ id: 'c', _type: 'c' });
 
   it('should read all Events', async () => {
     const trackerQueueStore = new TrackerQueueMemoryStore({ console: mockConsole });
@@ -24,6 +24,16 @@ describe('TrackerQueueMemoryStore', () => {
     expect(events.map((event) => event._type)).toStrictEqual(['a', 'b', 'c']);
   });
 
+  it('should read 2 Events', async () => {
+    const trackerQueueStore = new TrackerQueueMemoryStore({ console: mockConsole });
+    await trackerQueueStore.write(TrackerEvent1, TrackerEvent2, TrackerEvent3);
+    expect(trackerQueueStore.length).toBe(3);
+
+    const events = await trackerQueueStore.read(2);
+
+    expect(events.map((event) => event._type)).toStrictEqual(['a', 'b']);
+  });
+
   it('should allow filtering when reading Events', async () => {
     const trackerQueueStore = new TrackerQueueMemoryStore();
     await trackerQueueStore.write(TrackerEvent1, TrackerEvent2, TrackerEvent3);
@@ -32,6 +42,28 @@ describe('TrackerQueueMemoryStore', () => {
     const events = await trackerQueueStore.read(Infinity, (event) => event._type !== 'a');
 
     expect(events.map((event) => event._type)).toStrictEqual(['b', 'c']);
+  });
+
+  it('should delete Events matching the given ids', async () => {
+    const trackerQueueStore = new TrackerQueueMemoryStore();
+    await trackerQueueStore.write(TrackerEvent1, TrackerEvent2, TrackerEvent3);
+    expect(trackerQueueStore.length).toBe(3);
+
+    await trackerQueueStore.delete(['a', 'c']);
+
+    expect(trackerQueueStore.events.map((event) => event._type)).toStrictEqual(['b']);
+    expect(trackerQueueStore.length).toBe(1);
+  });
+
+  it('should delete all Events', async () => {
+    const trackerQueueStore = new TrackerQueueMemoryStore();
+    await trackerQueueStore.write(TrackerEvent1, TrackerEvent2, TrackerEvent3);
+    expect(trackerQueueStore.length).toBe(3);
+
+    await trackerQueueStore.clear();
+
+    expect(trackerQueueStore.events).toStrictEqual([]);
+    expect(trackerQueueStore.length).toBe(0);
   });
 });
 
@@ -151,6 +183,31 @@ describe('TrackerQueue', () => {
     expect(processFunctionSpy).toHaveBeenNthCalledWith(3, ...[TrackerEvent7]);
     expect(testQueue.store.length).toBe(0);
     expect(testQueue.processingEventIds).toHaveLength(0);
+  });
+
+  it('should flush pending events', async () => {
+    const TrackerEvent4 = new TrackerEvent({ _type: 'd' });
+    const TrackerEvent5 = new TrackerEvent({ _type: 'e' });
+    const TrackerEvent6 = new TrackerEvent({ _type: 'f' });
+    const TrackerEvent7 = new TrackerEvent({ _type: 'g' });
+    const processFunctionSpy = jest.fn(() => Promise.resolve());
+    const testQueue = new TrackerQueue({ batchSize: 3, concurrency: 3 });
+    testQueue.setProcessFunction(processFunctionSpy);
+    await testQueue.push(
+      TrackerEvent1,
+      TrackerEvent2,
+      TrackerEvent3,
+      TrackerEvent4,
+      TrackerEvent5,
+      TrackerEvent6,
+      TrackerEvent7
+    );
+    expect(testQueue.store.length).toBe(7);
+
+    await testQueue.flush();
+
+    expect(testQueue.store.length).toBe(0);
+    expect(testQueue.isIdle()).toBe(true);
   });
 
   it('startRunner should start the setInterval that will execute `run` automatically after enough time', async () => {

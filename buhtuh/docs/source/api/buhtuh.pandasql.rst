@@ -31,6 +31,7 @@ buhtuh.pandasql
       BuhTuhSeriesFloat64
       BuhTuhSeriesInt64
       BuhTuhSeriesJson
+      BuhTuhSeriesJsonb
       BuhTuhSeriesString
       BuhTuhSeriesTime
       BuhTuhSeriesTimedelta

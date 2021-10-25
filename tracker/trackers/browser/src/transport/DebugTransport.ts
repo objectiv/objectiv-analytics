@@ -1,15 +1,15 @@
 import {
   NonEmptyArray,
   TrackerConsole,
-  TrackerTransport,
   TrackerTransportConfig,
+  TrackerTransportInterface,
   TransportableEvent,
 } from '@objectiv/tracker-core';
 
 /**
  * A TrackerTransport that simply logs TrackerEvents to the console as debug messages.
  */
-export class DebugTransport implements TrackerTransport {
+export class DebugTransport implements TrackerTransportInterface {
   readonly console?: TrackerConsole;
   readonly transportName = 'DebugTransport';
 

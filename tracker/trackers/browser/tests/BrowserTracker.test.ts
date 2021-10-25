@@ -1,4 +1,4 @@
-import { TrackerEvent, TrackerPlugins, TransportGroup } from '@objectiv/tracker-core';
+import { TrackerEvent, TrackerPlugins, TrackerQueue, TrackerTransportRetry } from '@objectiv/tracker-core';
 import fetchMock from 'jest-fetch-mock';
 import { clear, mockUserAgent } from 'jest-useragent-mock';
 import { BrowserTracker, defaultFetchFunction, FetchAPITransport } from '../src/';
@@ -29,47 +29,36 @@ describe('BrowserTracker', () => {
   it('should instantiate with `applicationId` and `endpoint`', () => {
     const testTracker = new BrowserTracker({ applicationId: 'app-id', endpoint: 'localhost' });
     expect(testTracker).toBeInstanceOf(BrowserTracker);
-    expect(testTracker.transport).toBeInstanceOf(TransportGroup);
+    expect(testTracker.transport).toBeInstanceOf(TrackerTransportRetry);
     expect(testTracker.transport).toEqual({
-      transportName: 'TransportGroup',
-      usableTransports: [
-        {
-          transportName: 'QueuedTransport',
-          queue: {
-            queueName: 'TrackerQueue',
-            batchDelayMs: 1000,
-            batchSize: 10,
-            concurrency: 4,
-            processFunction: expect.any(Function),
-            processingEventIds: [],
-            store: {
-              queueStoreName: 'TrackerQueueMemoryStore',
-              length: 0,
-              events: [],
-            },
-          },
-          transport: {
-            transportName: 'RetryTransport',
-            maxAttempts: 10,
-            maxRetryMs: Infinity,
-            maxTimeoutMs: Infinity,
-            minTimeoutMs: 1000,
-            retryFactor: 2,
-            attempts: [],
-            transport: {
-              transportName: 'TransportSwitch',
-              firstUsableTransport: {
-                transportName: 'FetchAPITransport',
-                endpoint: 'localhost',
-                fetchFunction: defaultFetchFunction,
-              },
-            },
-          },
+      transportName: 'TrackerTransportRetry',
+      maxAttempts: 10,
+      maxRetryMs: Infinity,
+      maxTimeoutMs: Infinity,
+      minTimeoutMs: 1000,
+      retryFactor: 2,
+      attempts: [],
+      transport: {
+        transportName: 'TrackerTransportSwitch',
+        firstUsableTransport: {
+          transportName: 'FetchAPITransport',
+          endpoint: 'localhost',
+          fetchFunction: defaultFetchFunction,
         },
-        {
-          transportName: 'DebugTransport',
-        },
-      ],
+      },
+    });
+    expect(testTracker.queue).toBeInstanceOf(TrackerQueue);
+    expect(testTracker.queue).toEqual({
+      queueName: 'TrackerQueue',
+      batchDelayMs: 1000,
+      batchSize: 10,
+      concurrency: 4,
+      processFunction: expect.any(Function),
+      processingEventIds: [],
+      store: {
+        queueStoreName: 'TrackerQueueLocalStorageStore',
+        localStorageKey: 'objectiv-events-queue-app-id',
+      },
     });
   });
 

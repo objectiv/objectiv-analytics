@@ -1,6 +1,6 @@
-import { TrackerConsole, TrackerTransport, TrackerTransportConfig } from '../../src';
+import { TrackerConsole, TrackerTransportConfig, TrackerTransportInterface } from '../../src';
 
-export class UnusableTransport implements TrackerTransport {
+export class UnusableTransport implements TrackerTransportInterface {
   readonly console?: TrackerConsole;
   readonly transportName = 'UnusableTransport';
 

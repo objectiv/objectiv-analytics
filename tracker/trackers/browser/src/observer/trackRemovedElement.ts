@@ -1,8 +1,8 @@
-import { parseVisibilityAttribute } from '../structs';
+import { parseTrackVisibilityAttribute } from '../structs';
 import { TaggingAttribute } from '../TaggingAttribute';
 import { BrowserTracker } from '../tracker/BrowserTracker';
-import { trackerErrorHandler } from '../trackerErrorHandler';
 import { trackSectionHidden } from '../tracker/trackEventHelpers';
+import { trackerErrorHandler } from '../trackerErrorHandler';
 import { isTaggedElement } from '../typeGuards';
 
 /**
@@ -15,7 +15,7 @@ export const trackRemovedElement = (element: Element, tracker: BrowserTracker) =
       if (!element.hasAttribute(TaggingAttribute.trackVisibility)) {
         return;
       }
-      const trackVisibility = parseVisibilityAttribute(element.getAttribute(TaggingAttribute.trackVisibility));
+      const trackVisibility = parseTrackVisibilityAttribute(element.getAttribute(TaggingAttribute.trackVisibility));
       if (trackVisibility.mode === 'auto') {
         trackSectionHidden({ element, tracker });
       }

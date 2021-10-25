@@ -3,7 +3,8 @@ Copyright 2021 Objectiv B.V.
 """
 import pytest
 
-from buhtuh import BuhTuhSeries, Expression
+from buhtuh import BuhTuhSeries
+from buhtuh.expression import Expression
 from buhtuh.types import register_dtype, get_series_type_from_dtype, value_to_dtype, TypeRegistry
 from tests.functional.buhtuh.test_data_and_utils import get_bt_with_test_data, assert_equals_data
 
@@ -60,21 +61,18 @@ class ReversedStringType(BuhTuhSeries):
     supported_db_dtype = 'text'
     supported_value_types = (str,)
 
-    @staticmethod
-    def value_to_sql(value: str) -> str:
-        if not isinstance(value, str):
-            raise TypeError(f'value should be str, actual type: {type(value)}')
-        # TODO: fix sql injection!
-        return f"'{reversed(value)}'"
+    @classmethod
+    def supported_value_to_expression(cls, value: str) -> Expression:
+        return Expression.string_value(str(reversed(value)))
 
-    @staticmethod
-    def from_dtype_to_sql(source_dtype: str, expression: Expression) -> Expression:
+    @classmethod
+    def dtype_to_expression(cls, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'reversed_string':
             return expression
         elif source_dtype == 'String':
             return Expression.construct('reverse({})', expression)
         else:
-            return Expression.construct('reverse(({})::text)', expression)
+            return Expression.construct('reverse(cast({} as text))', expression)
 
 
 def test_custom_type(monkeypatch):
@@ -94,8 +92,6 @@ def test_custom_type(monkeypatch):
         _registry.register_dtype_series(ReversedStringType, [], False)
     # with override_dtype=True, the error should disappear and 'reversed_string' should be registered
     _registry.register_dtype_series(ReversedStringType, [], override_registered_types=True)
-
-
 
     bt_city_special = bt_city.astype('reversed_string')
 

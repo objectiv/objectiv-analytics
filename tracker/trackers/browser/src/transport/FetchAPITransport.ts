@@ -4,8 +4,8 @@ import {
   NonEmptyArray,
   TrackerConsole,
   TrackerEvent,
-  TrackerTransport,
   TrackerTransportConfig,
+  TrackerTransportInterface,
   TransportableEvent,
   TransportSendError,
 } from '@objectiv/tracker-core';
@@ -104,7 +104,7 @@ export type FetchAPITransportConfig = TrackerTransportConfig &
  * A TrackerTransport based on Fetch API. Sends event to the specified Collector endpoint.
  * Optionally supports specifying a custom `fetchFunction`.
  */
-export class FetchAPITransport implements TrackerTransport {
+export class FetchAPITransport implements TrackerTransportInterface {
   readonly console?: TrackerConsole;
   readonly endpoint?: string;
   readonly transportName = 'FetchAPITransport';

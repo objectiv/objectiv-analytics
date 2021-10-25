@@ -1,59 +1,10 @@
 import { Tracker, TrackerConsole } from './Tracker';
 import { TrackerEvent } from './TrackerEvent';
-
-/**
- * All possible lifecycle methods of a TrackerPlugin.
- */
-export interface TrackerPluginLifecycle {
-  /**
-   * Executed when the Tracker initializes.
-   * Useful to register event listeners that execute autonomously. Eg: URLChangeEvent
-   */
-  initialize?: (tracker: Tracker) => void;
-
-  /**
-   * Executed before the TrackerEvent is handed over to the TrackerTransport.
-   * Useful to gather Contexts that may have changed from the last TrackerEvent tracking. Eg: URL, Time, User, etc
-   */
-  beforeTransport?: (event: TrackerEvent) => void;
-}
-
-/**
- * A TrackerPlugin must define its own `pluginName` and may define TrackerPluginLifecycle callbacks.
- * It also defines a method to determine if the plugin can be used. Similarly to the Transport interface, this can
- * be used to check environment requirements, APIs availability, etc.
- */
-export interface TrackerPlugin extends TrackerPluginLifecycle {
-  readonly console?: TrackerConsole;
-  readonly pluginName: string;
-
-  /**
-   * Should return if the TrackerPlugin can be used. Eg: a browser based plugin may want to return `false` during SSR.
-   */
-  isUsable(): boolean;
-}
-
-/**
- * The TrackerPluginConfig.
- */
-export type TrackerPluginConfig = {
-  /**
-   * Optional. A TrackerConsole instance for logging.
-   */
-  console?: TrackerConsole;
-};
-
-/**
- * The TrackerPlugin constructor interface.
- */
-export interface TrackerPluginConstructor {
-  new (pluginConfig: TrackerPluginConfig): TrackerPlugin;
-}
+import { TrackerPluginConfig, TrackerPluginInterface } from './TrackerPluginInterface';
+import { TrackerPluginLifecycleInterface } from './TrackerPluginLifecycleInterface';
 
 /**
  * TrackerPlugins can be specified by instance, name or even on the fly as Objects.
- *
- * TODO add support for functions when TS fixes this: https://github.com/microsoft/TypeScript/issues/37663
  *
  * @example
  *
@@ -93,7 +44,7 @@ export interface TrackerPluginConstructor {
  *
  */
 export type TrackerPluginsConfiguration = TrackerPluginConfig & {
-  plugins: TrackerPlugin[];
+  plugins: TrackerPluginInterface[];
 };
 
 /**
@@ -104,9 +55,9 @@ export type TrackerPluginsConfiguration = TrackerPluginConfig & {
  * Plugins mutations. For example a plugin meant to access the finalized version of the TrackerEvent should be placed
  * at the bottom of the list.
  */
-export class TrackerPlugins implements TrackerPluginLifecycle {
+export class TrackerPlugins implements TrackerPluginLifecycleInterface {
   readonly console?: TrackerConsole;
-  readonly plugins: TrackerPlugin[];
+  readonly plugins: TrackerPluginInterface[];
 
   /**
    * Plugins can be lazy. Map through them to instantiate them.

@@ -17,7 +17,11 @@ buhtuh.partitioning
 
    .. autosummary::
    
+      BuhTuhCube
       BuhTuhGroupBy
+      BuhTuhGroupingList
+      BuhTuhGroupingSet
+      BuhTuhRollup
       BuhTuhWindow
       BuhTuhWindowFrameBoundary
       BuhTuhWindowFrameMode

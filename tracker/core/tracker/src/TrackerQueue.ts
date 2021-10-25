@@ -1,96 +1,9 @@
 import { isNonEmptyArray, NonEmptyArray } from './helpers';
 import { TrackerConsole } from './Tracker';
 import { TrackerEvent } from './TrackerEvent';
-
-/**
- * Our Tracker Queue Store generic interface.
- */
-export interface TrackerQueueStoreInterface {
-  /**
-   * Optional. A TrackerConsole instance for logging.
-   */
-  readonly console?: TrackerConsole;
-
-  /**
-   * A name describing the Queue Store implementation for debugging purposes
-   */
-  readonly queueStoreName: string;
-
-  /**
-   * How many TrackerEvents are in the store
-   */
-  length: number;
-
-  /**
-   * Read Events from the store, if `size` is omitted all TrackerEvents will be returned
-   */
-  read(size?: number, filterPredicate?: (event: TrackerEvent) => boolean): Promise<TrackerEvent[]>;
-
-  /**
-   * Write Events to the store
-   */
-  write(...args: NonEmptyArray<TrackerEvent>): Promise<any>;
-
-  /**
-   * Delete TrackerEvents from the store
-   */
-  delete(TrackerEventIds: string[]): Promise<any>;
-}
-
-/**
- * The TrackerQueueStoreConfig object.
- */
-export type TrackerQueueStoreConfig = {
-  /**
-   * Optional. A TrackerConsole instance for logging.
-   */
-  console?: TrackerConsole;
-};
-
-/**
- * An in-memory implementation of a TrackerQueueStore.
- */
-export class TrackerQueueMemoryStore implements TrackerQueueStoreInterface {
-  readonly console?: TrackerConsole;
-  queueStoreName = `TrackerQueueMemoryStore`;
-  length: number = 0;
-  events: TrackerEvent[] = [];
-
-  constructor(config?: TrackerQueueStoreConfig) {
-    this.console = config?.console;
-
-    if (this.console) {
-      this.console.log(`%c｢objectiv:${this.queueStoreName}｣ Initialized`, 'font-weight: bold');
-    }
-  }
-
-  async read(size?: number, filterPredicate?: (event: TrackerEvent) => boolean): Promise<TrackerEvent[]> {
-    let events = this.events;
-    if (filterPredicate) {
-      events = events.filter(filterPredicate);
-    }
-    return events.slice(0, size);
-  }
-
-  async write(...args: NonEmptyArray<TrackerEvent>): Promise<any> {
-    this.events.push(...args);
-    this.updateLength();
-  }
-
-  async delete(trackerEventIds: string[]): Promise<any> {
-    this.events = this.events.filter((trackerEvent) => !trackerEventIds.includes(trackerEvent.id));
-    this.updateLength();
-  }
-
-  updateLength(): void {
-    this.length = this.events.length;
-  }
-}
-
-/**
- * The definition of the runner function. Gets executed every batchDelayMs to process the Queue.
- */
-type TrackerQueueProcessFunction = (...args: NonEmptyArray<TrackerEvent>) => Promise<any>;
+import { TrackerQueueInterface, TrackerQueueProcessFunction } from './TrackerQueueInterface';
+import { TrackerQueueMemoryStore } from './TrackerQueueMemoryStore';
+import { TrackerQueueStoreInterface } from './TrackerQueueStoreInterface';
 
 /**
  * The configuration of a TrackerQueue
@@ -121,70 +34,6 @@ export type TrackerQueueConfig = {
    */
   concurrency?: number;
 };
-
-/**
- * Our Tracker Events Queue generic interface.
- */
-export interface TrackerQueueInterface {
-  /**
-   * Optional. A TrackerConsole instance for logging.
-   */
-  readonly console?: TrackerConsole;
-
-  /**
-   * The TrackerQueueStore to use. Defaults to TrackerQueueMemoryStore
-   */
-  readonly store: TrackerQueueStoreInterface;
-
-  /**
-   * How many events to dequeue at the same time. Defaults to 10;
-   */
-  readonly batchSize: number;
-
-  /**
-   * How often to re-run and dequeue again, in ms. Defaults to 1000.
-   */
-  readonly batchDelayMs: number;
-
-  /**
-   * How many batches to process simultaneously. Defaults to 4.
-   */
-  readonly concurrency: number;
-  /**
-   * The function to execute every batchDelayMs. Must be set with `setProcessFunction` before calling `run`
-   */
-  processFunction?: TrackerQueueProcessFunction;
-
-  /**
-   * A name describing the Queue implementation for debugging purposes
-   */
-  readonly queueName: string;
-
-  /**
-   * Sets the processFunction to execute whenever run is called
-   */
-  setProcessFunction(processFunction: TrackerQueueProcessFunction): void;
-
-  /**
-   * Starts the runner process
-   */
-  startRunner(): void;
-
-  /**
-   * Adds one or more TrackerEvents to the Queue
-   */
-  push(...args: NonEmptyArray<TrackerEvent>): Promise<any>;
-
-  /**
-   * Adds one or more TrackerEvents to the Queue
-   */
-  readBatch(): Promise<TrackerEvent[]>;
-
-  /**
-   * Fetches a batch of Events from the Queue and executes the given `processFunction` with them.
-   */
-  run(): Promise<any>;
-}
 
 /**
  * A very simple Batched Queue implementation.
@@ -286,5 +135,13 @@ export class TrackerQueue implements TrackerQueueInterface {
     }
 
     return Promise.all(processPromises);
+  }
+
+  async flush(): Promise<any> {
+    return this.store.clear();
+  }
+
+  isIdle(): boolean {
+    return this.store.length === 0 && this.processingEventIds.length === 0;
   }
 }

@@ -22,4 +22,7 @@ export enum TaggingAttribute {
 
   // A list of serialized ChildrenTaggingQuery objects
   tagChildren = 'data-objectiv-tag-children',
+
+  // Set to `true` by the Mutation Observer when an Element has been processed for auto-tracking
+  tracked = 'data-objectiv-tracked',
 }

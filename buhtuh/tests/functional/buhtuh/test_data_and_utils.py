@@ -66,20 +66,23 @@ RAILWAYS_COLUMNS = ['station_id', 'town', 'station', 'platforms']
 RAILWAYS_INDEX_AND_COLUMNS = ['_index_station_id'] + RAILWAYS_COLUMNS
 
 TEST_DATA_JSON = [
-    [0, '{"a": "b"}','[{"a": "b"}, {"c": "d"}]'],
-    [1, '{"_type": "SectionContext", "id": "home"}','["a","b","c","d"]'],
-    [2, '{"a": "b", "c": {"a": "c"}}','[{"_type": "a", "id": "b"},{"_type": "c", "id": "d"},{"_type": "e", "id": "f"}]'],
-    [3, '{"a": "b", "e": [{"a": "b"}, {"c": "d"}]}','[{"_type":"WebDocumentContext","id":"#document"},{"_type":"SectionContext","id":"home"},{"_type":"SectionContext","id":"top-10"},{"_type":"ItemContext","id":"5o7Wv5Q5ZE"}]']
+    [0, '{"a": "b"}', '[{"a": "b"}, {"c": "d"}]'],
+    [1, '{"_type": "SectionContext", "id": "home"}', '["a","b","c","d"]'],
+    [2, '{"a": "b", "c": {"a": "c"}}', '[{"_type": "a", "id": "b"},{"_type": "c", "id": "d"},{"_type": "e", "id": "f"}]'],
+    [3, '{"a": "b", "e": [{"a": "b"}, {"c": "d"}]}', '[{"_type":"WebDocumentContext","id":"#document"},{"_type":"SectionContext","id":"home"},{"_type":"SectionContext","id":"top-10"},{"_type":"ItemContext","id":"5o7Wv5Q5ZE"}]']
 ]
 JSON_COLUMNS = ['row', 'dict_column', 'list_column']
 JSON_INDEX_AND_COLUMNS = ['_row_id'] + JSON_COLUMNS
 
 
 def _get_bt(table, dataset, columns, convert_objects) -> BuhTuhDataFrame:
-    engine = sqlalchemy.create_engine(DB_TEST_URL)
     import pandas as pd
     df = pd.DataFrame.from_records(dataset, columns=columns)
-    df.set_index(columns[0], drop=False, inplace=True)
+    return get_from_df(table, df, convert_objects)
+
+
+def get_from_df(table, df, convert_objects = True):
+    df.set_index(df.columns[0], drop=False, inplace=True)
 
     if 'moment' in df.columns:
         df['moment'] = df['moment'].astype('datetime64')
@@ -87,6 +90,7 @@ def _get_bt(table, dataset, columns, convert_objects) -> BuhTuhDataFrame:
     if 'date' in df.columns:
         df['date'] = df['date'].astype('datetime64')
 
+    engine = sqlalchemy.create_engine(DB_TEST_URL)
     buh_tuh = BuhTuhDataFrame.from_dataframe(df, table, engine, convert_objects=convert_objects, if_exists='replace')
     return buh_tuh
 
@@ -131,6 +135,7 @@ def assert_equals_data(
     """
     Execute sql of ButTuhDataFrame/Series, with the given order_by, and make sure the result matches
     the expected columns and data.
+    :return: the values queried from the database
     """
     if len(expected_data) == 0:
         raise ValueError("Cannot check data if 0 rows are expected.")
@@ -148,6 +153,7 @@ def assert_equals_data(
     for i, df_row in enumerate(db_values):
         expected_row = expected_data[i]
         assert df_row == expected_row, f'row {i} is not equal: {expected_row} != {df_row}'
+    return db_values
 
 
 def assert_db_type(
@@ -171,4 +177,3 @@ def assert_db_type(
         assert db_type == expected_db_type
     series_type = get_series_type_from_db_dtype(db_type)
     assert series_type == expected_series_type
-

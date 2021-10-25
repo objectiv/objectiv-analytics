@@ -1,4 +1,4 @@
-import { getTracker, getTrackerRepository } from './globals';
+import { getTrackerRepository } from './globals';
 import { startAutoTracking } from './observer/startAutoTracking';
 import { BrowserTracker, BrowserTrackerConfig } from './tracker/BrowserTracker';
 
@@ -10,7 +10,7 @@ export const makeTracker = (trackerConfig: BrowserTrackerConfig): BrowserTracker
   const trackerRepository = getTrackerRepository();
 
   trackerRepository.add(newTracker);
-  startAutoTracking(trackerConfig, getTracker(newTracker.trackerId));
+  startAutoTracking(trackerConfig);
 
   return newTracker;
 };

@@ -1,9 +1,3 @@
-from typing import Type, Tuple, Any, TypeVar, List, TYPE_CHECKING, Dict, Hashable, cast, Union
-import datetime
-from uuid import UUID
-
-import numpy
-
 """
 Copyright 2021 Objectiv B.V.
 
@@ -14,8 +8,14 @@ To prevent cyclic imports, the functions in this file should not be used by pand
 is fully initialized (that is, only use within functions).
 """
 
+from typing import Type, Tuple, Any, TypeVar, List, TYPE_CHECKING, Dict, Hashable, cast, Union
+import datetime
+from uuid import UUID
+
+import numpy
+
 if TYPE_CHECKING:
-    from buhtuh.pandasql import BuhTuhSeries
+    from buhtuh.series import BuhTuhSeries
 
 
 def get_series_type_from_dtype(dtype: Union[Type, str]) -> Type['BuhTuhSeries']:
@@ -96,10 +96,11 @@ class TypeRegistry:
             return
 
         # Import locally to prevent cyclic imports
-        from buhtuh.pandasql import BuhTuhSeriesBoolean, BuhTuhSeriesInt64, \
-            BuhTuhSeriesFloat64, BuhTuhSeriesString, BuhTuhSeriesTimestamp, \
-            BuhTuhSeriesDate, BuhTuhSeriesTime, BuhTuhSeriesTimedelta, BuhTuhSeriesUuid, \
-            BuhTuhSeriesJsonb, BuhTuhSeriesJson
+        from buhtuh.series import \
+            BuhTuhSeriesBoolean, BuhTuhSeriesInt64, BuhTuhSeriesFloat64, BuhTuhSeriesString,\
+            BuhTuhSeriesTimestamp, BuhTuhSeriesDate, BuhTuhSeriesTime, BuhTuhSeriesTimedelta,\
+            BuhTuhSeriesUuid, BuhTuhSeriesJsonb, BuhTuhSeriesJson
+
         standard_types: List[Type[BuhTuhSeries]] = [
             BuhTuhSeriesBoolean, BuhTuhSeriesInt64, BuhTuhSeriesFloat64, BuhTuhSeriesString,
             BuhTuhSeriesTimestamp, BuhTuhSeriesDate, BuhTuhSeriesTime, BuhTuhSeriesTimedelta,
@@ -196,7 +197,7 @@ class TypeRegistry:
         """
         self._real_init()
         # exception for values that are BuhTuhSeries. Check: do we need this exception?
-        from buhtuh.pandasql import BuhTuhSeries
+        from buhtuh.series import BuhTuhSeries
         if isinstance(value, BuhTuhSeries):
             return value.dtype
         # iterate in reverse, the last item added that matches is used in case where multiple entries

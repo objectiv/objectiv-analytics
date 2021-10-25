@@ -1,6 +1,8 @@
 import {
+  makeAbortedEvent,
   makeApplicationLoadedEvent,
   makeClickEvent,
+  makeCompletedEvent,
   makeDeviceContext,
   makeDocumentLoadedEvent,
   makeInputChangeEvent,
@@ -248,6 +250,38 @@ describe('Event Factories', () => {
     expect(makeInputChangeEvent({ location_stack: [sectionA], global_contexts: [device] })).toStrictEqual({
       __interactive_event: true,
       _type: 'InputChangeEvent',
+      global_contexts: [device],
+      location_stack: [sectionA],
+    });
+  });
+
+  it('CompletedEvent', () => {
+    expect(makeCompletedEvent()).toStrictEqual({
+      __non_interactive_event: true,
+      _type: 'CompletedEvent',
+      global_contexts: [],
+      location_stack: [],
+    });
+
+    expect(makeCompletedEvent({ location_stack: [sectionA], global_contexts: [device] })).toStrictEqual({
+      __non_interactive_event: true,
+      _type: 'CompletedEvent',
+      global_contexts: [device],
+      location_stack: [sectionA],
+    });
+  });
+
+  it('AbortedEvent', () => {
+    expect(makeAbortedEvent()).toStrictEqual({
+      __non_interactive_event: true,
+      _type: 'AbortedEvent',
+      global_contexts: [],
+      location_stack: [],
+    });
+
+    expect(makeAbortedEvent({ location_stack: [sectionA], global_contexts: [device] })).toStrictEqual({
+      __non_interactive_event: true,
+      _type: 'AbortedEvent',
       global_contexts: [device],
       location_stack: [sectionA],
     });

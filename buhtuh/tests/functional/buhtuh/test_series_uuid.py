@@ -5,13 +5,12 @@ import uuid
 from unittest.mock import ANY
 
 import pytest
-from psycopg2 import DataError
 
 from buhtuh import BuhTuhSeriesUuid
 from tests.functional.buhtuh.test_data_and_utils import get_bt_with_test_data, assert_equals_data, run_query
 
 
-def test_uuid_value_to_sql():
+def test_uuid_value_to_expression():
     bt = get_bt_with_test_data()[['city']]
     bt['x'] = uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264')
     bt['y'] = '0022c7dd-074b-4a44-a7cb-b7716b668264'
@@ -19,6 +18,11 @@ def test_uuid_value_to_sql():
     bt['z'] = bt.x == bt.y
     bt['zz'] = bt.x != '0022c7da-074b-4a44-a7cb-b7716b668263'
     bt['zzz'] = bt.x == bt.yy
+
+    with pytest.raises(ValueError):
+        # not a valid uuid format
+        bt['yyyy'] = BuhTuhSeriesUuid.from_const(
+            base=bt, value='0022c7dd.074b.4a44.a7cb.b7716b668264', name='tmp')
 
     assert_equals_data(
         bt,
@@ -126,4 +130,3 @@ def test_uuid_compare():
             [3, 'Drylts', True, False, True, True, False],
         ]
     )
-

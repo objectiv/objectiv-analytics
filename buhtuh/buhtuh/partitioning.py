@@ -1,8 +1,9 @@
 from enum import Enum
-from typing import List, Union, Dict, Any
+from typing import List, Union, Dict, Any, Callable
 
-from buhtuh import Expression
-from buhtuh.pandasql import BuhTuhSeries, BuhTuhSeriesInt64, BuhTuhDataFrame
+from buhtuh.series import BuhTuhSeries, BuhTuhSeriesInt64, BuhTuhSeriesAbstractNumeric
+from buhtuh.expression import Expression
+from buhtuh.pandasql import BuhTuhDataFrame
 from sql_models.model import CustomSqlModel
 
 
@@ -77,49 +78,81 @@ class BuhTuhGroupBy:
                                 if name not in self.groupby.keys()}
 
     def _get_group_by_expression(self):
-        return ', '.join(g.get_expression() for g in self.groupby.values())
+        return ', '.join(g.expression.to_sql() for g in self.groupby.values())
 
-    def aggregate(
-            self,
-            series: Union[Dict[str, str], List[str]],
-            aggregations: List[str] = None
-    ) -> BuhTuhDataFrame:
+    def aggregate(self,
+                  func: Union[str, Callable, List[Union[str, Callable]],
+                              Dict[str, Union[str, Callable, List[Union[str, Callable]]]]],
+                  *args,
+                  **kwargs) -> BuhTuhDataFrame:
+        return self.agg(func, *args, **kwargs)
+
+    def agg(self,
+            func: Union[str, Callable, List[Union[str, Callable]],
+                        Dict[str, Union[str, Callable, List[Union[str, Callable]]]]],
+            *args,
+            **kwargs) -> BuhTuhDataFrame:
         """
-        Execute requested aggregations on this groupby
+        Aggregate using one or more operations over the specified axis.
+        :param func:    function, str, list or dict
+            Function to use for aggregating the data. If a function, must work when passed a
+            BuhTuhSeries.
 
-        :param series: a dict containing 'name': 'aggregation_method'.
-            In case you need duplicates: a list of 'name's is also supported, but aggregations
-            should have the same length list with the aggregation methods requested
-        :param aggregations: The aggregation methods requested in case series is a list.
-        :return: a new BuhTuhDataFrame containing the requested aggregations
+            Accepted combinations are:
+            - function
+            - string function name
+            - list of functions and/or function names, e.g. [BuhTuhSeriesInt64.sum, 'mean']
+            - dict of axis labels -> functions, function names or list of such.
+        :param args: positional arguments to be passed to the aggregation func
+        :param kwargs: keywords arguments to be passed to the aggregation func
+
+        :return a new BuhTuhDataFrame containing the requested aggregations
         """
-
         new_series_dtypes = {}
         aggregate_columns = []
 
-        if isinstance(series, list):
-            if not isinstance(aggregations, list):
-                raise ValueError('aggregations must be a list if series is a list')
-            if len(series) != len(aggregations):
-                raise ValueError(f'Length of series should match length of aggregations: '
-                                 f'{len(series)} != {len(aggregations)}')
-        elif isinstance(series, dict):
-            aggregations = list(series.values())
-            series = list(series.keys())
+        aggregations: Dict[str, List[Union[str, Callable]]] = {}
+        if isinstance(func, dict):
+            # make sure the keys are series we know
+            for k, v in func.items():
+                if k not in self.aggregated_data:
+                    raise KeyError(f'{k} not found in group by series')
+                if isinstance(v, str) or callable(v):
+                    aggregations[k] = [v]
+                elif isinstance(v, list):
+                    aggregations[k] = v
+                else:
+                    raise TypeError(f'Unsupported value type {type(func)} in func dict for key {k}')
+        elif isinstance(func, str) or callable(func):
+            aggregations = {k: [func] for k in self.aggregated_data.keys()}
+        elif isinstance(func, list):
+            aggregations = {k: func for k in self.aggregated_data.keys()}
         else:
-            raise TypeError()
+            raise TypeError(f'Unsupported argument type for func:  {type(func)}')
 
-        for name, aggregation in list(zip(series, aggregations)):
-            data_series = self.aggregated_data[name]
-            func = getattr(data_series, aggregation)
-            agg_series = func(self)
-            name = f'{agg_series.name}_{aggregation}'
-            agg_series = BuhTuhSeries.get_instance(base=self.buh_tuh,
-                                                   name=name,
-                                                   dtype=agg_series.dtype,
-                                                   expression=agg_series.expression)
-            aggregate_columns.append(agg_series.get_column_expression())
-            new_series_dtypes[agg_series.name] = agg_series.dtype
+        for name, aggregation_list in aggregations.items():
+            for aggregation in aggregation_list:
+                data_series = self.aggregated_data[name]
+                if callable(aggregation):
+                    agg_func = aggregation
+                    agg_series_name = f'{data_series.name}_{agg_func.__name__}'
+                else:
+                    agg_func = getattr(data_series, aggregation)
+                    agg_series_name = f'{data_series.name}_{aggregation}'
+
+                # If the method is bound yet (__self__ set), we need to use the unbound function
+                # to make sure call the method on the right series
+                if hasattr(agg_func, '__self__'):
+                    agg_func = agg_func.__func__  # type: ignore[attr-defined]
+
+                agg_series = agg_func(data_series, self, *args, **kwargs)
+
+                agg_series = BuhTuhSeries.get_instance(base=self.buh_tuh,
+                                                       name=agg_series_name,
+                                                       dtype=agg_series.dtype,
+                                                       expression=agg_series.expression)
+                aggregate_columns.append(agg_series.get_column_expression())
+                new_series_dtypes[agg_series.name] = agg_series.dtype
 
         group_by_expression = self._get_group_by_expression()
         if group_by_expression is None:
@@ -155,8 +188,7 @@ class BuhTuhGroupBy:
         try:
             return super().__getattribute__(attr_name)
         except AttributeError:
-            return lambda: self.aggregate({series_name: attr_name
-                                           for series_name in self.aggregated_data})
+            return lambda *args, **kwargs: self.aggregate(attr_name, *args, **kwargs)
 
     def _get_getitem_selection(self, key: Union[str, List[str]]) -> BuhTuhDataFrame:
         assert isinstance(key, (str, list, tuple)), \
@@ -471,10 +503,10 @@ class BuhTuhWindow(BuhTuhGroupBy):
         Given the window_func generate a statement like:
             {window_func} OVER (PARTITION BY .. ORDER BY ... frame_clause)
         """
-        partition = ', '.join(g.get_expression() for g in self.groupby.values())
+        partition = ', '.join(g.expression.to_sql() for g in self.groupby.values())
 
         # TODO implement NULLS FIRST / NULLS LAST, probably not here but in the sorting logic.
-        order_by = self.buh_tuh.get_order_by_expression()
+        order_by = self.buh_tuh.get_order_by_sql()
 
         if self.frame_clause is None:
             frame_clause = ''

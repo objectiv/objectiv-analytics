@@ -7,7 +7,6 @@ from tests.unit.buhtuh.util import get_fake_df
 
 def test_equals():
 
-
     left = get_fake_df(['a'], ['b', 'c'])
     right = get_fake_df(['a'], ['b', 'c'])
     result = left['b'].equals(left['b'])
@@ -52,11 +51,11 @@ def test_equals():
     sright = int_type(engine='test', base_node=None, index=None, name='test', expression='test')
     assert not sleft.equals(sright)
 
-    #different type
+    # different type
     sright = float_type(engine=None, base_node=None, index=None, name='test', expression='test')
     assert not sleft.equals(sright)
 
-    #different sorting
+    # different sorting
     sright = float_type(engine=None, base_node=None, index=None, name='test', expression='test',
                         sorted_ascending=True)
     assert not sleft.equals(sright)

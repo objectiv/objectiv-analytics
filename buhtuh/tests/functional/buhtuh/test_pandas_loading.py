@@ -1,8 +1,8 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-from buhtuh import BuhTuhSeriesInt64, BuhTuhSeriesString, BuhTuhSeriesFloat64, BuhTuhSeriesBoolean, \
-    BuhTuhSeriesTimestamp
+from buhtuh import BuhTuhSeriesBoolean, BuhTuhSeriesInt64, BuhTuhSeriesString, \
+    BuhTuhSeriesFloat64, BuhTuhSeriesTimestamp
 from tests.functional.buhtuh.test_data_and_utils import _get_bt, assert_db_type
 
 import datetime

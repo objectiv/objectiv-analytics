@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Union, List, Tuple, Optional, Dict, Set, NamedTuple
 
 from buhtuh import DataFrameOrSeries, BuhTuhDataFrame, ColumnNames, BuhTuhSeries
+from buhtuh.expression import quote_identifier, Expression
 from sql_models.model import CustomSqlModel, SqlModel
 
 
@@ -112,7 +113,7 @@ def _get_x_on(on: ColumnNames, x_on: Optional[ColumnNames], var_name: str) -> Li
 
 class ResultColumn(NamedTuple):
     name: str
-    expression: str
+    expression_sql: str
     dtype: str
 
 
@@ -195,7 +196,13 @@ def _get_column_name_expr_dtype(
         new_name = index_name
         if index_name in conflicting_names:
             new_name = index_name + suffix
-        new_index_list.append(ResultColumn(new_name, series.get_expression(table_alias), series.dtype))
+        new_index_list.append(
+                ResultColumn(
+                    name=new_name,
+                    expression_sql=series.expression.to_sql(table_alias),
+                    dtype=series.dtype
+                )
+        )
     return new_index_list
 
 
@@ -257,14 +264,12 @@ def merge(
         real_right_on=real_right_on,
         new_column_list=new_index_list + new_data_list
     )
-    # model_builder = CustomSqlModel(name='merge_sql', sql=sql)
-    # model = model_builder(left_node=left.base_node, right_node=right.base_node)
 
     return BuhTuhDataFrame.get_instance(
         engine=left.engine,
         base_node=model,
-        index_dtypes={name: dtype for name, _expr, dtype in new_index_list},
-        dtypes={name: dtype for name, _expr, dtype in new_data_list},
+        index_dtypes={rc.name: rc.dtype for rc in new_index_list},
+        dtypes={rc.name: rc.dtype for rc in new_data_list},
         order_by=[]  # merging resets any sorting
     )
 
@@ -281,16 +286,15 @@ def _get_merge_sql_model(
     Give the SqlModel to join left and right and select the new_column_list. This model also uses the
     join-type of how, matching rows on real_left_on and real_right_on.
     """
-    # todo: sql escaping where needed
     merge_conditions = []
     for l_label, r_label in zip(real_left_on, real_right_on):
-        l_expr = _get_expression(df_series=left, label=l_label, table_alias='l')
-        r_expr = _get_expression(df_series=right, label=r_label, table_alias='r')
-        merge_conditions.append(f'({l_expr} = {r_expr})')
+        l_expr = _get_expression(df_series=left, label=l_label)
+        r_expr = _get_expression(df_series=right, label=r_label)
+        merge_conditions.append(f'({l_expr.to_sql("l")} = {r_expr.to_sql("r")})')
 
-    columns_str = ', '.join(f'{expr} as "{name}"' for name, expr, _dtype in new_column_list)
+    columns_str = ', '.join(f'{rc.expression_sql} as {quote_identifier(rc.name)}' for rc in new_column_list)
     join_type = 'full outer' if how == How.outer else how.value
-    on_str = 'on ' + ' and '.join(merge_conditions) if merge_conditions else ''
+    on_str = ('on ' + ' and '.join(merge_conditions)) if merge_conditions else ''
 
     sql = '''
         select {columns_str}
@@ -308,12 +312,12 @@ def _get_merge_sql_model(
     return model
 
 
-def _get_expression(df_series: DataFrameOrSeries, label: str, table_alias: str) -> str:
-    """ Helper of merge: give the expression for the column with the given label in df_series as a string """
+def _get_expression(df_series: DataFrameOrSeries, label: str) -> Expression:
+    """ Helper of merge: give the expression for the column with the given label in df_series """
     if df_series.index and label in df_series.index:
-        return df_series.index[label].get_expression(table_alias)
+        return df_series.index[label].expression
     if isinstance(df_series, BuhTuhDataFrame):
-        return df_series.data[label].get_expression(table_alias)
+        return df_series.data[label].expression
     if isinstance(df_series, BuhTuhSeries):
-        return df_series.get_expression(table_alias)
+        return df_series.expression
     raise TypeError(f'df_series should be DataFrameOrSeries. type: {type(df_series)}')

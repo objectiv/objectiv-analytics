@@ -3,6 +3,7 @@ Copyright 2021 Objectiv B.V.
 """
 from tests.functional.buhtuh.test_data_and_utils import get_bt_with_json_data, assert_equals_data
 
+
 def test_json_get_value():
     bt = get_bt_with_json_data()
     bt['dict_column'] = bt.dict_column.astype('jsonb')

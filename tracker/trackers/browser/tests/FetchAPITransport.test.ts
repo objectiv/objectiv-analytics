@@ -1,4 +1,4 @@
-import { QueuedTransport, TrackerEvent, TrackerQueue, TransportSendError } from '@objectiv/tracker-core';
+import { TrackerEvent, TransportSendError } from '@objectiv/tracker-core';
 import fetchMock from 'jest-fetch-mock';
 import { defaultFetchFunction, defaultFetchParameters, FetchAPITransport } from '../src';
 import { mockConsole } from './mocks/MockConsole';
@@ -75,59 +75,6 @@ describe('FetchAPITransport', () => {
           transport_time: Date.now(),
         }),
         ...customParameters,
-      })
-    );
-  });
-
-  it('should enqueue the event instead of sending it right away', async () => {
-    jest.spyOn(global, 'setInterval');
-
-    // Create a test queue
-    const testQueue = new TrackerQueue();
-
-    // Create our Fetch Transport Instance
-    const testTransport = new FetchAPITransport({
-      endpoint: MOCK_ENDPOINT,
-    });
-
-    // Combine the two in a Queued Transport
-    const testQueuedTransport = new QueuedTransport({
-      queue: testQueue,
-      transport: testTransport,
-    });
-
-    // Let's handle an Event
-    await testQueuedTransport.handle(testEvent);
-
-    // Since we configured a Queue, the transport should not have called Fetch yet
-    expect(fetch).not.toHaveBeenCalled();
-
-    // Instead, it should have enqueued the TrackerEvent
-    expect(testQueue.store.length).toBe(1);
-
-    // Run timers to the next Queue tick.
-    jest.advanceTimersByTime(testQueue.batchDelayMs);
-
-    // Await for all promises to be fulfilled
-    await new Promise(jest.requireActual('timers').setImmediate);
-
-    // The Queue should have now sent the event by calling the runFunction once
-    expect(setInterval).toHaveBeenCalledTimes(1);
-    expect(fetch).toHaveBeenCalledTimes(1);
-    const { id, ...otherProps } = testEvent;
-    expect(fetch).toHaveBeenCalledWith(
-      MOCK_ENDPOINT,
-      expect.objectContaining({
-        body: JSON.stringify({
-          events: [
-            {
-              ...otherProps,
-              id,
-            },
-          ],
-          transport_time: Date.now(),
-        }),
-        ...defaultFetchParameters,
       })
     );
   });

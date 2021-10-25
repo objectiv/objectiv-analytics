@@ -5,9 +5,6 @@ import sizes from 'rollup-plugin-sizes';
 import { terser } from 'rollup-plugin-terser';
 import ts from 'rollup-plugin-ts';
 
-const dev = process.env.dev === 'true';
-console.log(`Build type: ${dev ? 'dev' : 'production'}`);
-
 export default [
   {
     input: './src/index.ts',
@@ -15,9 +12,9 @@ export default [
       {
         file: `dist/index.js`,
         format: 'esm',
-        sourcemap: dev,
+        sourcemap: true,
       },
     ],
-    plugins: [nodeResolve({ browser: true }), commonjs(), ts(), ...(dev ? [] : [terser()]), sizes(), filesize()],
+    plugins: [nodeResolve({ browser: true }), commonjs(), ts(), terser(), sizes(), filesize()],
   },
 ];

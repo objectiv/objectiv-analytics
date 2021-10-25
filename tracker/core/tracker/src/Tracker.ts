@@ -1,9 +1,11 @@
 import { AbstractGlobalContext, AbstractLocationContext, Contexts } from '@objectiv/schema';
 import { ApplicationContextPlugin } from './ApplicationContextPlugin';
 import { ContextsConfig } from './Context';
+import { waitForPromise } from './helpers';
 import { TrackerEvent, TrackerEventConfig } from './TrackerEvent';
-import { TrackerPlugins } from './TrackerPlugin';
-import { TrackerTransport } from './TrackerTransport';
+import { TrackerPlugins } from './TrackerPlugins';
+import { TrackerQueueInterface } from './TrackerQueueInterface';
+import { TrackerTransportInterface } from './TrackerTransportInterface';
 
 /**
  * TrackerConsole is a simplified implementation of Console.
@@ -28,9 +30,14 @@ export type TrackerConfig = ContextsConfig & {
   trackerId?: string;
 
   /**
-   * Optional. TrackerTransport instance. Responsible for sending or storing Events.
+   * Optional. TrackerQueue instance. Responsible for queueing and batching Events. Queuing occurs before Transport.
    */
-  transport?: TrackerTransport;
+  queue?: TrackerQueueInterface;
+
+  /**
+   * Optional. TrackerTransport instance. Responsible for sending or storing Events. Transport occurs after Queueing.
+   */
+  transport?: TrackerTransportInterface;
 
   /**
    * Optional. Plugins that will be executed when the Tracker initializes and before the Event is sent.
@@ -62,7 +69,8 @@ export class Tracker implements Contexts, TrackerConfig {
   readonly console?: TrackerConsole;
   readonly applicationId: string;
   readonly trackerId: string;
-  readonly transport?: TrackerTransport;
+  readonly queue?: TrackerQueueInterface;
+  readonly transport?: TrackerTransportInterface;
   readonly plugins: TrackerPlugins;
 
   active: boolean;
@@ -83,6 +91,7 @@ export class Tracker implements Contexts, TrackerConfig {
     this.console = trackerConfig.console;
     this.applicationId = trackerConfig.applicationId;
     this.trackerId = trackerConfig.trackerId ?? trackerConfig.applicationId;
+    this.queue = trackerConfig.queue;
     this.transport = trackerConfig.transport;
     this.plugins =
       trackerConfig.plugins ??
@@ -109,6 +118,7 @@ export class Tracker implements Contexts, TrackerConfig {
       );
       this.console.log(`Active: ${this.active}`);
       this.console.log(`Application ID: ${this.applicationId}`);
+      this.console.log(`Queue: ${this.queue?.queueName ?? 'none'}`);
       this.console.log(`Transport: ${this.transport?.transportName ?? 'none'}`);
       this.console.group(`Plugins:`);
       this.console.log(this.plugins.plugins.map((plugin) => plugin.pluginName).join(', '));
@@ -122,9 +132,29 @@ export class Tracker implements Contexts, TrackerConfig {
       this.console.groupEnd();
     }
 
-    // If active execute all plugins `initialize` callback. Plugins may use this to register automatic event listeners
+    // If active, initialize plugins and queue, if any
     if (this.active) {
+      // Execute all plugins `initialize` callback. Plugins may use this to register automatic event listeners
       this.plugins.initialize(this);
+
+      // If we have a Queue and a usable Transport, start Queue runner
+      if (this.queue && this.transport && this.transport.isUsable()) {
+        // Bind the handle function to its Transport instance to preserve its scope
+        const processFunction = this.transport.handle.bind(this.transport);
+
+        // Set the queue processFunction to transport.handle method: the queue will run Transport.handle for each batch
+        this.queue.setProcessFunction(processFunction);
+
+        // And start the Queue runner
+        this.queue.startRunner();
+
+        if (this.console) {
+          this.console.log(
+            `%c｢objectiv:Tracker:${this.trackerId}｣ ${this.queue.queueName} runner for ${this.transport.transportName} started`,
+            'font-weight:bold'
+          );
+        }
+      }
     }
   }
 
@@ -149,6 +179,33 @@ export class Tracker implements Contexts, TrackerConfig {
   }
 
   /**
+   * Flushes the Queue
+   */
+  flushQueue() {
+    if (this.queue) {
+      this.queue.flush();
+    }
+  }
+
+  /**
+   * Waits for Queue `isIdle` in an attempt to wait for it to finish its job.
+   * Resolves regardless if the Queue reaches an idle state or timeout is reached.
+   */
+  async waitForQueue(parameters?: { intervalMs?: number; timeoutMs?: number }): Promise<boolean> {
+    if (this.queue) {
+      // Some - hopefully - sensible defaults. 100ms for polling and double the Queue's batch delay as timeout.
+      const intervalMs = parameters?.intervalMs ?? 100;
+      const timeoutMs = parameters?.timeoutMs ?? this.queue.batchDelayMs * 2;
+
+      // Bind the isHandle function to its Queue instance to preserve its scope
+      const predicate = this.queue.isIdle.bind(this.queue);
+
+      return waitForPromise({ predicate, intervalMs, timeoutMs });
+    }
+    return true;
+  }
+
+  /**
    * Merges Tracker Location and Global contexts, runs all Plugins and sends the Event via the TrackerTransport.
    */
   async trackEvent(event: TrackerEventConfig): Promise<TrackerEvent> {
@@ -166,11 +223,13 @@ export class Tracker implements Contexts, TrackerConfig {
     // Execute all plugins `beforeTransport` callback. Plugins may enrich or add Contexts to the TrackerEvent
     this.plugins.beforeTransport(trackedEvent);
 
-    // Hand over TrackerEvent to TrackerTransport, if enabled and usable. They may send it, queue it, store it, etc
+    // Hand over TrackerEvent to TrackerTransport or TrackerQueue, if enabled and usable.
     if (this.transport && this.transport.isUsable()) {
       if (this.console) {
         this.console.groupCollapsed(
-          `｢objectiv:Tracker:${this.trackerId}｣ Tracking ${trackedEvent._type} (${trackedEvent.location_stack
+          `｢objectiv:Tracker:${this.trackerId}｣ ${this.queue ? 'Queuing' : 'Tracking'} ${
+            trackedEvent._type
+          } (${trackedEvent.location_stack
             .map((context) => `${context._type.replace('Context', '')}:${context.id}`)
             .join(' > ')})`
         );
@@ -185,7 +244,11 @@ export class Tracker implements Contexts, TrackerConfig {
         this.console.groupEnd();
       }
 
-      await this.transport.handle(trackedEvent);
+      if (this.queue) {
+        await this.queue.push(trackedEvent);
+      } else {
+        await this.transport.handle(trackedEvent);
+      }
     }
 
     return trackedEvent;

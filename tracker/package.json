@@ -13,7 +13,6 @@
     "build-plugins": "yarn workspaces foreach -p --include '@objectiv/plugin**' --verbose run build",
     "build-trackers": "yarn workspace @objectiv/tracker-browser build && yarn workspace @objectiv/tracker-angular build",
     "build": "yarn build-core && yarn build-plugins && yarn build-trackers",
-    "build:dev": "dev=true yarn build",
     "prettify": "yarn workspaces foreach --exclude root --verbose run prettify",
     "prettify:generated": "yarn workspace @objectiv/schema prettify:generated && yarn workspace @objectiv/tracker-core prettify:generated",
     "list": "yarn workspaces list",

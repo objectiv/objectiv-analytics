@@ -4,8 +4,8 @@ import {
   NonEmptyArray,
   TrackerConsole,
   TrackerEvent,
-  TrackerTransport,
   TrackerTransportConfig,
+  TrackerTransportInterface,
   TransportableEvent,
   TransportSendError,
 } from '@objectiv/tracker-core';
@@ -93,7 +93,7 @@ export type XMLHttpRequestTransportConfig = TrackerTransportConfig &
  * A TrackerTransport based on XMLHttpRequest. Sends event to the specified Collector endpoint.
  * Optionally supports specifying a custom `xmlHttpRequestFunction`.
  */
-export class XMLHttpRequestTransport implements TrackerTransport {
+export class XMLHttpRequestTransport implements TrackerTransportInterface {
   readonly console?: TrackerConsole;
   readonly endpoint?: string;
   readonly transportName = 'XMLHttpRequestTransport';

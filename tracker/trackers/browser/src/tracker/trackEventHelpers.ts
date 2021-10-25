@@ -92,8 +92,8 @@ export const trackURLChange = (parameters: NonInteractiveTrackHelperParameters =
   }
 };
 
-export const trackCompleted = (parameters: NonInteractiveTrackHelperParameters ={}) => {
-    try {
+export const trackCompleted = (parameters: NonInteractiveTrackHelperParameters = {}) => {
+  try {
     const { element = document, tracker } = parameters;
     return trackEvent({ eventFactory: makeCompletedEvent, element, tracker });
   } catch (error) {
@@ -101,11 +101,11 @@ export const trackCompleted = (parameters: NonInteractiveTrackHelperParameters =
   }
 };
 
-export const trackAborted = (parameters: NonInteractiveTrackHelperParameters ={}) => {
-    try {
+export const trackAborted = (parameters: NonInteractiveTrackHelperParameters = {}) => {
+  try {
     const { element = document, tracker } = parameters;
     return trackEvent({ eventFactory: makeAbortedEvent, element, tracker });
   } catch (error) {
     trackerErrorHandler(error, parameters, parameters.onError);
   }
-}
+};

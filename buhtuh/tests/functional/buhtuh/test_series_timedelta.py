@@ -8,7 +8,7 @@ def test_timedelta():
     mt = get_bt_with_food_data()[['skating_order', 'moment']]
 
     # import code has no means to distinguish between date and timestamp
-    gb = mt.groupby([]).aggregate(['moment', 'moment'], ['min', 'max'])
+    gb = mt.groupby([]).aggregate({'moment': ['min', 'max']})
     gb['delta'] = gb['moment_max'] - gb['moment_min']
 
     import datetime

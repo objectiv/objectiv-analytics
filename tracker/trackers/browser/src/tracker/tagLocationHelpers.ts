@@ -85,6 +85,7 @@ export type TagLinkParameters = TagLocationHelperParameters & { text: string; hr
 export const tagLink = (parameters: TagLinkParameters): TagLocationReturnValue => {
   try {
     const { id, text, href, options } = create(parameters, TagLinkParameters);
+    // TODO attempt auto-detecting if href is external and use that to set `waitUntilTracked` accordingly
     return tagLocation({ instance: makeLinkContext({ id, text, href }), options, onError: parameters.onError });
   } catch (error) {
     return trackerErrorHandler(error, parameters);

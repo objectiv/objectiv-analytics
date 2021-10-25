@@ -1,4 +1,4 @@
-import { TrackerEvent, TrackerPlugin, TrackerPlugins, TrackerPluginsConfiguration } from '../src';
+import { TrackerEvent, TrackerPluginInterface, TrackerPlugins, TrackerPluginsConfiguration } from '../src';
 
 describe('Plugin', () => {
   it('should instantiate when specifying an empty list of Plugins', () => {
@@ -8,7 +8,7 @@ describe('Plugin', () => {
   });
 
   it('should instantiate when specifying a list of Plugins instances', () => {
-    const plugins: TrackerPlugin[] = [
+    const plugins: TrackerPluginInterface[] = [
       { pluginName: 'test-pluginA', isUsable: () => true },
       { pluginName: 'test-pluginB', isUsable: () => true },
     ];
@@ -18,7 +18,7 @@ describe('Plugin', () => {
   });
 
   it('should support Plugin creation via instance, class name, factory function or just plain object', () => {
-    class TestPluginA implements TrackerPlugin {
+    class TestPluginA implements TrackerPluginInterface {
       readonly pluginName = 'pluginA';
       readonly parameter?: string;
 
@@ -40,7 +40,7 @@ describe('Plugin', () => {
           pluginName: 'pluginA',
           parameter: 'parameterValue',
           isUsable: () => true,
-        } as TrackerPlugin,
+        } as TrackerPluginInterface,
       ],
     };
     const testPlugins = new TrackerPlugins(plugins);
@@ -69,18 +69,18 @@ describe('Plugin', () => {
   });
 
   it('should execute all Plugins implementing the `beforeTransport` callback', () => {
-    const pluginA: TrackerPlugin = {
+    const pluginA: TrackerPluginInterface = {
       pluginName: 'pluginA',
       isUsable: () => true,
       beforeTransport: jest.fn(),
     };
-    const pluginB: TrackerPlugin = {
+    const pluginB: TrackerPluginInterface = {
       pluginName: 'pluginB',
       isUsable: () => true,
       beforeTransport: jest.fn(),
     };
-    const pluginC: TrackerPlugin = { pluginName: 'pluginC', isUsable: () => true };
-    const plugins: TrackerPlugin[] = [pluginA, pluginB, pluginC];
+    const pluginC: TrackerPluginInterface = { pluginName: 'pluginC', isUsable: () => true };
+    const plugins: TrackerPluginInterface[] = [pluginA, pluginB, pluginC];
     const testPlugins = new TrackerPlugins({ plugins });
     expect(pluginA.beforeTransport).not.toHaveBeenCalled();
     expect(pluginB.beforeTransport).not.toHaveBeenCalled();
@@ -91,22 +91,22 @@ describe('Plugin', () => {
   });
 
   it('should execute only Plugins that are usable', () => {
-    const pluginA: TrackerPlugin = {
+    const pluginA: TrackerPluginInterface = {
       pluginName: 'pluginA',
       isUsable: () => true,
       beforeTransport: jest.fn(),
     };
-    const pluginB: TrackerPlugin = {
+    const pluginB: TrackerPluginInterface = {
       pluginName: 'test-pluginB',
       isUsable: () => false,
       beforeTransport: jest.fn(),
     };
-    const pluginC: TrackerPlugin = {
+    const pluginC: TrackerPluginInterface = {
       pluginName: 'pluginC',
       isUsable: () => true,
       beforeTransport: jest.fn(),
     };
-    const plugins: TrackerPlugin[] = [pluginA, pluginB, pluginC];
+    const plugins: TrackerPluginInterface[] = [pluginA, pluginB, pluginC];
     const testPlugins = new TrackerPlugins({ plugins });
     expect(pluginA.beforeTransport).not.toHaveBeenCalled();
     expect(pluginB.beforeTransport).not.toHaveBeenCalled();

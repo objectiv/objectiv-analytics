@@ -4,9 +4,25 @@ Copyright 2021 Objectiv B.V.
 from unittest.mock import ANY
 
 import pytest
-from buhtuh import BuhTuhDataFrame, BuhTuhSeriesBoolean, BuhTuhSeriesUuid
+from buhtuh import BuhTuhDataFrame, BuhTuhSeriesUuid, BuhTuhSeriesBoolean
 from sql_models.graph_operations import get_graph_nodes_info
 from tests.functional.buhtuh.test_data_and_utils import get_bt_with_test_data, assert_equals_data
+
+
+def test_basic():
+    bt = get_bt_with_test_data()
+    assert_equals_data(
+        bt,
+        expected_columns=[
+            '_index_skating_order',  # index
+            'skating_order', 'city', 'municipality', 'inhabitants', 'founding',  # data columns
+        ],
+        expected_data=[
+            [1, 1, 'Ljouwert', 'Leeuwarden', 93485, 1285],
+            [2, 2, 'Snits', 'Súdwest-Fryslân', 33520, 1456],
+            [3, 3, 'Drylts', 'Súdwest-Fryslân', 3055, 1268]
+        ]
+    )
 
 
 def test_del_item():
@@ -129,9 +145,9 @@ def test_get_df_materialized_model():
     # have an expression that's simply the name of the column for all data columns, as the complex expression
     # has been moved to the new underlying base_node.
     for series in bt.data.values():
-        assert series.get_expression() != f'"{series.name}"'
+        assert series.expression.to_sql() != f'"{series.name}"'
     for series in bt_materialized.data.values():
-        assert series.get_expression() == f'"{series.name}"'
+        assert series.expression.to_sql() == f'"{series.name}"'
 
     # The materialized graph should have one extra node
     node_info_orig = get_graph_nodes_info(bt.get_current_node())

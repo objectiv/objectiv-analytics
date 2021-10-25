@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from buhtuh.partitioning import BuhTuhWindow, BuhTuhWindowFrameMode, BuhTuhWindowFrameBoundary
+from buhtuh.partitioning import BuhTuhWindowFrameMode, BuhTuhWindowFrameBoundary
 from tests.functional.buhtuh.test_data_and_utils import assert_equals_data, get_bt_with_test_data
 
 

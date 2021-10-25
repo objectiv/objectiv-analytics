@@ -9,9 +9,9 @@ docusaurus_dir = '../../../objectiv.io'
 docs = 'docs'
 static = 'static'
 
-buhtuh = 'buhtuh'
-docs_target = f'{docusaurus_dir}/{docs}/{buhtuh}'
-static_target = f'{docusaurus_dir}/{static}/{buhtuh}'
+module = 'buhtuh'
+docs_target = f'{docusaurus_dir}/{docs}/{module}'
+static_target = f'{docusaurus_dir}/{static}/{module}'
 
 # whitelist of pages to consider
 patterns = [
@@ -63,9 +63,11 @@ for url in glob.glob(f"{html_dir}/**/*.html", recursive=True):
     if title == 'index':
         sidebar_label = 'Introduction'
         sidebar_position = 1
+        slug = f'/{module}'
     else:
         sidebar_label = title
         sidebar_position = 99
+        slug = f'/{module}/{real_url.replace(".html", "")}'
 
     # template for the mdx file
     # please leave the whitespace as is (it's part of the markdown)
@@ -73,6 +75,7 @@ for url in glob.glob(f"{html_dir}/**/*.html", recursive=True):
         f"""---
 id: {title}
 hide_title: true
+slug: {slug}
 sidebar_position: {sidebar_position}
 sidebar_label: {sidebar_label}
 ---
@@ -82,7 +85,7 @@ import SphinxPages from '@site/src/components/sphinx-page'
 import useBaseUrl from '@docusaurus/useBaseUrl'
 
 
-<SphinxPages url={{useBaseUrl('{buhtuh}/{real_url}')}} />
+<SphinxPages url={{useBaseUrl('{module}/{real_url}')}} />
 """
     # set target path to generated .mdx file
     # target_path = url.replace(html_dir, '').replace('.html', '.mdx')

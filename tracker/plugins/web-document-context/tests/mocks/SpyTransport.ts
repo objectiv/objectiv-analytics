@@ -1,6 +1,6 @@
-import { TrackerConsole, TrackerTransport, TrackerTransportConfig } from '@objectiv/tracker-core';
+import { TrackerConsole, TrackerTransportConfig, TrackerTransportInterface } from '@objectiv/tracker-core';
 
-export class SpyTransport implements TrackerTransport {
+export class SpyTransport implements TrackerTransportInterface {
   readonly console?: TrackerConsole;
   readonly transportName = 'SpyTransport';
 

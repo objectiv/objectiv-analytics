@@ -4,8 +4,10 @@ import {
   Tracker,
   TrackerConfig,
   TrackerEvent,
-  TrackerPlugin,
+  TrackerPluginInterface,
   TrackerPlugins,
+  TrackerQueue,
+  TrackerQueueMemoryStore,
 } from '../src';
 import { LogTransport } from './mocks/LogTransport';
 import { mockConsole } from './mocks/MockConsole';
@@ -33,11 +35,12 @@ describe('Tracker', () => {
     expect(console.log).not.toHaveBeenCalled();
   });
 
-  it('should instantiate with tracker config', () => {
+  it('should instantiate with tracker config', async () => {
     expect(mockConsole.log).not.toHaveBeenCalled();
     const trackerConfig: TrackerConfig = { applicationId: 'app-id', console: mockConsole };
     const testTransport = new LogTransport();
     const testTracker = new Tracker({ ...trackerConfig, transport: testTransport });
+    await expect(testTracker.waitForQueue()).resolves.toBe(true);
     expect(testTracker).toBeInstanceOf(Tracker);
     expect(testTracker.transport).toStrictEqual(testTransport);
     expect(testTracker.plugins).toEqual({
@@ -197,8 +200,8 @@ describe('Tracker', () => {
     });
 
     it('should execute all plugins implementing the initialize callback', () => {
-      const pluginC: TrackerPlugin = { pluginName: 'pC', isUsable: () => true, initialize: jest.fn() };
-      const pluginD: TrackerPlugin = { pluginName: 'pD', isUsable: () => true, initialize: jest.fn() };
+      const pluginC: TrackerPluginInterface = { pluginName: 'pC', isUsable: () => true, initialize: jest.fn() };
+      const pluginD: TrackerPluginInterface = { pluginName: 'pD', isUsable: () => true, initialize: jest.fn() };
       const trackerPlugins = new TrackerPlugins({ plugins: [pluginC, pluginD] });
       const testTracker = new Tracker({ ...trackerConfig, plugins: trackerPlugins, console: mockConsole });
       expect(pluginC.initialize).toHaveBeenCalledWith(testTracker);
@@ -206,12 +209,12 @@ describe('Tracker', () => {
     });
 
     it('should execute all plugins implementing the beforeTransport callback', () => {
-      const pluginE: TrackerPlugin = {
+      const pluginE: TrackerPluginInterface = {
         pluginName: 'pE',
         isUsable: () => true,
         beforeTransport: jest.fn(),
       };
-      const pluginF: TrackerPlugin = {
+      const pluginF: TrackerPluginInterface = {
         pluginName: 'pF',
         isUsable: () => true,
         beforeTransport: jest.fn(),
@@ -280,6 +283,133 @@ describe('Tracker', () => {
         `%c｢objectiv:Tracker:app-id｣ New state: inactive`,
         'font-weight: bold'
       );
+    });
+  });
+
+  describe('TrackerQueue', () => {
+    const testEventName = 'test-event';
+    const testContexts: ContextsConfig = {
+      location_stack: [{ __location_context: true, _type: 'section', id: 'test' }],
+      global_contexts: [{ __global_context: true, _type: 'global', id: 'test' }],
+    };
+    const testEvent = new TrackerEvent({ _type: testEventName, ...testContexts });
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      jest.spyOn(global, 'setInterval');
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should not initialize the queue runner if the given transport is not usable', () => {
+      const logTransport = new UnusableTransport();
+      jest.spyOn(logTransport, 'handle');
+      const trackerQueue = new TrackerQueue();
+
+      const testTracker = new Tracker({
+        applicationId: 'app-id',
+        transport: logTransport,
+        queue: trackerQueue,
+      });
+      jest.runAllTimers();
+
+      expect(testTracker.transport?.isUsable()).toBe(false);
+      expect(trackerQueue.store.length).toBe(0);
+      expect(logTransport.handle).not.toHaveBeenCalled();
+      expect(setInterval).not.toHaveBeenCalled();
+    });
+
+    it('should queue events in the TrackerQueue and send them in batches via the LogTransport', async () => {
+      const logTransport = new LogTransport();
+      const queueStore = new TrackerQueueMemoryStore();
+      const trackerQueue = new TrackerQueue({ store: queueStore });
+
+      const testTracker = new Tracker({
+        applicationId: 'app-id',
+        queue: trackerQueue,
+        transport: logTransport,
+      });
+      await expect(testTracker.waitForQueue()).resolves.toBe(true);
+
+      const testTrackerWithConsole = new Tracker({
+        applicationId: 'app-id',
+        queue: trackerQueue,
+        transport: logTransport,
+        console: mockConsole,
+      });
+      await expect(testTracker.waitForQueue({ timeoutMs: 1, intervalMs: 1 })).resolves.toBe(true);
+
+      jest.spyOn(trackerQueue, 'processFunction');
+
+      expect(testTracker.transport?.isUsable()).toBe(true);
+      expect(testTrackerWithConsole.transport?.isUsable()).toBe(true);
+
+      expect(trackerQueue.processFunction).not.toBeUndefined();
+      expect(trackerQueue.processFunction).not.toHaveBeenCalled();
+      expect(setInterval).toHaveBeenCalledTimes(2);
+
+      await testTracker.trackEvent(testEvent);
+      await testTrackerWithConsole.trackEvent(testEvent);
+
+      expect(queueStore.length).toBe(2);
+      expect(trackerQueue.processFunction).not.toHaveBeenCalled();
+
+      await trackerQueue.run();
+
+      expect(trackerQueue.processingEventIds).toHaveLength(0);
+      expect(trackerQueue.processFunction).toHaveBeenCalledTimes(1);
+      expect(trackerQueue.processFunction).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          id: testEvent.id,
+        }),
+        expect.objectContaining({
+          id: testEvent.id,
+        })
+      );
+    });
+
+    it('should flush pending events', async () => {
+      const logTransport = new LogTransport();
+      const queueStore = new TrackerQueueMemoryStore();
+      const trackerQueue = new TrackerQueue({ store: queueStore, concurrency: 1, batchSize: 1, batchDelayMs: 1 });
+
+      const trackerWithoutQueue = new Tracker({
+        applicationId: 'app-id',
+        transport: logTransport,
+      });
+      // Should be safe to call when no queue has been specified
+      trackerWithoutQueue.flushQueue();
+
+      const testTracker = new Tracker({
+        applicationId: 'app-id',
+        queue: trackerQueue,
+        transport: logTransport,
+      });
+
+      jest.spyOn(trackerQueue, 'processFunction');
+
+      expect(testTracker.transport?.isUsable()).toBe(true);
+
+      expect(trackerQueue.processFunction).not.toBeUndefined();
+      expect(trackerQueue.processFunction).not.toHaveBeenCalled();
+      expect(setInterval).toHaveBeenCalledTimes(1);
+
+      await testTracker.trackEvent(testEvent);
+      await testTracker.trackEvent(testEvent);
+      await testTracker.trackEvent(testEvent);
+      await testTracker.trackEvent(testEvent);
+
+      testTracker.flushQueue();
+
+      expect(queueStore.length).toBe(0);
+
+      await trackerQueue.run();
+
+      expect(trackerQueue.processingEventIds).toHaveLength(0);
+      expect(trackerQueue.processFunction).not.toHaveBeenCalled();
     });
   });
 });

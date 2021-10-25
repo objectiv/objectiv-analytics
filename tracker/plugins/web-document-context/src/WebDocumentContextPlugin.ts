@@ -2,8 +2,8 @@ import {
   makeWebDocumentContext,
   TrackerConsole,
   TrackerEvent,
-  TrackerPlugin,
   TrackerPluginConfig,
+  TrackerPluginInterface,
 } from '@objectiv/tracker-core';
 
 /**
@@ -17,7 +17,7 @@ export type WebDocumentContextPluginConfig = TrackerPluginConfig & {
  * The WebDocumentContext Plugin gathers the current URL from the main document using the Location API.
  * It implements the `run` method. This ensures the URL is retrieved before each Event is sent.
  */
-export class WebDocumentContextPlugin implements TrackerPlugin {
+export class WebDocumentContextPlugin implements TrackerPluginInterface {
   readonly console?: TrackerConsole;
   readonly pluginName = `WebDocumentContextPlugin`;
   readonly documentContextId: string;

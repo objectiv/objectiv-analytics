@@ -53,7 +53,7 @@ export const getTracker = (trackerId?: string): BrowserTracker => {
 };
 
 /**
- * Helper method to easily set a different default Tracker in the TrackerRepositoru
+ * Helper method to easily set a different default Tracker in the TrackerRepository.
  */
 export const setDefaultTracker = (trackerId: string) => {
   getTrackerRepository().setDefault(trackerId);

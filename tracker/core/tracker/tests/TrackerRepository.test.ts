@@ -154,4 +154,22 @@ describe('TrackerRepository', () => {
       'font-weight: bold'
     );
   });
+
+  it('should call flushQueue for all active Tracker instances', () => {
+    const trackerRepository = new TrackerRepository();
+    const tracker1 = new Tracker({ applicationId: 'app-id-1', console: mockConsole });
+    const tracker2 = new Tracker({ applicationId: 'app-id-2', active: false, console: mockConsole });
+    const tracker3 = new Tracker({ applicationId: 'app-id-3', console: mockConsole });
+    trackerRepository.add(tracker1);
+    trackerRepository.add(tracker2);
+    trackerRepository.add(tracker3);
+    jest.resetAllMocks();
+    jest.spyOn(tracker1, 'flushQueue');
+    jest.spyOn(tracker2, 'flushQueue');
+    jest.spyOn(tracker3, 'flushQueue');
+    trackerRepository.flushAllQueues();
+    expect(tracker1.flushQueue).toHaveBeenCalledTimes(1);
+    expect(tracker2.flushQueue).toHaveBeenCalledTimes(1);
+    expect(tracker3.flushQueue).toHaveBeenCalledTimes(1);
+  });
 });

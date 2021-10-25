@@ -1,6 +1,6 @@
-import { TrackerConsole, TrackerTransport, TrackerTransportConfig } from '../../src';
+import { TrackerConsole, TrackerTransportConfig, TrackerTransportInterface } from '../../src';
 
-export class ConfigurableMockTransport implements TrackerTransport {
+export class ConfigurableMockTransport implements TrackerTransportInterface {
   readonly console?: TrackerConsole;
   readonly transportName = 'ConfigurableMockTransport';
   _isUsable: boolean;

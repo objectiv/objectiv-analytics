@@ -1,6 +1,6 @@
-import { TrackerConsole, TrackerTransport, TrackerTransportConfig } from '../../src';
+import { TrackerConsole, TrackerTransportConfig, TrackerTransportInterface } from '../../src';
 
-export class LogTransport implements TrackerTransport {
+export class LogTransport implements TrackerTransportInterface {
   readonly console?: TrackerConsole;
   readonly transportName = 'LogTransport';
 

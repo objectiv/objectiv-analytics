@@ -2,7 +2,7 @@ import { ApplicationContext } from '@objectiv/schema';
 import { makeApplicationContext } from './ContextFactories';
 import { TrackerConfig, TrackerConsole } from './Tracker';
 import { TrackerEvent } from './TrackerEvent';
-import { TrackerPlugin, TrackerPluginConfig } from './TrackerPlugin';
+import { TrackerPluginConfig, TrackerPluginInterface } from './TrackerPluginInterface';
 
 /**
  * The ApplicationContextPlugin Config object.
@@ -12,7 +12,7 @@ export type ApplicationContextPluginConfig = TrackerPluginConfig & Pick<TrackerC
 /**
  * The ApplicationContext Plugin adds an ApplicationContext as GlobalContext before events are transported.
  */
-export class ApplicationContextPlugin implements TrackerPlugin {
+export class ApplicationContextPlugin implements TrackerPluginInterface {
   readonly console?: TrackerConsole;
   readonly pluginName = `ApplicationContextPlugin`;
   readonly applicationContext: ApplicationContext;

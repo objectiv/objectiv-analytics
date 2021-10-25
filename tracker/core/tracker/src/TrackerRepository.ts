@@ -1,21 +1,5 @@
-/**
- * The interface of the TrackerRepository
- */
 import { Tracker } from './Tracker';
-
-/**
- * Generic type for TrackerRepository.
- */
-export interface TrackerRepositoryInterface<T extends Tracker> {
-  trackersMap: Map<string, T>;
-  defaultTracker?: T;
-  add(newInstance: T): void;
-  delete(trackerId: string): void;
-  get(trackerId?: string): T | undefined;
-  setDefault(trackerId: string): void;
-  activateAll(): void;
-  deactivateAll(): void;
-}
+import { TrackerRepositoryInterface } from './TrackerRepositoryInterface';
 
 /**
  * TrackerRepository allows developers to create and use multiple Tracker instances in the same Application.
@@ -85,5 +69,9 @@ export class TrackerRepository<T extends Tracker> implements TrackerRepositoryIn
 
   deactivateAll() {
     this.trackersMap.forEach((tracker) => tracker.setActive(false));
+  }
+
+  flushAllQueues() {
+    this.trackersMap.forEach((tracker) => tracker.flushQueue());
   }
 }

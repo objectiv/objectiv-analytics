@@ -4,14 +4,18 @@
 import { makeClickEvent } from '@objectiv/tracker-core';
 import {
   BrowserTracker,
-  makeTracker,
+  DebugTransport,
   getLocationHref,
+  getTracker,
   makeMutationCallback,
+  makeTracker,
   startAutoTracking,
+  trackAborted,
   trackApplicationLoaded,
+  trackCompleted,
+  TrackerQueueLocalStorageStore,
   trackEvent,
   trackURLChange,
-  getTracker,
 } from '../src';
 
 describe('Without DOM', () => {
@@ -24,7 +28,7 @@ describe('Without DOM', () => {
   });
 
   it('should throw if Window does not exists', async () => {
-    expect(() => makeTracker({ applicationId: 'test', endpoint: 'test' })).toThrow(
+    expect(() => makeTracker({ applicationId: 'test', transport: new DebugTransport() })).toThrow(
       'Cannot access the Window interface.'
     );
 
@@ -62,16 +66,38 @@ describe('Without DOM', () => {
     expect(console.error).toHaveBeenNthCalledWith(2, new ReferenceError('document is not defined'));
   });
 
+  it('should console.error id Completed Event fails at retrieving the document element', () => {
+    trackCompleted();
+
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenNthCalledWith(1, new ReferenceError('document is not defined'), {});
+
+    trackCompleted({ onError: console.error });
+    expect(console.error).toHaveBeenCalledTimes(2);
+    expect(console.error).toHaveBeenNthCalledWith(2, new ReferenceError('document is not defined'));
+  });
+
+  it('should console.error id Aborted Event fails at retrieving the document element', () => {
+    trackAborted();
+
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenNthCalledWith(1, new ReferenceError('document is not defined'), {});
+
+    trackAborted({ onError: console.error });
+    expect(console.error).toHaveBeenCalledTimes(2);
+    expect(console.error).toHaveBeenNthCalledWith(2, new ReferenceError('document is not defined'));
+  });
+
   it('should return undefined', () => {
     expect(getLocationHref()).toBeUndefined();
   });
 
   it('should console error when MutationObserver is not available', async () => {
     jest.spyOn(console, 'error');
-    const tracker = new BrowserTracker({ endpoint: 'endpoint', applicationId: 'app' });
+    const tracker = new BrowserTracker({ applicationId: 'app', transport: new DebugTransport() });
     jest.spyOn(tracker, 'trackEvent');
 
-    startAutoTracking({}, tracker);
+    startAutoTracking();
 
     expect(tracker.trackEvent).not.toHaveBeenCalled();
     expect(console.error).toHaveBeenCalledTimes(1);
@@ -79,14 +105,20 @@ describe('Without DOM', () => {
 
   it('should console error when mutationCallback receives garbled data', async () => {
     jest.spyOn(console, 'error');
-    const tracker = new BrowserTracker({ endpoint: 'endpoint', applicationId: 'app' });
+    const tracker = new BrowserTracker({ applicationId: 'app', transport: new DebugTransport() });
     jest.spyOn(tracker, 'trackEvent');
-    const mutationCallback = makeMutationCallback(false, tracker);
+    const mutationCallback = makeMutationCallback(false);
 
     // @ts-ignore
     mutationCallback('not a list');
 
     expect(tracker.trackEvent).not.toHaveBeenCalled();
     expect(console.error).toHaveBeenCalledTimes(1);
+  });
+
+  it('should throw if TrackerQueueLocalStorageStore gets constructed', async () => {
+    expect(() => new TrackerQueueLocalStorageStore({ trackerId: 'app-id' })).toThrow(
+      'TrackerQueueLocalStorageStore: failed to initialize: window.localStorage is not available.'
+    );
   });
 });

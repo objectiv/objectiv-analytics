@@ -1,6 +1,7 @@
+import { getTracker } from '../globals';
 import { getLocationHref } from '../helpers';
 import { TaggingAttribute } from '../TaggingAttribute';
-import { BrowserTracker, BrowserTrackerConfig } from '../tracker/BrowserTracker';
+import { BrowserTrackerConfig } from '../tracker/BrowserTracker';
 import { trackApplicationLoaded, trackURLChange } from '../tracker/trackEventHelpers';
 import { trackerErrorHandler } from '../trackerErrorHandler';
 import { isTaggedElement } from '../typeGuards';
@@ -10,10 +11,28 @@ import { trackVisibilityHiddenEvent } from './trackVisibilityHiddenEvent';
 import { trackVisibilityVisibleEvent } from './trackVisibilityVisibleEvent';
 
 /**
- * Global state to track if we already triggered an Application Loaded Event and to keep track of URLs
+ * Global state
  */
-let applicationLoaded = false;
-let previousURL = getLocationHref();
+export const AutoTrackingState: {
+  observerInstance: MutationObserver | null,
+  applicationLoaded: boolean,
+  previousURL: string | undefined,
+} = {
+  /**
+   * Holds the instance to the Tagged Elements Mutation Observer created by `startAutoTracking`
+   */
+  observerInstance: null,
+
+  /**
+   * Whether we already tracked the ApplicationLoaded Event or not
+   */
+  applicationLoaded: false,
+
+  /**
+   * Holds the last seen URL
+   */
+  previousURL: getLocationHref(),
+}
 
 /**
  * The options that `startAutoTracking` accepts
@@ -23,23 +42,49 @@ export type AutoTrackingOptions = Pick<BrowserTrackerConfig, 'trackURLChanges' |
 /**
  * Initializes our automatic tracking, based on Mutation Observer.
  * Also tracks application Loaded.
+ * Safe to call multiple times: it will auto-track only once.
  */
-export const startAutoTracking = (options: AutoTrackingOptions, tracker: BrowserTracker) => {
+export const startAutoTracking = (options?: AutoTrackingOptions) => {
   try {
-    const trackURLChangeEvents = options.trackURLChanges ?? true;
-    const trackApplicationLoadedEvents = options.trackApplicationLoaded ?? true;
+    // Nothing to do if we are already auto-tracking
+    if(AutoTrackingState.observerInstance) {
+      return;
+    }
 
-    new MutationObserver(makeMutationCallback(trackURLChangeEvents, tracker)).observe(document, {
+    // Create Mutation Observer
+    AutoTrackingState.observerInstance = new MutationObserver(makeMutationCallback(options?.trackURLChanges ?? true));
+
+    // Start observing DOM
+    AutoTrackingState.observerInstance.observe(document, {
       childList: true,
       subtree: true,
       attributes: true,
       attributeFilter: [TaggingAttribute.trackVisibility],
     });
 
-    if (trackApplicationLoadedEvents && !applicationLoaded) {
-      applicationLoaded = true;
-      trackApplicationLoaded({ tracker });
+    // Track ApplicationLoaded Event - once
+    if ((options?.trackApplicationLoaded ?? true) && !AutoTrackingState.applicationLoaded) {
+      AutoTrackingState.applicationLoaded = true;
+      trackApplicationLoaded({ tracker: getTracker() });
     }
+  } catch (error) {
+    trackerErrorHandler(error);
+  }
+};
+
+/**
+ * Stops autoTracking
+ */
+export const stopAutoTracking = () => {
+  try {
+    // Nothing to do if we are not auto-tracking
+    if(!AutoTrackingState.observerInstance) {
+      return;
+    }
+
+    // Stop Mutation Observer
+    AutoTrackingState.observerInstance.disconnect()
+    AutoTrackingState.observerInstance = null;
   } catch (error) {
     trackerErrorHandler(error);
   }
@@ -68,14 +113,16 @@ export const startAutoTracking = (options: AutoTrackingOptions, tracker: Browser
  * Application Loaded Event (default enabled, configurable)
  * Triggered once
  */
-export const makeMutationCallback = (trackURLChangeEvents: boolean, tracker: BrowserTracker): MutationCallback => {
+export const makeMutationCallback = (trackURLChangeEvents: boolean): MutationCallback => {
   return (mutationsList) => {
     try {
+      const tracker = getTracker();
+
       if (trackURLChangeEvents) {
         // Track SPA URL changes
         const currentURL = getLocationHref();
-        if (currentURL !== previousURL) {
-          previousURL = currentURL;
+        if (currentURL !== AutoTrackingState.previousURL) {
+          AutoTrackingState.previousURL = currentURL;
           trackURLChange({ tracker });
         }
       }
