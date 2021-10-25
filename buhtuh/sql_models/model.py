@@ -13,12 +13,12 @@ import hashlib
 from abc import abstractmethod, ABCMeta
 from copy import deepcopy
 from enum import Enum
-from typing import TypeVar, Generic, Dict, Any, Set, Tuple, Type, Union, TYPE_CHECKING, List, cast
+from typing import TypeVar, Generic, Dict, Any, Set, Tuple, Type, Union, TYPE_CHECKING, Sequence
 
 from sql_models.util import extract_format_fields
 
 if TYPE_CHECKING:
-    from buhtuh.expression import Expression
+    from sql_models.expression import Expression
 
 
 class Materialization(Enum):
@@ -206,7 +206,7 @@ class SqlModelBuilder(SqlModelSpec, metaclass=ABCMeta):
                                     f'type {type(reference_value)}.')
         return self.instantiate()
 
-    def __call__(self: TB, **values: Union[int, str, 'Expression', List['Expression'],
+    def __call__(self: TB, **values: Union[int, str, 'Expression', Sequence['Expression'],
                                            'SqlModel', 'SqlModelBuilder']) -> 'SqlModel[TB]':
         self.set_values(**values)
         return self.instantiate()
@@ -230,7 +230,7 @@ class SqlModelBuilder(SqlModelSpec, metaclass=ABCMeta):
             self._cache_created_instances[instance.hash] = instance
         return self._cache_created_instances[instance.hash]
 
-    def set_values(self: TB, **values: Union[int, str, 'Expression', List['Expression'],
+    def set_values(self: TB, **values: Union[int, str, 'Expression', Sequence['Expression'],
                                              'SqlModel', 'SqlModelBuilder']) -> TB:
         """
         Set values that can either be references or properties
@@ -238,7 +238,7 @@ class SqlModelBuilder(SqlModelSpec, metaclass=ABCMeta):
         :return: self
         """
         # todo: check that values are of the correct types
-        from buhtuh.expression import Expression
+        from sql_models.expression import Expression
 
         for key, value in values.items():
             if key in self.spec_references:

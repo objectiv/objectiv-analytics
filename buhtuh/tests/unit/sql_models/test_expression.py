@@ -3,8 +3,10 @@ Copyright 2021 Objectiv B.V.
 """
 import pytest
 
-from buhtuh.expression import RawToken, ColumnReferenceToken, expression_to_sql, quote_string, \
+from sql_models.expression import RawToken, ColumnReferenceToken, expression_to_sql, quote_string, \
     quote_identifier, StringValueToken, Expression
+from buhtuh.expression import Expression as BTExpression
+
 from tests.unit.buhtuh.util import get_fake_df
 
 
@@ -34,15 +36,15 @@ def test_construct():
 
 def test_construct_series():
     df = get_fake_df(['i'], ['a', 'b'])
-    result = Expression.construct('cast({} as text)', df.a)
-    assert result == Expression([
+    result = BTExpression.construct('cast({} as text)', df.a)
+    assert result == BTExpression([
         RawToken('cast('),
         ColumnReferenceToken('a'),
         RawToken(' as text)')
     ])
     assert expression_to_sql(result.resolve_column_references()) == 'cast("a" as text)'
 
-    result = Expression.construct('{}, {}, {}', df.a, Expression.raw('test'), df.b)
+    result = BTExpression.construct('{}, {}, {}', df.a, BTExpression.raw('test'), df.b)
     assert expression_to_sql(result.resolve_column_references()) == '"a", test, "b"'
 
 
@@ -67,7 +69,7 @@ def test_string():
 def test_combined():
     df = get_fake_df(['i'], ['duration', 'irrelevant'])
     expr1 = Expression.column_reference('year')
-    expr2 = Expression.construct('cast({} as bigint)', df.duration)
+    expr2 = BTExpression.construct('cast({} as bigint)', df.duration)
     expr_sum = Expression.construct('{} + {}', expr1, expr2)
     expr_str = Expression.construct('"Finished in " || cast(({}) as text) || " or later."', expr_sum)
     assert expression_to_sql(expr_str.resolve_column_references()) == \

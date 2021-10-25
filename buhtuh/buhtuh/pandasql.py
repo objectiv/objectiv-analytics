@@ -1,6 +1,6 @@
 from copy import copy
 from typing import List, Set, Union, Dict, Any, Optional, Tuple, cast, NamedTuple, \
-    TYPE_CHECKING, Callable
+    TYPE_CHECKING, Callable, Sequence
 from uuid import UUID
 
 import pandas
@@ -972,11 +972,11 @@ class BuhTuhDataFrame:
         sql = to_sql(model)
         return sql
 
-    def _get_all_index_expressions(self, table_name: str = None) -> List[Expression]:
+    def _get_all_index_expressions(self, table_name: str = None) -> Sequence[Expression]:
         return [Expression.column_reference(index_column).resolve_column_references(table_name)
                 for index_column in self.index.keys()]
 
-    def _get_all_column_expressions(self, table_name: str = None) -> List[Expression]:
+    def _get_all_column_expressions(self, table_name: str = None) -> Sequence[Expression]:
         return [series.get_column_expression().resolve_column_references(table_name)
                 for series in self.data.values()]
 

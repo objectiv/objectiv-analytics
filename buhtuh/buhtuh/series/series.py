@@ -7,8 +7,9 @@ from typing import Optional, Dict, Tuple, Union, Type, Any, List, cast, TYPE_CHE
 from uuid import UUID
 
 from buhtuh import BuhTuhDataFrame, SortColumn, DataFrameOrSeries, get_series_type_from_dtype
-from buhtuh.expression import quote_identifier, Expression
+from buhtuh.expression import Expression
 from buhtuh.types import value_to_dtype
+from sql_models.expression import quote_identifier
 from sql_models.model import SqlModel
 
 if TYPE_CHECKING:

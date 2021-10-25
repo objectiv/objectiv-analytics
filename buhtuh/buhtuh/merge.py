@@ -5,7 +5,8 @@ from enum import Enum
 from typing import Union, List, Tuple, Optional, Dict, Set, NamedTuple, TYPE_CHECKING
 
 from buhtuh import DataFrameOrSeries, BuhTuhDataFrame, ColumnNames, BuhTuhSeries
-from buhtuh.expression import quote_identifier, Expression
+from buhtuh.expression import Expression
+from sql_models.expression import quote_identifier
 from sql_models.model import CustomSqlModel, SqlModel
 
 if TYPE_CHECKING:
