@@ -56,7 +56,7 @@ class Cursor:
 
 class Connection:
 
-    def __init__(self, dsn: str, default_timeout=20000):
+    def __init__(self, dsn: str, default_timeout: int = 20000):
         self._endpoint = dsn
         self._cursor = Cursor(self)
 
@@ -131,8 +131,12 @@ class Connection:
     def cursor(self) -> Cursor:
         return self._cursor
 
-    def execute(self, query, timeout=10000) -> Result:
+    def execute(self, query: str, timeout: int = None) -> Result:
+        if not timeout:
+            timeout = self.default_timeout
+        # reset description of columns
         self.description = None
+
         response = self._do_query(query, timeout)
         if response['result'] == 'ok':
             self.description = response['description']
