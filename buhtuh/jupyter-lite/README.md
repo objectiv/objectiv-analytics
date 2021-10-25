@@ -28,7 +28,7 @@ pip wheel . -w jupyter-lite/files
 4. Build buhtuh package
 ```bash
 cd ../buhtuh
-pip wheel . -w ../jupyter-lite/jupyter-lite/files
+pip wheel . -w jupyter-lite/jupyter-lite/files --no-deps
 ```
 
 
