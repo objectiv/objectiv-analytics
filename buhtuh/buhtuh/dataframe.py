@@ -434,6 +434,9 @@ class BuhTuhDataFrame:
                 # HAVING is not implemented yet
                 raise ValueError("Please materialize this the DataFrame before creating the expression. "
                                  "Use df.get_df_materialized_model() to do so.")
+            if key.flag_agg_function:
+                raise ValueError("Cannot use a Boolean series that contains a non-materialized "
+                                 "aggregation function or a windowing function as Boolean row selector")
 
             model_builder = CustomSqlModel(
                 name='boolean_selection',

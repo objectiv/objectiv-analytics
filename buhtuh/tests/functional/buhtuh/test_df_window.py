@@ -272,8 +272,13 @@ def test_windowing_expressions():
 
 def test_windowing_boolean_functions():
     # Windowing function are not allowed as boolean row selectors.
-    # TODO We need the flags to check for this though.
-    pass
+    bt = get_bt_with_test_data(full_data_set=True)
+    btg_min_fnd = bt.groupby('municipality')['founding'].min()
+    with pytest.raises(ValueError, match='non-materialized aggregation'):
+        x = bt[btg_min_fnd == bt.founding]
+    with pytest.raises(ValueError, match='non-materialized aggregation'):
+        # TODO: make the aggregation flag propagate properly
+        x = bt[bt.founding == btg_min_fnd]
 
 
 def test_rolling_defaults_vs_pandas():

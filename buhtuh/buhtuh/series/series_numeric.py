@@ -32,7 +32,9 @@ class BuhTuhSeriesAbstractNumeric(BuhTuhSeries, ABC):
         self._check_supported('sub', ['int64', 'float64'], other)
         expression = Expression.construct('({}) - ({})', self, other)
         new_dtype = 'float64' if 'float64' in (self.dtype, other.dtype) else 'int64'
-        return self.copy_override(dtype=new_dtype, expression=expression)
+        # TODO: do this for all operations. OR (better) move this logic to Expression
+        flag_agg = self.flag_agg_function or other.flag_agg_function
+        return self.copy_override(dtype=new_dtype, expression=expression, flag_agg_function=flag_agg)
 
     def _comparator_operator(self, other, comparator):
         other = const_to_series(base=self, value=other)
