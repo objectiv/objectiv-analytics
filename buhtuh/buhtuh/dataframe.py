@@ -1274,14 +1274,6 @@ class BuhTuhDataFrame:
                                     skipna=skipna, ddof=ddof, **kwargs)
 
     def sum(self, axis=None, skipna=True, level=None, numeric_only=False, min_count=0, **kwargs):
-        # execution:
-        # df.sum()
-        # df._aggregate_func('sum', ...)
-        # df.agg('sum', ...)
-        # series.apply_func({'column': ['sum']}, ..)
-        # series_subclass.sum(...)
-        # series.derived_agg_func.sum(...)
-        # series.copy_override(..., expression=Expression.construct('sum({})))
         return self._aggregate_func('sum', axis, level, numeric_only,
                                     skipna=skipna, min_count=min_count, **kwargs)
 
