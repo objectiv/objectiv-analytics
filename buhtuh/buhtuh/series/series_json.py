@@ -30,14 +30,16 @@ class BuhTuhSeriesJsonb(BuhTuhSeries):
                  name: str,
                  expression: Expression,
                  group_by: 'BuhTuhGroupBy',
-                 sorted_ascending: Optional[bool] = None):
+                 sorted_ascending: Optional[bool] = None,
+                 **kwargs):
         super().__init__(engine,
                          base_node,
                          index,
                          name,
                          expression,
                          group_by,
-                         sorted_ascending)
+                         sorted_ascending,
+                         **kwargs)
         self.json = Json(self)
 
     def __getitem__(self, key: Union[Any, slice]):
@@ -101,7 +103,8 @@ class BuhTuhSeriesJson(BuhTuhSeriesJsonb):
                  name: str,
                  expression: Expression,
                  group_by: 'BuhTuhGroupBy',
-                 sorted_ascending: Optional[bool] = None):
+                 sorted_ascending: Optional[bool] = None,
+                 **kwargs):
 
         super().__init__(engine,
                          base_node,
@@ -109,7 +112,8 @@ class BuhTuhSeriesJson(BuhTuhSeriesJsonb):
                          name,
                          Expression.construct(f'cast({{}} as jsonb)', expression),
                          group_by,
-                         sorted_ascending)
+                         sorted_ascending,
+                         **kwargs)
 
 
 class Json:

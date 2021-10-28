@@ -481,5 +481,16 @@ def test_groupby_frame_split_recombine_aggregation_applied():
         )
 
 
-
-
+def test_materialize_on_double_aggregation():
+    # When we use a aggregation function twice, we need to materialize the node in between, because it's not
+    # possible to nest the aggregate function calls. I.e. you cannot do `avg(sum(x))`
+    # You cannot
+    bt = get_bt_with_test_data(full_data_set=True)
+    btg = bt.groupby('municipality')[['founding']]
+    btg = btg.sum()
+    with pytest.raises(ValueError, match='already aggregated'):
+        btg.mean('founding_sum')
+    # After manually materializing the frame everything is OK again.
+    btg = btg.get_df_materialized_model()
+    btg = btg.mean('founding_sum')
+    assert_equals_data(btg, expected_columns=['index', 'founding_sum_mean'], expected_data=[[1,	2413.5]])

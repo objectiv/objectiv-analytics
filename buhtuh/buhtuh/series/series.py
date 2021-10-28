@@ -43,7 +43,10 @@ class BuhTuhSeries(ABC):
                  name: str,
                  expression: Expression,
                  group_by: Optional['BuhTuhGroupBy'],
-                 sorted_ascending: Optional[bool] = None):
+                 sorted_ascending: Optional[bool] = None,
+                 flag_nullable: bool = True,
+                 flag_aggregation_function: bool = False,
+                 **kwargs):
         """
         Initialize a new BuhTuhSeries object.
         If a BuhTuhSeries is associated with a BuhTuhDataFrame. The engine, base_node and index
@@ -79,6 +82,8 @@ class BuhTuhSeries(ABC):
         self._expression = expression
         self._group_by = group_by
         self._sorted_ascending = sorted_ascending
+        self._flag_nullable = flag_nullable
+        self._flag_aggregation_function = flag_aggregation_function
 
     @property
     @classmethod
@@ -181,6 +186,14 @@ class BuhTuhSeries(ABC):
     def expression(self) -> Expression:
         return self._expression
 
+    @property
+    def flag_nullable(self) -> bool:
+        return self._flag_nullable
+
+    @property
+    def flag_aggregation_function(self) -> bool:
+        return self._flag_aggregation_function
+
     @classmethod
     def get_class_instance(
             cls,
@@ -235,14 +248,16 @@ class BuhTuhSeries(ABC):
         return result
 
     def copy_override(self,
-                      dtype=None,
+                      dtype: str = None,
                       engine=None,
-                      base_node=None,
-                      index=None,
-                      name=None,
-                      expression=None,
+                      base_node: SqlModel = None,
+                      index: Dict[str, 'BuhTuhSeries'] = None,
+                      name: str = None,
+                      expression: Expression = None,
                       group_by: List[Union['BuhTuhGroupBy', None]] = None,  # List so [None] != None
-                      sorted_ascending=None):
+                      sorted_ascending: bool = None,
+                      flag_nullable: bool = None,
+                      flag_aggregation_function: bool = None):
         """
         Big fat warning: group_by can legally be None, but if you want to set that,
         set the param in a list: [None], or [someitem]. If you set None, it will be left alone.
@@ -255,7 +270,9 @@ class BuhTuhSeries(ABC):
             name=self._name if name is None else name,
             expression=self._expression if expression is None else expression,
             group_by=self._group_by if group_by is None else group_by[0],
-            sorted_ascending=self._sorted_ascending if sorted_ascending is None else sorted_ascending
+            sorted_ascending=self._sorted_ascending if sorted_ascending is None else sorted_ascending,
+            flag_nullable=self._flag_nullable if flag_nullable is None else flag_nullable,
+            flag_aggregation_function=self._flag_aggregation_function if flag_aggregation_function is None else flag_aggregation_function  # noqa
         )
 
     def get_column_expression(self, table_alias='') -> str:
@@ -461,6 +478,11 @@ class BuhTuhSeries(ABC):
         if len(func) == 0:
             raise Exception('Nothing to do.')
 
+        if self.flag_aggregation_function:
+            raise ValueError('Cannot call an aggregation function on an already aggregated column. Try '
+                             'calling get_df_materialized_model() on the DataFrame this Series belongs to '
+                             'first.')
+
         series = {}
         for fn in func:
             if isinstance(fn, str):
@@ -608,7 +630,8 @@ class BuhTuhSeries(ABC):
             return self.copy_override(dtype=derived_dtype,
                                       index=partition.index,
                                       group_by=[partition],
-                                      expression=expression)
+                                      expression=expression,
+                                      flag_aggregation_function=True)
         else:
             return self.copy_override(dtype=derived_dtype,
                                       expression=partition.get_window_expression(expression))

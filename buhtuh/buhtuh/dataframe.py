@@ -1110,6 +1110,7 @@ class BuhTuhDataFrame:
                 if k not in self._data:
                     raise KeyError(f'{k} not found in group by series')
                 if isinstance(v, str) or callable(v):
+                    # TODO: why do we convert to a list? series.apply_func doesn't need that. Same below
                     apply_dict[k] = [v]
                 elif isinstance(v, list):
                     apply_dict[k] = v
@@ -1148,6 +1149,9 @@ class BuhTuhDataFrame:
                    exclude_non_applied: bool = False,
                    *args, **kwargs) -> 'BuhTuhDataFrame':
         """ see apply_to_series() """
+        # TODO: this function is never used. Either:
+        #   1) Remove it
+        #   2) Treat it as an end-user function: add documentation and tests
         series = self._apply_func_to_series(func, axis, numeric_only,
                                             exclude_non_applied, *args, **kwargs)
         return self.copy_override(series={s.name: s for s in series})
@@ -1172,7 +1176,7 @@ class BuhTuhDataFrame:
             **kwargs) -> 'BuhTuhDataFrame':
         """
         :param func: the aggregations to apply on all series.
-            See apply_func() for supported arguments
+            See _apply_func_to_series() for supported arguments
         :param axis: the aggregation axis
         :param numeric_only: Whether to aggregate numeric series only, or attempt all.
         :param group_by: The grouping to use, defaults to entire dataframe
@@ -1196,7 +1200,26 @@ class BuhTuhDataFrame:
                                   group_by=[group_by],
                                   order_by=[])
 
-    def _aggregate_func(self, func, axis, level, numeric_only, *args, **kwargs):
+    def _aggregate_func(self, func: str, axis, level, numeric_only, *args, **kwargs) -> 'BuhTuhDataFrame':
+        """
+        Return a copy of this dataframe with the aggregate function applied (but not materialized).
+        :param func: sql fragment that will be applied as 'func(column_name)', e.g. 'sum'
+        """
+
+        """
+        Internals documentation (todo: move this somewhere else?)
+
+        Typical execution trace, in this case for calling sum on a DataFrame:
+         * df.sum()
+         * df._aggregate_func('sum', ...)
+         * df.agg('sum', ...)
+         * df._apply_func_to_series('sum', ...)
+         then per series object:
+          * series.apply_func({'column': ['sum']}, ..)
+          * series_subclass.sum(...)
+          * series.derived_agg_func(partition, 'sum', ...)
+          * series.copy_override(..., expression=Expression.construct('sum({})'))
+        """
         if level is not None:
             raise NotImplementedError("index levels are currently not implemented")
         return self.agg(func, axis, numeric_only, *args, **kwargs)
@@ -1264,6 +1287,14 @@ class BuhTuhDataFrame:
                                     skipna=skipna, ddof=ddof, **kwargs)
 
     def sum(self, axis=None, skipna=True, level=None, numeric_only=False, min_count=0, **kwargs):
+        # execution:
+        # df.sum()
+        # df._aggregate_func('sum', ...)
+        # df.agg('sum', ...)
+        # series.apply_func({'column': ['sum']}, ..)
+        # series_subclass.sum(...)
+        # series.derived_agg_func.sum(...)
+        # series.copy_override(..., expression=Expression.construct('sum({})))
         return self._aggregate_func('sum', axis, level, numeric_only,
                                     skipna=skipna, min_count=min_count, **kwargs)
 
