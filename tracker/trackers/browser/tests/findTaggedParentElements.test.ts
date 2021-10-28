@@ -98,7 +98,7 @@ describe('findTaggedParentElements', () => {
   });
 
   it('should console.error and exit early if parentElementId is not a Tracked Element', () => {
-    jest.spyOn(global.console, 'error');
+    jest.spyOn(console, 'error').mockImplementation(() => {});
 
     const div = document.createElement('div');
     div.setAttribute(TaggingAttribute.context, 'div');

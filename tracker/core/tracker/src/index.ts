@@ -4,6 +4,7 @@ export * from './ContextFactories';
 export * from './EventFactories';
 export * from './helpers';
 export * from './Tracker';
+export * from './TrackerConsole';
 export * from './TrackerEvent';
 export * from './TrackerPluginInterface';
 export * from './TrackerPluginLifecycleInterface';

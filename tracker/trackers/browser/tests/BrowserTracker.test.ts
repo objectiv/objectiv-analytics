@@ -2,8 +2,19 @@ import { TrackerEvent, TrackerPlugins, TrackerQueue, TrackerTransportRetry } fro
 import fetchMock from 'jest-fetch-mock';
 import { clear, mockUserAgent } from 'jest-useragent-mock';
 import { BrowserTracker, defaultFetchFunction, FetchAPITransport } from '../src/';
+import { mockConsole } from './mocks/MockConsole';
 
 describe('BrowserTracker', () => {
+  beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'group').mockImplementation(() => {});
+    jest.spyOn(console, 'groupCollapsed').mockImplementation(() => {});
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
   it('should not instantiate without either `transport` or `endpoint`', () => {
     expect(
       () =>
@@ -69,6 +80,64 @@ describe('BrowserTracker', () => {
     });
     expect(testTracker).toBeInstanceOf(BrowserTracker);
     expect(testTracker.transport).toBeInstanceOf(FetchAPITransport);
+  });
+
+  describe('env sensitive logic', () => {
+    const OLD_ENV = process.env;
+
+    beforeEach(() => {
+      process.env = { ...OLD_ENV };
+    });
+
+    afterAll(() => {
+      process.env = OLD_ENV;
+    });
+
+    it('Tracker instance should automatically bind to global console', () => {
+      process.env.NODE_ENV = 'dev';
+
+      const testTracker = new BrowserTracker({
+        applicationId: 'app-id',
+        transport: new FetchAPITransport({ endpoint: 'localhost' }),
+      });
+
+      expect(testTracker.console).toEqual(console);
+    });
+
+    it('should not crash if NODE_ENV is undefined', () => {
+      process.env.NODE_ENV = undefined;
+
+      const testTracker = new BrowserTracker({
+        applicationId: 'app-id',
+        transport: new FetchAPITransport({ endpoint: 'localhost' }),
+      });
+
+      expect(testTracker.console).toEqual(undefined);
+    });
+
+    it('Should not automatically bind to global console if we are in dev mode and console has been specified', () => {
+      process.env.NODE_ENV = 'dev';
+
+      const testTracker = new BrowserTracker({
+        applicationId: 'app-id',
+        transport: new FetchAPITransport({ endpoint: 'localhost' }),
+        console: mockConsole,
+      });
+
+      expect(testTracker.console).toEqual(mockConsole);
+    });
+
+    it('Should not automatically bind to global console if `null` has been specified ', () => {
+      process.env.NODE_ENV = 'dev';
+
+      const testTracker = new BrowserTracker({
+        applicationId: 'app-id',
+        transport: new FetchAPITransport({ endpoint: 'localhost' }),
+        console: mockConsole,
+      });
+
+      expect(testTracker.console).toEqual(mockConsole);
+    });
   });
 
   describe('Default Plugins', () => {

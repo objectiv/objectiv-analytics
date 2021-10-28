@@ -1,5 +1,5 @@
 import { NonEmptyArray } from './helpers';
-import { TrackerConsole } from './Tracker';
+import { TrackerConsole } from './TrackerConsole';
 import { TrackerTransportConfig, TrackerTransportInterface, TransportableEvent } from './TrackerTransportInterface';
 
 /**

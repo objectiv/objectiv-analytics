@@ -1,14 +1,18 @@
-import { makeSectionVisibleEvent } from '@objectiv/tracker-core';
+import { generateUUID, makeSectionVisibleEvent } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, makeTracker, TaggingAttribute } from '../src';
 import { trackVisibilityVisibleEvent } from '../src/observer/trackVisibilityVisibleEvent';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 
 describe('trackVisibilityVisibleEvent', () => {
-  beforeEach(() => {
-    jest.resetAllMocks();
-    makeTracker({ applicationId: 'test', endpoint: 'test' });
+  beforeAll(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    makeTracker({ applicationId: generateUUID(), endpoint: 'test' });
     expect(getTracker()).toBeInstanceOf(BrowserTracker);
     jest.spyOn(getTracker(), 'trackEvent');
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
   });
 
   it('should not track elements without visibility tagging attributes', async () => {

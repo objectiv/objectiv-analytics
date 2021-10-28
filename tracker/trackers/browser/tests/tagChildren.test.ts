@@ -9,6 +9,9 @@ import {
 } from '../src';
 
 describe('tagChild and tagChildren', () => {
+  beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
   afterEach(() => {
     jest.resetAllMocks();
   });
@@ -59,7 +62,7 @@ describe('tagChild and tagChildren', () => {
   });
 
   it('should call `console.error` when an error occurs and `onError` has not been provided', () => {
-    jest.spyOn(console, 'error');
+    jest.spyOn(console, 'error').mockImplementation(() => {});
 
     // @ts-ignore
     tagChild({ queryAll: {} });
@@ -68,7 +71,7 @@ describe('tagChild and tagChildren', () => {
   });
 
   it('should return query and tagAs attributes', () => {
-    jest.spyOn(console, 'error');
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     const parameters = { queryAll: '#two', tagAs: tagElement({ id: 'element-two' }) };
 
     const attributes1 = tagChild(parameters);

@@ -1,6 +1,7 @@
 import { ApplicationContext } from '@objectiv/schema';
 import { makeApplicationContext } from './ContextFactories';
-import { TrackerConfig, TrackerConsole } from './Tracker';
+import { TrackerConfig } from './Tracker';
+import { TrackerConsole } from './TrackerConsole';
 import { TrackerEvent } from './TrackerEvent';
 import { TrackerPluginConfig, TrackerPluginInterface } from './TrackerPluginInterface';
 

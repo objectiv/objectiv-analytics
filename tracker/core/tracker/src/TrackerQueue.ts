@@ -1,5 +1,5 @@
 import { isNonEmptyArray, NonEmptyArray } from './helpers';
-import { TrackerConsole } from './Tracker';
+import { TrackerConsole } from './TrackerConsole';
 import { TrackerEvent } from './TrackerEvent';
 import { TrackerQueueInterface, TrackerQueueProcessFunction } from './TrackerQueueInterface';
 import { TrackerQueueMemoryStore } from './TrackerQueueMemoryStore';

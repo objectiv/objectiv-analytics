@@ -1,4 +1,4 @@
-import { makeSectionContext, makeSectionHiddenEvent } from '@objectiv/tracker-core';
+import { generateUUID, makeSectionContext, makeSectionHiddenEvent } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, makeTracker, TaggingAttribute } from '../src';
 import { trackRemovedElements } from '../src/observer/trackRemovedElements';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
@@ -6,7 +6,7 @@ import { makeTaggedElement } from './mocks/makeTaggedElement';
 describe('trackRemovedElements', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    makeTracker({ applicationId: 'test', endpoint: 'test' });
+    makeTracker({ applicationId: generateUUID(), endpoint: 'test' });
     expect(getTracker()).toBeInstanceOf(BrowserTracker);
     jest.spyOn(getTracker(), 'trackEvent');
   });
@@ -18,7 +18,6 @@ describe('trackRemovedElements', () => {
 
     anotherDiv.appendChild(button);
     div.appendChild(anotherDiv);
-    document.body.appendChild(div);
 
     trackRemovedElements(div, getTracker());
 
@@ -32,7 +31,6 @@ describe('trackRemovedElements', () => {
 
     trackedDiv.appendChild(trackedChildDiv);
     trackedChildDiv.appendChild(trackedButton);
-    document.body.appendChild(trackedDiv);
 
     trackRemovedElements(trackedDiv, getTracker());
 
@@ -48,7 +46,6 @@ describe('trackRemovedElements', () => {
 
     trackedDiv.appendChild(trackedButton);
     div.appendChild(trackedDiv);
-    document.body.appendChild(div);
 
     trackRemovedElements(div, getTracker());
 
@@ -67,7 +64,6 @@ describe('trackRemovedElements', () => {
 
     trackedDiv.appendChild(trackedButton);
     div.appendChild(trackedDiv);
-    document.body.appendChild(div);
 
     trackRemovedElements(div, getTracker());
 
@@ -75,7 +71,7 @@ describe('trackRemovedElements', () => {
   });
 
   it('should console error', async () => {
-    jest.spyOn(console, 'error');
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     const div = document.createElement('div');
     const trackedDiv = makeTaggedElement('div', 'div', 'div');
     trackedDiv.setAttribute(TaggingAttribute.trackVisibility, '{"mode":"broken"}');
@@ -83,7 +79,6 @@ describe('trackRemovedElements', () => {
 
     trackedDiv.appendChild(trackedButton);
     div.appendChild(trackedDiv);
-    document.body.appendChild(div);
 
     trackRemovedElements(div, getTracker());
 
@@ -92,7 +87,7 @@ describe('trackRemovedElements', () => {
   });
 
   it('should console error', async () => {
-    jest.spyOn(console, 'error');
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     const div = document.createElement('div');
     jest.spyOn(div, 'querySelectorAll').mockImplementation(() => {
       throw new Error();
@@ -101,6 +96,6 @@ describe('trackRemovedElements', () => {
     trackRemovedElements(div, getTracker());
 
     expect(getTracker().trackEvent).not.toHaveBeenCalled();
-    expect(console.error).toHaveBeenCalledTimes(2);
+    expect(console.error).toHaveBeenCalledTimes(1);
   });
 });

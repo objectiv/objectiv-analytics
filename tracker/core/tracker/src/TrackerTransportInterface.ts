@@ -1,6 +1,6 @@
 import ExtendableError from 'es6-error';
 import { NonEmptyArray } from './helpers';
-import { TrackerConsole } from './Tracker';
+import { TrackerConsole } from './TrackerConsole';
 import { TrackerEvent } from './TrackerEvent';
 
 /**

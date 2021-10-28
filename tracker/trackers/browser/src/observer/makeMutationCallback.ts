@@ -1,94 +1,13 @@
-import { getTracker } from '../globals';
+import { AutoTrackingState } from '../global/AutoTrackingState';
+import { getTracker } from '../global/getTracker';
 import { getLocationHref } from '../helpers';
-import { TaggingAttribute } from '../TaggingAttribute';
-import { BrowserTrackerConfig } from '../tracker/BrowserTracker';
-import { trackApplicationLoaded, trackURLChange } from '../tracker/trackEventHelpers';
+import { trackURLChange } from '../tracker/trackEventHelpers';
 import { trackerErrorHandler } from '../trackerErrorHandler';
 import { isTaggedElement } from '../typeGuards';
 import { trackNewElements } from './trackNewElements';
 import { trackRemovedElements } from './trackRemovedElements';
 import { trackVisibilityHiddenEvent } from './trackVisibilityHiddenEvent';
 import { trackVisibilityVisibleEvent } from './trackVisibilityVisibleEvent';
-
-/**
- * Global state
- */
-export const AutoTrackingState: {
-  observerInstance: MutationObserver | null,
-  applicationLoaded: boolean,
-  previousURL: string | undefined,
-} = {
-  /**
-   * Holds the instance to the Tagged Elements Mutation Observer created by `startAutoTracking`
-   */
-  observerInstance: null,
-
-  /**
-   * Whether we already tracked the ApplicationLoaded Event or not
-   */
-  applicationLoaded: false,
-
-  /**
-   * Holds the last seen URL
-   */
-  previousURL: getLocationHref(),
-}
-
-/**
- * The options that `startAutoTracking` accepts
- */
-export type AutoTrackingOptions = Pick<BrowserTrackerConfig, 'trackURLChanges' | 'trackApplicationLoaded'>;
-
-/**
- * Initializes our automatic tracking, based on Mutation Observer.
- * Also tracks application Loaded.
- * Safe to call multiple times: it will auto-track only once.
- */
-export const startAutoTracking = (options?: AutoTrackingOptions) => {
-  try {
-    // Nothing to do if we are already auto-tracking
-    if(AutoTrackingState.observerInstance) {
-      return;
-    }
-
-    // Create Mutation Observer
-    AutoTrackingState.observerInstance = new MutationObserver(makeMutationCallback(options?.trackURLChanges ?? true));
-
-    // Start observing DOM
-    AutoTrackingState.observerInstance.observe(document, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: [TaggingAttribute.trackVisibility],
-    });
-
-    // Track ApplicationLoaded Event - once
-    if ((options?.trackApplicationLoaded ?? true) && !AutoTrackingState.applicationLoaded) {
-      AutoTrackingState.applicationLoaded = true;
-      trackApplicationLoaded({ tracker: getTracker() });
-    }
-  } catch (error) {
-    trackerErrorHandler(error);
-  }
-};
-
-/**
- * Stops autoTracking
- */
-export const stopAutoTracking = () => {
-  try {
-    // Nothing to do if we are not auto-tracking
-    if(!AutoTrackingState.observerInstance) {
-      return;
-    }
-
-    // Stop Mutation Observer
-    AutoTrackingState.observerInstance.disconnect()
-    AutoTrackingState.observerInstance = null;
-  } catch (error) {
-    trackerErrorHandler(error);
-  }
-};
 
 /**
  * A factory to generate our mutation observer callback. It will observe:

@@ -1,11 +1,11 @@
-import { makeSectionVisibleEvent } from '@objectiv/tracker-core';
+import { generateUUID, makeSectionVisibleEvent } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, makeTracker, tagButton, tagElement, TaggingAttribute } from '../src';
 import { trackNewElements } from '../src/observer/trackNewElements';
 
 describe('trackNewElements', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    makeTracker({ applicationId: 'test', endpoint: 'test' });
+    makeTracker({ applicationId: generateUUID(), endpoint: 'test' });
     expect(getTracker()).toBeInstanceOf(BrowserTracker);
     jest.spyOn(getTracker(), 'trackEvent');
   });
@@ -53,7 +53,7 @@ describe('trackNewElements', () => {
   });
 
   it('should console error', async () => {
-    jest.spyOn(console, 'error');
+    jest.spyOn(console, 'error').mockImplementation(() => {});
 
     // @ts-ignore
     trackNewElements(null, getTracker());

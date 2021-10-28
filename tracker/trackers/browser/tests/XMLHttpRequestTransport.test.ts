@@ -4,6 +4,7 @@ import { XMLHttpRequestTransport } from '../src';
 import { mockConsole } from './mocks/MockConsole';
 
 beforeEach(() => {
+  jest.spyOn(console, 'error').mockImplementation(() => {});
   xhrMock.setup();
   jest.useFakeTimers();
 });
@@ -11,6 +12,7 @@ beforeEach(() => {
 afterEach(() => {
   xhrMock.teardown();
   jest.useRealTimers();
+  jest.resetAllMocks();
 });
 
 describe('XMLHttpRequestTransport', () => {

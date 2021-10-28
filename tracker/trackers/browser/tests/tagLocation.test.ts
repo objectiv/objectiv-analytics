@@ -14,6 +14,13 @@ import { matchElementId } from './mocks/matchElementId';
 import { mockConsole } from './mocks/MockConsole';
 
 describe('tagLocation', () => {
+  beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
   it('should return an empty object when error occurs', () => {
     // @ts-ignore
     expect(tagLocation()).toBeUndefined();
@@ -52,7 +59,7 @@ describe('tagLocation', () => {
   });
 
   it('should call `console.error` when an error occurs and `onError` has not been provided', () => {
-    const consoleErrorMock = jest.spyOn(console, 'error');
+    const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     // @ts-ignore
     tagLocation({ instance: {} });

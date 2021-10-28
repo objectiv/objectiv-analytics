@@ -12,6 +12,13 @@ import {
 import { matchElementId } from './mocks/matchElementId';
 
 describe('tagLocationHelpers', () => {
+  beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
   it('should return an empty object when error occurs', () => {
     // @ts-ignore
     expect(tagElement()).toBeUndefined();

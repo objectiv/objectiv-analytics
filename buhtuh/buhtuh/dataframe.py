@@ -432,7 +432,6 @@ class BuhTuhDataFrame:
                                  'and then create a new Boolean series on the resulting merged data.')
             if self._group_by is not None:
                 # HAVING is not implemented yet
-                self.get_df_materialized_model()
                 raise ValueError("Please materialize this the DataFrame before creating the expression. "
                                  "Use df.get_df_materialized_model() to do so.")
 

@@ -1,4 +1,5 @@
-import { Tracker, TrackerConsole } from './Tracker';
+import { Tracker } from './Tracker';
+import { TrackerConsole } from './TrackerConsole';
 import { TrackerEvent } from './TrackerEvent';
 import { TrackerPluginConfig, TrackerPluginInterface } from './TrackerPluginInterface';
 import { TrackerPluginLifecycleInterface } from './TrackerPluginLifecycleInterface';

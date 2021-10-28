@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-import { makeClickEvent } from '@objectiv/tracker-core';
+import { generateUUID, makeClickEvent } from '@objectiv/tracker-core';
 import {
   BrowserTracker,
   DebugTransport,
@@ -20,7 +20,7 @@ import {
 
 describe('Without DOM', () => {
   beforeEach(() => {
-    jest.spyOn(console, 'error');
+    jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -28,7 +28,7 @@ describe('Without DOM', () => {
   });
 
   it('should throw if Window does not exists', async () => {
-    expect(() => makeTracker({ applicationId: 'test', transport: new DebugTransport() })).toThrow(
+    expect(() => makeTracker({ applicationId: generateUUID(), transport: new DebugTransport() })).toThrow(
       'Cannot access the Window interface.'
     );
 
@@ -93,7 +93,7 @@ describe('Without DOM', () => {
   });
 
   it('should console error when MutationObserver is not available', async () => {
-    jest.spyOn(console, 'error');
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     const tracker = new BrowserTracker({ applicationId: 'app', transport: new DebugTransport() });
     jest.spyOn(tracker, 'trackEvent');
 
@@ -104,7 +104,7 @@ describe('Without DOM', () => {
   });
 
   it('should console error when mutationCallback receives garbled data', async () => {
-    jest.spyOn(console, 'error');
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     const tracker = new BrowserTracker({ applicationId: 'app', transport: new DebugTransport() });
     jest.spyOn(tracker, 'trackEvent');
     const mutationCallback = makeMutationCallback(false);

@@ -1,6 +1,6 @@
-import { getTrackerRepository } from './globals';
-import { startAutoTracking } from './observer/startAutoTracking';
-import { BrowserTracker, BrowserTrackerConfig } from './tracker/BrowserTracker';
+import { startAutoTracking } from '../global/startAutoTracking';
+import { BrowserTracker, BrowserTrackerConfig } from '../tracker/BrowserTracker';
+import { getTrackerRepository } from './getTrackerRepository';
 
 /**
  * Allows to easily create and configure a new BrowserTracker instance and also starts auto tracking

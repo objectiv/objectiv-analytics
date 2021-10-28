@@ -1,14 +1,19 @@
-import { makeInputChangeEvent, makeInputContext } from '@objectiv/tracker-core';
-import { BrowserTracker, getTracker, makeTracker } from '../src/';
+import { generateUUID, makeInputChangeEvent } from '@objectiv/tracker-core';
+import { BrowserTracker, getTracker, getTrackerRepository, makeTracker } from '../src/';
 import { makeBlurEventHandler } from '../src/observer/makeBlurEventHandler';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 
 describe('makeBlurEventHandler', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    makeTracker({ applicationId: 'test', endpoint: 'test' });
+    makeTracker({ applicationId: generateUUID(), endpoint: 'test' });
     expect(getTracker()).toBeInstanceOf(BrowserTracker);
     jest.spyOn(getTracker(), 'trackEvent');
+  });
+
+  afterEach(() => {
+    getTrackerRepository().trackersMap = new Map();
+    getTrackerRepository().defaultTracker = undefined;
   });
 
   it('should track Input Change when invoked from a valid target', () => {
@@ -59,7 +64,9 @@ describe('makeBlurEventHandler', () => {
     expect(getTracker().trackEvent).toHaveBeenCalledTimes(1);
     expect(getTracker().trackEvent).toHaveBeenNthCalledWith(
       1,
-      makeInputChangeEvent({ location_stack: [makeInputContext({ id: 'input' })] })
+      expect.objectContaining(
+        makeInputChangeEvent({ location_stack: [expect.objectContaining({ _type: 'InputContext', id: 'input' })] })
+      )
     );
   });
 });

@@ -2,18 +2,11 @@ import { AbstractGlobalContext, AbstractLocationContext, Contexts } from '@objec
 import { ApplicationContextPlugin } from './ApplicationContextPlugin';
 import { ContextsConfig } from './Context';
 import { waitForPromise } from './helpers';
+import { TrackerConsole } from './TrackerConsole';
 import { TrackerEvent, TrackerEventConfig } from './TrackerEvent';
 import { TrackerPlugins } from './TrackerPlugins';
 import { TrackerQueueInterface } from './TrackerQueueInterface';
 import { TrackerTransportInterface } from './TrackerTransportInterface';
-
-/**
- * TrackerConsole is a simplified implementation of Console.
- */
-export type TrackerConsole = Pick<
-  Console,
-  'debug' | 'error' | 'group' | 'groupCollapsed' | 'groupEnd' | 'info' | 'log' | 'warn'
->;
 
 /**
  * The configuration of the Tracker

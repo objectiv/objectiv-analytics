@@ -1,4 +1,4 @@
-import { TrackerConsole } from './Tracker';
+import { TrackerConsole } from './TrackerConsole';
 import { TrackerPluginLifecycleInterface } from './TrackerPluginLifecycleInterface';
 
 /**
