@@ -16,7 +16,18 @@ if TYPE_CHECKING:
     from buhtuh.series import BuhTuhSeries, BuhTuhSeriesBoolean, BuhTuhSeriesAbstractNumeric
 
 DataFrameOrSeries = Union['BuhTuhDataFrame', 'BuhTuhSeries']
+""" ColumnNames: a single column name, or a list of column names """
 ColumnNames = Union[str, List[str]]
+"""
+ColumnFunction: Identifier for a function that can be applied to a column, possibly in the context of a
+    window or aggregation.
+    Accepted combinations are:
+    - function
+    - string function name
+    - list of functions and/or function names, e.g. [BuhTuhSeriesInt64.sum, 'mean']
+    - dict of axis labels -> functions, function names or list of such.
+"""
+ColumnFunction = Union[str, Callable, List[Union[str, Callable]]]
 
 
 class SortColumn(NamedTuple):
@@ -1070,8 +1081,7 @@ class BuhTuhDataFrame:
         )
 
     def _apply_func_to_series(self,
-                              func: Union[str, Callable, List[Union[str, Callable]],
-                                          Dict[str, Union[str, Callable, List[Union[str, Callable]]]]],
+                              func: Union[ColumnFunction, Dict[str, ColumnFunction]],
                               axis: int = 1,
                               numeric_only: bool = False,
                               exclude_non_applied: bool = False,
@@ -1103,29 +1113,20 @@ class BuhTuhDataFrame:
             raise NotImplementedError("numeric_only=None to attempt all columns but ignore "
                                       "failing ones silently is currently not implemented.")
 
-        apply_dict: Dict[str, List[Union[str, Callable]]] = {}
+        apply_dict: Dict[str, ColumnFunction] = {}
         if isinstance(func, dict):
             # make sure the keys are series we know
             for k, v in func.items():
                 if k not in self._data:
                     raise KeyError(f'{k} not found in group by series')
-                if isinstance(v, str) or callable(v):
-                    # TODO: why do we convert to a list? series.apply_func doesn't need that. Same below
-                    apply_dict[k] = [v]
-                elif isinstance(v, list):
-                    apply_dict[k] = v
-                else:
+                if not isinstance(v, (str, list)) and not callable(v):
                     raise TypeError(f'Unsupported value type {type(v)} in func dict for key {k}')
+                apply_dict[k] = v
         elif isinstance(func, (str, list)) or callable(func):
-            apply_dict = {}
             # check whether we need to exclude non-numeric
             for name, series in self.data.items():
-                if numeric_only and not isinstance(series, BuhTuhSeriesAbstractNumeric):
-                    continue
-                if isinstance(func, list):
+                if not numeric_only or isinstance(series, BuhTuhSeriesAbstractNumeric):
                     apply_dict[name] = func
-                else:
-                    apply_dict[name] = [func]
         else:
             raise TypeError(f'Unsupported type for func: {type(func)}')
 
@@ -1142,23 +1143,8 @@ class BuhTuhDataFrame:
 
         return list(new_series.values())
 
-    def apply_func(self, func: Union[str, Callable, List[Union[str, Callable]],
-                                     Dict[str, Union[str, Callable, List[Union[str, Callable]]]]],
-                   axis: int = 1,
-                   numeric_only: bool = False,
-                   exclude_non_applied: bool = False,
-                   *args, **kwargs) -> 'BuhTuhDataFrame':
-        """ see apply_to_series() """
-        # TODO: this function is never used. Either:
-        #   1) Remove it
-        #   2) Treat it as an end-user function: add documentation and tests
-        series = self._apply_func_to_series(func, axis, numeric_only,
-                                            exclude_non_applied, *args, **kwargs)
-        return self.copy_override(series={s.name: s for s in series})
-
     def aggregate(self,
-                  func: Union[str, Callable, List[Union[str, Callable]],
-                              Dict[str, Union[str, Callable, List[Union[str, Callable]]]]],
+                  func: Union[ColumnFunction, Dict[str, ColumnFunction]],
                   axis: int = 1,
                   numeric_only: bool = False,
                   *args, **kwargs) -> 'BuhTuhDataFrame':
@@ -1168,8 +1154,7 @@ class BuhTuhDataFrame:
         return self.agg(func, axis, numeric_only, *args, **kwargs)
 
     def agg(self,
-            func: Union[str, Callable, List[Union[str, Callable]],
-                        Dict[str, Union[str, Callable, List[Union[str, Callable]]]]],
+            func: Union[ColumnFunction, Dict[str, ColumnFunction]],
             axis: int = 1,
             numeric_only: bool = False,
             *args,
@@ -1207,7 +1192,7 @@ class BuhTuhDataFrame:
         """
 
         """
-        Internals documentation (todo: move this somewhere else?)
+        Internals documentation
 
         Typical execution trace, in this case for calling sum on a DataFrame:
          * df.sum()

@@ -7,6 +7,7 @@ from typing import Optional, Dict, Tuple, Union, Type, Any, List, cast, TYPE_CHE
 from uuid import UUID
 
 from buhtuh import BuhTuhDataFrame, SortColumn, DataFrameOrSeries, get_series_type_from_dtype
+from buhtuh.dataframe import ColumnFunction
 from buhtuh.expression import quote_identifier, Expression
 from buhtuh.types import value_to_dtype
 from sql_models.model import SqlModel
@@ -44,8 +45,7 @@ class BuhTuhSeries(ABC):
                  expression: Expression,
                  group_by: Optional['BuhTuhGroupBy'],
                  sorted_ascending: Optional[bool] = None,
-                 flag_nullable: bool = True,
-                 flag_aggregation_function: bool = False,
+                 flag_agg_function: bool = False,
                  **kwargs):
         """
         Initialize a new BuhTuhSeries object.
@@ -74,6 +74,8 @@ class BuhTuhSeries(ABC):
         :param expression: Expression that this Series represents
         :param group_by: The requested aggregation for this series.
         :param sorted_ascending: None for no sorting, True for sorted ascending, False for sorted descending
+        :param flag_agg_function: whether the expression contains an aggregation or windowing
+            function.
         """
         self._engine = engine
         self._base_node = base_node
@@ -82,8 +84,7 @@ class BuhTuhSeries(ABC):
         self._expression = expression
         self._group_by = group_by
         self._sorted_ascending = sorted_ascending
-        self._flag_nullable = flag_nullable
-        self._flag_aggregation_function = flag_aggregation_function
+        self._flag_agg_function = flag_agg_function
 
     @property
     @classmethod
@@ -187,12 +188,9 @@ class BuhTuhSeries(ABC):
         return self._expression
 
     @property
-    def flag_nullable(self) -> bool:
-        return self._flag_nullable
-
-    @property
-    def flag_aggregation_function(self) -> bool:
-        return self._flag_aggregation_function
+    def flag_agg_function(self) -> bool:
+        """ Whether the expression of this series contains an aggregation or windowing function. """
+        return self._flag_agg_function
 
     @classmethod
     def get_class_instance(
@@ -256,8 +254,7 @@ class BuhTuhSeries(ABC):
                       expression: Expression = None,
                       group_by: List[Union['BuhTuhGroupBy', None]] = None,  # List so [None] != None
                       sorted_ascending: bool = None,
-                      flag_nullable: bool = None,
-                      flag_aggregation_function: bool = None):
+                      flag_agg_function: bool = None):
         """
         Big fat warning: group_by can legally be None, but if you want to set that,
         set the param in a list: [None], or [someitem]. If you set None, it will be left alone.
@@ -271,8 +268,7 @@ class BuhTuhSeries(ABC):
             expression=self._expression if expression is None else expression,
             group_by=self._group_by if group_by is None else group_by[0],
             sorted_ascending=self._sorted_ascending if sorted_ascending is None else sorted_ascending,
-            flag_nullable=self._flag_nullable if flag_nullable is None else flag_nullable,
-            flag_aggregation_function=self._flag_aggregation_function if flag_aggregation_function is None else flag_aggregation_function  # noqa
+            flag_agg_function=self._flag_agg_function if flag_agg_function is None else flag_agg_function
         )
 
     def get_column_expression(self, table_alias='') -> str:
@@ -459,7 +455,7 @@ class BuhTuhSeries(ABC):
         return self._comparator_operator(other, ">")
 
     def apply_func(self,
-                   func: Union[str, Callable, List[Union[str, Callable]]],
+                   func: ColumnFunction,
                    *args, **kwargs) -> List['BuhTuhSeries']:
         """
         Apply the given func to this Series. If multiple are given, multiple new series will
@@ -478,7 +474,7 @@ class BuhTuhSeries(ABC):
         if len(func) == 0:
             raise Exception('Nothing to do.')
 
-        if self.flag_aggregation_function:
+        if self.flag_agg_function:
             raise ValueError('Cannot call an aggregation function on an already aggregated column. Try '
                              'calling get_df_materialized_model() on the DataFrame this Series belongs to '
                              'first.')
@@ -631,7 +627,7 @@ class BuhTuhSeries(ABC):
                                       index=partition.index,
                                       group_by=[partition],
                                       expression=expression,
-                                      flag_aggregation_function=True)
+                                      flag_agg_function=True)
         else:
             return self.copy_override(dtype=derived_dtype,
                                       expression=partition.get_window_expression(expression))
