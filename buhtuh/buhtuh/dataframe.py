@@ -6,7 +6,7 @@ from uuid import UUID
 import pandas
 from sqlalchemy.engine import Engine
 
-from buhtuh.expression import Expression, quote_identifier
+from buhtuh.expression import Expression
 from buhtuh.types import get_series_type_from_dtype, get_dtype_from_db_dtype
 from sql_models.model import SqlModel, CustomSqlModel
 from sql_models.sql_generator import to_sql
