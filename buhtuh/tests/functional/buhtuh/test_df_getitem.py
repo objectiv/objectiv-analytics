@@ -111,3 +111,16 @@ def test_get_item_materialize():
             ['Waadhoeke', 12760]
         ]
     )
+
+
+def test_get_item_slice():
+    bt = get_bt_with_test_data(full_data_set=True)[['municipality']]
+    r = bt[2:5]
+
+    assert_equals_data(
+        r,
+        expected_columns=['_index_skating_order', 'municipality'],
+        expected_data=[
+            [3, 'Súdwest-Fryslân'], [4, 'De Friese Meren'], [5, 'Súdwest-Fryslân']
+        ]
+    )
