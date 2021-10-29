@@ -137,7 +137,7 @@ def test_get_df_materialized_model():
 
     assert_equals_data(bt, expected_columns=expected_columns, expected_data=expected_data)
 
-    bt_materialized = bt.get_df_materialized_model()
+    bt_materialized = bt.get_df_materialized_model(node_name='node')
     # The materialized DataFrame should result in the exact same data
     assert_equals_data(bt_materialized, expected_columns=expected_columns, expected_data=expected_data)
 
@@ -150,11 +150,11 @@ def test_get_df_materialized_model():
         assert series.expression.to_sql() == f'"{series.name}"'
 
     # The materialized graph should have one extra node
-    node_info_orig = get_graph_nodes_info(bt.get_current_node())
-    node_info_mat = get_graph_nodes_info(bt_materialized.get_current_node())
+    node_info_orig = get_graph_nodes_info(bt.get_current_node('node'))
+    node_info_mat = get_graph_nodes_info(bt_materialized.get_current_node('node'))
     assert len(node_info_orig) + 1 == len(node_info_mat)
-    previous_node_mat = list(bt_materialized.get_current_node().references.values())[0]
-    assert previous_node_mat == bt.get_current_node()
+    previous_node_mat = list(bt_materialized.get_current_node('node').references.values())[0]
+    assert previous_node_mat == bt.get_current_node('node')
 
 
 def test_get_df_materialized_model_non_deterministic_expressions():
@@ -170,7 +170,7 @@ def test_get_df_materialized_model_non_deterministic_expressions():
             [3, 'Drylts', ANY, ANY, False],
         ]
     assert_equals_data(bt, expected_columns=expected_columns, expected_data=expected_data)
-    bt = bt.get_df_materialized_model()
+    bt = bt.get_df_materialized_model(node_name='node')
     # Now bt['uuid1'] has been evaluated, so copying the column should copy the value not just the expression
     bt['uuid3'] = bt['uuid1']
     # Now a comparison should give True

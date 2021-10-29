@@ -100,6 +100,14 @@ def test_get_item_materialize():
     bt = get_bt_with_test_data(full_data_set=True)[['municipality', 'inhabitants']]
     bt = bt.groupby('municipality')[['inhabitants']].sum()
 
-    with pytest.raises(ValueError, match='materialize this the DataFrame '
-                                         'before creating the expression'):
-        bt[bt.inhabitants_sum != 10]
+    r = bt[bt.inhabitants_sum != 700] #  'Friese Meren' be gone!
+
+    assert_equals_data(
+        r,
+        expected_columns=['municipality', 'inhabitants_sum'],
+        expected_data=[
+            ['Noardeast-Fryslân', 12675], ['Leeuwarden', 93485],
+            ['Súdwest-Fryslân', 52965], ['Harlingen', 14740],
+            ['Waadhoeke', 12760]
+        ]
+    )

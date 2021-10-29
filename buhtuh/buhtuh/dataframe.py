@@ -368,7 +368,7 @@ class BuhTuhDataFrame:
             return df
         return list(df.data.values())[0]
 
-    def get_df_materialized_model(self, inplace=False) -> 'BuhTuhDataFrame':
+    def get_df_materialized_model(self, node_name='manual_materialize', inplace=False) -> 'BuhTuhDataFrame':
         """
         Create a copy of this DataFrame with as base_node the current DataFrame's state.
 
@@ -386,7 +386,7 @@ class BuhTuhDataFrame:
         index_dtypes = {k: v.dtype for k, v in self._index.items()}
         series_dtypes = {k: v.dtype for k, v in self._data.items()}
 
-        model = self.get_current_node()
+        model = self.get_current_node(node_name)
         return self.get_instance(
             engine=self.engine,
             base_node=model,
@@ -415,35 +415,30 @@ class BuhTuhDataFrame:
 
             return self.copy_override(series=selected_data)
 
-        if isinstance(key, slice):
-            model = self.get_current_node(limit=key)
-            return self._df_or_series(df=self.copy_override(base_node=model))
+        if isinstance(key, (BuhTuhSeriesBoolean, slice)):
+            if isinstance(key, slice):
+                node = self.get_current_node('getitem_slice', limit=key)
+            else:
+                # We only support first level boolean indices for now
+                if key.base_node != self.base_node:
+                    raise ValueError('Cannot apply Boolean series with a different base_node to DataFrame.'
+                                     'Hint: make sure the Boolean series is derived from this DataFrame. '
+                                     'Alternative: use df.merge(series) to merge the series with the df '
+                                     'first, and then create a new Boolean series on the resulting merged '
+                                     'data.')
+                if self._group_by is not None:
+                    node = self.get_current_node(
+                        'getitem_having_boolean',
+                        having=Expression.construct("having {}", key.expression))
+                else:
+                    node = self.get_current_node(
+                        'getitem_where_boolean',
+                        where=Expression.construct("where {}", key.expression))
 
-        if isinstance(key, BuhTuhSeriesBoolean):
-            # We only support first level boolean indices for now
-            if key.base_node != self.base_node:
-                raise ValueError('Cannot apply Boolean series with a different base_node to DataFrame.'
-                                 'Hint: make sure the Boolean series is derived from this DataFrame. '
-                                 'Alternative: use df.merge(series) to merge the series with the df first,'
-                                 'and then create a new Boolean series on the resulting merged data.')
-            if self._group_by is not None:
-                # HAVING is not implemented yet
-                raise ValueError("Please materialize this the DataFrame before creating the expression. "
-                                 "Use df.get_df_materialized_model() to do so.")
-
-            model_builder = CustomSqlModel(
-                name='boolean_selection',
-                sql='select {columns} from {{_last_node}} where {where}'
-            )
-            model = model_builder(
-                columns=self._get_all_column_expressions_sql(),
-                _last_node=self.base_node,
-                where=key.expression.to_sql(),
-            )
             return self._df_or_series(
                 BuhTuhDataFrame.get_instance(
                     engine=self.engine,
-                    base_node=model,
+                    base_node=node,
                     index_dtypes={name: series.dtype for name, series in self.index.items()},
                     dtypes={name: series.dtype for name, series in self.data.items()},
                     group_by=None,
@@ -595,7 +590,7 @@ class BuhTuhDataFrame:
             if not materialize:
                 raise NotImplementedError("reset_index not supported on non-materialized groupbys."
                                           "pass materialize=True, or materialize manually.")
-            df = df.get_df_materialized_model(inplace)
+            df = df.get_df_materialized_model(node_name='groupby_setindex', inplace=inplace)
 
         # build the new index, appending if necessary
         new_index = {} if not append else copy(df._index)
@@ -783,7 +778,7 @@ class BuhTuhDataFrame:
         df = self
         if self._group_by:
             # We need to materialize this node first, we can't stack aggregations (yet)
-            df = self.get_df_materialized_model()
+            df = self.get_df_materialized_model(node_name='nested_groupby')
 
         group_by: BuhTuhGroupBy
         if isinstance(by, tuple):
@@ -1021,7 +1016,10 @@ class BuhTuhDataFrame:
 
         return order_str
 
-    def get_current_node(self, limit: Union[int, slice] = None) -> SqlModel[CustomSqlModel]:
+    def get_current_node(self, name,
+                         limit: Union[int, slice] = None,
+                         where: Expression = None,
+                         having: Expression = None) -> SqlModel[CustomSqlModel]:
         """
         Translate the current state of this DataFrame into a SqlModel.
         :param limit: The limit to use
@@ -1052,36 +1050,45 @@ class BuhTuhDataFrame:
 
         order_by_sql = self.get_order_by_sql()
         limit_sql = '' if limit_str is None else f'{limit_str}'
+        where = where if where else Expression.construct('')
 
         if self._group_by:
             group_by_sql = self._group_by.get_group_by_columns_sql()
             group_by_sql = f'group by {group_by_sql}' if group_by_sql != '' else ''
 
+            having = having if having else Expression.construct('')
+
             model_builder = CustomSqlModel(
+                name=name,
                 sql="""
                     select {group_by_columns}, {aggregate_columns}
                     from {{prev}}
+                    {where}
                     {group_by}
+                    {having}
                     {order_by} {limit}
                     """
             )
             return model_builder(
                 group_by_columns=self.group_by.get_index_columns_sql(),
                 aggregate_columns=', '.join([s.get_column_expression() for s in self._data.values()]),
+                where=where.to_sql(),
                 group_by=group_by_sql,
+                having=having.to_sql(),
                 order_by=order_by_sql,
                 limit=limit_sql,
                 prev=self.base_node
             )
         else:
             model_builder = CustomSqlModel(
-                name='view_sql',
-                sql='select {columns} from {{_last_node}} {order} {limit}'
+                name=name,
+                sql='select {columns} from {{_last_node}} {where} {order} {limit}'
             )
 
             return model_builder(
                 columns=self._get_all_column_expressions_sql(),
                 _last_node=self.base_node,
+                where=where.to_sql(),
                 limit=limit_sql,
                 order=order_by_sql
             )
@@ -1092,7 +1099,7 @@ class BuhTuhDataFrame:
         :param limit: limit on which rows to select in the query
         :return: SQL query
         """
-        model = self.get_current_node(limit=limit)
+        model = self.get_current_node('view_sql', limit=limit)
         sql = to_sql(model)
         return sql
 
