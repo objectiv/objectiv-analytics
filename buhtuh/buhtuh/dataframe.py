@@ -378,6 +378,8 @@ class BuhTuhDataFrame:
         make sense for very large expressions, or for non-deterministic expressions (e.g. see
         BuhTuhSeriesUuid.sql_gen_random_uuid()).
 
+        :param node_name: The name of the node that's going to be created
+        :param inplace: Perform operation on self if inplace=True, or create a copy
         :return: New DataFrame with the current DataFrame's state as base_node
         """
         if inplace:
@@ -1020,6 +1022,8 @@ class BuhTuhDataFrame:
         """
         Translate the current state of this DataFrame into a SqlModel.
         :param limit: The limit to use
+        :param where: The where-expression to apply, if any
+        :param having: The having-expression to apply in case group_by is set, if any
         :return: SQL query as a SqlModel that represents the current state of this DataFrame.
         """
 
