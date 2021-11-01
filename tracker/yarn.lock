@@ -2304,7 +2304,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@objectiv/plugin-web-device-context@workspace:plugins/web-device-context, @objectiv/plugin-web-device-context@~0.0.1":
+"@objectiv/plugin-web-device-context@^0.0.1, @objectiv/plugin-web-device-context@workspace:plugins/web-device-context":
   version: 0.0.0-use.local
   resolution: "@objectiv/plugin-web-device-context@workspace:plugins/web-device-context"
   dependencies:
@@ -2325,11 +2325,11 @@ __metadata:
     tslib: ^2.3.1
     typescript: ^4.4.4
   peerDependencies:
-    "@objectiv/tracker-core": ~0.0.1
+    "@objectiv/tracker-core": ^0.0.1
   languageName: unknown
   linkType: soft
 
-"@objectiv/plugin-web-document-context@workspace:plugins/web-document-context, @objectiv/plugin-web-document-context@~0.0.1":
+"@objectiv/plugin-web-document-context@^0.0.1, @objectiv/plugin-web-document-context@workspace:plugins/web-document-context":
   version: 0.0.0-use.local
   resolution: "@objectiv/plugin-web-document-context@workspace:plugins/web-document-context"
   dependencies:
@@ -2351,11 +2351,11 @@ __metadata:
     tslib: ^2.3.1
     typescript: ^4.4.4
   peerDependencies:
-    "@objectiv/tracker-core": ~0.0.1
+    "@objectiv/tracker-core": ^0.0.1
   languageName: unknown
   linkType: soft
 
-"@objectiv/schema@workspace:core/schema, @objectiv/schema@~0.0.1":
+"@objectiv/schema@^0.0.1, @objectiv/schema@workspace:core/schema":
   version: 0.0.0-use.local
   resolution: "@objectiv/schema@workspace:core/schema"
   dependencies:
@@ -2371,24 +2371,26 @@ __metadata:
     "@angular/compiler": ^12.2.11
     "@angular/compiler-cli": ^12.2.11
     "@angular/core": ^12.2.11
-    "@objectiv/tracker-browser": 0.0.1
+    "@objectiv/tracker-browser": ^0.0.1
     ng-packagr: ^12.2.5
     prettier: ^2.4.1
     rxjs: ^7.4.0
+    tslib: ^2.3.1
     typescript: 4.3.5
+    zone.js: ^0.11.4
   peerDependencies:
-    "@objectiv/tracker-browser": 0.0.1
+    "@objectiv/tracker-browser": ^0.0.1
   languageName: unknown
   linkType: soft
 
-"@objectiv/tracker-browser@0.0.1, @objectiv/tracker-browser@workspace:trackers/browser":
+"@objectiv/tracker-browser@^0.0.1, @objectiv/tracker-browser@workspace:trackers/browser":
   version: 0.0.0-use.local
   resolution: "@objectiv/tracker-browser@workspace:trackers/browser"
   dependencies:
-    "@objectiv/plugin-web-device-context": ~0.0.1
-    "@objectiv/plugin-web-document-context": ~0.0.1
-    "@objectiv/schema": ~0.0.1
-    "@objectiv/tracker-core": ~0.0.1
+    "@objectiv/plugin-web-device-context": ^0.0.1
+    "@objectiv/plugin-web-document-context": ^0.0.1
+    "@objectiv/schema": ^0.0.1
+    "@objectiv/tracker-core": ^0.0.1
     "@rollup/plugin-commonjs": ^21.0.1
     "@rollup/plugin-node-resolve": ^13.0.6
     "@rollup/plugin-strip": ^2.1.0
@@ -2410,11 +2412,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@objectiv/tracker-core@workspace:core/tracker, @objectiv/tracker-core@~0.0.1":
+"@objectiv/tracker-core@^0.0.1, @objectiv/tracker-core@workspace:core/tracker":
   version: 0.0.0-use.local
   resolution: "@objectiv/tracker-core@workspace:core/tracker"
   dependencies:
-    "@objectiv/schema": ~0.0.1
+    "@objectiv/schema": ^0.0.1
     "@rollup/plugin-commonjs": ^21.0.1
     "@rollup/plugin-node-resolve": ^13.0.6
     "@types/jest": ^27.0.2
@@ -9115,5 +9117,14 @@ typescript@^4.4.4:
     y18n: ^5.0.5
     yargs-parser: ^20.2.2
   checksum: 7904ae4cb54c956ed4e2e0920417958e339c0e5305b6f7385a66afd5101a79dc83b38af856064a7dd1fd8458dc442936ee19e53b621349d410f7abebf2769772
+  languageName: node
+  linkType: hard
+
+"zone.js@npm:^0.11.4":
+  version: 0.11.4
+  resolution: "zone.js@npm:0.11.4"
+  dependencies:
+    tslib: ^2.0.0
+  checksum: 20c3e39898019de4747a434a29ed528e5d730a674570c3e72775a57f9d57dba812e70d67c3932ff54e95db9b778f06a9b18119c5184dfd9552d3622544a6729f
   languageName: node
   linkType: hard

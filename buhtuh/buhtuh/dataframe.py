@@ -563,33 +563,30 @@ class BuhTuhDataFrame:
         df._data = new_data
         return df
 
-    def reset_index(self, **kwargs):
+    def reset_index(self, drop: bool = False, **kwargs):
         """
         Will call set_index with keys=[]
         :see: set_index()
         """
-        return self.set_index(keys=[], **kwargs)
+        return self.set_index(keys=[], drop=drop, **kwargs)
 
     def set_index(self, keys: Union[str, 'BuhTuhSeries', List[Union[str, 'BuhTuhSeries']]],
-                  append=False, drop=False, inplace=False, materialize=False):
+                  append=False, drop=True, inplace=False):
         """
         Set this dataframe's index to the the index given in keys
         :param keys: the keys of the new index. Can be a series name str, a BuhTuhSeries, or a list
             of those.
         :param append: whether to append to the existing index or replace
-        :param drop: drop the series that are removed from the index
+        :param drop: delete columns to be used as the new index / delete the columns that are removed
+            from the index.
         :param inplace: attempt inplace operation, not always supported and will raise if not
-        :param materialize: materialize this df is required
-        :returns: the modified df
+        :returns: the modified df in case inplace=True, else a copy with the modifications applied.
         """
 
         from buhtuh.series import BuhTuhSeries
 
         df = self if inplace else self.copy_override()
         if self._group_by:
-            if not materialize:
-                raise NotImplementedError("reset_index not supported on non-materialized groupbys."
-                                          "pass materialize=True, or materialize manually.")
             df = df.get_df_materialized_model(node_name='groupby_setindex', inplace=inplace)
 
         # build the new index, appending if necessary
@@ -607,9 +604,9 @@ class BuhTuhDataFrame:
 
             new_index[idx_series.name] = idx_series.copy_override(index={})
 
-            if not drop and idx_series.name not in df._index:
-                raise ValueError('When adding index series, drop must be True because duplicate '
-                                 'column names are not supported.')
+            if not drop and idx_series.name not in df._index and idx_series.name in df._data:
+                raise ValueError('When adding existing series to the index, drop must be True'
+                                 ' because duplicate column names are not supported.')
 
         dropped = set(df._index.keys()) - set(new_index.keys())
         new_series = {n: s.copy_override(index=new_index) for n, s in df.all_series.items()

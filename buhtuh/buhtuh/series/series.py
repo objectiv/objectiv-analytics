@@ -364,6 +364,10 @@ class BuhTuhSeries(ABC):
         return series.head(1).astype(series.dtype).values[0]
 
     def isnull(self):
+        """
+        Detect missing values. Only null values in the BuhTuhSeries in the underlying sql table will return
+        True.
+        """
         expression_str = f'{{}} is null'
         expression = Expression.construct(
             expression_str,
@@ -372,6 +376,10 @@ class BuhTuhSeries(ABC):
         return self.copy_override(dtype='bool', expression=expression)
 
     def notnull(self):
+        """
+        Detect existing (non-missing) values. Any non-null value in the BuhTuhSeries in the underlying sql
+        table will return True.
+        """
         expression_str = f'{{}} is not null'
         expression = Expression.construct(
             expression_str,

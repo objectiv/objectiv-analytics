@@ -54,6 +54,22 @@ def test_fillna():
             bt['0'].fillna(val)
 
 
+def test_isnull():
+    values = ['a', 'b', None]
+    pdf = pd.DataFrame(data=values,columns=['text_with_null'])
+    bt = get_from_df('test_isnull', pdf)
+    bt['y'] = bt.text_with_null.isnull()
+    bt['z'] = bt.text_with_null.notnull()
+
+    assert_equals_data(
+        bt,
+        expected_columns=['_index_text_with_null', 'text_with_null', 'y', 'z'],
+        expected_data=[['a', 'a', False, True],
+                       ['b', 'b', False, True],
+                       [None, None, True, False]
+                       ]
+    )
+
 
 def test_type_agnostic_aggregation_functions():
     bt = get_bt_with_test_data(full_data_set=True)

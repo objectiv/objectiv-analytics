@@ -1,6 +1,6 @@
 clean:
 	# clean up caches
-	find core plugins trackers -type d -name dist -not -path '*node_modules*'  | xargs rm -rf
+	find core plugins trackers -type d -name dist -o -name coverage -not -path '*node_modules*'  | xargs rm -rf
 
 build: clean
 	yarn install && yarn build

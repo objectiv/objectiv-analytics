@@ -3,6 +3,8 @@ Copyright 2021 Objectiv B.V.
 """
 from decimal import Decimal
 
+import pytest
+
 from buhtuh import BuhTuhDataFrame
 from tests.functional.buhtuh.test_data_and_utils import get_bt_with_test_data, get_bt_with_food_data, \
     assert_equals_data, get_bt_with_railway_data
@@ -170,6 +172,23 @@ def test_merge_basic_on_indexes():
         ]
     )
 
+    # Test empty index behaviour.
+    mtr = mt.reset_index()
+    btr = bt.reset_index()
+    with pytest.raises(
+            ValueError,
+            match="Len of left_on .* does not match that of right_on"):
+        bt.merge(mtr, left_index=True, right_index=True)
+
+    with pytest.raises(
+            ValueError,
+            match="Len of left_on .* does not match that of right_on"):
+        btr.merge(mt, left_index=True, right_index=True)
+
+    with pytest.raises(ValueError, match="No columns to perform merge on"):
+        result = btr.merge(mtr, left_index=True, right_index=True)
+        result.head()
+
 
 def test_merge_suffixes():
     bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
@@ -315,6 +334,7 @@ def test_merge_cross_join():
     mt = get_bt_with_food_data()[['food']]
     result = bt.merge(mt, how='cross')
     assert isinstance(result, BuhTuhDataFrame)
+
     assert_equals_data(
         result,
         expected_columns=[
@@ -336,6 +356,28 @@ def test_merge_cross_join():
             [3, 2, 'Drylts', 'Dúmkes'],
             [3, 4, 'Drylts', 'Grutte Pier Bier'],
         ],
+        order_by=['_index_skating_order_x', '_index_skating_order_y']
+    )
+
+    # empty index cross merge also supported
+    btr = bt.reset_index()
+    mtr = mt.reset_index()
+    result2 = btr.merge(mtr, how='cross')
+    assert isinstance(result, BuhTuhDataFrame)
+
+    # series order is different though
+    assert_equals_data(
+        result2,
+        expected_columns=[
+            '_index_skating_order_x', 'city', '_index_skating_order_y', 'food'
+        ],
+        # in bt there is no row with skating_order == 4, so for the station with 4 platforms we
+        # expect to join None values.
+        expected_data=[
+            [1, 'Ljouwert', 1, 'Sûkerbôlle'], [1, 'Ljouwert', 2, 'Dúmkes'],
+            [1, 'Ljouwert', 4, 'Grutte Pier Bier'], [2, 'Snits', 1, 'Sûkerbôlle'], [2, 'Snits', 2, 'Dúmkes'],
+            [2, 'Snits', 4, 'Grutte Pier Bier'], [3, 'Drylts', 1, 'Sûkerbôlle'], [3, 'Drylts', 2, 'Dúmkes'],
+            [3, 'Drylts', 4, 'Grutte Pier Bier']],
         order_by=['_index_skating_order_x', '_index_skating_order_y']
     )
 
@@ -379,7 +421,8 @@ def test_merge_expression_columns():
     assert_equals_data(
         result,
         # This is weak. Ordering is broken.
-        expected_columns=['_index_skating_order_x', '_index_skating_order_y', 'skating_order', 'city', 'inhabitants', 'food'],
+        expected_columns=['_index_skating_order_x', '_index_skating_order_y', 'skating_order', 'city',
+                          'inhabitants', 'food'],
         expected_data=[
             [1, 1, 3, 'Ljouwert', 93485, 'Sûkerbôlle'],
             [2, 2, 4, 'Snits', 33520, 'Dúmkes'],
@@ -403,6 +446,7 @@ def test_merge_expression_columns_regression():
             [2, 2, 2, 'Snits', 33520, False, False, False, 'Dúmkes']
         ]
     )
+
 
 def test_merge_non_materialized():
     bt = get_bt_with_test_data(full_data_set=False)[['municipality', 'inhabitants']]

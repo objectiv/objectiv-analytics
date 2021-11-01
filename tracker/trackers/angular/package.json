@@ -11,17 +11,19 @@
     "npm-publish": "(cd dist && npm publish)"
   },
   "peerDependencies": {
-    "@objectiv/tracker-browser": "0.0.1"
+    "@objectiv/tracker-browser": "^0.0.1"
   },
   "devDependencies": {
     "@angular/compiler": "^12.2.11",
     "@angular/compiler-cli": "^12.2.11",
     "@angular/core": "^12.2.11",
-    "@objectiv/tracker-browser": "0.0.1",
+    "@objectiv/tracker-browser": "^0.0.1",
     "ng-packagr": "^12.2.5",
     "prettier": "^2.4.1",
     "rxjs": "^7.4.0",
-    "typescript": "4.3.5"
+    "tslib": "^2.3.1",
+    "typescript": "4.3.5",
+    "zone.js": "^0.11.4"
   },
   "ngPackage": {
     "lib": {

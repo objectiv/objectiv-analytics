@@ -7,7 +7,7 @@ This file does not contain any test, but having the file's name start with `test
 as a test file. This makes pytest rewrite the asserts to give clearer errors.
 """
 import os
-from typing import List, Union, Type
+from typing import List, Union, Type, Dict, Any
 
 import sqlalchemy
 from sqlalchemy.engine import ResultProxy
@@ -84,26 +84,42 @@ TEST_DATA_JSON = [
     [3,
      '{"a": "b", "e": [{"a": "b"}, {"c": "d"}]}',
      '[{"_type":"WebDocumentContext","id":"#document"},'
-      '{"_type":"SectionContext","id":"home"},'
-      '{"_type":"SectionContext","id":"top-10"},'
-      '{"_type":"ItemContext","id":"5o7Wv5Q5ZE"}]',
+     ' {"_type":"SectionContext","id":"home"},'
+     ' {"_type":"SectionContext","id":"top-10"},'
+     ' {"_type":"ItemContext","id":"5o7Wv5Q5ZE"}]',
      '[{"_type":"WebDocumentContext","id":"#document"},'
-      '{"_type":"SectionContext","id":"home"},'
-      '{"_type":"SectionContext","id":"top-10"},'
-      '{"_type":"ItemContext","id":"5o7Wv5Q5ZE"}]'
+     ' {"_type":"SectionContext","id":"home"},'
+     ' {"_type":"SectionContext","id":"top-10"},'
+     ' {"_type":"ItemContext","id":"5o7Wv5Q5ZE"}]'
      ]
 ]
 JSON_COLUMNS = ['row', 'dict_column', 'list_column', 'mixed_column']
 JSON_INDEX_AND_COLUMNS = ['_row_id'] + JSON_COLUMNS
 
-
-def _get_bt(table, dataset, columns, convert_objects) -> BuhTuhDataFrame:
-    import pandas as pd
-    df = pd.DataFrame.from_records(dataset, columns=columns)
-    return get_from_df(table, df, convert_objects)
+# We cache all BuhTuhDataFrames, that way we don't have to recreate and query tables each time.
+_TABLE_DATAFRAME_CACHE: Dict[str, 'BuhTuhDataFrame'] = {}
 
 
-def get_from_df(table, df, convert_objects = True):
+def _get_bt(
+        table: str,
+        dataset: List[List[Any]],
+        columns: List[str],
+        convert_objects: bool
+) -> BuhTuhDataFrame:
+    # We'll just use the table as lookup key and ignore the other paramters, if we store different things
+    # in the same table, then tests will be confused anyway
+    lookup_key = table
+    if lookup_key not in _TABLE_DATAFRAME_CACHE:
+        import pandas as pd
+        df = pd.DataFrame.from_records(dataset, columns=columns)
+        _TABLE_DATAFRAME_CACHE[lookup_key] = get_from_df(table, df, convert_objects)
+    # We don't even renew the 'engine', as creating the database connection takes a bit of time too. If
+    # we ever do into trouble because of stale connection or something, then we can change it at that point
+    # in time.
+    return _TABLE_DATAFRAME_CACHE[lookup_key].copy_override()
+
+
+def get_from_df(table, df, convert_objects=True):
     df.set_index(df.columns[0], drop=False, inplace=True)
 
     if 'moment' in df.columns:
@@ -113,16 +129,15 @@ def get_from_df(table, df, convert_objects = True):
         df['date'] = df['date'].astype('datetime64')
 
     engine = sqlalchemy.create_engine(DB_TEST_URL)
-    buh_tuh = BuhTuhDataFrame.from_dataframe(df, table, engine, convert_objects=convert_objects, if_exists='replace')
+    buh_tuh = BuhTuhDataFrame.from_dataframe(df, table, engine, convert_objects=convert_objects,
+                                             if_exists='replace')
     return buh_tuh
 
 
 def get_bt_with_test_data(full_data_set: bool = False) -> BuhTuhDataFrame:
     if full_data_set:
-        test_data = TEST_DATA_CITIES_FULL
-    else:
-        test_data = TEST_DATA_CITIES
-    return _get_bt('test_table', test_data, CITIES_COLUMNS, True)
+        return _get_bt('test_table_full', TEST_DATA_CITIES_FULL, CITIES_COLUMNS, True)
+    return _get_bt('test_table_partial', TEST_DATA_CITIES, CITIES_COLUMNS, True)
 
 
 def get_bt_with_food_data() -> BuhTuhDataFrame:
@@ -135,7 +150,7 @@ def get_bt_with_railway_data() -> BuhTuhDataFrame:
 
 def get_bt_with_json_data(as_json=True) -> BuhTuhDataFrame:
     bt = _get_bt('test_json_table', TEST_DATA_JSON, JSON_COLUMNS, True)
-    if as_json==True:
+    if as_json:
         bt['dict_column'] = bt.dict_column.astype('jsonb')
         bt['list_column'] = bt.list_column.astype('jsonb')
         bt['mixed_column'] = bt.mixed_column.astype('jsonb')

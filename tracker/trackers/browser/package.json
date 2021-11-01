@@ -37,10 +37,10 @@
     "xhr-mock": "^2.5.1"
   },
   "dependencies": {
-    "@objectiv/plugin-web-device-context": "~0.0.1",
-    "@objectiv/plugin-web-document-context": "~0.0.1",
-    "@objectiv/schema": "~0.0.1",
-    "@objectiv/tracker-core": "~0.0.1",
+    "@objectiv/plugin-web-device-context": "^0.0.1",
+    "@objectiv/plugin-web-document-context": "^0.0.1",
+    "@objectiv/schema": "^0.0.1",
+    "@objectiv/tracker-core": "^0.0.1",
     "superstruct": "^0.15.3"
   }
 }

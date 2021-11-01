@@ -281,10 +281,10 @@ def test_rolling_defaults_vs_pandas():
 
     # Create a pandas version of this stuff
     for series in bt.data_columns:
+        pdf: pd.DataFrame = bt[[series]].to_df()
         for center in [False, True]:
             for window in range(1, 11):
                 for min_periods in range(0, window):
-                    pdf: pd.DataFrame = bt[[series]].to_df()
                     pd_values = pdf.rolling(window=window, min_periods=min_periods, center=center)\
                         .sum()
                     bt_values = bt.rolling(window=window, min_periods=min_periods, center=center)\
