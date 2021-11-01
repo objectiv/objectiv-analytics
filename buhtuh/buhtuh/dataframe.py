@@ -1016,7 +1016,7 @@ class BuhTuhDataFrame:
 
         return order_str
 
-    def get_current_node(self, name,
+    def get_current_node(self, name: str,
                          limit: Union[int, slice] = None,
                          where: Expression = None,
                          having: Expression = None) -> SqlModel[CustomSqlModel]:
