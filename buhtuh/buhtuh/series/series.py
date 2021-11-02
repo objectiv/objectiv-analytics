@@ -266,6 +266,10 @@ class BuhTuhSeries(ABC):
         return f'{expression_sql} as {quoted_column_name}'
 
     def _check_supported(self, operation_name: str, supported_dtypes: List[str], other: 'BuhTuhSeries'):
+        # We now abuse the name to check whether this is a const we just created, but actually we need to
+        # do this via Expression flags. TODO
+        if self._group_by != other.group_by and other.name != '__const__':
+            raise NotImplementedError(f'Cannot apply {operation_name} on two series with different group_by.')
 
         if self.base_node != other.base_node:
             raise ValueError(f'Cannot apply {operation_name} on two series with different base_node. '
@@ -805,7 +809,7 @@ def const_to_series(base: Union[BuhTuhSeries, BuhTuhDataFrame],
     """
     if isinstance(value, BuhTuhSeries):
         return value
-    name = '__tmp' if name is None else name
+    name = '__const__' if name is None else name
     dtype = value_to_dtype(value)
     series_type = get_series_type_from_dtype(dtype)
     return series_type.from_const(base=base, value=value, name=name)

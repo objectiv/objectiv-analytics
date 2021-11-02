@@ -118,3 +118,9 @@ def test_series_direct_aggregation():
 
     btg = bt.groupby('municipality')
     print(bt.inhabitants.sum(btg).head())
+
+def test_series_different_aggregations():
+    bt = get_bt_with_test_data(full_data_set=True)
+    with pytest.raises(NotImplementedError, match="Cannot apply .* on two series with different group_by"):
+        bt.groupby('municipality').skating_order.nunique() / bt.skating_order.nunique()
+
