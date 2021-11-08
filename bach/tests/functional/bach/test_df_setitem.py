@@ -247,3 +247,52 @@ def test_set_series_expression():
         ]
     )
     assert bt.time_travel == bt['time_travel']
+
+
+def test_set_series_single_value():
+    bt = get_bt_with_test_data()[['inhabitants']]
+    original_base_node = bt.base_node
+
+    bt['const'] = 3
+    bt['maxi'] = bt.inhabitants.max()
+    bt['maxii'] = bt.inhabitants.max()
+    assert bt.const.expression.is_single_value
+    assert bt.maxi.expression.is_single_value
+    # should recycle the same subquery
+    assert bt.maxi.expression.get_references() == bt.maxii.expression.get_references()
+
+
+    bt['moremax'] = bt.maxi + 5
+    bt['constmoremax'] = bt.maxi + bt.const
+    # should be reading from the same node and not create new ones
+    assert bt.maxi.expression.get_references() \
+           == bt.moremax.expression.get_references() \
+           == bt.constmoremax.expression.get_references()
+    assert bt.maxi.expression.is_single_value
+    assert bt.moremax.expression.is_single_value
+    assert bt.constmoremax.expression.is_single_value
+
+    bt['moremax2'] = bt.inhabitants.max() + 6
+    # Not the same reference, because + 5 gets added to the subquery instead of the column expression
+    assert bt.maxi.expression.get_references() != bt.moremax2.expression.get_references()
+    assert bt.moremax2.expression.is_single_value
+
+    bt['moremax3'] = bt.maxi + 7
+    # The same reference, because + 7 gets added to the column expression
+    assert bt.maxi.expression.get_references() == bt.moremax3.expression.get_references()
+    assert bt.moremax3.expression.is_single_value
+
+    # lots of subqueries added, but we were not materialized
+    assert bt.base_node == original_base_node
+
+    assert_equals_data(
+        bt,
+        expected_columns=['_index_skating_order', 'inhabitants', 'const', 'maxi', 'maxii',
+                          'moremax', 'constmoremax',
+                          'moremax2', 'moremax3'],
+        expected_data=[
+            [1, 93485, 3, 93485, 93485, 93490, 93488, 93491, 93492],
+            [2, 33520, 3, 93485, 93485, 93490, 93488, 93491, 93492],
+            [3, 3055, 3, 93485, 93485, 93490, 93488, 93491, 93492]
+        ]
+    )

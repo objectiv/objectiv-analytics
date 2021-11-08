@@ -297,7 +297,7 @@ class Series(ABC):
             # we should maybe create a subquery
             if self.base_node != other.base_node or self.group_by != other.group_by:
                 if other.expression.is_single_value:
-                    other = self._independent_subquery(other)
+                    other = self.as_independent_subquery(other)
                 else:
                     # TODO improve error
                     raise ValueError("rhs has a different base_node or group_by, but contains more than one "
@@ -377,7 +377,7 @@ class Series(ABC):
         )
 
     @staticmethod
-    def _independent_subquery(series, operation: str = None, dtype: str = None) -> 'Series':
+    def as_independent_subquery(series, operation: str = None, dtype: str = None) -> 'Series':
         """
         Get a series representing an independent subquery, created by materializing the series given
         and crafting a subquery expression from it, possibly adding the given operation.
@@ -399,18 +399,18 @@ class Series(ABC):
         return s
 
     def exists(self):
-        s = Series._independent_subquery(self, 'exists', dtype='bool')
+        s = Series.as_independent_subquery(self, 'exists', dtype='bool')
         return s.copy_override(expression=SingleValueExpression(s.expression))
 
     def any_value(self):
         # aka some()
-        return Series._independent_subquery(self, 'any')
+        return Series.as_independent_subquery(self, 'any')
 
     def all_values(self):
-        return Series._independent_subquery(self, 'all')
+        return Series.as_independent_subquery(self, 'all')
 
     def isin(self, other: 'Series'):
-        in_expr = Expression.construct('{} {}', self, Series._independent_subquery(other, 'in'))
+        in_expr = Expression.construct('{} {}', self, Series.as_independent_subquery(other, 'in'))
         return self.copy_override(expression=in_expr, dtype='boolean')
 
     def astype(self, dtype: Union[str, Type]) -> 'Series':

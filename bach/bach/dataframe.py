@@ -59,14 +59,15 @@ class DataFrame:
     The API of this DataFrame is partially compatible with Pandas DataFrames. For more on Pandas
     DataFrames see https://pandas.pydata.org/docs/reference/frame.html
     """
+
     def __init__(
-        self,
-        engine: Engine,
-        base_node: SqlModel[BachSqlModel],
-        index: Dict[str, 'Series'],
-        series: Dict[str, 'Series'],
-        group_by: Optional['GroupBy'],
-        order_by: List[SortColumn] = None
+            self,
+            engine: Engine,
+            base_node: SqlModel[BachSqlModel],
+            index: Dict[str, 'Series'],
+            series: Dict[str, 'Series'],
+            group_by: Optional['GroupBy'],
+            order_by: List[SortColumn] = None
     ):
         """
         Instantiate a new DataFrame.
@@ -595,23 +596,28 @@ class DataFrame:
             if not isinstance(value, Series):
                 series = const_to_series(base=self, value=value, name=key)
                 self._data[key] = series
-                return
             else:
-                # two cases:
-                # 1) these share the same base_node and index
-                # 2) these share the same index, but not the same base_node
-                if value.index != self.index:
-                    raise ValueError(f'Index of assigned value does not match index of DataFrame. '
-                                     f'Value: {value.index}, df: {self.index}')
-                if value.base_node == self.base_node:
-                    if self._group_by != value.group_by:
-                        raise ValueError(f'GroupBy of assigned value does not match DataFrame. '
-                                         f'Value: {value.group_by}, df: {self._group_by}')
+                if value.base_node == self.base_node and self._group_by == value.group_by:
                     self._data[key] = value.copy_override(name=key)
-                    return
+                elif value.expression.is_constant:
+                    self._data[key] = value.copy_override(name=key, index=self._index,
+                                                          group_by=[self._group_by])
+                elif value.expression.is_independent_subquery:
+                    self._data[key] = value.copy_override(name=key, index=self._index,
+                                                          group_by=[self._group_by])
+                elif value.expression.is_single_value:
+                    self._data[key] = Series.as_independent_subquery(value).copy_override(
+                        name=key, index=self._index, group_by=[self._group_by])
                 else:
-                    # this is the complex case. Maybe don't support this at all?TODO
-                    raise NotImplementedError('TODO')
+                    if value.group_by != self._group_by:
+                        raise ValueError(f'GroupBy of assigned value does not match DataFrame and the '
+                                         f'given series was not single value or an independent subquery. '
+                                         f'GroupBy Value: {value.group_by}, df: {self._group_by}')
+                    elif value.base_node != self.base_node:
+                        raise ValueError('Base node of assigned value does not match DataFrame and the '
+                                         'given series was not single value or an independent subquery.')
+                    else:
+                        raise NotImplementedError('Incompatible series can not be added to the dataframe.')
 
         elif isinstance(key, list):
             if len(key) == 0:
@@ -883,9 +889,9 @@ class DataFrame:
             by: Union[GroupBySingleType,  # single series group_by
                       # for GroupingSets
                       Tuple[Union[GroupBySingleType, Tuple[GroupBySingleType, ...]], ...],
-                      List[Union[GroupBySingleType,                             # multi series
-                                 List[GroupBySingleType],                       # for grouping lists
-                                 Tuple[GroupBySingleType, ...]]],                    # for grouping lists
+                      List[Union[GroupBySingleType,  # multi series
+                                 List[GroupBySingleType],  # for grouping lists
+                                 Tuple[GroupBySingleType, ...]]],  # for grouping lists
                       None] = None) -> 'DataFrame':
         """
         Group by any of the series currently in this dataframe, both from index

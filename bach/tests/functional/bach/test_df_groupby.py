@@ -558,12 +558,14 @@ def test_groupby_frame_split_recombine():
     assert btg1a == btg1  # inplies base_node and group_by are equal
 
     # can not add columns from grouped df to ungrouped df
-    with pytest.raises(ValueError, match="Index of assigned value does not match index of DataFrame"):
+    with pytest.raises(ValueError, match="GroupBy of assigned value does not match DataFrame and the given "
+                                         "series was not single value or an independent subquery"):
         bt2 = bt.drop(columns=['founding'])
         bt2['founding'] = btg1b
 
     # can not add columns from ungrouped df to grouped df
-    with pytest.raises(ValueError, match="Index of assigned value does not match index of DataFrame"):
+    with pytest.raises(ValueError, match="GroupBy of assigned value does not match DataFrame and the given "
+                                         "series was not single value or an independent subquery"):
         bt2 = btg1.drop(columns=['founding'])
         bt2['founding'] = bt['founding']
 
