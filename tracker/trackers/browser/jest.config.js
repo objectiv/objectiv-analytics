@@ -6,6 +6,7 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
   reporters: ['jest-standard-reporter'],
+  coverageReporters: ['lcov', 'text', 'json-summary'],
   collectCoverageFrom: ['src/**/*.ts'],
   moduleNameMapper: {
     '@objectiv-analytics/tracker-core': '<rootDir>/../../core/tracker/src',

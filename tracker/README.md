@@ -221,10 +221,13 @@ Publishes all public packages to a Local Verdaccio instance.
 >
 > Example: `yarn workspace @objectiv-analytics/tracker-core npm-publish:verdaccio`
 
-### `yarn utils:generate`
+### `yarn generate:schema`
 Runs the generator utility. This will generate:
 - The @objectiv-analytics/schema package TypeScript definitions from the OSF
 - The Context and Event factories in @objectiv-analytics/tracker-core package from the @objectiv-analytics/schema 
+
+### `yarn generate:badges`
+Runs the README badges generator utility. This will update badges placeholders in README.md files.
 
 ## Versioning  commands
  - [Release Workflow Documentation](https://yarnpkg.com/features/release-workflow)

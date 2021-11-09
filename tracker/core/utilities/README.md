@@ -4,16 +4,16 @@ Internal Core Tracker utilities.
 
 ---
 
-## Usage from utilities package
+## Generate schema
 
 ```sh
-yarn generate
+yarn generate:schema
 ```
 
-## Usage from workspace
+## Generate README badges
 
 ```sh
-yarn utils:generate
+yarn generate:badges
 ```
 
 ## Copyright and license

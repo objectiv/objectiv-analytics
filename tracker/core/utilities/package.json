@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "prettify": "prettier --write .",
-    "generate": "(cd src && node generator.js)",
+    "generate:schema": "(cd src && node generator.js)",
     "check:dependencies": "npx depcheck"
   },
   "devDependencies": {
