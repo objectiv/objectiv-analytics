@@ -1,6 +1,6 @@
 # Objectiv WebDocumentContext Plugin
 
-[![License][license-badge]][license-url] [![Coverage][coverage-badge]]
+[![License][license-badge]][license-url] ![Coverage][coverage-badge]
 
 Plugin for Objectiv web trackers. Detects the current URL via the document's Location API and factors in a `WebDocumentContext` that is attached to each `TrackerEvent`'s `global_contexts` before transport. Also listens to DOMContentLoaded to automatically trigger `DocumentLoadedEvent`s.
 
