@@ -46,6 +46,7 @@ const path = require('path');
 (async () => {
   // Read README.md
   const readmeFileContent = await fs.promises.readFile('README.md', 'utf8');
+  let newReadmeFileContent = readmeFileContent;
 
   // Determine which badges we need to update
   const readmeHasLicenseBadge = readmeFileContent.indexOf('[![License][license-badge]][license-url]') >= 0;
@@ -57,7 +58,7 @@ const path = require('path');
     const [licenseBadgeValue, licenseBadgeUrl] = await getLicenseData();
 
     // Update badge value and url
-    updateBadge(readmeFileContent, 'License', licenseBadgeValue, licenseBadgeUrl);
+    newReadmeFileContent = updateBadge(newReadmeFileContent, 'License', licenseBadgeValue, licenseBadgeUrl);
 
     console.log(`Processed License badge: ${licenseBadgeValue}, ${licenseBadgeUrl}`);
   }
@@ -68,8 +69,13 @@ const path = require('path');
     const coverageBadgeValue = await getCoverageData();
 
     // Update badge value
-    updateBadge(readmeFileContent, 'Coverage', coverageBadgeValue);
+    newReadmeFileContent = updateBadge(newReadmeFileContent, 'Coverage', coverageBadgeValue);
     console.log(`Processed Coverage badge: ${coverageBadgeValue}`);
+  }
+
+  if (newReadmeFileContent !== readmeFileContent) {
+    fs.writeFileSync('README.md', newReadmeFileContent);
+    console.log('README.md updated');
   }
 })();
 
@@ -119,21 +125,32 @@ const getLicenseData = async () => {
 }
 
 const updateBadge = (readmeFileContent, badgeName, badgeValue, badgeUrl) => {
-  // const pattern = `![Coverage]`;
-  // const enpatterned = (value: string) => `${pattern}(${value})`;
-  //
-  // const startIndex = newReadmeFile.indexOf(pattern);
-  // const valueToChangeStart = newReadmeFile.slice(startIndex + pattern.length);
-  //
-  // const valueToChangeIndex = valueToChangeStart.indexOf(')');
-  // const valueToChangeFinal = valueToChangeStart.substring(1, valueToChangeIndex);
-  //
-  // const oldBadge = enpatterned(valueToChangeFinal);
-  // const newBadge = enpatterned(coverageBadge as string);
-  //
-  // if (getArgumentValue('ci') && oldBadge !== newBadge) {
-  //   reject("The coverage badge has changed, which isn't allowed with the `ci` argument");
-  // }
-  //
-  // newReadmeFile = newReadmeFile.replace(oldBadge, newBadge);
+  let newReadmeFileContent = readmeFileContent + '\n';
+
+  if(badgeValue) {
+    const badgeKey = `${badgeName.toLowerCase()}-badge`;
+    newReadmeFileContent = appendOrReplaceBadgeValue(newReadmeFileContent, badgeKey, badgeValue);
+  }
+
+  if(badgeUrl) {
+    const badgeKey = `${badgeName.toLowerCase()}-url`;
+    newReadmeFileContent = appendOrReplaceBadgeValue(newReadmeFileContent, badgeKey, badgeUrl);
+  }
+
+  return newReadmeFileContent;
+}
+
+const appendOrReplaceBadgeValue = (readmeFileContent, badgeKey, badgeValue) => {
+  // Make new badge value
+  const newBadgeValue = `[${badgeKey}]: ${badgeValue}\n`
+
+  // Replace old badge value with the new one or simply append the value if it was not there
+  const badgeValueRegex = new RegExp(`\\[${badgeKey}]: .*\\n`);
+  if(readmeFileContent.match(badgeValueRegex)) {
+    readmeFileContent.replace(badgeValueRegex, newBadgeValue);
+  } else {
+    readmeFileContent += newBadgeValue;
+  }
+
+  return readmeFileContent;
 }
