@@ -32,5 +32,5 @@ jobs:
       - name: test if TS schema is up to date
         run: |
           cd tracker
-          yarn utils:generate
+          yarn generate:schema
           test $(git status -s -uno | wc -l) -eq 0
