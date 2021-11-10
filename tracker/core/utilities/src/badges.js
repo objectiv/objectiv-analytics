@@ -125,7 +125,7 @@ const getLicenseData = async () => {
 }
 
 const updateBadge = (readmeFileContent, badgeName, badgeValue, badgeUrl) => {
-  let newReadmeFileContent = readmeFileContent + '\n';
+  let newReadmeFileContent = readmeFileContent;
 
   if(badgeValue) {
     const badgeKey = `${badgeName.toLowerCase()}-badge`;
