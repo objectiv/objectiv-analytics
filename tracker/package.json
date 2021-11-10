@@ -26,6 +26,6 @@
     "publish": "yarn check:dependencies && yarn workspaces foreach --exclude root --exclude @objectiv-analytics/utilities --verbose run npm-publish",
     "publish:verdaccio": "yarn workspaces foreach --exclude root --exclude @objectiv-analytics/utilities --verbose run npm-publish:verdaccio",
     "generate:schema": "yarn workspace @objectiv-analytics/utilities generate:schema && yarn prettify:generated && yarn tsc",
-    "generate:badges": "yarn workspaces foreach --exclude root --exclude @objectiv-analytics/schema --exclude @objectiv-analytics/utilities --exclude @objectiv-analytics/tracker-angular --verbose run generate:badges"
+    "generate:badges": "node core/utilities/src/badges.js && yarn workspaces foreach --exclude root --verbose run generate:badges"
   }
 }

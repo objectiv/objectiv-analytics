@@ -32,6 +32,7 @@
     "build": "ng-packagr -p package.json",
     "prettify": "prettier --write .",
     "tsc": "tsc --noEmit",
+    "generate:badges": "node ../../core/utilities/src/badges.js",
     "npm-publish": "(cd dist && shx rm -f .npmrc && npm publish)",
     "npm-publish:verdaccio": "(cd dist && shx cp ../../../verdaccio/.npmrc .npmrc && npm publish && rm -f .npmrc)"
   },

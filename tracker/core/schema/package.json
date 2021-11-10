@@ -33,6 +33,7 @@
     "prettify": "prettier --write .",
     "prettify:generated": "yarn prettier --write ./src",
     "tsc": "tsc --noEmit",
+    "generate:badges": "node ../../core/utilities/src/badges.js",
     "check:dependencies": "npx depcheck",
     "npm-publish": "shx rm -f .npmrc && npm publish",
     "npm-publish:verdaccio": "shx cp ../../verdaccio/.npmrc .npmrc && npm publish && shx rm -f .npmrc"

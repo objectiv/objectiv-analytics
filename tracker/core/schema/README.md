@@ -1,5 +1,7 @@
 # Objectiv Schema TypeScript
 
+[![License][license-badge]][license-url]
+
 TypeScript implementation of the open taxonomy for analytics for Objectiv trackers.
 
 ---

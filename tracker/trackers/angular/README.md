@@ -1,5 +1,7 @@
 # Objectiv Angular Tracker 
 
+[![License][license-badge]][license-url]
+
 Objectiv tracker for Angular that embraces the open taxonomy for analytics. Supports all core tracking methods out of the box, and provides added shorthands for Angular components. Also provides default auto-tracking (ApplicationLoaded, URLChange) out of the box.
 
 ---

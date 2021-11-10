@@ -1,5 +1,7 @@
 # Objectiv Tracker
 
+[![License][license-badge]][license-url]
+
 Objectiv’s Tracker enables you to track user behaviour for web applications, websites and other JavaScript-based applications. It embraces the open taxonomy for analytics to ensure the collected data is clean, well-structured and ready for modeling.
 
 Platform-specific tracker packages are available for popular frameworks such as React and Angular. Trackers can be extended with plugins, which are independent packages that can be configured in any Tracker instance to add or mutate contextual information.

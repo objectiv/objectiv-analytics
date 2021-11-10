@@ -30,7 +30,7 @@
  *
  * 3. Add badge placeholders to the README.md
  *    [![License][license-badge]][license-url]
- *    [![Coverage][coverage-percent]]
+ *    [![Coverage][coverage-badge]]
  *
  * 4. Generate coverage reports and then run it to update badges in the readme:
  *
@@ -47,18 +47,30 @@ const path = require('path');
   // Read README.md
   const readmeFileContent = await fs.promises.readFile('README.md', 'utf8');
 
-  // Retrieve license badge value and url
-  const [licenseBadgeValue, licenseBadgeUrl] = await getLicenseData();
+  // Determine which badges we need to update
+  const readmeHasLicenseBadge = readmeFileContent.indexOf('[![License][license-badge]][license-url]') >= 0;
+  const readmeHasCoverageBadge = readmeFileContent.indexOf('[![Coverage][coverage-badge]]') >= 0;
 
-  // Retrieve coverage badge value
-  const coverageBadgeValue = await getCoverageData();
+  // Process and update License badge
+  if (readmeHasLicenseBadge) {
+    // Retrieve license badge value and url
+    const [licenseBadgeValue, licenseBadgeUrl] = await getLicenseData();
 
-  // Update badge values and urls
-  updateBadge(readmeFileContent, 'License', licenseBadgeValue, licenseBadgeUrl);
-  updateBadge(readmeFileContent, 'Coverage', coverageBadgeValue);
+    // Update badge value and url
+    updateBadge(readmeFileContent, 'License', licenseBadgeValue, licenseBadgeUrl);
 
-  console.log(`Processed License badge: ${licenseBadgeValue}, ${licenseBadgeUrl}`);
-  console.log(`Processed Coverage badge: ${coverageBadgeValue}`);
+    console.log(`Processed License badge: ${licenseBadgeValue}, ${licenseBadgeUrl}`);
+  }
+
+  // Process and update Coverage badge
+  if (readmeHasCoverageBadge) {
+    // Retrieve coverage badge value
+    const coverageBadgeValue = await getCoverageData();
+
+    // Update badge value
+    updateBadge(readmeFileContent, 'Coverage', coverageBadgeValue);
+    console.log(`Processed Coverage badge: ${coverageBadgeValue}`);
+  }
 })();
 
 const getCoverageData = async () => {

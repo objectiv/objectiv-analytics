@@ -10,6 +10,7 @@
   "scripts": {
     "prettify": "prettier --write .",
     "generate:schema": "(cd src && node generator.js)",
+    "generate:badges": "node ../../core/utilities/src/badges.js",
     "check:dependencies": "npx depcheck"
   },
   "devDependencies": {
