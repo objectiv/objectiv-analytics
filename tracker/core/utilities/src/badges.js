@@ -39,7 +39,7 @@ const fs = require('fs');
 const path = require('path');
 
 (async () => {
-  // Read README.md and coverage/coverage-summary.json files
+  // Read README.md
   const readmeFileContent = await fs.promises.readFile('README.md', 'utf8');
 
   // Process license badge
@@ -49,8 +49,8 @@ const path = require('path');
   const coverageBadgeValue = await getCoverageBadgeValue();
 
   // Update badge values
-  updateBadgeValue('License', licenseBadgeValue);
-  updateBadgeValue('Coverage', coverageBadgeValue);
+  updateBadgeValue(readmeFileContent, 'License', licenseBadgeValue);
+  updateBadgeValue(readmeFileContent, 'Coverage', coverageBadgeValue);
 
   console.log(`Processed License badge: ${licenseBadgeValue}`);
   console.log(`Processed Coverage badge: ${coverageBadgeValue}`);
@@ -80,10 +80,19 @@ const getCoverageBadgeValue = async () => {
 }
 
 const getLicenseBadgeValue = async () => {
-  return '';
+  // Read package JSON
+  const packageJsonFileContent = await fs.promises.readFile('package.json', 'utf8');
+
+  // Parse package JSON
+  const packageJson = JSON.parse(packageJsonFileContent);
+
+  // Retrieve the license
+  const license = packageJson.license;
+
+  return encodeURI(`https://img.shields.io/badge/license-${license}-blue.svg?style=flat`);
 }
 
-const updateBadgeValue = () => {
+const updateBadgeValue = (readmeFileContent, badgeName, badgeValue) => {
   // const pattern = `![Coverage]`;
   // const enpatterned = (value: string) => `${pattern}(${value})`;
   //
