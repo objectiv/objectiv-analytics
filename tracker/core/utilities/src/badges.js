@@ -28,7 +28,11 @@
  *      "generate:badges": "node ../path/to/core/utilities/src/badges.js",
  *    }
  *
- * 3. Generate coverage reports and then run it to update badges in the readme:
+ * 3. Add badge placeholders to the README.md
+ *    [![License][license-badge]][license-url]
+ *    [![Coverage][coverage-percent]]
+ *
+ * 4. Generate coverage reports and then run it to update badges in the readme:
  *
  *    yarn test:coverage
  *    yarn generate:badges
@@ -36,27 +40,28 @@
  */
 
 const fs = require('fs');
+const got = require("got");
 const path = require('path');
 
 (async () => {
   // Read README.md
   const readmeFileContent = await fs.promises.readFile('README.md', 'utf8');
 
-  // Process license badge
-  const licenseBadgeValue = await getLicenseBadgeValue();
+  // Retrieve license badge value and url
+  const [licenseBadgeValue, licenseBadgeUrl] = await getLicenseData();
 
-  // Process coverage badge
-  const coverageBadgeValue = await getCoverageBadgeValue();
+  // Retrieve coverage badge value
+  const coverageBadgeValue = await getCoverageData();
 
-  // Update badge values
-  updateBadgeValue(readmeFileContent, 'License', licenseBadgeValue);
-  updateBadgeValue(readmeFileContent, 'Coverage', coverageBadgeValue);
+  // Update badge values and urls
+  updateBadge(readmeFileContent, 'License', licenseBadgeValue, licenseBadgeUrl);
+  updateBadge(readmeFileContent, 'Coverage', coverageBadgeValue);
 
-  console.log(`Processed License badge: ${licenseBadgeValue}`);
+  console.log(`Processed License badge: ${licenseBadgeValue}, ${licenseBadgeUrl}`);
   console.log(`Processed Coverage badge: ${coverageBadgeValue}`);
 })();
 
-const getCoverageBadgeValue = async () => {
+const getCoverageData = async () => {
   const coverageReportFileContent = await fs.promises.readFile(path.join('coverage', 'coverage-summary.json'), 'utf8');
 
   // Parse coverage JSON Summary
@@ -79,20 +84,29 @@ const getCoverageBadgeValue = async () => {
   return encodeURI(`https://img.shields.io/badge/Coverage-${coveragePercentage}%-${badgeColor}.svg`);
 }
 
-const getLicenseBadgeValue = async () => {
+const getLicenseData = async () => {
   // Read package JSON
   const packageJsonFileContent = await fs.promises.readFile('package.json', 'utf8');
 
   // Parse package JSON
   const packageJson = JSON.parse(packageJsonFileContent);
 
-  // Retrieve the license
-  const license = packageJson.license;
+  // Retrieve the license Id
+  const licenseId = packageJson.license;
 
-  return encodeURI(`https://img.shields.io/badge/license-${license}-blue.svg?style=flat`);
+  // Retrieve and parse the license JSON from SPDX
+  const licenseJson = await got(`https://spdx.org/licenses/${licenseId}.json`).json();
+
+  // Retrieve the license Url, just pick the first seeAlso item
+  const licenseUrl = licenseJson["seeAlso"][0];
+
+  return [
+    encodeURI(`https://img.shields.io/badge/license-${licenseId}-blue.svg`),
+    licenseUrl
+  ];
 }
 
-const updateBadgeValue = (readmeFileContent, badgeName, badgeValue) => {
+const updateBadge = (readmeFileContent, badgeName, badgeValue, badgeUrl) => {
   // const pattern = `![Coverage]`;
   // const enpatterned = (value: string) => `${pattern}(${value})`;
   //
@@ -110,9 +124,4 @@ const updateBadgeValue = (readmeFileContent, badgeName, badgeValue) => {
   // }
   //
   // newReadmeFile = newReadmeFile.replace(oldBadge, newBadge);
-
-
-  // Process license badge
-  // [license-image]: https://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
-  // [license]: https://www.apache.org/licenses/LICENSE-2.0
 }
