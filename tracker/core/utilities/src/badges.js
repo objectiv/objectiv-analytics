@@ -30,7 +30,7 @@
  *
  * 3. Add badge placeholders to the README.md
  *    [![License][license-badge]][license-url]
- *    ![Coverage][coverage-badge]
+ *    [![Coverage][coverage-badge]](#)
  *
  * 4. Generate coverage reports and then run it to update badges in the readme:
  *
@@ -50,7 +50,7 @@ const path = require('path');
 
   // Determine which badges we need to update
   const readmeHasLicenseBadge = readmeFileContent.indexOf('[![License][license-badge]][license-url]') >= 0;
-  const readmeHasCoverageBadge = readmeFileContent.indexOf('![Coverage][coverage-badge]') >= 0;
+  const readmeHasCoverageBadge = readmeFileContent.indexOf('[![Coverage][coverage-badge]](#)') >= 0;
 
   // Process and update License badge
   if (readmeHasLicenseBadge) {

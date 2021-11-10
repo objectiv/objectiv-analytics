@@ -1,6 +1,6 @@
 # Objectiv JavaScript Tracker Core 
 
-[![License][license-badge]][license-url] ![Coverage][coverage-badge]
+[![License][license-badge]][license-url] [![Coverage][coverage-badge]](#)
 
 Interface for creation, configuration, and management of Objectiv trackers. Provides factories for producing 
 Contexts & Events based on the open taxonomy schema, a basic batched Queue and Transport implementation, as well 
