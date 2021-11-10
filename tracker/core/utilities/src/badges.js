@@ -36,30 +36,74 @@
  */
 
 const fs = require('fs');
+const path = require('path');
 
-fs.readFile('./coverage/coverage-summary.json', 'utf8', (error, resource) => {
-  if (error) {
-    throw error;
-  }
+(async () => {
+  // Read README.md and coverage/coverage-summary.json files
+  const readmeFileContent = await fs.promises.readFile('README.md', 'utf8');
+
+  // Process license badge
+  const licenseBadgeValue = await getLicenseBadgeValue();
+
+  // Process coverage badge
+  const coverageBadgeValue = await getCoverageBadgeValue();
+
+  // Update badge values
+  updateBadgeValue('License', licenseBadgeValue);
+  updateBadgeValue('Coverage', coverageBadgeValue);
+
+  console.log(`Processed License badge: ${licenseBadgeValue}`);
+  console.log(`Processed Coverage badge: ${coverageBadgeValue}`);
+})();
+
+const getCoverageBadgeValue = async () => {
+  const coverageReportFileContent = await fs.promises.readFile(path.join('coverage', 'coverage-summary.json'), 'utf8');
 
   // Parse coverage JSON Summary
-  const coverageReportJsonSummary = JSON.parse(resource);
+  const coverageReportJson = JSON.parse(coverageReportFileContent);
 
   // Retrieve the total statements percentage
-  const coveragePercentage = coverageReportJsonSummary.total.statements.pct;
+  const coveragePercentage = coverageReportJson.total.statements.pct;
 
   // Determine badge color - quite arbitrarily
   const badgeColor =
     coveragePercentage >= 90
       ? 'brightgreen'
       : coveragePercentage >= 80
-      ? 'yellow'
-      : coveragePercentage >= 70
-      ? 'orange'
-      : 'red';
+        ? 'yellow'
+        : coveragePercentage >= 70
+          ? 'orange'
+          : 'red';
 
-  // Build shields.io badge URL using coverPercentage and badgeColor determine above
-  const badgeURL = encodeURI(`https://img.shields.io/badge/Coverage-${coveragePercentage}%-${badgeColor}.svg`);
+  // Build shields.io badge URL using `coveragePercentage` and `badgeColor` variables determined above
+  return encodeURI(`https://img.shields.io/badge/Coverage-${coveragePercentage}%-${badgeColor}.svg`);
+}
 
-  console.log(`Generated coverage badge: ${badgeURL}`)
-});
+const getLicenseBadgeValue = async () => {
+  return '';
+}
+
+const updateBadgeValue = () => {
+  // const pattern = `![Coverage]`;
+  // const enpatterned = (value: string) => `${pattern}(${value})`;
+  //
+  // const startIndex = newReadmeFile.indexOf(pattern);
+  // const valueToChangeStart = newReadmeFile.slice(startIndex + pattern.length);
+  //
+  // const valueToChangeIndex = valueToChangeStart.indexOf(')');
+  // const valueToChangeFinal = valueToChangeStart.substring(1, valueToChangeIndex);
+  //
+  // const oldBadge = enpatterned(valueToChangeFinal);
+  // const newBadge = enpatterned(coverageBadge as string);
+  //
+  // if (getArgumentValue('ci') && oldBadge !== newBadge) {
+  //   reject("The coverage badge has changed, which isn't allowed with the `ci` argument");
+  // }
+  //
+  // newReadmeFile = newReadmeFile.replace(oldBadge, newBadge);
+
+
+  // Process license badge
+  // [license-image]: https://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
+  // [license]: https://www.apache.org/licenses/LICENSE-2.0
+}

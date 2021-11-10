@@ -1,5 +1,7 @@
 # Objectiv Browser Tracker 
 
+[![License][license-image]][license] [![Coverage][coverage-percent]]
+
 Objectiv tracker for web applications & websites that embraces the open taxonomy for analytics. Supports core tracking methods and default auto-tracking (ApplicationLoaded, URLChange) out of the box.
 
 ---
