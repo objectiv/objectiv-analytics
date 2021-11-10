@@ -32,5 +32,3 @@ All rights reserved.
 [license-url]: https://www.apache.org/licenses/LICENSE-2.0
 
 [coverage-badge]: https://img.shields.io/badge/Coverage-100%25-brightgreen.svg
-
-

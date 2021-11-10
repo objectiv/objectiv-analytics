@@ -119,7 +119,7 @@ const getLicenseData = async () => {
   const licenseUrl = licenseJson["seeAlso"][0];
 
   return [
-    encodeURI(`https://img.shields.io/badge/license-${licenseId}-blue.svg`),
+    encodeURI(`https://img.shields.io/badge/license-${licenseId.replace('-', '--')}-blue.svg`),
     licenseUrl
   ];
 }
