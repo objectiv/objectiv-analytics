@@ -16,31 +16,16 @@ x-db_env_variables: &db_env_variables
 
 version: "3.4"
 services:
-  objectiv_website:
-    container_name: objectiv_website
-    image: ${OBJECTIV_CONTAINER_URL-objectiv}/website:${OBJECTIV_CONTAINER_TAG-latest}
-    depends_on:
-      - objectiv_collector
-    ports:
-      - "127.0.0.1:8080:80"
-    networks:
-      - obj
-    healthcheck:
-      test: [ "CMD", "printf",  "\"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/80" ]
-      interval: 30s
-      timeout: 2s
-      retries: 3
-
   objectiv_collector:
     container_name: objectiv_collector
     depends_on:
       - objectiv_postgres
     # default image: eu.gcr.io/objectiv-production/backend:latest
-    image: ${OBJECTIV_CONTAINER_URL-objectiv}/backend:${OBJECTIV_CONTAINER_TAG-latest}
+    image: ${OBJECTIV_CONTAINER_URL-eu.gcr.io/objectiv-production}/backend:${OBJECTIV_CONTAINER_TAG-latest}
     working_dir: /services
     entrypoint: bash -c "objectiv-db-init; ./entry_point.sh"
     ports:
-      - "127.0.0.1:5000:5000"
+      - 127.0.0.1:5000:5000
     networks:
       - obj
     volumes:
@@ -57,8 +42,12 @@ services:
   objectiv_postgres:
     container_name: objectiv_postgres
     image: postgres:latest
+    ports:
+      - 127.0.0.1:5432:5432
     networks:
       - obj
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
     environment:
       <<: *db_env_variables
       # WARNING: Disabling authentication here
@@ -69,29 +58,9 @@ services:
       timeout: 2s
       retries: 5
 
-  objectiv_notebook:
-    container_name: objectiv_notebook
-    # default image: eu.gcr.io/objectiv-production/notebook:latest
-    image: ${OBJECTIV_CONTAINER_URL-objectiv}/notebook:${OBJECTIV_CONTAINER_TAG-latest}
-    ports:
-      - "8888:8888"
-      - "8053:8053"
-
-    networks:
-      - obj
-    depends_on:
-      # we make it depend on the other instances
-      # so we have the best chance of the db being up in time
-      - objectiv_postgres
-      - objectiv_collector
-    environment:
-      <<: *db_env_variables
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8888" ]
-      interval: 30s
-      timeout: 2s
-      retries: 3
-
+# persist PG data in a docker volume
+volumes:
+  pgdata:
 
 # use bridged networking, so we can access services provided from the host
 networks:
