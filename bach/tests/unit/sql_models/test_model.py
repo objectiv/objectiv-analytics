@@ -47,7 +47,7 @@ def test_equality_different_classes():
     vm1 = ValueModel.build(key='X', val=1)
     vm2 = ValueModel.build(key='X', val=2)
     csm1 = CustomSqlModel(
-        sql='select {key} as key, {val} as value',
+        sql="select '{key}' as key, {val} as value",
     )(key='X', val=2)
     # csm1 has the same sql, properties, references, and materialization as vm2, but not the same name
     # so generated sql will be different if it is part of a CTE, and thus the objects are not equal.
@@ -58,7 +58,7 @@ def test_equality_different_classes():
     # the properties are formatted by the same function into sql. The fact that it is actually a different
     # sub-class of SqlModel doesn't matter for the sql generation nor for the equality check, cs2m == vm2
     csm2 = CustomSqlModel(
-        sql='select {key} as key, {val} as value',
+        sql="select '{key}' as key, {val} as value",
         name='ValueModel'
     )(key='X', val=2)
     assert vm1 != csm2

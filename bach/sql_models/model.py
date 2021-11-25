@@ -2,18 +2,21 @@
 Copyright 2021 Objectiv B.V.
 
 Models:
-* SqlModel         - Actual sql-model. Instances of this class form the nodes in the model graph
-* SqlModelSpec     - Specification class, that specifies basic properties of an SqlModel instance
-* SqlModelBuilder  - Helper class to instantiate the (immutable) SqlModel objects. Generally models should
-                     extend this class and not the SqlModel class.
-* CustomSqlModel   - Utility child of SqlModelSpec that can be used to add a node with custom sql to a
-                     model graph.
+
+* `SqlModel`: Actual sql-model. Instances of this class form the nodes in the model graph
+* `SqlModelSpec`: Specification class, that specifies basic properties of an SqlModel instance
+* `SqlModelBuilder`: Helper class to instantiate the (immutable) SqlModel objects. Generally models should
+  extend this class and not the SqlModel class.
+* `CustomSqlModel`: Utility child of SqlModelSpec that can be used to add a node with custom sql to a
+  model graph.
+
 """
+import collections
 import hashlib
 from abc import abstractmethod, ABCMeta
 from copy import deepcopy
 from enum import Enum
-from typing import TypeVar, Generic, Dict, Any, Set, Tuple, Type, Union
+from typing import TypeVar, Generic, Dict, Any, Set, Tuple, Type, Union, Hashable
 
 from sql_models.util import extract_format_fields
 
@@ -21,6 +24,9 @@ from sql_models.util import extract_format_fields
 class Materialization(Enum):
     CTE = 1
     VIEW = 2
+    TABLE = 3
+    """ TEMP_TABLE_DROP_ON_COMMIT exists mostly for testing purposes. """
+    TEMP_TABLE_DROP_ON_COMMIT = 4
 
 
 # special reference-level format string that will be filled in at sql-generation time with a per-model
@@ -237,18 +243,23 @@ class SqlModelBuilder(SqlModelSpec, metaclass=ABCMeta):
 
     def set_values(self: TB, **values) -> TB:
         """
-        Set values that can either be references or properties
+        Set values that can either be references or properties.
+        If a value is a property then it must be immutable
+        If a value is a reference then it must either be an instance of SqlModelBuilder or of SqlModel
         :param values:
         :return: self
         """
-        # todo: check that values are of the correct types
-
         for key, value in values.items():
             if key in self.spec_references:
                 if not isinstance(value, (SqlModel, SqlModelBuilder)):
-                    raise ValueError(f'reference of incorrect type: {type(value)}')
+                    raise ValueError(f'reference ({key}) is of incorrect type: {type(value)}')
                 self._references[key] = value
             elif key in self.spec_properties:
+                # todo: enable below check, after we stop using lists in properties in Bach
+                # # There is not straightforward way to check whether a value is immutable. However virtual
+                # # all immutable objects are also hashable, so we check that instead.
+                # if not isinstance(value, collections.abc.Hashable):
+                #     raise ValueError(f'property ({key}) is of incorrect type: {type(value)}')
                 self._properties[key] = value
             else:
                 raise ValueError(f'Provided parameter {key} is not a valid property nor reference for '
@@ -296,14 +307,17 @@ class SqlModel(Generic[T]):
     """
     def __init__(self,
                  model_spec: T,
-                 properties: Dict[str, Any],
+                 properties: Dict[str, Hashable],
                  references: Dict[str, 'SqlModel'],
                  materialization: Materialization
                  ):
         """
         :param model_spec: ModelSpec class defining the sql, and the names of the properties and references
             that this class must have.
-        :param properties: Dictionary mapping property names to property values
+        :param properties: Dictionary mapping property names to property values. Important: the values must
+            be immutable. If not then the instance as a whole is not immutable, which will invalidate
+            assumptions that code might hold about these instances. See the class's docstring for information
+            on why this is important.
         :param references: Dictionary mapping reference names to instances of SqlModels.
         """
         self._model_spec = model_spec

@@ -18,7 +18,7 @@ def assert_roughly_equal_sql(sql_a: str, sql_b: str):
 class ValueModel(SqlModelBuilder):
     @property
     def sql(self) -> str:
-        return 'select {key} as key, {val} as value'
+        return "select '{key}' as key, {val} as value"
 
 
 class RefModel(SqlModelBuilder):
@@ -37,7 +37,7 @@ class JoinModel(SqlModelBuilder):
     @property
     def sql(self) -> str:
         return '''
-            select key, left.value + right.value
-            from {{ref_left}} as left
-            inner join {{ref_right}} as right on left.key=right.key
+            select l.key, l.value + r.value as value
+            from {{ref_left}} as l
+            inner join {{ref_right}} as r on l.key=r.key
         '''

@@ -3,7 +3,8 @@ Copyright 2021 Objectiv B.V.
 """
 from typing import List, NamedTuple, Dict
 
-from sql_models.model import SqlModel, REFERENCE_UNIQUE_FIELD
+from sql_models.graph_operations import find_nodes, FoundNode
+from sql_models.model import SqlModel, REFERENCE_UNIQUE_FIELD, Materialization
 from sql_models.sql_query_parser import raw_sql_to_selects
 from sql_models.util import quote_identifier
 
@@ -14,7 +15,52 @@ def to_sql(model: SqlModel) -> str:
     :param model: model to convert to sql
     :return: executable select query
     """
-    compiler_cache: Dict[str, List[SemiCompiledTuple]] = {}
+    compiler_cache: Dict[str, List['SemiCompiledTuple']] = {}
+    return _to_sql_materialized_node(model=model, compiler_cache=compiler_cache)
+
+
+def to_sql_materialized_nodes(start_node: SqlModel, include_start_node=True) -> List[str]:
+    """
+    Give list of sql statements:
+        * The sql to query the given model
+        * The sql to create all views and tables that the given model depends upon
+    :param start_node: model to convert to sql
+    :return: A list of sql statements. The final statement will be the query for the given start_node.
+        Earlier statements will be create statements for views and/or tables.
+    """
+    result = []
+    compiler_cache: Dict[str, List['SemiCompiledTuple']] = {}
+    # find all nodes that are materialized as view or table, and the start_node if needed
+    # make sure we get the longest possible path to a node (use_last_found_instance=True). That way we can
+    # reverse the list and we'll get the nodes that are a dependency for other nodes before the node that
+    # depends on them.
+
+    def select_nodes(node: SqlModel) -> bool:
+        return (node is start_node and include_start_node) \
+               or node.materialization in (
+                Materialization.VIEW, Materialization.TABLE, Materialization.TEMP_TABLE_DROP_ON_COMMIT
+               )
+
+    materialized_found_nodes: List[FoundNode] = find_nodes(
+        start_node=start_node,
+        function=select_nodes,
+        use_last_found_instance=True
+    )
+    for found_node in reversed(materialized_found_nodes):
+        result.append(_to_sql_materialized_node(model=found_node.model, compiler_cache=compiler_cache))
+    return result
+
+
+def _to_sql_materialized_node(
+        model: SqlModel,
+        compiler_cache: Dict[str, List['SemiCompiledTuple']]
+) -> str:
+    """
+    Give the sql to query the given model
+    :param model: model to convert to sql
+    :param compiler_cache: Dictionary mapping model hashes to already compiled results
+    :return: executable select query
+    """
     queries = _to_cte_sql(compiler_cache=compiler_cache, model=model)
     queries = _filter_duplicate_ctes(queries)
     if len(queries) == 0:
@@ -22,13 +68,35 @@ def to_sql(model: SqlModel) -> str:
         raise Exception('Internal error. No models to compile')
 
     if len(queries) == 1:
-        return queries[0].sql
+        return _materialize(queries[0].sql, model)
 
     # case: len(result) > 1
     sql = 'with '
     sql += ',\n'.join(f'{row.quoted_cte_name} as ({row.sql})' for row in queries[:-1])
     sql += '\n' + queries[-1].sql
-    return sql
+    return _materialize(sql, model)
+
+
+def _materialize(sql_query: str, model: SqlModel) -> str:
+    """
+    Generate sql that wraps the sql_query with the materialization indicated by model.
+    :param sql_query: raw sql query
+    :param model: model that indicates the materialization and name of the resulting view or table
+        (if applicable).
+    :return: raw sql
+    """
+
+    materialization = model.materialization
+    quoted_name = model_to_quoted_name(model)
+    if materialization == Materialization.CTE:
+        return sql_query
+    if materialization == Materialization.VIEW:
+        return f'create view {quoted_name} as {sql_query}'
+    if materialization == Materialization.TABLE:
+        return f'create table {quoted_name} as {sql_query}'
+    if materialization == Materialization.TEMP_TABLE_DROP_ON_COMMIT:
+        return f'create temporary table {quoted_name} on commit drop as {sql_query}'
+    raise Exception(f'Unsupported Materialization value: {materialization}')
 
 
 class SemiCompiledTuple(NamedTuple):
@@ -77,27 +145,32 @@ def _to_cte_sql(compiler_cache: Dict[str, List[SemiCompiledTuple]],
     if model.hash in compiler_cache:
         return compiler_cache[model.hash]
 
-    if not model.references:
-        return _single_model_to_sql(compiler_cache=compiler_cache, model=model, reference_names={})
+    # First recursively compile all CTEs that we depend on
     result = []
     reference_names = {
-        name: model_to_quoted_cte_name(reference) for name, reference in model.references.items()
+        name: model_to_quoted_name(reference) for name, reference in model.references.items()
     }
     for ref_name, reference in model.references.items():
-        result.extend(_to_cte_sql(compiler_cache=compiler_cache, model=reference))
+        if reference.materialization == Materialization.CTE:
+            result.extend(_to_cte_sql(compiler_cache=compiler_cache, model=reference))
+
+    # Compile the actual model
     result.extend(
-        _single_model_to_sql(compiler_cache=compiler_cache, model=model, reference_names=reference_names))
+        _single_model_to_sql(compiler_cache=compiler_cache, model=model, reference_names=reference_names)
+    )
 
     compiler_cache[model.hash] = result
     return result
 
 
-def model_to_quoted_cte_name(model):
-    """ Get the name for the cte that will be generated from this model, quoted and escaped. """
+def model_to_quoted_name(model: SqlModel):
+    """
+    Get the name for the cte/table/view that will be generated from this model, quoted and escaped.
+    """
     # max length of an identifier name in Postgres is normally 63 characters. We'll use that as a cutoff
     # here.
     # TODO: two compilation phases:
-    #  1) get all cte names
+    #  1) get all cte/view/table names
     #  2) generate actual sql. Only for CTEs with conflicting names add the hash
     name = f'{model.generic_name[0:28]}___{model.hash}'
     return quote_identifier(name)
@@ -132,7 +205,7 @@ def _single_model_to_sql(compiler_cache: Dict[str, List[SemiCompiledTuple]],
         assert cte.name is not None
         result.append(SemiCompiledTuple(quoted_cte_name=quote_identifier(cte.name), sql=cte.select_sql))
     result.append(
-        SemiCompiledTuple(quoted_cte_name=model_to_quoted_cte_name(model), sql=ctes[-1].select_sql)
+        SemiCompiledTuple(quoted_cte_name=model_to_quoted_name(model), sql=ctes[-1].select_sql)
     )
 
     compiler_cache[model.hash] = result

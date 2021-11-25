@@ -146,7 +146,7 @@ def test_find_nodes():
     assert find_node(graph, lambda node: False) is None
     assert find_nodes(graph, lambda node: False) == []
 
-    # fine all
+    # find all
     assert find_node(graph, lambda node: True) == FoundNode(model=graph, reference_path=tuple())
     expected_result = [
         FoundNode(model=graph, reference_path=tuple()),
@@ -157,20 +157,68 @@ def test_find_nodes():
     ]
     assert find_nodes(graph, lambda node: True) == expected_result
 
-    # fine one
+    # find one
     assert find_node(graph, lambda node: node.generic_name == 'RefModel') == \
            FoundNode(model=rm, reference_path=('ref_left', 'ref_left'))
     assert find_nodes(graph, lambda node: node.generic_name == 'RefModel') == [
         FoundNode(model=rm, reference_path=('ref_left', 'ref_left'))
     ]
 
-    # fine some
+    # find some
     assert find_node(graph, lambda node: node.generic_name == 'ValueModel') == \
            FoundNode(model=vm1, reference_path=('ref_right',))
     assert find_nodes(graph, lambda node: node.generic_name == 'ValueModel') == [
         FoundNode(model=vm1, reference_path=('ref_right',)),
         FoundNode(model=vm2, reference_path=('ref_left', 'ref_right'))
     ]
+
+
+def test_find_nodes_path_length():
+    # Test for nodes that can be found through multiple paths.
+    # The order of the returned nodes from find_nodes() depends on the length of the reference path. For
+    # nodes with multiple paths either the longest or the shortest path is taken into account based on
+    # the value of use_last_found_instance
+
+    # Graph:
+
+    #
+    #                /--- rm1 <-+---------------------------\
+    #               /            \                           +-- graph
+    #   vm1 <------+              +-- jm2 <----\            /
+    #               \            /              +-- jm4 <--/
+    #                +-- jm1 <--+              /
+    #               /            \            /
+    #              /              +-- jm3 <--/
+    #   vm2 <-----+              /
+    #              \------------/
+
+    vm1 = ValueModel.build(key='a', val=1)
+    vm2 = ValueModel.build(key='a', val=2)
+    rm1 = RefModel.build(ref=vm1)
+    jm1 = JoinModel.build(ref_left=vm2, ref_right=vm1)
+    jm2 = JoinModel.build(ref_left=jm1, ref_right=rm1)
+    jm3 = JoinModel.build(ref_left=vm2, ref_right=jm1)
+    jm4 = JoinModel.build(ref_left=jm3, ref_right=jm2)
+    graph = JoinModel.build(ref_left=jm4, ref_right=rm1)
+
+    # find vm1 from graph, both with longest and shortest path
+    result = find_nodes(graph, function=lambda n: n is vm1, use_last_found_instance=False)
+    assert result == [FoundNode(model=vm1, reference_path=('ref_right', 'ref'))]
+    result = find_nodes(graph, function=lambda n: n is vm1, use_last_found_instance=True)
+    assert result == [FoundNode(model=vm1, reference_path=('ref_left', 'ref_right', 'ref_right', 'ref'))]
+
+    # find vm1 from jm4, both with longest and shortest path
+    result = find_nodes(jm4, function=lambda n: n is vm1, use_last_found_instance=False)
+    assert result == [FoundNode(model=vm1, reference_path=('ref_left', 'ref_right', 'ref_right'))]
+    result = find_nodes(jm4, function=lambda n: n is vm1, use_last_found_instance=True)
+    assert result == [FoundNode(model=vm1, reference_path=('ref_right', 'ref_right', 'ref'))]
+
+    # find vm2 from graph, both with longest and shortest path
+    result = find_nodes(graph, function=lambda n: n is vm2)
+    assert result == [FoundNode(model=vm2, reference_path=('ref_left', 'ref_left', 'ref_left'))]
+    result = find_nodes(graph, function=lambda n: n is vm2, use_last_found_instance=True)
+    assert result == [FoundNode(model=vm2, reference_path=('ref_left', 'ref_right', 'ref_left', 'ref_left'))]
+
 
 
 def _assert_graph_difference(graph: SqlModel,
