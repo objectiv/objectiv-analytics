@@ -2,7 +2,7 @@
 
 Objectiv is a data collection & modeling library that puts the data scientist first. 
 
-It proposes the adoption of [a common taxonomy for analytics](https://www.objectiv.io/taxonomy), enabling a shared way to collect well-structured, pre-validated data that is ready to model on without significant gruntwork. Models & datasets embracing the taxonomy are reusable and interchangeable, allowing data scientists to build on knowledge and practises of others.
+It proposes the adoption of [a common taxonomy for analytics](https://www.objectiv.io/taxonomy), enabling a shared way to collect well-structured, pre-validated data that is ready to model on without significant gruntwork. Models & datasets embracing the taxonomy are reusable and interchangeable, allowing data scientists to build on knowledge and practices of others.
 
 ![Objectiv Pipeline](https://www.objectiv.io/docs/img/objectiv-pipeline.svg "Objectiv Pipeline")
 
