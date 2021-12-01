@@ -12,7 +12,9 @@ def assert_roughly_equal_sql(sql_a: str, sql_b: str):
     whitespace_remove_trans = str.maketrans(dict.fromkeys(string.whitespace))
     a_stripped = sql_a.translate(whitespace_remove_trans)
     b_stripped = sql_b.translate(whitespace_remove_trans)
-    assert a_stripped == b_stripped
+    if a_stripped != b_stripped:
+        print(f'\n\n{a_stripped}\n\n != \n\n{b_stripped}\n\n')
+        raise AssertionError(f'\n\n{a_stripped}\n\n != \n\n{b_stripped}\n\n')
 
 
 class ValueModel(SqlModelBuilder):

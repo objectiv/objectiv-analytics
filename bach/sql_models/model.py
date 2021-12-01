@@ -16,17 +16,45 @@ import hashlib
 from abc import abstractmethod, ABCMeta
 from copy import deepcopy
 from enum import Enum
-from typing import TypeVar, Generic, Dict, Any, Set, Tuple, Type, Union, Hashable
+from typing import TypeVar, Generic, Dict, Any, Set, Tuple, Type, Union, Hashable, NamedTuple, Optional
 
 from sql_models.util import extract_format_fields
 
 
+class MaterializationType(NamedTuple):
+    """
+    name: unique identifier
+    is_statement:
+        True indicates that a SqlModel with this materialization should be turned into a sql statement,
+            either query or a create statement
+        False indicates that a SqlModel with this materialization should not be turned into a standalone sql
+            statement. Example: a CTE should not be used as a standalone statement.
+    is_cte:
+        True indicates that a SqlModel with this materialization can be used as a CTE by another SqlModel.
+        False indicates that a SqlModel with this materialization cannot be used as a CTE
+    """
+    name: str
+    is_statement: bool
+    is_cte: bool
+
+
 class Materialization(Enum):
-    CTE = 1
-    VIEW = 2
-    TABLE = 3
-    """ TEMP_TABLE_DROP_ON_COMMIT exists mostly for testing purposes. """
-    TEMP_TABLE_DROP_ON_COMMIT = 4
+    CTE = MaterializationType('cte', False, True)
+    """ A QUERY can be used as a CTE, but is also a stand-alone query."""
+    QUERY = MaterializationType('query', True, True)
+    VIEW = MaterializationType('view', True, False)
+    TABLE = MaterializationType('table', True, False)
+    TEMP_TABLE = MaterializationType('temp_table', True, False)
+    """ A VIRTUAL_NODE will not be turned into a statement, nor generate any CTEs"""
+    VIRTUAL_NODE = MaterializationType('virtual', False, False)
+
+    @property
+    def is_statement(self) -> bool:
+        return self.value.is_statement
+
+    @property
+    def is_cte(self) -> bool:
+        return self.value.is_cte
 
 
 # special reference-level format string that will be filled in at sql-generation time with a per-model
@@ -309,7 +337,8 @@ class SqlModel(Generic[T]):
                  model_spec: T,
                  properties: Dict[str, Hashable],
                  references: Dict[str, 'SqlModel'],
-                 materialization: Materialization
+                 materialization: Materialization,
+                 specific_name: Optional[str] = None
                  ):
         """
         :param model_spec: ModelSpec class defining the sql, and the names of the properties and references
@@ -319,6 +348,8 @@ class SqlModel(Generic[T]):
             assumptions that code might hold about these instances. See the class's docstring for information
             on why this is important.
         :param references: Dictionary mapping reference names to instances of SqlModels.
+        :param materialization: TODO
+        :param specific_name: TODO
         """
         self._model_spec = model_spec
         self._generic_name = model_spec.generic_name
@@ -326,6 +357,7 @@ class SqlModel(Generic[T]):
         self._references: Dict[str, 'SqlModel'] = references
         self._properties: Dict[str, Any] = properties
         self._materialization = materialization
+        self._specific_name = specific_name
         self._property_formatter = model_spec.properties_to_sql
 
         # Verify completeness of this object: references and properties
@@ -345,6 +377,7 @@ class SqlModel(Generic[T]):
             3. properties
             4. materialization
             5. references, and recursively their sql, properties, materialization, and their references
+            6. specific_name
         :return: 32 character string representation of md5 hash
         """
         data = {
@@ -356,12 +389,21 @@ class SqlModel(Generic[T]):
                 ref_name: model.hash for ref_name, model in self.references.items()
             }
         }
+        if self.specific_name is not None:
+            data['specific_name'] = self.specific_name
         data_bytes = repr(data).encode('utf-8')
         return hashlib.md5(data_bytes).hexdigest()
 
     @property
     def generic_name(self) -> str:
+        """ Name for the type of model."""
         return self._generic_name
+
+    @property
+    def specific_name(self) -> Optional[str]:
+        """ Optional name for this specific instance of the model_spec that this model implements. """
+        # TODO: add to hash
+        return self._specific_name
 
     @property
     def sql(self) -> str:
@@ -402,7 +444,6 @@ class SqlModel(Generic[T]):
         """
         Return a copy with the given properties of this model updated.
         """
-        references = self.references
         properties = self.properties
         for new_key, new_val in new_properties.items():
             if new_key not in properties:
@@ -411,9 +452,10 @@ class SqlModel(Generic[T]):
             properties[new_key] = new_val
         return SqlModel(
             model_spec=self._model_spec,
-            references=references,
+            references=self.references,
             properties=properties,
-            materialization=self.materialization
+            materialization=self.materialization,
+            specific_name=self.specific_name
         )
 
     def copy_link(self,
@@ -425,7 +467,6 @@ class SqlModel(Generic[T]):
         working with a full graph of models its best to use the wrapper methods in graph_operations.py
         """
         references = self.references
-        properties = self.properties
         for new_key, new_val in new_references.items():
             if new_key not in references:
                 raise ValueError(f'Trying to update non-existing references key: {new_key}. '
@@ -434,8 +475,9 @@ class SqlModel(Generic[T]):
         return SqlModel(
             model_spec=self._model_spec,
             references=references,
-            properties=properties,
-            materialization=self.materialization
+            properties=self.properties,
+            materialization=self.materialization,
+            specific_name=self.specific_name
         )
 
     def copy_set_materialization(self, materialization: Materialization) -> 'SqlModel[T]':
@@ -444,13 +486,26 @@ class SqlModel(Generic[T]):
         """
         if self.materialization == materialization:
             return self
-        references = self.references
-        properties = self.properties
         return SqlModel(
             model_spec=self._model_spec,
-            references=references,
-            properties=properties,
-            materialization=materialization
+            references=self.references,
+            properties=self.properties,
+            materialization=materialization,
+            specific_name=self.specific_name
+        )
+
+    def copy_set_specific_name(self, specific_name: Optional[str]) -> 'SqlModel[T]':
+        """
+        Create a copy with the given specific_name of this model updated.
+        """
+        if self.specific_name == specific_name:
+            return self
+        return SqlModel(
+            model_spec=self._model_spec,
+            references=self.references,
+            properties=self.properties,
+            materialization=self.materialization,
+            specific_name=specific_name
         )
 
     def set(self,
@@ -511,6 +566,26 @@ class SqlModel(Generic[T]):
         # import locally to prevent cyclic imports
         from sql_models.graph_operations import get_node, replace_node_in_graph
         replacement_model = get_node(self, reference_path).copy_set_materialization(materialization)
+        return replace_node_in_graph(self, reference_path, replacement_model)
+
+    def set_specific_name(self,
+                          reference_path: RefPath,
+                          specific_name: Optional[str]) -> 'SqlModel[T]':
+        """
+        Create a (partial) copy of the graph that can be reached from self, with the specific_name of the
+        referenced node updated.
+
+        The node identified by the reference_path is copied and updated, as are all nodes that
+        (indirectly) refer that node. The updated version of self is returned.
+
+        This instance, and all nodes that it refers recursively are unchanged.
+        :param reference_path: references to traverse to get to the node that has to be updated
+        :param specific_name: specific_name value
+        :return: an updated copy of this node
+        """
+        # import locally to prevent cyclic imports
+        from sql_models.graph_operations import get_node, replace_node_in_graph
+        replacement_model = get_node(self, reference_path).copy_set_specific_name(specific_name)
         return replace_node_in_graph(self, reference_path, replacement_model)
 
     def __eq__(self, other) -> bool:

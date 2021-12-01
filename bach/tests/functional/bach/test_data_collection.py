@@ -9,35 +9,39 @@ def test_collection_to_sql_simple():
     df = get_bt_with_test_data()
     dc = DataCollection()
 
-    dc.add(df, 'start')
+    df = dc.add(df, 'start')
     df['test'] = 1
-    dc.add(df, 'step1')
+    df = dc.add(df, 'step1')
     df = dc.get('start')
     df['test'] = 2
-    dc.add(df, 'step2')
+    df = dc.add(df, 'step2')
 
-    sql = dc.to_sql()
+    result = dc.to_sql()
     print()
-    for s in sql:
-        print(s)
+    for name, sql in result.items():
+        print(f'name: {name}')
+        print(f'sql: {sql}')
         print()
-    assert len(sql) == 3
+    assert len(result) == 3
+    # TODO: execute queries, check results
 
 
 def test_collection_to_sql_materialization():
     df = get_bt_with_test_data()
     dc = DataCollection()
 
-    dc.add(df, 'start', materialization='table')
+    df = dc.add(df, 'start', materialization='table')
+
     df['test'] = 1
-    dc.add(df, 'step1')
+    df = dc.add(df, 'step1')
     df = dc.get('start')
     df['test'] = 2
-    dc.add(df, 'step2')
+    df = dc.add(df, 'step2')
 
-    sql = dc.to_sql()
+    result = dc.to_sql()
     print()
-    for s in sql:
-        print(s)
+    for name, sql in result.items():
+        print(f'name: {name}')
+        print(f'sql: {sql}')
         print()
-    assert len(sql) == 3
+    assert len(result) == 3

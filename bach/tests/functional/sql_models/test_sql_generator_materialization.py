@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import os
-from typing import List, Any, Tuple
+from typing import List, Any, Tuple, Dict, Optional
 
 import sqlalchemy
 
@@ -37,7 +37,7 @@ def test_execute_multi_statement_sql_materialization():
     vm2 = ValueModel.build(key='a', val=2)
     jm1 = JoinModel.build(ref_left=vm2, ref_right=rvm1)
     jm2 = JoinModel.build(ref_left=jm1, ref_right=rm1)
-    graph = JoinModel.build(ref_left=jm2, ref_right=rm2)
+    graph = JoinModel.build(ref_left=jm2, ref_right=rm2).copy_set_specific_name('graph')
 
     # Expected output of the query
     expected_columns = ['key', 'value']
@@ -47,11 +47,11 @@ def test_execute_multi_statement_sql_materialization():
     sql_statements = to_sql_materialized_nodes(graph)
     assert len(sql_statements) == 1
     result = run_queries(sql_statements)
-    assert result == expected
+    assert result['graph'] == expected
 
     # Test: modify materialization of node 'jm2' in the graph
     reference_path = find_node(start_node=graph, function=lambda n: n is jm2).reference_path
-    jm2_replacement = jm2.copy_set_materialization(Materialization.TEMP_TABLE_DROP_ON_COMMIT)
+    jm2_replacement = jm2.copy_set_materialization(Materialization.TEMP_TABLE)
     graph = replace_node_in_graph(
         start_node=graph,
         reference_path=reference_path,
@@ -61,7 +61,7 @@ def test_execute_multi_statement_sql_materialization():
     sql_statements = to_sql_materialized_nodes(graph)
     assert len(sql_statements) == 2
     result = run_queries(sql_statements)
-    assert result == expected
+    assert result['graph'] == expected
 
     # Test: modify materialization of nodes 'jm1' and 'rvm2' in the graph
     graph = replace_node_in_graph(
@@ -78,19 +78,25 @@ def test_execute_multi_statement_sql_materialization():
     sql_statements = to_sql_materialized_nodes(graph)
     assert len(sql_statements) == 4
     result = run_queries(sql_statements)
-    assert result == expected
+    assert result['graph'] == expected
 
     # Test: modify materialization of nodes 'rvm1' in the graph
     graph = replace_node_in_graph(
         start_node=graph,
         reference_path=find_node(start_node=graph, function=lambda n: n is rvm1).reference_path,
-        replacement_model=rvm1.copy_set_materialization(Materialization.TEMP_TABLE_DROP_ON_COMMIT)
+        replacement_model=rvm1.copy_set_materialization(Materialization.TEMP_TABLE)
     )
     # Verify that the model's query gives the expected output
     sql_statements = to_sql_materialized_nodes(graph)
     assert len(sql_statements) == 5
     result = run_queries(sql_statements)
-    assert result == expected
+    assert result == {
+        'JoinModel___26298b4761063ca6e0584b14d18c5957': None,
+        'JoinModel___b0583e8844673155e02465cd64539074': None,
+        'RefValueModel___90eaf999b5ecdf4fc74578a7c723b571': None,
+        'RefValueModel___baf6e76d20383dbf2b877c0b9cbae768': None,
+        'graph': expected
+    }
 
 
 def test_materialized_shared_ctes():
@@ -109,44 +115,62 @@ def test_materialized_shared_ctes():
     vm1 = ValueModel.build(key='a', val=1)
     vm2 = ValueModel.build(key='a', val=2)
     vm3 = ValueModel.build(key='a', val=3)
-    jm1 = JoinModel().set_materialization(Materialization.TEMP_TABLE_DROP_ON_COMMIT)\
-        .set_values(ref_left=vm2, ref_right=vm1).instantiate()
-    jm2 = JoinModel().set_materialization(Materialization.TEMP_TABLE_DROP_ON_COMMIT)\
-        .set_values(ref_left=vm3, ref_right=vm2).instantiate()
-    graph = JoinModel.build(ref_left=jm2, ref_right=jm1)
+    jm1 = JoinModel.build(ref_left=vm2, ref_right=vm1)\
+        .copy_set_materialization(Materialization.TEMP_TABLE)\
+        .copy_set_specific_name('jm1')
+    jm2 = JoinModel.build(ref_left=vm3, ref_right=vm2)\
+        .copy_set_materialization(Materialization.TEMP_TABLE)\
+        .copy_set_specific_name('jm2')
+    graph = JoinModel.build(ref_left=jm2, ref_right=jm1).copy_set_specific_name('graph')
 
     # Verify that the model's query gives the expected output
     sql_statements = to_sql_materialized_nodes(graph)
     assert len(sql_statements) == 3
-    columns, values = run_queries(sql_statements)
-    assert columns == ['key', 'value']
-    assert values == [['a', 8]]  # (1 + 2) + (2 + 3) = 3 + 5 = 8
+    result = run_queries(sql_statements)
+    assert result == {
+        'graph': (
+            ['key', 'value'],
+            [['a', 8]]  # (1 + 2) + (2 + 3) = 3 + 5 = 8
+        ),
+        'jm1': None,
+        'jm2': None
+    }
 
 
-def run_queries(sql_statements: List[str]) -> Tuple[List[str], List[List[Any]]]:
+def run_queries(sql_statements: Dict[str, str]) -> Dict[str, Optional[Tuple[List[str], List[List[Any]]]]]:
     """
-    Execute all sql statements and return result of last one. The statements will be executed inside a
-    transaction that will be rolled back, which will any table/view create statements.
-    :param sql_statements: List of sql statements. Should not contain any transactions begin/commit/rollback
-        statements.
-    :return: tuple:
-        1) List of column-names
-        2) List of rows, with each row being a list of values
+    Execute all sql statements and return a dictionary with the result of each. The statements will be
+    executed inside a transaction that will be rolled back, which will any table/view create statements.
+    All statements are executed in the order in which they are in the dictionary.
+
+    :param sql_statements: Dict mapping a name to a sql statements. Sql statemetns should not contain any
+        transactions begin/commit/rollback statements.
+    :return: Dictionary, one entry for each entry in sql_statements, matching names.
+        Each value is either one of two options:
+            1) None, in case the sql-statement didn't return anything.
+            2) A tuple with two fields:
+                1) List of column-names
+                2) List of rows, with each row being a list of values
     """
     if not sql_statements:
-        raise ValueError('Expected non-empty list')
-
-    sql = ';'.join(sql_statement for sql_statement in sql_statements)
-    print(f'\n\n{sql}\n\n')
-    # escape sql, as conn.execute will think that '%' indicates a parameter
-    sql = sql.replace('%', '%%')
+        raise ValueError('Expected non-empty dictionary')
+    result = {}
 
     engine = sqlalchemy.create_engine(DB_TEST_URL)
     with engine.connect() as conn:
         with conn.begin() as transaction:
-            res = conn.execute(sql)
-            column_names = list(res.keys())
-            db_values = [list(row) for row in res]
+            for name, sql in sql_statements.items():
+                print(f'\n{sql}\n')
+                # escape sql, as conn.execute will think that '%' indicates a parameter
+                sql = sql.replace('%', '%%')
+                res = conn.execute(sql)
+                column_names = list(res.keys())
+                if not column_names:
+                    result[name] = None
+                else:
+                    db_values = [list(row) for row in res]
+                    result[name] = (column_names, db_values)
+
             # rollback. This will remove any tables or views that we might have created.
             transaction.rollback()
-            return column_names, db_values
+            return result

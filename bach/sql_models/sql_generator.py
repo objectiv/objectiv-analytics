@@ -1,7 +1,7 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-from typing import List, NamedTuple, Dict
+from typing import List, NamedTuple, Dict, Set, Iterable
 
 from sql_models.graph_operations import find_nodes, FoundNode
 from sql_models.model import SqlModel, REFERENCE_UNIQUE_FIELD, Materialization
@@ -19,35 +19,33 @@ def to_sql(model: SqlModel) -> str:
     return _to_sql_materialized_node(model=model, compiler_cache=compiler_cache)
 
 
-def to_sql_materialized_nodes(start_node: SqlModel, include_start_node=True) -> List[str]:
+def to_sql_materialized_nodes(start_node: SqlModel, include_start_node=True) -> Dict[str, str]:
     """
     Give list of sql statements:
         * The sql to query the given model
         * The sql to create all views and tables that the given model depends upon
     :param start_node: model to convert to sql
-    :return: A list of sql statements. The final statement will be the query for the given start_node.
-        Earlier statements will be create statements for views and/or tables.
+    :return: A dict of sql statements. The order of the items in the dict is significant: earlier statements
+        will create views and/or tables that might be used by later statements.
     """
-    result = []
+    result: Dict[str, str] = {}
     compiler_cache: Dict[str, List['SemiCompiledTuple']] = {}
     # find all nodes that are materialized as view or table, and the start_node if needed
     # make sure we get the longest possible path to a node (use_last_found_instance=True). That way we can
     # reverse the list and we'll get the nodes that are a dependency for other nodes before the node that
     # depends on them.
 
-    def select_nodes(node: SqlModel) -> bool:
-        return (node is start_node and include_start_node) \
-               or node.materialization in (
-                Materialization.VIEW, Materialization.TABLE, Materialization.TEMP_TABLE_DROP_ON_COMMIT
-               )
-
     materialized_found_nodes: List[FoundNode] = find_nodes(
         start_node=start_node,
-        function=select_nodes,
+        function=lambda node: (
+            (node is start_node and include_start_node) or node.materialization.is_statement
+        ),
         use_last_found_instance=True
     )
+    _check_names_unique(found_node.model for found_node in materialized_found_nodes)
     for found_node in reversed(materialized_found_nodes):
-        result.append(_to_sql_materialized_node(model=found_node.model, compiler_cache=compiler_cache))
+        model = found_node.model
+        result[model_to_name(model)] = _to_sql_materialized_node(model=model, compiler_cache=compiler_cache)
     return result
 
 
@@ -90,12 +88,16 @@ def _materialize(sql_query: str, model: SqlModel) -> str:
     quoted_name = model_to_quoted_name(model)
     if materialization == Materialization.CTE:
         return sql_query
+    if materialization == Materialization.QUERY:
+        return sql_query
     if materialization == Materialization.VIEW:
         return f'create view {quoted_name} as {sql_query}'
     if materialization == Materialization.TABLE:
         return f'create table {quoted_name} as {sql_query}'
-    if materialization == Materialization.TEMP_TABLE_DROP_ON_COMMIT:
+    if materialization == Materialization.TEMP_TABLE:
         return f'create temporary table {quoted_name} on commit drop as {sql_query}'
+    if materialization == Materialization.VIRTUAL_NODE:
+        return ''
     raise Exception(f'Unsupported Materialization value: {materialization}')
 
 
@@ -108,6 +110,19 @@ class SemiCompiledTuple(NamedTuple):
     # quoted and escaped.
     quoted_cte_name: str
     sql: str
+
+
+def _check_names_unique(models: Iterable[SqlModel]):
+    """
+    Check that there are no duplicate names in the list of models. Raises an error if duplicates are found.
+    """
+    seen: Set[str] = set()
+    for model in models:
+        name = model_to_name(model)
+        if name in seen:
+            raise ValueError(f'Names of SqlModels need to be unique throughout the graph.'
+                             f'Duplicate found: "{name}"')
+        seen.add(name)
 
 
 def _filter_duplicate_ctes(queries: List[SemiCompiledTuple]) -> List[SemiCompiledTuple]:
@@ -151,7 +166,7 @@ def _to_cte_sql(compiler_cache: Dict[str, List[SemiCompiledTuple]],
         name: model_to_quoted_name(reference) for name, reference in model.references.items()
     }
     for ref_name, reference in model.references.items():
-        if reference.materialization == Materialization.CTE:
+        if reference.materialization.is_cte:
             result.extend(_to_cte_sql(compiler_cache=compiler_cache, model=reference))
 
     # Compile the actual model
@@ -163,7 +178,7 @@ def _to_cte_sql(compiler_cache: Dict[str, List[SemiCompiledTuple]],
     return result
 
 
-def model_to_quoted_name(model: SqlModel):
+def model_to_name(model: SqlModel):
     """
     Get the name for the cte/table/view that will be generated from this model, quoted and escaped.
     """
@@ -172,8 +187,17 @@ def model_to_quoted_name(model: SqlModel):
     # TODO: two compilation phases:
     #  1) get all cte/view/table names
     #  2) generate actual sql. Only for CTEs with conflicting names add the hash
+    if model.specific_name is not None:
+        return model.specific_name[0:63]
     name = f'{model.generic_name[0:28]}___{model.hash}'
-    return quote_identifier(name)
+    return name
+
+
+def model_to_quoted_name(model: SqlModel):
+    """
+    Get the name for the cte/table/view that will be generated from this model, quoted and escaped.
+    """
+    return quote_identifier(model_to_name(model))
 
 
 def _single_model_to_sql(compiler_cache: Dict[str, List[SemiCompiledTuple]],
