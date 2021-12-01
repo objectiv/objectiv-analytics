@@ -1,10 +1,8 @@
 ![Objectiv Logo](https://objectiv.io/docs/img/logo-objectiv-large.svg "Objectiv Logo")
 
-Objectiv is a data collection & modeling library that puts the data scientist first. It is built around 
-[the open taxonomy of analytics](https://objectiv.io/docs/taxonomy), which is our proposal for a common way to collect, 
-structure and validate data. With Objectiv, you create a 
-[contextual layer for your application](https://objectiv.io/docs/tracking/core-concepts/tagging) by mapping it to the taxonomy, 
-with the goal of collecting better data and more effective modeling.
+Objectiv is a data collection & modeling library that puts the data scientist first. 
+
+It proposes the adoption of [a common taxonomy for analytics](https://www.objectiv.io/taxonomy), enabling a shared way to collect well-structured, pre-validated data that is ready to model on without significant gruntwork. Models & datasets embracing the taxonomy are reusable and interchangeable, allowing data scientists to build on knowledge and practises of others.
 
 ![Objectiv Pipeline](https://www.objectiv.io/docs/img/objectiv-pipeline.svg "Objectiv Pipeline")
 
