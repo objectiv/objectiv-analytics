@@ -80,22 +80,29 @@ def test_execute_multi_statement_sql_materialization():
     result = run_queries(sql_statements)
     assert result['graph'] == expected
 
-    # Test: modify materialization of nodes 'rvm1' in the graph
+    # Test: modify materialization of nodes 'rvm1' in the graph, to 'QUERY' meaning it should be a separate
+    # query, but also a CTE for other queries
     graph = replace_node_in_graph(
         start_node=graph,
         reference_path=find_node(start_node=graph, function=lambda n: n is rvm1).reference_path,
-        replacement_model=rvm1.copy_set_materialization(Materialization.TEMP_TABLE)
+        replacement_model=rvm1.copy_set_materialization(Materialization.QUERY)
     )
     # Verify that the model's query gives the expected output
     sql_statements = to_sql_materialized_nodes(graph)
     assert len(sql_statements) == 5
     result = run_queries(sql_statements)
     assert result == {
-        'JoinModel___26298b4761063ca6e0584b14d18c5957': None,
-        'JoinModel___b0583e8844673155e02465cd64539074': None,
-        'RefValueModel___90eaf999b5ecdf4fc74578a7c723b571': None,
-        'RefValueModel___baf6e76d20383dbf2b877c0b9cbae768': None,
-        'graph': expected
+        'JoinModel___e0bab08e339f02ef255537649ef13be1': None,
+        'JoinModel___e716b40925362305c0dda48e7bb5bd06': None,
+        'RefValueModel___b67e68430810f9b67ae041ce0119c479': None,
+        'RefValueModel___c32fc33ab9d72eccd40c53ba2bf71ab8': (
+            ['key', 'value'],
+            [['a', 6]]
+        ),
+        'graph': (
+            ['key', 'value'],
+            [['a', 40]]
+        )
     }
 
 

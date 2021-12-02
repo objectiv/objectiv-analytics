@@ -4,6 +4,8 @@ Copyright 2021 Objectiv B.V.
 import re
 from typing import Dict, NamedTuple, Union
 
+from sqlalchemy.engine import Engine
+
 from bach import DataFrame
 from sql_models.model import Materialization, SqlModel, CustomSqlModel
 from sql_models.sql_generator import to_sql_materialized_nodes
@@ -13,12 +15,13 @@ class Entry(NamedTuple):
     name: str
     df: DataFrame
     materialization: Materialization
+    executed: bool = False
 
 
 class DataCollection:
 
     def __init__(self):
-        self._frames: Dict[str, Entry] = {}
+        self._entries: Dict[str, Entry] = {}
 
     def add(self,
             df: DataFrame,
@@ -36,8 +39,9 @@ class DataCollection:
 
         df_copy = df.materialize(node_name=name)
         materialized_node = df_copy.base_node.copy_set_materialization(materialization=materialization)
+        # TODO: also update base_node of series. this is BROKEN
         df_copy = df_copy.copy_override(base_node=materialized_node)
-        self._frames[name] = Entry(name=name, df=df_copy, materialization=materialization)
+        self._entries[name] = Entry(name=name, df=df_copy, materialization=materialization)
         return df_copy
         # TODO: add a function in DataFrame for this too?
         # TODO: removing savepoints from the DataCollection and from all involved DFs might be hard to
@@ -45,7 +49,7 @@ class DataCollection:
         # TODO: add function to elegantly update base_node of a dataframe
 
     def get(self, name: str) -> DataFrame:
-        return self._frames[name].df.copy()
+        return self._entries[name].df.copy()
 
     # todo: delete, modify
 
@@ -54,7 +58,7 @@ class DataCollection:
         TODO: comments
         """
         references: Dict[str, SqlModel] = {
-            f'ref_{entry.name}': entry.df.base_node for entry in self._frames.values()
+            f'ref_{entry.name}': entry.df.base_node for entry in self._entries.values()
         }
         graph = get_virtual_node(references)
         # for entry in self._frames.values():
@@ -65,6 +69,31 @@ class DataCollection:
         #     )
         sqls = to_sql_materialized_nodes(start_node=graph, include_start_node=False)
         return sqls
+
+    def execute(self, engine: Engine):
+        sql_statements = self.to_sql()
+        not_executed = {
+            name: sql for name, sql in sql_statements.items() if not self._entries[name].executed
+        }
+        if not not_executed:
+            # nothing to do
+            return
+
+        for name, sql in not_executed:
+            # TODO: update DAG
+
+        with engine.connect() as conn:
+            with conn.begin() as transaction:
+                for name, sql in not_executed:
+                    conn.execute(sql)
+                    item = self._entries[name]
+                    new_entry = Entry(
+                        name=item.name,
+                        df=item.df,
+                        materialization=item.materialization,
+                        executed=True
+                    )
+                    self._entries[name] = new_entry
 
 
 def get_virtual_node(references: Dict[str, SqlModel]) -> SqlModel:

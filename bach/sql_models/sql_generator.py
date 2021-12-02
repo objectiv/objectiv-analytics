@@ -184,9 +184,6 @@ def model_to_name(model: SqlModel):
     """
     # max length of an identifier name in Postgres is normally 63 characters. We'll use that as a cutoff
     # here.
-    # TODO: two compilation phases:
-    #  1) get all cte/view/table names
-    #  2) generate actual sql. Only for CTEs with conflicting names add the hash
     if model.specific_name is not None:
         return model.specific_name[0:63]
     name = f'{model.generic_name[0:28]}___{model.hash}'
