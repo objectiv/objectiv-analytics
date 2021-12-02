@@ -2,6 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import re
+from copy import copy
 
 from sql_models.model import Materialization
 from sql_models.sql_generator import to_sql, to_sql_materialized_nodes
@@ -12,35 +13,36 @@ from tests.unit.sql_models.util import ValueModel, RefModel, JoinModel, assert_r
 def test_simple_to_sql():
     # simple test that a simple graph compiles, and gets the expected sql with both
     # to_sql and to_sql_materialized_nodes
+    # TODO: add copy to graph
     graph = get_simple_test_graph()
-    graph_view = graph.copy_set_materialization(Materialization.VIEW)
-    graph_table = graph.copy_set_materialization(Materialization.TABLE)
-    graph_temp_table = graph.copy_set_materialization(Materialization.TEMP_TABLE)
+    graph_view = copy(graph).set_materialization(Materialization.VIEW)
+    graph_table = copy(graph).set_materialization(Materialization.TABLE)
+    graph_temp_table = copy(graph).set_materialization(Materialization.TEMP_TABLE)
     sql_view = to_sql(graph_view)
     sql_table = to_sql(graph_table)
     sql_temp_table = to_sql(graph_temp_table)
 
     # assert that output of to_sql_materialized_nodes() matched to_sql()
-    expected_view = {'JoinModel___72375bcf8a25de05a031b9b40b871b7e': sql_view}
-    expected_table = {'JoinModel___ba94544f10ddca3e10485ffc73a35215': sql_table}
-    expected_temp_table = {'JoinModel___873a21bbc5cca01b28d8794d0e96eb3e': sql_temp_table}
+    expected_view = {'JoinModel___0c9c9b9dbac1b88e9b93d3c4ddbf8f44': sql_view}
+    expected_table = {'JoinModel___0c9c9b9dbac1b88e9b93d3c4ddbf8f44': sql_table}
+    expected_temp_table = {'JoinModel___0c9c9b9dbac1b88e9b93d3c4ddbf8f44': sql_temp_table}
     assert to_sql_materialized_nodes(graph_view) == expected_view
     assert to_sql_materialized_nodes(graph_table) == expected_table
     assert to_sql_materialized_nodes(graph_temp_table) == expected_temp_table
 
     # assert that the sql generate for the table is correct
     expected_sql_table = '''
-        create table "JoinModel___ba94544f10ddca3e10485ffc73a35215"
-        as with "ValueModel___a51a289cdeb34824db00b4f82b33a4fb" as (
+        create table "JoinModel___0c9c9b9dbac1b88e9b93d3c4ddbf8f44"
+        as with "ValueModel___3db919cc0b969b3b337ea662ae91cd0c" as (
             select 'a' as key, 1 as value
-        ), "RefModel___4baad8d19279117cdf36a9fb054d94d2" as (
-            select * from "ValueModel___a51a289cdeb34824db00b4f82b33a4fb"
-        ), "ValueModel___39ec2678bd193588e7aa47444a87ffd2" as (
+        ), "RefModel___81e056015b4acb4baa247696c7722f85" as (
+            select * from "ValueModel___3db919cc0b969b3b337ea662ae91cd0c"
+        ), "ValueModel___6dc0489b207d8887333ea0cf60980358" as (
             select 'a' as key, 2 as value
         )
         select l.key, l.value + r.value as value
-        from "RefModel___4baad8d19279117cdf36a9fb054d94d2" as l
-        inner join "ValueModel___39ec2678bd193588e7aa47444a87ffd2" as r on l.key=r.key
+        from "RefModel___81e056015b4acb4baa247696c7722f85" as l
+        inner join "ValueModel___6dc0489b207d8887333ea0cf60980358" as r on l.key=r.key
     '''
     assert_roughly_equal_sql(expected_sql_table, sql_table)
 
@@ -69,14 +71,14 @@ def test_edge_node_materialization():
     assert len(result) == 3
     expected_query = '''
         select l.key, l.value + r.value as value
-        from "ValueModel___0cf6df2c76283647c26101b0e472e617" as l
-        inner join "ValueModel___5d92f18dfba41ab7101110d9679b9faf" as r on l.key=r.key
+        from "ValueModel___3db919cc0b969b3b337ea662ae91cd0c" as l
+        inner join "ValueModel___6dc0489b207d8887333ea0cf60980358" as r on l.key=r.key
     '''
 
     # TODO: the naming of these views and tables is something we need to improve
     result_list = list(result.values())
-    assert result_list[0] == 'create table "ValueModel___5d92f18dfba41ab7101110d9679b9faf" as select \'a\' as key, 2 as value'
-    assert result_list[1] == 'create view "ValueModel___0cf6df2c76283647c26101b0e472e617" as select \'a\' as key, 1 as value'
+    assert result_list[0] == 'create table "ValueModel___6dc0489b207d8887333ea0cf60980358" as select \'a\' as key, 2 as value'
+    assert result_list[1] == 'create view "ValueModel___3db919cc0b969b3b337ea662ae91cd0c" as select \'a\' as key, 1 as value'
     assert_roughly_equal_sql(result_list[2], expected_query)
 
 
@@ -96,17 +98,17 @@ def test_non_edge_node_materialization():
     assert len(result) == 2
     # TODO: the naming of these views and tables in the generated sql is something we need to improve
     jm_expected_sql = '''
-        create view "JoinModel___2303c02e10ed1183d253c6ce249f6f4b" as
-        with "ValueModel___a51a289cdeb34824db00b4f82b33a4fb" as (
+        create view "JoinModel___90dfe1c30b357c01c8ba273743720140" as
+        with "ValueModel___3db919cc0b969b3b337ea662ae91cd0c" as (
             select 'a' as key, 1 as value
-        ), "ValueModel___39ec2678bd193588e7aa47444a87ffd2" as (
+        ), "ValueModel___6dc0489b207d8887333ea0cf60980358" as (
             select 'a' as key, 2 as value
         )
         select l.key, l.value + r.value as value
-        from "ValueModel___a51a289cdeb34824db00b4f82b33a4fb" as l
-        inner join "ValueModel___39ec2678bd193588e7aa47444a87ffd2" as r on l.key=r.key
+        from "ValueModel___3db919cc0b969b3b337ea662ae91cd0c" as l
+        inner join "ValueModel___6dc0489b207d8887333ea0cf60980358" as r on l.key=r.key
     '''
-    graph_expected_sql = 'select * from "JoinModel___2303c02e10ed1183d253c6ce249f6f4b"'
+    graph_expected_sql = 'select * from "JoinModel___90dfe1c30b357c01c8ba273743720140"'
     result_list = list(result.values())
     assert_roughly_equal_sql(result_list[0], jm_expected_sql)
     assert_roughly_equal_sql(result_list[1], graph_expected_sql)

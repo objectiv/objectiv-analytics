@@ -6,7 +6,7 @@ from typing import List, Any, Tuple, Dict, Optional
 
 import sqlalchemy
 
-from sql_models.graph_operations import find_node, replace_node_in_graph
+from sql_models.graph_operations import find_node, replace_node_in_graph, get_node
 from sql_models.model import Materialization
 from sql_models.sql_generator import to_sql_materialized_nodes
 from tests.unit.sql_models.util import ValueModel, RefModel, JoinModel, RefValueModel
@@ -37,7 +37,7 @@ def test_execute_multi_statement_sql_materialization():
     vm2 = ValueModel.build(key='a', val=2)
     jm1 = JoinModel.build(ref_left=vm2, ref_right=rvm1)
     jm2 = JoinModel.build(ref_left=jm1, ref_right=rm1)
-    graph = JoinModel.build(ref_left=jm2, ref_right=rm2).copy_set_materialization_name('graph')
+    graph = JoinModel.build(ref_left=jm2, ref_right=rm2).set_materialization_name('graph')
 
     # Expected output of the query
     expected_columns = ['key', 'value']
@@ -51,12 +51,7 @@ def test_execute_multi_statement_sql_materialization():
 
     # Test: modify materialization of node 'jm2' in the graph
     reference_path = find_node(start_node=graph, function=lambda n: n is jm2).reference_path
-    jm2_replacement = jm2.copy_set_materialization(Materialization.TEMP_TABLE)
-    graph = replace_node_in_graph(
-        start_node=graph,
-        reference_path=reference_path,
-        replacement_model=jm2_replacement
-    )
+    get_node(graph, reference_path).set_materialization(Materialization.TEMP_TABLE)
     # Verify that the model's query gives the expected output
     sql_statements = to_sql_materialized_nodes(graph)
     assert len(sql_statements) == 2
@@ -64,16 +59,12 @@ def test_execute_multi_statement_sql_materialization():
     assert result['graph'] == expected
 
     # Test: modify materialization of nodes 'jm1' and 'rvm2' in the graph
-    graph = replace_node_in_graph(
-        start_node=graph,
-        reference_path=find_node(start_node=graph, function=lambda n: n is jm1).reference_path,
-        replacement_model=jm1.copy_set_materialization(Materialization.VIEW)
-    )
-    graph = replace_node_in_graph(
-        start_node=graph,
-        reference_path=find_node(start_node=graph, function=lambda n: n is rvm2).reference_path,
-        replacement_model=rvm2.copy_set_materialization(Materialization.TABLE)
-    )
+    reference_path = find_node(start_node=graph, function=lambda n: n is jm1).reference_path
+    get_node(graph, reference_path).set_materialization(Materialization.VIEW)
+
+    reference_path = find_node(start_node=graph, function=lambda n: n is rvm2).reference_path
+    get_node(graph, reference_path).set_materialization(Materialization.TABLE)
+
     # Verify that the model's query gives the expected output
     sql_statements = to_sql_materialized_nodes(graph)
     assert len(sql_statements) == 4
@@ -82,23 +73,21 @@ def test_execute_multi_statement_sql_materialization():
 
     # Test: modify materialization of nodes 'rvm1' in the graph, to 'QUERY' meaning it should be a separate
     # query, but also a CTE for other queries
-    graph = replace_node_in_graph(
-        start_node=graph,
-        reference_path=find_node(start_node=graph, function=lambda n: n is rvm1).reference_path,
-        replacement_model=rvm1.copy_set_materialization(Materialization.QUERY)
-    )
+    reference_path = find_node(start_node=graph, function=lambda n: n is rvm1).reference_path
+    get_node(graph, reference_path).set_materialization(Materialization.QUERY)
+
     # Verify that the model's query gives the expected output
     sql_statements = to_sql_materialized_nodes(graph)
     assert len(sql_statements) == 5
     result = run_queries(sql_statements)
     assert result == {
-        'JoinModel___e0bab08e339f02ef255537649ef13be1': None,
-        'JoinModel___e716b40925362305c0dda48e7bb5bd06': None,
-        'RefValueModel___b67e68430810f9b67ae041ce0119c479': None,
-        'RefValueModel___c32fc33ab9d72eccd40c53ba2bf71ab8': (
-            ['key', 'value'],
-            [['a', 6]]
-        ),
+        'JoinModel___13226f22cf9e09dc2bff6ee5727ec9c6': None,
+        'JoinModel___9805e44ecd2f82cd0674bc61a90a1bc5': None,
+        'RefValueModel___2775bc52e5cfe9a481c3d528d540232c': None,
+         'RefValueModel___3f754200f7caa7887b0f91de286e3382': (
+             ['key', 'value'],  # columns
+             [['a', 6]]         # rows
+         ),
         'graph': (
             ['key', 'value'],
             [['a', 40]]
@@ -123,12 +112,12 @@ def test_materialized_shared_ctes():
     vm2 = ValueModel.build(key='a', val=2)
     vm3 = ValueModel.build(key='a', val=3)
     jm1 = JoinModel.build(ref_left=vm2, ref_right=vm1)\
-        .copy_set_materialization(Materialization.TEMP_TABLE)\
-        .copy_set_materialization_name('jm1')
+        .set_materialization(Materialization.TEMP_TABLE)\
+        .set_materialization_name('jm1')
     jm2 = JoinModel.build(ref_left=vm3, ref_right=vm2)\
-        .copy_set_materialization(Materialization.TEMP_TABLE)\
-        .copy_set_materialization_name('jm2')
-    graph = JoinModel.build(ref_left=jm2, ref_right=jm1).copy_set_materialization_name('graph')
+        .set_materialization(Materialization.TEMP_TABLE)\
+        .set_materialization_name('jm2')
+    graph = JoinModel.build(ref_left=jm2, ref_right=jm1).set_materialization_name('graph')
 
     # Verify that the model's query gives the expected output
     sql_statements = to_sql_materialized_nodes(graph)
