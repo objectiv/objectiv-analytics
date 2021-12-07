@@ -32,10 +32,10 @@
 
     /* Tell the compiler how to resolve our own modules relatively to `baseUrl` */
     "paths": {
-      "@objectiv-analytics/schema": ["core/schema/src"],
-      "@objectiv-analytics/plugin-*": ["plugins/*/src"],
-      "@objectiv-analytics/tracker-core": ["core/tracker/src"],
-      "@objectiv-analytics/tracker-*": ["trackers/*/src"],
+      "@objectiv/schema": ["core/schema/src"],
+      "@objectiv/plugin-*": ["plugins/*/src"],
+      "@objectiv/tracker-core": ["core/tracker/src"],
+      "@objectiv/tracker-*": ["trackers/*/src"],
     }
   },
   "exclude": [

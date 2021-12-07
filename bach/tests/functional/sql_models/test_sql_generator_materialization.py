@@ -37,7 +37,7 @@ def test_execute_multi_statement_sql_materialization():
     vm2 = ValueModel.build(key='a', val=2)
     jm1 = JoinModel.build(ref_left=vm2, ref_right=rvm1)
     jm2 = JoinModel.build(ref_left=jm1, ref_right=rm1)
-    graph = JoinModel.build(ref_left=jm2, ref_right=rm2).copy_set_specific_name('graph')
+    graph = JoinModel.build(ref_left=jm2, ref_right=rm2).copy_set_materialization_name('graph')
 
     # Expected output of the query
     expected_columns = ['key', 'value']
@@ -124,11 +124,11 @@ def test_materialized_shared_ctes():
     vm3 = ValueModel.build(key='a', val=3)
     jm1 = JoinModel.build(ref_left=vm2, ref_right=vm1)\
         .copy_set_materialization(Materialization.TEMP_TABLE)\
-        .copy_set_specific_name('jm1')
+        .copy_set_materialization_name('jm1')
     jm2 = JoinModel.build(ref_left=vm3, ref_right=vm2)\
         .copy_set_materialization(Materialization.TEMP_TABLE)\
-        .copy_set_specific_name('jm2')
-    graph = JoinModel.build(ref_left=jm2, ref_right=jm1).copy_set_specific_name('graph')
+        .copy_set_materialization_name('jm2')
+    graph = JoinModel.build(ref_left=jm2, ref_right=jm1).copy_set_materialization_name('graph')
 
     # Verify that the model's query gives the expected output
     sql_statements = to_sql_materialized_nodes(graph)

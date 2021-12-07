@@ -2,7 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { TrackerConfig } from '@objectiv-analytics/tracker-core';
+import { TrackerConfig } from '@objectiv/tracker-core';
 
 /**
  * Browser Tracker can be configured in a easier way, as opposed to the core tracker, by specifying just an `endpoint`.

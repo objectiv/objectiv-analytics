@@ -2,7 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { ContextsConfig, Tracker, TrackerConfig, TrackerPlugins } from '@objectiv-analytics/tracker-core';
+import { ContextsConfig, Tracker, TrackerConfig, TrackerPlugins } from '@objectiv/tracker-core';
 import { makeDefaultPluginsList } from './common/factories/makeDefaultPluginsList';
 import { makeDefaultQueue } from './common/factories/makeDefaultQueue';
 import { makeDefaultTransport } from './common/factories/makeDefaultTransport';

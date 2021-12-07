@@ -1,6 +1,6 @@
 # Start the Objectiv Pipeline.
 #
-# By default uses images from eu.gcr.io/objectiv-production
+# By default uses images from dockerhub
 # To use locally built images set the OBJECTIV_CONTAINER_URL variable to just "objectiv"
 # To use a specific image version instead of latest set OBJECTIV_CONTAINER_TAG
 
@@ -20,8 +20,7 @@ services:
     container_name: objectiv_collector
     depends_on:
       - objectiv_postgres
-    # default image: eu.gcr.io/objectiv-production/backend:latest
-    image: ${OBJECTIV_CONTAINER_URL-objectiv/backend:${OBJECTIV_CONTAINER_TAG-latest}
+    image: ${OBJECTIV_CONTAINER_URL-objectiv/backend}:${OBJECTIV_CONTAINER_TAG-latest}
     working_dir: /services
     entrypoint: bash -c "objectiv-db-init; ./entry_point.sh"
     ports:

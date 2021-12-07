@@ -1,5 +1,5 @@
 {
-  "name": "@objectiv-analytics/schema",
+  "name": "@objectiv/schema",
   "version": "0.0.1",
   "description": "Objectiv TypeScript implementation of the open taxonomy for analytics",
   "license": "Apache-2.0",
@@ -34,7 +34,7 @@
     "prettify:generated": "yarn prettier --write ./src",
     "tsc": "tsc --noEmit",
     "check:dependencies": "npx depcheck",
-    "npm-publish": "shx rm -f .npmrc && npm publish",
+    "npm-publish": "shx rm -f .npmrc && npm publish --access=public",
     "npm-publish:verdaccio": "shx cp ../../verdaccio/.npmrc .npmrc && npm publish && shx rm -f .npmrc"
   },
   "devDependencies": {

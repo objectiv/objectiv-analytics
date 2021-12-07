@@ -2,7 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { makeURLChangeEvent } from '@objectiv-analytics/tracker-core';
+import { makeURLChangeEvent } from '@objectiv/tracker-core';
 import { trackerErrorHandler } from '../common/trackerErrorHandler';
 import { NonInteractiveEventTrackerParameters } from '../definitions/NonInteractiveEventTrackerParameters';
 import { trackEvent } from './trackEvent';

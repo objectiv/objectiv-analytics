@@ -202,21 +202,21 @@ def test_find_nodes_path_length():
     graph = JoinModel.build(ref_left=jm4, ref_right=rm1)
 
     # find vm1 from graph, both with longest and shortest path
-    result = find_nodes(graph, function=lambda n: n is vm1, use_last_found_instance=False)
+    result = find_nodes(graph, function=lambda n: n is vm1, first_instance=True)
     assert result == [FoundNode(model=vm1, reference_path=('ref_right', 'ref'))]
-    result = find_nodes(graph, function=lambda n: n is vm1, use_last_found_instance=True)
+    result = find_nodes(graph, function=lambda n: n is vm1, first_instance=False)
     assert result == [FoundNode(model=vm1, reference_path=('ref_left', 'ref_right', 'ref_right', 'ref'))]
 
     # find vm1 from jm4, both with longest and shortest path
-    result = find_nodes(jm4, function=lambda n: n is vm1, use_last_found_instance=False)
+    result = find_nodes(jm4, function=lambda n: n is vm1, first_instance=True)
     assert result == [FoundNode(model=vm1, reference_path=('ref_left', 'ref_right', 'ref_right'))]
-    result = find_nodes(jm4, function=lambda n: n is vm1, use_last_found_instance=True)
+    result = find_nodes(jm4, function=lambda n: n is vm1, first_instance=False)
     assert result == [FoundNode(model=vm1, reference_path=('ref_right', 'ref_right', 'ref'))]
 
     # find vm2 from graph, both with longest and shortest path
     result = find_nodes(graph, function=lambda n: n is vm2)
     assert result == [FoundNode(model=vm2, reference_path=('ref_left', 'ref_left', 'ref_left'))]
-    result = find_nodes(graph, function=lambda n: n is vm2, use_last_found_instance=True)
+    result = find_nodes(graph, function=lambda n: n is vm2, first_instance=False)
     assert result == [FoundNode(model=vm2, reference_path=('ref_left', 'ref_right', 'ref_left', 'ref_left'))]
 
 

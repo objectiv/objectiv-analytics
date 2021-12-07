@@ -2,7 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { LocationStack, TrackerEvent, UntrackedEvent } from '@objectiv-analytics/tracker-core';
+import { LocationStack, TrackerEvent, UntrackedEvent } from '@objectiv/tracker-core';
 import { BrowserTracker } from '../BrowserTracker';
 import { getElementLocationStack } from '../common/getElementLocationStack';
 import { trackerErrorHandler } from '../common/trackerErrorHandler';

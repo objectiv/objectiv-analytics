@@ -8,7 +8,7 @@ import {
   TrackerTransportConfig,
   TrackerTransportInterface,
   TransportableEvent,
-} from '@objectiv-analytics/tracker-core';
+} from '@objectiv/tracker-core';
 
 /**
  * A TrackerTransport that simply logs TrackerEvents to the console as debug messages.

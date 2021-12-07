@@ -2,11 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import {
-  TrackerTransportInterface,
-  TrackerTransportRetry,
-  TrackerTransportSwitch,
-} from '@objectiv-analytics/tracker-core';
+import { TrackerTransportInterface, TrackerTransportRetry, TrackerTransportSwitch } from '@objectiv/tracker-core';
 import { BrowserTrackerConfig } from '../../definitions/BrowserTrackerConfig';
 import { FetchAPITransport } from '../../transports/FetchAPITransport';
 import { XMLHttpRequestTransport } from '../../transports/XMLHttpRequestTransport';

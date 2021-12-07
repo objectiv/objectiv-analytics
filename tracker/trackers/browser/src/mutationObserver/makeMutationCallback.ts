@@ -2,7 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { TrackerConsole, TrackerElementLocations } from '@objectiv-analytics/tracker-core';
+import { TrackerConsole, TrackerElementLocations } from '@objectiv/tracker-core';
 import { getLocationHref } from '../common/getLocationHref';
 import { isTaggedElement } from '../common/guards/isTaggedElement';
 import { trackerErrorHandler } from '../common/trackerErrorHandler';

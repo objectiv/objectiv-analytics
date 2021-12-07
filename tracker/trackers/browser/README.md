@@ -7,12 +7,12 @@ Objectiv tracker for web applications & websites that embraces the open taxonomy
 To install the most recent stable version:
 
 ```sh
-yarn add @objectiv-analytics/tracker-browser
+yarn add @objectiv/tracker-browser
 ```
 
 ### or
 ```sh
-npm install @objectiv-analytics/tracker-browser
+npm install @objectiv/tracker-browser
 ```
 
 ## Usage

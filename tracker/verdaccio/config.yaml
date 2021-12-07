@@ -23,7 +23,7 @@ uplinks:
     url: https://registry.npmjs.org/
 
 packages:
-  '@objectiv-analytics/*':
+  '@objectiv/*':
     # scoped packages
     access: $all
     publish: $all

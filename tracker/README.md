@@ -8,10 +8,10 @@ Platform-specific tracker packages are available for popular frameworks such as 
 
 For installation instructions for your preferred platform, please choose a tracker package:
 
-| Name                                            | Type    | Path                          | Links                                                     |
-| ----------------------------------------------- | ------- | ----------------------------- | --------------------------------------------------------- |
-| @objectiv-analytics/tracker-angular             | tracker | /trackers/angular             | [README](/tracker/trackers/angular/README.md)             |
-| @objectiv-analytics/tracker-browser             | tracker | /trackers/browser             | [README](/tracker/trackers/browser/README.md)             |
+| Name                                  | Type    | Path                          | Links                                                     |
+| ------------------------------------- | ------- | ----------------------------- | --------------------------------------------------------- |
+| @objectiv/tracker-angular             | tracker | /trackers/angular             | [README](/tracker/trackers/angular/README.md)             |
+| @objectiv/tracker-browser             | tracker | /trackers/browser             | [README](/tracker/trackers/browser/README.md)             |
 
 For detailed installation & usage instructions, visit [Objectiv Docs](https://www.objectiv.io/docs/tracking).
 

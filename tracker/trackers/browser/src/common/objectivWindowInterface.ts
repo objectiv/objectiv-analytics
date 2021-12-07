@@ -2,7 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { TrackerRepository } from '@objectiv-analytics/tracker-core';
+import { TrackerRepository } from '@objectiv/tracker-core';
 import { BrowserTracker } from '../BrowserTracker';
 import { windowExists } from './windowExists';
 

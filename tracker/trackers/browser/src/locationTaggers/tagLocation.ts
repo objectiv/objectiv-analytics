@@ -2,7 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { generateUUID, getObjectKeys } from '@objectiv-analytics/tracker-core';
+import { generateUUID, getObjectKeys } from '@objectiv/tracker-core';
 import { create, is, validate } from 'superstruct';
 import { runIfValueIsNotUndefined } from '../common/runIfValueIsNotUndefined';
 import { stringifyLocationContext } from '../common/stringifiers/stringifyLocationContext';

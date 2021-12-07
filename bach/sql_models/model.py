@@ -11,7 +11,6 @@ Models:
   model graph.
 
 """
-import collections
 import hashlib
 from abc import abstractmethod, ABCMeta
 from copy import deepcopy
@@ -180,6 +179,7 @@ class SqlModelBuilder(SqlModelSpec, metaclass=ABCMeta):
         super().__init__()
         self.set_values(**values)
         self.materialization = Materialization.CTE
+        self.materialization_name: Optional[str] = None
         self._cache_created_instances: Dict[str, 'SqlModel'] = {}
 
     @property
@@ -262,7 +262,8 @@ class SqlModelBuilder(SqlModelSpec, metaclass=ABCMeta):
         instance = SqlModel(model_spec=self,
                             properties=self.properties,
                             references=self.references,
-                            materialization=self.materialization)
+                            materialization=self.materialization,
+                            materialization_name=self.materialization_name)
         # If we already once created the exact same instance, then we'll return that one and discard the
         # newly created instance.
         if instance.hash not in self._cache_created_instances:
@@ -304,6 +305,14 @@ class SqlModelBuilder(SqlModelSpec, metaclass=ABCMeta):
         self.materialization = materialization
         return self
 
+    def set_materialization_name(self: TB, materialization_name: Optional[str]) -> TB:
+        """
+        Set the materialization_name
+        :return: self
+        """
+        self.materialization_name = materialization_name
+        return self
+
     def _check_is_complete(self):
         """
         Raises an Exception if either references or properties are missing
@@ -338,7 +347,7 @@ class SqlModel(Generic[T]):
                  properties: Dict[str, Hashable],
                  references: Dict[str, 'SqlModel'],
                  materialization: Materialization,
-                 specific_name: Optional[str] = None
+                 materialization_name: Optional[str] = None
                  ):
         """
         :param model_spec: ModelSpec class defining the sql, and the names of the properties and references
@@ -349,7 +358,7 @@ class SqlModel(Generic[T]):
             on why this is important.
         :param references: Dictionary mapping reference names to instances of SqlModels.
         :param materialization: TODO
-        :param specific_name: TODO
+        :param materialization_name: TODO
         """
         self._model_spec = model_spec
         self._generic_name = model_spec.generic_name
@@ -357,7 +366,7 @@ class SqlModel(Generic[T]):
         self._references: Dict[str, 'SqlModel'] = references
         self._properties: Dict[str, Any] = properties
         self._materialization = materialization
-        self._specific_name = specific_name
+        self._materialization_name = materialization_name
         self._property_formatter = model_spec.properties_to_sql
 
         # Verify completeness of this object: references and properties
@@ -377,7 +386,7 @@ class SqlModel(Generic[T]):
             3. properties
             4. materialization
             5. references, and recursively their sql, properties, materialization, and their references
-            6. specific_name
+            6. materialization_name
         :return: 32 character string representation of md5 hash
         """
         data = {
@@ -389,8 +398,8 @@ class SqlModel(Generic[T]):
                 ref_name: model.hash for ref_name, model in self.references.items()
             }
         }
-        if self.specific_name is not None:
-            data['specific_name'] = self.specific_name
+        if self.materialization_name is not None:
+            data['materialization_name'] = self.materialization_name
         data_bytes = repr(data).encode('utf-8')
         return hashlib.md5(data_bytes).hexdigest()
 
@@ -400,10 +409,9 @@ class SqlModel(Generic[T]):
         return self._generic_name
 
     @property
-    def specific_name(self) -> Optional[str]:
+    def materialization_name(self) -> Optional[str]:
         """ Optional name for this specific instance of the model_spec that this model implements. """
-        # TODO: add to hash
-        return self._specific_name
+        return self._materialization_name
 
     @property
     def sql(self) -> str:
@@ -455,7 +463,7 @@ class SqlModel(Generic[T]):
             references=self.references,
             properties=properties,
             materialization=self.materialization,
-            specific_name=self.specific_name
+            materialization_name=self.materialization_name
         )
 
     def copy_link(self,
@@ -477,7 +485,7 @@ class SqlModel(Generic[T]):
             references=references,
             properties=self.properties,
             materialization=self.materialization,
-            specific_name=self.specific_name
+            materialization_name=self.materialization_name
         )
 
     def copy_set_materialization(self, materialization: Materialization) -> 'SqlModel[T]':
@@ -491,21 +499,21 @@ class SqlModel(Generic[T]):
             references=self.references,
             properties=self.properties,
             materialization=materialization,
-            specific_name=self.specific_name
+            materialization_name=self.materialization_name
         )
 
-    def copy_set_specific_name(self, specific_name: Optional[str]) -> 'SqlModel[T]':
+    def copy_set_materialization_name(self, materialization_name: Optional[str]) -> 'SqlModel[T]':
         """
-        Create a copy with the given specific_name of this model updated.
+        Create a copy with the given materialization_name of this model updated.
         """
-        if self.specific_name == specific_name:
+        if self.materialization_name == materialization_name:
             return self
         return SqlModel(
             model_spec=self._model_spec,
             references=self.references,
             properties=self.properties,
             materialization=self.materialization,
-            specific_name=specific_name
+            materialization_name=materialization_name
         )
 
     def set(self,
@@ -568,24 +576,25 @@ class SqlModel(Generic[T]):
         replacement_model = get_node(self, reference_path).copy_set_materialization(materialization)
         return replace_node_in_graph(self, reference_path, replacement_model)
 
-    def set_specific_name(self,
-                          reference_path: RefPath,
-                          specific_name: Optional[str]) -> 'SqlModel[T]':
+    def set_materialization_name(self,
+                                 reference_path: RefPath,
+                                 materialization_name: Optional[str]) -> 'SqlModel[T]':
         """
-        Create a (partial) copy of the graph that can be reached from self, with the specific_name of the
-        referenced node updated.
+        Create a (partial) copy of the graph that can be reached from self, with the materialization_name of
+        the referenced node updated.
 
         The node identified by the reference_path is copied and updated, as are all nodes that
         (indirectly) refer that node. The updated version of self is returned.
 
         This instance, and all nodes that it refers recursively are unchanged.
         :param reference_path: references to traverse to get to the node that has to be updated
-        :param specific_name: specific_name value
+        :param materialization_name: materialization_name value
         :return: an updated copy of this node
         """
         # import locally to prevent cyclic imports
         from sql_models.graph_operations import get_node, replace_node_in_graph
-        replacement_model = get_node(self, reference_path).copy_set_specific_name(specific_name)
+        replacement_model = get_node(self, reference_path).copy_set_materialization_name(
+            materialization_name)
         return replace_node_in_graph(self, reference_path, replacement_model)
 
     def __eq__(self, other) -> bool:

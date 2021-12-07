@@ -625,7 +625,7 @@ Object.keys(object_factories).forEach((factory_type) => {
     imports.push('AbstractLocationContext');
     imports.push('AbstractGlobalContext');
   }
-  const import_statement = `import { \n\t${imports.join(',\n\t')}\n} from '@objectiv-analytics/schema';\n`;
+  const import_statement = `import { \n\t${imports.join(',\n\t')}\n} from '@objectiv/schema';\n`;
 
   const filename = `${core_tracker_package_dir}${factory_type}.ts`;
   fs.writeFileSync(filename, COPYRIGHT);

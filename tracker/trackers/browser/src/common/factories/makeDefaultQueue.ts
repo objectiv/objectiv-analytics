@@ -2,7 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { TrackerQueue, TrackerQueueInterface } from '@objectiv-analytics/tracker-core';
+import { TrackerQueue, TrackerQueueInterface } from '@objectiv/tracker-core';
 import { BrowserTrackerConfig } from '../../definitions/BrowserTrackerConfig';
 import { TrackerQueueLocalStorage } from '../../queues/TrackerQueueLocalStorage';
 

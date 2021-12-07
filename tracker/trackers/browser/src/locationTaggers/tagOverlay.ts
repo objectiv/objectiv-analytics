@@ -2,7 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { makeOverlayContext } from '@objectiv-analytics/tracker-core';
+import { makeOverlayContext } from '@objectiv/tracker-core';
 import { create } from 'superstruct';
 import { trackerErrorHandler } from '../common/trackerErrorHandler';
 import { LocationTaggerParameters } from '../definitions/LocationTaggerParameters';

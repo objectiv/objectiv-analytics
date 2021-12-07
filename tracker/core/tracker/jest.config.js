@@ -8,6 +8,6 @@ module.exports = {
   reporters: ['jest-standard-reporter'],
   collectCoverageFrom: ['src/**.ts'],
   moduleNameMapper: {
-    '@objectiv-analytics/schema': '<rootDir>../../core/schema/src',
+    '@objectiv/schema': '<rootDir>../../core/schema/src',
   },
 };

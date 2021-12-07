@@ -3,7 +3,7 @@
  */
 
 import { ModuleWithProviders, NgModule } from '@angular/core';
-import { BrowserTrackerConfig } from '@objectiv-analytics/tracker-browser';
+import { BrowserTrackerConfig } from '@objectiv/tracker-browser';
 import { ObjectivTrackerDirective } from './objectiv-tracker.directive';
 import { OBJECTIV_TRACKER_INITIALIZER_PROVIDER } from './objectiv-tracker.initializer';
 import { OBJECTIV_TRACKER_CONFIG_TOKEN } from './objectiv-tracker.token';

@@ -8,7 +8,7 @@ import {
   makeButtonContext,
   makeInputContext,
   TrackerElementLocations,
-} from '@objectiv-analytics/tracker-core';
+} from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker, TaggingAttribute } from '../src';
 import { trackNewElement } from '../src/mutationObserver/trackNewElement';
 import { makeTaggedElement } from './mocks/makeTaggedElement';

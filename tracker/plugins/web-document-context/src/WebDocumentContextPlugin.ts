@@ -8,7 +8,7 @@ import {
   TrackerConsole,
   TrackerPluginConfig,
   TrackerPluginInterface,
-} from '@objectiv-analytics/tracker-core';
+} from '@objectiv/tracker-core';
 
 /**
  * WebDocumentContextConfig allows to optionally specify a custom ID for the WebDocumentContext

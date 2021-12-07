@@ -2,7 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { TrackerEvent } from '@objectiv-analytics/tracker-core';
+import { TrackerEvent } from '@objectiv/tracker-core';
 import { DebugTransport } from '../src/';
 import { mockConsole } from './mocks/MockConsole';
 

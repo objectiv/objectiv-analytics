@@ -21,7 +21,7 @@ import {
   VideoStopEvent,
   AbstractLocationContext,
   AbstractGlobalContext,
-} from '@objectiv-analytics/schema';
+} from '@objectiv/schema';
 
 /** Creates instance of AbortedEvent
  * @param {Object} props - factory properties

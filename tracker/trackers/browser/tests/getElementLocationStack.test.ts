@@ -2,14 +2,14 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { WebDocumentContextPlugin } from '@objectiv-analytics/plugin-web-document-context';
+import { WebDocumentContextPlugin } from '@objectiv/plugin-web-document-context';
 import {
   generateUUID,
   getLocationPath,
   LocationStack,
   makeSectionContext,
   TrackerPlugins,
-} from '@objectiv-analytics/tracker-core';
+} from '@objectiv/tracker-core';
 import { BrowserTracker, getElementLocationStack, TaggableElement } from '../src';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 

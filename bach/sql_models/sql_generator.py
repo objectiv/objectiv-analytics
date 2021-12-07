@@ -40,7 +40,7 @@ def to_sql_materialized_nodes(start_node: SqlModel, include_start_node=True) -> 
         function=lambda node: (
             (node is start_node and include_start_node) or node.materialization.is_statement
         ),
-        use_last_found_instance=True
+        first_instance=False
     )
     _check_names_unique(found_node.model for found_node in materialized_found_nodes)
     for found_node in reversed(materialized_found_nodes):
@@ -184,8 +184,8 @@ def model_to_name(model: SqlModel):
     """
     # max length of an identifier name in Postgres is normally 63 characters. We'll use that as a cutoff
     # here.
-    if model.specific_name is not None:
-        return model.specific_name[0:63]
+    if model.materialization_name is not None:
+        return model.materialization_name[0:63]
     name = f'{model.generic_name[0:28]}___{model.hash}'
     return name
 

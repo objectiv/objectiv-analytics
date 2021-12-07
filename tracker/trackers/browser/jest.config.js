@@ -8,8 +8,8 @@ module.exports = {
   reporters: ['jest-standard-reporter'],
   collectCoverageFrom: ['src/**/*.ts'],
   moduleNameMapper: {
-    '@objectiv-analytics/tracker-core': '<rootDir>/../../core/tracker/src',
-    '@objectiv-analytics/plugin-(.*)': '<rootDir>/../../plugins/$1/src',
+    '@objectiv/tracker-core': '<rootDir>/../../core/tracker/src',
+    '@objectiv/plugin-(.*)': '<rootDir>/../../plugins/$1/src',
   },
   setupFilesAfterEnv: ['jest-extended/all'],
 };

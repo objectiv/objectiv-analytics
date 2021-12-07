@@ -19,14 +19,14 @@ The Objectiv JavaScript Tracker is composed of three workspaces.
 
 This is a complete list of the currently available packages.
 
-| Name                                            | Type    | Path                          | Links                                                     |
-| ----------------------------------------------- | ------- | ----------------------------- | --------------------------------------------------------- |
-| @objectiv-analytics/schema                      | core    | /core/schema                  | [README](/tracker/core/schema/README.md)                  |
-| @objectiv-analytics/tracker-core                | core    | /core/tracker                 | [README](/tracker/core/tracker/README.md)                 |
-| @objectiv-analytics/utilities                   | core    | /core/utilities               | [README](/tracker/core/utilities/README.md)               |
-| @objectiv-analytics/plugin-web-document-context | plugin  | /plugins/web-document-context | [README](/tracker/plugins/web-document-context/README.md) |
-| @objectiv-analytics/tracker-angular             | tracker | /trackers/angular             | [README](/tracker/trackers/angular/README.md)             |
-| @objectiv-analytics/tracker-browser             | tracker | /trackers/browser             | [README](/tracker/trackers/browser/README.md)             |
+| Name                                  | Type    | Path                          | Links                                                     |
+| ------------------------------------- | ------- | ----------------------------- | --------------------------------------------------------- |
+| @objectiv/schema                      | core    | /core/schema                  | [README](/tracker/core/schema/README.md)                  |
+| @objectiv/tracker-core                | core    | /core/tracker                 | [README](/tracker/core/tracker/README.md)                 |
+| @objectiv/utilities                   | core    | /core/utilities               | [README](/tracker/core/utilities/README.md)               |
+| @objectiv/plugin-web-document-context | plugin  | /plugins/web-document-context | [README](/tracker/plugins/web-document-context/README.md) |
+| @objectiv/tracker-angular             | tracker | /trackers/angular             | [README](/tracker/trackers/angular/README.md)             |
+| @objectiv/tracker-browser             | tracker | /trackers/browser             | [README](/tracker/trackers/browser/README.md)             |
 
 >Note: Packages may be completely independent of each other. Currently, many of them share the same testing framework or bundler but that's not required. Each has its own local configurations and may diverge if needed.
 
@@ -52,7 +52,7 @@ yarn workspace <package name> <command>
 
 For example, this command will run tests only for the Core module:
 ```bash
-yarn workspace @objectiv-analytics/tracker-core test
+yarn workspace @objectiv/tracker-core test
 ```
 
 ## Dependency management
@@ -63,9 +63,9 @@ This is how to add/update or remove dependencies for a specific package:
 
 #### Using `yarn workspace`
 ```bash
-yarn workspace @objectiv-analytics/tracker-core add <packageA>
-yarn workspace @objectiv-analytics/tracker-core add <packageB> --dev
-yarn workspace @objectiv-analytics/tracker-core remove <packageA> <packageB>
+yarn workspace @objectiv/tracker-core add <packageA>
+yarn workspace @objectiv/tracker-core add <packageB> --dev
+yarn workspace @objectiv/tracker-core remove <packageA> <packageB>
 ```
 
 #### Using `yarn add`
@@ -174,19 +174,19 @@ Publishes all public packages to NPM.
 > **Note**:  
 > To publish a single package the command name is `npm-publish` to avoid conflicting with the default command 
 > 
-> Example: `yarn workspace @objectiv-analytics/tracker-core npm-publish`
+> Example: `yarn workspace @objectiv/tracker-core npm-publish`
 
 ### `yarn publish:verdaccio`
 Publishes all public packages to a Local Verdaccio instance.
 > **Note**:  
 > To publish a single package the command name is `npm-publish:verdaccio` to avoid conflicting with the default command
 >
-> Example: `yarn workspace @objectiv-analytics/tracker-core npm-publish:verdaccio`
+> Example: `yarn workspace @objectiv/tracker-core npm-publish:verdaccio`
 
 ### `yarn utils:generate`
 Runs the generator utility. This will generate:
-- The @objectiv-analytics/schema package TypeScript definitions from the OSF
-- The Context and Event factories in @objectiv-analytics/tracker-core package from the @objectiv-analytics/schema 
+- The @objectiv/schema package TypeScript definitions from the OSF
+- The Context and Event factories in @objectiv/tracker-core package from the @objectiv/schema 
 
 ## Versioning  commands
  - [Release Workflow Documentation](https://yarnpkg.com/features/release-workflow)

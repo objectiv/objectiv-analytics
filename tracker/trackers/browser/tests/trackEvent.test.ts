@@ -15,7 +15,7 @@ import {
   makeURLChangeEvent,
   makeVideoPauseEvent,
   makeVideoStartEvent,
-} from '@objectiv-analytics/tracker-core';
+} from '@objectiv/tracker-core';
 import {
   BrowserTracker,
   getTracker,

@@ -2,7 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { TrackerConfig } from '@objectiv-analytics/tracker-core';
+import { TrackerConfig } from '@objectiv/tracker-core';
 
 /**
  * Compares two TrackerConfig objects ignoring mutable attributes.

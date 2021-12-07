@@ -2,7 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { makeLinkContext } from '@objectiv-analytics/tracker-core';
+import { makeLinkContext } from '@objectiv/tracker-core';
 import { create } from 'superstruct';
 import { trackerErrorHandler } from '../common/trackerErrorHandler';
 import { TagLinkParameters } from '../definitions/TagLinkParameters';

@@ -7,12 +7,12 @@ Plugin for Objectiv web trackers. Detects the current URL via the document's Loc
 To install the most recent stable version:
 
 ```sh
-yarn add @objectiv-analytics/plugin-web-document-context
+yarn add @objectiv/plugin-web-document-context
 ```
 
 ### or
 ```sh
-npm install @objectiv-analytics/plugin-web-document-context
+npm install @objectiv/plugin-web-document-context
 ```
 
 # Usage

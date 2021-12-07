@@ -11,7 +11,7 @@ import {
   TrackerTransportInterface,
   TransportableEvent,
   TransportSendError,
-} from '@objectiv-analytics/tracker-core';
+} from '@objectiv/tracker-core';
 import { BrowserTrackerConfig } from '../definitions/BrowserTrackerConfig';
 
 /**

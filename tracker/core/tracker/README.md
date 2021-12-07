@@ -7,12 +7,12 @@ as interfaces for other implementations. It’s also extensible through plugins.
 ## Package installation
 
 ```sh
-yarn add @objectiv-analytics/tracker-core
+yarn add @objectiv/tracker-core
 ```
 
 ### or
 ```sh
-npm install @objectiv-analytics/tracker-core
+npm install @objectiv/tracker-core
 ```
 
 ## Usage

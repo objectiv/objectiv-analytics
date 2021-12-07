@@ -2,7 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { AbstractGlobalContext, AbstractLocationContext } from '@objectiv-analytics/schema';
+import { AbstractGlobalContext, AbstractLocationContext } from '@objectiv/schema';
 
 /**
  * An array of Location Contexts

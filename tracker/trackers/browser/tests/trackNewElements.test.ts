@@ -2,7 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { generateUUID } from '@objectiv-analytics/tracker-core';
+import { generateUUID } from '@objectiv/tracker-core';
 import {
   BrowserTracker,
   getTracker,

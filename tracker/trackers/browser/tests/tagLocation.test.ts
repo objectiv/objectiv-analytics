@@ -11,7 +11,7 @@ import {
   makeNavigationContext,
   makeOverlayContext,
   makeSectionContext,
-} from '@objectiv-analytics/tracker-core';
+} from '@objectiv/tracker-core';
 import { StructError } from 'superstruct';
 import { tagElement, TaggingAttribute, tagLocation } from '../src';
 import { matchUUID } from './mocks/matchUUID';

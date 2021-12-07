@@ -3,7 +3,7 @@
  */
 
 import { APP_INITIALIZER, Provider } from '@angular/core';
-import { BrowserTrackerConfig, makeTracker } from '@objectiv-analytics/tracker-browser';
+import { BrowserTrackerConfig, makeTracker } from '@objectiv/tracker-browser';
 import { OBJECTIV_TRACKER_CONFIG_TOKEN } from './objectiv-tracker.token';
 
 /**
