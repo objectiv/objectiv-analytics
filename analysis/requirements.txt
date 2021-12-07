@@ -1,0 +1,10 @@
+# install bach and bach_open_taxonomy in edit mode, so local changes are immediately usable
+-e ../bach
+-e bach_open_taxonomy
+
+# requirements for the product_analytics.ipynb notebook
+jupyter
+jupyter-dash
+matplotlib
+plotly
+seaborn
