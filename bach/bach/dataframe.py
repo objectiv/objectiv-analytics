@@ -7,11 +7,12 @@ import pandas
 from sqlalchemy.engine import Engine
 from sqlalchemy.future import Connection
 
+from bach.savepoints import Savepoints
 from bach.expression import Expression, SingleValueExpression
 from bach.sql_model import BachSqlModel, SampleSqlModel
 from bach.types import get_series_type_from_dtype, get_dtype_from_db_dtype
 from sql_models.graph_operations import replace_node_in_graph, find_node
-from sql_models.model import SqlModel
+from sql_models.model import SqlModel, Materialization
 from sql_models.sql_generator import to_sql
 from sql_models.util import quote_identifier
 
@@ -548,7 +549,39 @@ class DataFrame:
         """
         return self.copy_override()
 
-    def materialize(self, node_name='manual_materialize', inplace=False, limit: Any = None) -> 'DataFrame':
+    def add_savepoint(
+            self,
+            save_points: Savepoints,
+            name: str,
+            materialization: Materialization = Materialization.QUERY,
+            execute_now: bool = False
+    ):
+        """
+
+        """
+        # if not self.is_materialized:
+        #    raise ValueError('Can only add savepoint in a materialized state')
+        #    # TODO: just do inplace materialization?
+        # TODO: this needs to be inplace
+        df = self.materialize(
+            node_name='save_point',
+            inplace=False,
+            limit=None,
+            materialization=materialization,
+            savepoint_name=name
+        )
+        save_points.add_df(df)
+        return df
+
+
+    def materialize(
+            self,
+            node_name='manual_materialize',
+            inplace=False,
+            limit: Any = None,
+            materialization: Materialization = Materialization.CTE,
+            savepoint_name: Optional[str] = None
+    ) -> 'DataFrame':
         """
         Create a copy of this DataFrame with as base_node the current DataFrame's state.
 
@@ -574,6 +607,7 @@ class DataFrame:
         series_dtypes = {k: v.dtype for k, v in self._data.items()}
 
         node = self.get_current_node(name=node_name, limit=limit)
+        node = node.copy_set_materialization(materialization).copy_set_materialization_name(savepoint_name)
         return self.copy_override(
             base_node=node,
             index_dtypes=index_dtypes,

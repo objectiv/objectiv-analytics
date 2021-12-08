@@ -24,28 +24,33 @@ class MaterializationType(NamedTuple):
     """
     name: unique identifier
     is_statement:
-        True indicates that a SqlModel with this materialization should be turned into a sql statement,
-            either query or a create statement
-        False indicates that a SqlModel with this materialization should not be turned into a standalone sql
-            statement. Example: a CTE should not be used as a standalone statement.
+        True: a SqlModel with this materialization should be turned into a standalone sql statement, either
+            a query or a create statement
+        False: a SqlModel with this materialization should not be turned into a standalone sql statement.
+            Example: a CTE should not be used as a standalone statement.
     is_cte:
-        True indicates that a SqlModel with this materialization can be used as a CTE by another SqlModel.
-        False indicates that a SqlModel with this materialization cannot be used as a CTE
+        True: a SqlModel with this materialization can be used as a CTE by another SqlModel.
+        False: a SqlModel with this materialization cannot be used as a CTE
+    modifies_db:
+        True: This materialization will change the state of the database beyond the transaction that it
+            runs in, e.g. create a permanent table or a view
+        False: This materialization is idempotent, running it doesn't change the database state.
     """
     name: str
     is_statement: bool
     is_cte: bool
+    modifies_db: bool
 
 
 class Materialization(Enum):
-    CTE = MaterializationType('cte', False, True)
+    CTE = MaterializationType('cte', False, True, False)
     """ A QUERY can be used as a CTE, but is also a stand-alone query."""
-    QUERY = MaterializationType('query', True, True)
-    VIEW = MaterializationType('view', True, False)
-    TABLE = MaterializationType('table', True, False)
-    TEMP_TABLE = MaterializationType('temp_table', True, False)
+    QUERY = MaterializationType('query', True, True, False)
+    VIEW = MaterializationType('view', True, False, True)
+    TABLE = MaterializationType('table', True, False, True)
+    TEMP_TABLE = MaterializationType('temp_table', True, False, False)
     """ A VIRTUAL_NODE will not be turned into a statement, nor generate any CTEs"""
-    VIRTUAL_NODE = MaterializationType('virtual', False, False)
+    VIRTUAL_NODE = MaterializationType('virtual', False, False, False)
 
     @property
     def is_statement(self) -> bool:
@@ -54,6 +59,10 @@ class Materialization(Enum):
     @property
     def is_cte(self) -> bool:
         return self.value.is_cte
+
+    @property
+    def modifies_db (self):
+        return self.value.modifies_db
 
 
 # special reference-level format string that will be filled in at sql-generation time with a per-model
