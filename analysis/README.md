@@ -9,13 +9,7 @@ export PYTHONPATH=.
 
 # This will fail if the postgres lib development headers are not present if so, then on Ubuntu that can
 # be fixed with: sudo apt-get install libpq-dev
-
-# install bach and bach_open_taxonomy in edit mode, so local changes are immediately useable
-pip install -e ../bach
-pip install -e bach_open_taxonomy
-
-# needed for the product_analytics.ipynb notebook
-pip install jupyter plotly matplotlib jupyter-dash seaborn 
+pip install -r requirements.txt
 
 # in case your notebook can not find all of the packages you just installed
 # you may also need to create a kernel config for this venv:

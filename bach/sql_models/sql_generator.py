@@ -45,7 +45,7 @@ def to_sql_materialized_nodes(start_node: SqlModel, include_start_node=True) -> 
         function=lambda node: (
             (node is start_node and include_start_node) or node.materialization.is_statement
         ),
-        use_last_found_instance=True
+        first_instance=False
     )
     _check_names_unique(found_node.model for found_node in materialized_found_nodes)
     for found_node in reversed(materialized_found_nodes):

@@ -28,9 +28,6 @@ If you’ve found an issue or have a feature request, please check out the [Cont
 ## Security Disclosure
 Found a security issue? Please don’t use the issue tracker but contact us directly. See [SECURITY.md](../SECURITY.md) for details.
 
-## Roadmap
-Future plans for Objectiv can be found on our [Github Roadmap](https://github.com/objectiv/objectiv-analytics/projects/2).
-
 ## Custom development & contributing code
 If you want to contribute to Objectiv or use it as a base for custom development, take a look at [CONTRIBUTING.md](CONTRIBUTING.md). It contains detailed development instructions and a link to information about our contribution process and where you can fit in.
 

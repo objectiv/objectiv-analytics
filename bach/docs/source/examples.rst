@@ -4,13 +4,13 @@
 Examples
 ========
 Here we'll give some very basic examples of the usage of Bach: creating a DataFrame, basic operations,
-aggregate operations, and getting the resulting data.
+aggregate operations, and getting the resulting data filtered and sorted.
 
 In the examples we'll assume that the database has a table called 'example', with a few specific
 columns. The SQL to create that table can be found below in :ref:`appendix_example_data`.
 
-We also have `live example notebook <https://notebook.objectiv.io/lab?path=product_analytics.ipynb>`_ that you
-can use to get a feel for Bach.
+We also have `live example notebook <https://notebook.objectiv.io/lab?path=product_analytics.ipynb>`_ that
+you can use to get a feel for Bach.
 
 
 Create a DataFrame from a database table
@@ -44,7 +44,6 @@ Basic operations
     df['concat'] = df['city'] + ' is located in ' + df['municipality']
     # remove the city column
     df.drop(columns=['city'], inplace=True)
-    df.to_pandas()
     # rename the 'another column' column to 'city'
     df.rename(columns={'another column': 'city'}, inplace=True)
 

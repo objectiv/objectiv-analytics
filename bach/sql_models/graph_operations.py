@@ -109,7 +109,7 @@ def get_node(start_node: SqlModel, reference_path: RefPath) -> SqlModel:
 def find_nodes(
         start_node: SqlModel,
         function: Callable[[SqlModel], bool],
-        use_last_found_instance: bool = False
+        first_instance: bool = True
 ) -> List[FoundNode]:
     """
     Return all nodes for which function returns True, which can be found by recursively traversing the
@@ -121,9 +121,9 @@ def find_nodes(
 
     :param start_node: start node
     :param function: Function that should return either True or False for a given SqlModel
-    :param use_last_found_instance: If set to true, if a node is encountered multiple times then the
-        last occurrence will be in the returned list instead of the first occurrence (which is the default).
-        The position of the FoundNode in the returned list will reflect the last occurrence also.
+    :param first_instance: If set to true, if a node is encountered multiple times in the breadth first
+        search then the first occurrence will be included in the result. If set to False then the last
+        occurrence will be in the result.
     :return: A list of tuples. Each tuple contains the found SqlModel and a reference path to that model.
         The returned nodes are in the order in which they were encountered. As a result the reference_path
         of the returned tuples monotonically increases when iterating the list.
@@ -136,7 +136,7 @@ def find_nodes(
         if function(node):
             if node not in result_nodes:
                 result_nodes[node] = FoundNode(node, path)
-            elif node in result_nodes and use_last_found_instance:
+            elif node in result_nodes and not first_instance:
                 # we rely on the fact that python 3.7+ will keep the insertion order. So we'll have to
                 # remove and reinsert the item to get it in the right position in the returned result.
                 del result_nodes[node]
@@ -150,12 +150,12 @@ def find_nodes(
 def find_node(
         start_node: SqlModel,
         function: Callable[[SqlModel], bool],
-        use_last_found_instance: bool = False
+        first_instance: bool = True
 ) -> Optional[FoundNode]:
     """
     Similar to find_nodes, but will only return the first node in the result, or None if none are found.
     """
-    result = find_nodes(start_node, function, use_last_found_instance)
+    result = find_nodes(start_node, function, first_instance)
     if not result:
         return None
     return result[0]
