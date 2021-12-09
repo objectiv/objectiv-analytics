@@ -24,7 +24,6 @@ Check out [objectiv.io](https://www.objectiv.io) to learn more.
 * [Objectiv Docs](https://www.objectiv.io/docs) - Objectiv's official documentation.
 * [Objectiv on Slack](https://join.slack.com/t/objectiv-io/shared_invite/zt-u6xma89w-DLDvOB7pQer5QUs5B_~5pg) - Get help & join the discussion on where to take Objectiv next.
 * [Contribution Guide](https://www.objectiv.io/docs/the-project/contribute) - Report bugs, request features and contribution information.
-* [Github Roadmap](https://github.com/objectiv/objectiv-analytics/projects/2) - Learn about Objectiv's future plans.
 
 
 This repository is part of the source code for Objectiv, which is released under the Apache 2.0 License. Please refer to [LICENSE.md](LICENSE.md) for details. Unless otherwise noted, all files © 2021 Objectiv B.V.

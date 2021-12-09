@@ -2,7 +2,7 @@
 
 The Open Taxonomy for Analytics is Objectiv’s proposal for a common way to collect, structure and validate data. It defines classes for each common event type and the contexts in which they can happen. It describes their properties, requirements and their relationships with other classes. 
 
-The current version of the taxonomy is built for product analytics. We have plans to support other fields as well. Check out our [Github Roadmap](https://github.com/objectiv/objectiv-analytics/projects/2) for details. 
+The current version of the taxonomy is built for product analytics. We have plans to support other fields as well.
 
 Objectiv uses the Open Taxonomy to:
 * Enable realtime validation of instrumentation and provide debugging feedback.
@@ -25,9 +25,6 @@ If you’ve found an issue or have a feature request, please check out the [Cont
 
 ## Security Disclosure
 Found a security issue? Please don’t use the issue tracker but contact us directly. See [SECURITY.md](../SECURITY.md) for details.
-
-## Roadmap
-Future plans for Objectiv can be found on our [Github Roadmap](https://github.com/objectiv/objectiv-analytics/projects/2).
 
 ## Custom Development & Contributing Code
 If you want to contribute to the Open Taxonomy or use it as a base for custom development, take a look at [CONTRIBUTING.md](CONTRIBUTING.md). It contains detailed development instructions and a link to information about our contribution process and where you can fit in.

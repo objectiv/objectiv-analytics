@@ -220,26 +220,7 @@ def merge(
         suffixes: Tuple[str, str]
 ) -> DataFrame:
     """
-    Join the left and right Dataframes, or a DataFrame (left) and a Series (right). This will return a new
-    DataFrame that contains the combined columns of both dataframes, and the rows that result from joining
-    on the specified columns. The columns that are joined on can consists (partially or fully) out of index
-    columns.
-
-    If the column names on the left and right conflict, then the suffixes are used to distinguish them in the
-    resulting DataFrame. The algorithm for determining the resulting columns and their names is similar to
-    Pandas, but has slight differences when joining on indices and column names conflict.
-
-    :param left: left DataFrame
-    :param right: DataFrame or Series to join on left
-    :param how: supported values: {‘left’, ‘right’, ‘outer’, ‘inner’, ‘cross’}
-    :param on: optional, column(s) to join left and right on.
-    :param left_on: optional, column(s) from the left df to join on
-    :param right_on: optional, column(s) from the right df/series to join on
-    :param left_index: If true uses the index of the left df as columns to join on
-    :param right_index: If true uses the index of the right df/series as columns to join on
-    :param suffixes: Tuple of two strings. Will be used to suffix duplicate column names. Must make column
-        names unique
-    :return: A new Dataframe. The original frames are not modified.
+    See :py:meth:`bach.DataFrame.merge` for more information.
     """
     if how not in ('left', 'right', 'outer', 'inner', 'cross'):
         raise ValueError(f"how must be one of ('left', 'right', 'outer', 'inner', 'cross'), value: {how}")

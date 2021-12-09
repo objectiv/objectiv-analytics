@@ -862,6 +862,8 @@ class Series(ABC):
         else:
             if isinstance(wrapped, DataFrame):
                 unwrapped = wrapped.group_by
+                if unwrapped is None:
+                    unwrapped = GroupBy([])
             else:
                 unwrapped = wrapped
 

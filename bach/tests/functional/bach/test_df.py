@@ -216,3 +216,36 @@ def test_materialize_non_deterministic_expressions():
             [3, 'Drylts', ANY, ANY, False, ANY, True],
         ]
     assert_equals_data(bt, expected_columns=expected_columns, expected_data=expected_data)
+
+
+def test_is_materialized():
+    df_original = get_bt_with_test_data()
+    assert df_original.is_materialized
+    df = df_original.copy()
+    assert df.is_materialized
+
+    # adding column
+    df['x'] = 'test'
+    assert not df.is_materialized
+    del df['x']
+    assert df.is_materialized
+
+    # group by
+    df = df.groupby('municipality')
+    assert not df.is_materialized
+
+    # sort_values
+    df = df_original.copy()
+    assert df.is_materialized
+    df = df.sort_values('city')
+    assert not df.is_materialized
+
+
+    # switching columns
+    df = df_original.copy()
+    assert df.is_materialized
+    df['x'] = df['municipality']
+    df['municipality'] = df['city']
+    df['city'] = df['x']
+    del df['x']
+    assert not df.is_materialized
