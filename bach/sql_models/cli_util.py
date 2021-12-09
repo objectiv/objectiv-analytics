@@ -17,5 +17,6 @@ def print_node_info(node_info: NodeInfo):
     print(f'reference_path: {node_info.reference_path}')
     print(f'properties: {node_info.model.properties}')
     print(f'materialization: {node_info.model.materialization}')
+    print(f'materialization_name: {node_info.model.materialization_name}')
     print(f'inputs: {[in_node.node_id for in_node in node_info.in_edges]}')
     print(f'outputs: {[out_node.node_id for out_node in node_info.out_edges]}')

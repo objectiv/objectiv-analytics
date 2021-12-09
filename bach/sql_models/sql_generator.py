@@ -28,6 +28,11 @@ def to_sql_materialized_nodes(start_node: SqlModel, include_start_node=True) -> 
     :return: A dict of sql statements. The order of the items in the dict is significant: earlier statements
         will create views and/or tables that might be used by later statements.
     """
+    # TODO: Make sure we never have non-identical sql-models with the same hash. Either:
+    #  1) Traverse the tree and make sure that all models with the same hash are identical or throw an error
+    #  2) Use a singleton pattern to guarantee that there is only one instance of a node with a given hash
+    #  3) ??
+    # Contemplate this a bit, and add tests after implementing
     result: Dict[str, str] = {}
     compiler_cache: Dict[str, List['SemiCompiledTuple']] = {}
     # find all nodes that are materialized as view or table, and the start_node if needed

@@ -52,18 +52,18 @@ def test_format_injection():
     model = mb(a="'{{y}}'")
     mb = CustomSqlModel('select {a} from {{x}}')
     result = to_sql(mb(a='y', x=model))
-    expected = 'with "CustomSqlModel___1415e9e145b7bdd712c6fadaac5a6483" as (select \'{{y}}\' from x)\n' \
-               'select y from "CustomSqlModel___1415e9e145b7bdd712c6fadaac5a6483"'
+    expected = 'with "CustomSqlModel___898cb76e5f8de581ff9524b39e665f94" as (select \'{{y}}\' from x)\n' \
+               'select y from "CustomSqlModel___898cb76e5f8de581ff9524b39e665f94"'
     assert result == expected
 
     result = to_sql(mb(a="'{y}'", x=model))
-    expected = 'with "CustomSqlModel___1415e9e145b7bdd712c6fadaac5a6483" as (select \'{{y}}\' from x)\n' \
-               "select '{y}' from \"CustomSqlModel___1415e9e145b7bdd712c6fadaac5a6483\""
+    expected = 'with "CustomSqlModel___898cb76e5f8de581ff9524b39e665f94" as (select \'{{y}}\' from x)\n' \
+               "select '{y}' from \"CustomSqlModel___898cb76e5f8de581ff9524b39e665f94\""
     assert result == expected
 
     result = to_sql(mb(a="'{{y}}'", x=model))
-    expected = 'with "CustomSqlModel___1415e9e145b7bdd712c6fadaac5a6483" as (select \'{{y}}\' from x)\n' \
-               "select '{{y}}' from \"CustomSqlModel___1415e9e145b7bdd712c6fadaac5a6483\""
+    expected = 'with "CustomSqlModel___898cb76e5f8de581ff9524b39e665f94" as (select \'{{y}}\' from x)\n' \
+               "select '{{y}}' from \"CustomSqlModel___898cb76e5f8de581ff9524b39e665f94\""
     assert result == expected
 
 
@@ -141,17 +141,17 @@ def test_model_thrice_simple():
     )
     result = to_sql(model)
     expected = '''
-        with "Source ""Table""___a4a63d6f66f547fb2994ed020c76db56" as (
+        with "Source ""Table""___3264567cc3094171bac5670392af4cd0" as (
             select 1 as val
-        ), "Double___160c435d2dd8220f87ab1d2a1e3e6c5b" as (
+        ), "Double___7536c8da3c0bfffbaf7a88319c68e7d2" as (
             select (val * 2) as val
-            from "Source ""Table""___a4a63d6f66f547fb2994ed020c76db56"
-        ), "Double___3a93a6eda1f771832d32e871fe86498f" as (
+            from "Source ""Table""___3264567cc3094171bac5670392af4cd0"
+        ), "Double___eb5f9e8a122319ea565a8ba6688fc6f1" as (
             select (val * 2) as val
-            from "Double___160c435d2dd8220f87ab1d2a1e3e6c5b"
+            from "Double___7536c8da3c0bfffbaf7a88319c68e7d2"
         )
         select (val * 2) as val
-        from "Double___3a93a6eda1f771832d32e871fe86498f"
+        from "Double___eb5f9e8a122319ea565a8ba6688fc6f1"
     '''
     assert_roughly_equal_sql(result, expected)
 
