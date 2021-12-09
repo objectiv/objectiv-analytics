@@ -43,8 +43,10 @@ class Savepoints:
         return sorted(
             name
             for name in self._executed_statements.keys()
-            if name in self._executed_statements
-               and self._executed_statements[name].materialization == Materialization.TABLE
+            if (
+                name in self._executed_statements
+                and self._executed_statements[name].materialization == Materialization.TABLE
+            )
         )
 
     @property
@@ -53,7 +55,7 @@ class Savepoints:
             name
             for name in self._executed_statements.keys()
             if name in self._executed_statements
-               and self._executed_statements[name].materialization == Materialization.VIEW
+            and self._executed_statements[name].materialization == Materialization.VIEW
         )
 
     def add_df(self, df: 'DataFrame'):
@@ -149,7 +151,6 @@ class Savepoints:
         # TODO: support checking the state in the database. Add an engine parameter and query which tables
         #  and views actually exists in the db??? Might be hard to detect changes tho
         self._executed_statements = {}
-
 
 
 def get_virtual_node(references: Dict[str, SqlModel]) -> SqlModel:

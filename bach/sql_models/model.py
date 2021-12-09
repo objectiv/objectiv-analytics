@@ -61,7 +61,7 @@ class Materialization(Enum):
         return self.value.is_cte
 
     @property
-    def modifies_db (self):
+    def modifies_db(self):
         return self.value.modifies_db
 
 

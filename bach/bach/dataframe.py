@@ -572,7 +572,7 @@ class DataFrame:
         """
         return self.copy_override()
 
-    def add_savepoint(
+    def set_savepoint(
             self,
             save_points: Savepoints,
             name: str,
@@ -582,20 +582,28 @@ class DataFrame:
         """
 
         """
-        # if not self.is_materialized:
-        #    raise ValueError('Can only add savepoint in a materialized state')
-        #    # TODO: just do inplace materialization?
-        # TODO: this needs to be inplace
-        df = self.materialize(
-            node_name='save_point',
-            inplace=False,
-            limit=None,
-            materialization=materialization,
-            savepoint_name=name
-        )
-        save_points.add_df(df)
-        return df
+        if not self.is_materialized:
+            raise ValueError('Can only add savepoint in a materialized state')
+            # TODO: just do inplace materialization?
+        if (self.base_node.materialization != Materialization.CTE
+                and self.base_node.materialization_name is not None):
+            raise ValueError(f'DataFrame is already saved as savepoint {self.base_node.materialization_name}')
+        # TODO: check that name doesn't conflict with earlier savepoints in the graph
+        base_node = self.base_node.\
+            copy_set_materialization(materialization).\
+            copy_set_materialization_name(name)
 
+        # ## Change base_node start
+        # TODO: just handle this somewhere else? make this mutable (from other branch)
+        self._base_node = base_node
+        for name, series in self._index.items():
+            self._index[name] = series.copy_override(base_node=base_node)
+        for name, series in self._data.items():
+            self._data[name] = series.copy_override(base_node=base_node, index=self._index)
+        # ## Change base_node end
+
+        save_points.add_df(self)
+        return self
 
     def materialize(
             self,
@@ -617,7 +625,7 @@ class DataFrame:
         TODO: a known problem is that DataFrames with 'json' columns cannot be fully materialized.
 
         :param node_name: The name of the node that's going to be created
-        :param inplace: Perform operation on self if ``inplace=True``, or create a copy. Not supported yet.
+        :param inplace: Perform operation on self if ``inplace=True``, or create a copy.
         :param limit: The limit (slice, int) to apply.
         :returns: New DataFrame with the current DataFrame's state as base_node
 
@@ -625,23 +633,29 @@ class DataFrame:
             Calling materialize() resets the order of the dataframe. Call :py:meth:`sort_values()` again on
             the result if order is important.
         """
-        if inplace:
-            raise NotImplementedError("inplace materialization is not supported")
-
         index_dtypes = {k: v.dtype for k, v in self._index.items()}
         series_dtypes = {k: v.dtype for k, v in self._data.items()}
-
         node = self.get_current_node(name=node_name, limit=limit)
         node = node.copy_set_materialization(materialization).copy_set_materialization_name(savepoint_name)
-        return self.copy_override(
+
+        df = self.get_instance(
+            engine=self.engine,
             base_node=node,
             index_dtypes=index_dtypes,
-            series_dtypes=series_dtypes,
-            group_by=[None],
-            # materializing resets any sorting as we don't have a way to translate the sorting expressions
-            # to new columns reliably. This needs attention # TODO
+            dtypes=series_dtypes,
+            group_by=None,
             order_by=[]
         )
+
+        if not inplace:
+            return df
+        self._engine = df.engine
+        self._base_node = df.base_node
+        self._index = df.index
+        self._data = df.data
+        self._group_by = df.group_by
+        self._order_by = df._order_by
+        return self
 
     def get_sample(self,
                    table_name: str,
