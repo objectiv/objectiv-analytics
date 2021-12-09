@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import re
-from typing import Dict, NamedTuple, TYPE_CHECKING, List
+from typing import Dict, NamedTuple, TYPE_CHECKING, List, Tuple
 
 from sqlalchemy.engine import Engine
 
@@ -18,6 +18,7 @@ class Entry(NamedTuple):
     """
     INTERNAL: class to represent a savepoint in the Savepoints class
     """
+    # todo: don't need to track this anymore, just the df is enough?
     name: str
     df: 'DataFrame'
     materialization: Materialization
@@ -38,24 +39,27 @@ class Savepoints:
         self._entries: Dict[str, Entry] = {}
         self._executed_statements: Dict[str, ExecutedStatement] = {}
 
+
+    @property
+    def created(self) -> List[Tuple[str, Materialization]]:
+        return reversed([
+            (name, exec_statement.materialization)
+            for name, exec_statement in self._executed_statements.items()
+            if self._executed_statements[name].materialization.modifies_db
+        ])
+
     @property
     def tables_created(self) -> List[str]:
-        return sorted(
-            name
-            for name in self._executed_statements.keys()
-            if (
-                name in self._executed_statements
-                and self._executed_statements[name].materialization == Materialization.TABLE
-            )
+        return reversed(
+            name for name in self._executed_statements.keys()
+            if self._executed_statements[name].materialization == Materialization.TABLE
         )
 
     @property
     def views_created(self) -> List[str]:
-        return sorted(
-            name
-            for name in self._executed_statements.keys()
-            if name in self._executed_statements
-            and self._executed_statements[name].materialization == Materialization.VIEW
+        return reversed(
+            name for name in self._executed_statements.keys()
+            if self._executed_statements[name].materialization == Materialization.VIEW
         )
 
     def add_df(self, df: 'DataFrame'):
@@ -86,21 +90,22 @@ class Savepoints:
     def get_df(self, savepoint_name: str) -> 'DataFrame':
         return self._entries[savepoint_name].df.copy()
 
-    def to_sql(self) -> Dict[str, str]:
+    def to_sql(self, savepoint_names: List[str] = None) -> Dict[str, str]:
         """
         Generate the sql for all save-points
 
         :return: dictionary mapping the name of each savepoint to the sql for that savepoint.
         """
         references: Dict[str, SqlModel] = {
-            f'ref_{entry.name}': entry.df.base_node for entry in self._entries.values()
+            f'ref_{name}': entry.df.base_node for name, entry in self._entries.items()
+            if savepoint_names is None or name in savepoint_names
         }
         # TODO: move this to sqlmodel?
         graph = get_virtual_node(references)
         sqls = to_sql_materialized_nodes(start_node=graph, include_start_node=False)
         return sqls
 
-    def execute(self, engine: Engine) -> Dict[str, List[tuple]]:
+    def execute(self, engine: Engine, savepoint_names: List[str] = None) -> Dict[str, List[tuple]]:
         """
         Execute the savepoints:
             * Create all tables and views that do not yet exist or have been changed since the last time
@@ -112,13 +117,31 @@ class Savepoints:
         """
         # todo: store engine as part of __init__?
         # todo: support removing created views/tables that have been created but have changed later
+        sql_statements = self.to_sql(savepoint_names)
+        return self._execute_sql(engine, sql_statements)
+
+    def _execute_sql(self, engine: Engine, sql_statements: Dict[str, str]) -> Dict[str, List[tuple]]:
+        """
+        Execute the savepoints:
+            * Create all tables and views that do not yet exist or have been changed since the last time
+                that execute() was invoked
+            * Run all queries and return the results
+        :param engine: engine to execute the sql statements
+        :param sql_statements: dict of savepoint name to a sql statement.
+            The savepoint name must exist
+            The sql-statement must match the materialization and query of the savepoint.
+        :return: The result of all savepoints with materialization type QUERY. A dictionary mapping
+            the savepoint name to a List of tuples representing the rows that the queries returned.
+        """
+        # todo: store engine as part of __init__?
+        # todo: support removing created views/tables that have been created but have changed later
         result = {}
         with engine.connect() as conn:
             with conn.begin() as transaction:
-                for name, sql in self.to_sql().items():
-                    # non-idempotent statement
+                for name, sql in sql_statements.items():
                     materialization = self._entries[name].materialization
                     if materialization.modifies_db:
+                        # sql is a non-idempotent statement
                         if name not in self._executed_statements or \
                                 not self._executed_statements[name].materialization.modifies_db:
                             # First time we execute this statement, or previously it didn't modifiy the db
@@ -136,13 +159,15 @@ class Savepoints:
                         self._executed_statements[name] = \
                             ExecutedStatement(name=name, sql=sql, materialization=materialization)
                     else:
+                        # sql is an idempotent statement
                         query_result = conn.execute(sql)
                         if materialization == Materialization.QUERY:
-                            # we should return the result
-                            # TODO: change format so it includes header names?
+                            # We return the combined result of all sql statements with QUERY materialization
+                            # TODO: change format so it includes column names?
                             result[name] = list(query_result)
                 transaction.commit()
         return result
+
 
     def reset_executed_state(self):
         """

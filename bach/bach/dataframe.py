@@ -358,6 +358,8 @@ class DataFrame:
         for name, series in self.all_series.items():
             if series.expression != Expression.column_reference(name):
                 return False
+        # TODO BUG: if self.series contains less columns than the self.base_node gives then this will return
+        #  true even though the result of evaluating the base_node and of get_current_node() is different
         return True
 
     def __eq__(self, other: Any) -> bool:
@@ -595,22 +597,13 @@ class DataFrame:
                 materialization=materialization,
                 savepoint_name=name
             )
-        else:
-            # TODO: check that name doesn't conflict with earlier savepoints in the graph
-            base_node = self.base_node.\
-                copy_set_materialization(materialization).\
-                copy_set_materialization_name(name)
-
-            # ## Change base_node start
-            # TODO: just handle this somewhere else? make the base_node mutable (from other branch)
-            self._base_node = base_node
-            for name, series in self._index.items():
-                self._index[name] = series.copy_override(base_node=base_node)
-            for name, series in self._data.items():
-                self._data[name] = series.copy_override(base_node=base_node, index=self._index)
-            # ## Change base_node end
+        # TODO: check that name doesn't conflict with earlier savepoints in the graph
+        self.base_node.set_materialization(materialization)
+        self.base_node.set_materialization_name(name)
 
         save_points.add_df(self)
+        if materialization.modifies_db:
+            save_points.execute(self.engine, name)
         return self
 
     def materialize(self, node_name='manual_materialize', inplace=False, limit: Any = None) -> 'DataFrame':

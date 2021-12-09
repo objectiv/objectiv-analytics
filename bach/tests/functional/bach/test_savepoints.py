@@ -16,58 +16,37 @@ def test_add_df():
     assert sp.tables_created == []
 
     # Basic test
-    df = df.materialize(
-        node_name='manual_materialize',
-        inplace=False,
-        limit=None,
-        materialization=Materialization.QUERY,
-        savepoint_name='the_name'
-    )
+    df = df.materialize()
+    df.base_node.set_materialization(Materialization.QUERY).set_materialization_name('the_name')
     sp.add_df(df)
     assert sp.get_df('the_name') == df
 
     # Test error conditions
     # wrong materialization
-    df = df.materialize(
-        node_name='manual_materialize',
-        inplace=False,
-        limit=None,
-        materialization=Materialization.CTE,
-        savepoint_name=None
-    )
+    df = df.materialize()
+    df.base_node.set_materialization(Materialization.CTE).set_materialization_name(None)
+
     with pytest.raises(ValueError, match='Materialization type not supported'):
         sp.add_df(df)
 
     # no name
-    df = df.materialize(
-        node_name='manual_materialize',
-        inplace=False,
-        limit=None,
-        materialization=Materialization.QUERY,
-        savepoint_name=None
-    )
+    df = df.materialize()
+    df.base_node.set_materialization(Materialization.QUERY).set_materialization_name(None)
+
     with pytest.raises(ValueError, match='Name must match'):
         sp.add_df(df)
 
     # wrong name
-    df = df.materialize(
-        node_name='manual_materialize',
-        inplace=False,
-        limit=None,
-        materialization=Materialization.QUERY,
-        savepoint_name='A invalid name (spaces)'
-    )
+    df = df.materialize()
+    df.base_node\
+        .set_materialization(Materialization.QUERY)\
+        .set_materialization_name('An invalid name (spaces)')
     with pytest.raises(ValueError, match='Name must match'):
         sp.add_df(df)
 
     # duplicate name
-    df = df.materialize(
-        node_name='manual_materialize',
-        inplace=False,
-        limit=None,
-        materialization=Materialization.QUERY,
-        savepoint_name='the_name'
-    )
+    df = df.materialize()
+    df.base_node.set_materialization(Materialization.QUERY).set_materialization_name('the_name')
     with pytest.raises(ValueError, match='already exists'):
         sp.add_df(df)
 
@@ -77,13 +56,10 @@ def test_execute_query():
     engine = df.engine
     sp = Savepoints()
 
-    df = df.materialize(
-        node_name='manual_materialize',
-        inplace=False,
-        limit=None,
-        materialization=Materialization.QUERY,
-        savepoint_name='the_name'
-    )
+    df = df.materialize()
+    df.base_node\
+        .set_materialization(Materialization.QUERY)\
+        .set_materialization_name('the_name')
 
     sp.add_df(df)
     result = sp.execute(engine)
@@ -96,15 +72,12 @@ def test_execute_query():
     }
 
     df = df[df.skating_order < 3]
-    df = df.materialize(
-        node_name='manual_materialize',
-        inplace=False,
-        limit=None,
-        materialization=Materialization.QUERY,
-        savepoint_name='second_point'
-    )
-    sp.add_df(df)
+    df = df.materialize()
+    df.base_node\
+        .set_materialization(Materialization.QUERY)\
+        .set_materialization_name('second_point')
 
+    sp.add_df(df)
     result = sp.execute(engine)
     assert result == {
         'the_name': [
@@ -124,13 +97,10 @@ def test_execute_table():
     engine = df.engine
     sp = Savepoints()
 
-    df = df.materialize(
-        node_name='manual_materialize',
-        inplace=False,
-        limit=None,
-        materialization=Materialization.TABLE,
-        savepoint_name='sp_first_point'
-    )
+    df = df.materialize()
+    df.base_node\
+        .set_materialization(Materialization.TABLE)\
+        .set_materialization_name('sp_first_point')
 
     sp.add_df(df)
     result = sp.execute(engine)
@@ -139,35 +109,27 @@ def test_execute_table():
 
     # reduce df to one row and add savepoint
     df = df[df.skating_order == 1]
-    df = df.materialize(
-        node_name='manual_materialize',
-        inplace=False,
-        limit=None,
-        materialization=Materialization.TABLE,
-        savepoint_name='sp_second_point'
-    )
+    df = df.materialize()
+    df.base_node\
+        .set_materialization(Materialization.TABLE)\
+        .set_materialization_name('sp_second_point')
+
     sp.add_df(df)
 
     # Change columns in df and add savepoint
     df = df[['skating_order', 'city', 'founding']]
     df['x'] = 12345
-    df = df.materialize(
-        node_name='manual_materialize',
-        inplace=False,
-        limit=None,
-        materialization=Materialization.TABLE,
-        savepoint_name='sp_third_point'
-    )
+    df = df.materialize()
+    df.base_node\
+        .set_materialization(Materialization.TABLE)\
+        .set_materialization_name('sp_third_point')
     sp.add_df(df)
 
     # No changes, add query
-    df = df.materialize(
-        node_name='manual_materialize',
-        inplace=False,
-        limit=None,
-        materialization=Materialization.QUERY,
-        savepoint_name='sp_final_point'
-    )
+    df = df.materialize()
+    df.base_node\
+        .set_materialization(Materialization.QUERY)\
+        .set_materialization_name('sp_final_point')
     sp.add_df(df)
 
     expected_result = {
