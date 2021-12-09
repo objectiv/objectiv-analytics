@@ -610,8 +610,6 @@ class DataFrame:
             node_name='manual_materialize',
             inplace=False,
             limit: Any = None,
-            materialization: Materialization = Materialization.CTE,
-            savepoint_name: Optional[str] = None
     ) -> 'DataFrame':
         """
         Create a copy of this DataFrame with as base_node the current DataFrame's state.
@@ -632,6 +630,20 @@ class DataFrame:
         .. note::
             Calling materialize() resets the order of the dataframe. Call :py:meth:`sort_values()` again on
             the result if order is important.
+        """
+        return self._materialize(node_name=node_name, inplace=inplace, limit=limit)
+
+    def _materialize(
+            self,
+            node_name='manual_materialize',
+            inplace=False,
+            limit: Any = None,
+            materialization: Materialization = Materialization.CTE,
+            savepoint_name: Optional[str] = None
+    ) -> 'DataFrame':
+        """
+        See :py:meth:`materialize()`.
+        This method adds parameters for materialization and savepoint_name
         """
         index_dtypes = {k: v.dtype for k, v in self._index.items()}
         series_dtypes = {k: v.dtype for k, v in self._data.items()}
