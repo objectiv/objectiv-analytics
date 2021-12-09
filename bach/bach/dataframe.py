@@ -582,25 +582,33 @@ class DataFrame:
         """
 
         """
-        if not self.is_materialized:
-            raise ValueError('Can only add savepoint in a materialized state')
-            # TODO: just do inplace materialization?
-        if (self.base_node.materialization != Materialization.CTE
-                and self.base_node.materialization_name is not None):
+        if self.is_materialized \
+                and self.base_node.materialization != Materialization.CTE \
+                and self.base_node.materialization_name is not None:
             raise ValueError(f'DataFrame is already saved as savepoint {self.base_node.materialization_name}')
-        # TODO: check that name doesn't conflict with earlier savepoints in the graph
-        base_node = self.base_node.\
-            copy_set_materialization(materialization).\
-            copy_set_materialization_name(name)
 
-        # ## Change base_node start
-        # TODO: just handle this somewhere else? make this mutable (from other branch)
-        self._base_node = base_node
-        for name, series in self._index.items():
-            self._index[name] = series.copy_override(base_node=base_node)
-        for name, series in self._data.items():
-            self._data[name] = series.copy_override(base_node=base_node, index=self._index)
-        # ## Change base_node end
+        if not self.is_materialized:
+            self._materialize(
+                node_name='savepoint',
+                inplace=True,
+                limit=None,
+                materialization=materialization,
+                savepoint_name=name
+            )
+        else:
+            # TODO: check that name doesn't conflict with earlier savepoints in the graph
+            base_node = self.base_node.\
+                copy_set_materialization(materialization).\
+                copy_set_materialization_name(name)
+
+            # ## Change base_node start
+            # TODO: just handle this somewhere else? make the base_node mutable (from other branch)
+            self._base_node = base_node
+            for name, series in self._index.items():
+                self._index[name] = series.copy_override(base_node=base_node)
+            for name, series in self._data.items():
+                self._data[name] = series.copy_override(base_node=base_node, index=self._index)
+            # ## Change base_node end
 
         save_points.add_df(self)
         return self
