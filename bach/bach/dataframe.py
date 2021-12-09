@@ -613,12 +613,7 @@ class DataFrame:
         save_points.add_df(self)
         return self
 
-    def materialize(
-            self,
-            node_name='manual_materialize',
-            inplace=False,
-            limit: Any = None,
-    ) -> 'DataFrame':
+    def materialize(self, node_name='manual_materialize', inplace=False, limit: Any = None) -> 'DataFrame':
         """
         Create a copy of this DataFrame with as base_node the current DataFrame's state.
 
@@ -633,30 +628,15 @@ class DataFrame:
         :param node_name: The name of the node that's going to be created
         :param inplace: Perform operation on self if ``inplace=True``, or create a copy.
         :param limit: The limit (slice, int) to apply.
-        :returns: New DataFrame with the current DataFrame's state as base_node
+        :returns: DataFrame with the current DataFrame's state as base_node
 
         .. note::
             Calling materialize() resets the order of the dataframe. Call :py:meth:`sort_values()` again on
             the result if order is important.
         """
-        return self._materialize(node_name=node_name, inplace=inplace, limit=limit)
-
-    def _materialize(
-            self,
-            node_name='manual_materialize',
-            inplace=False,
-            limit: Any = None,
-            materialization: Materialization = Materialization.CTE,
-            savepoint_name: Optional[str] = None
-    ) -> 'DataFrame':
-        """
-        See :py:meth:`materialize()`.
-        This method adds parameters for materialization and savepoint_name
-        """
         index_dtypes = {k: v.dtype for k, v in self._index.items()}
         series_dtypes = {k: v.dtype for k, v in self._data.items()}
         node = self.get_current_node(name=node_name, limit=limit)
-        node = node.copy_set_materialization(materialization).copy_set_materialization_name(savepoint_name)
 
         df = self.get_instance(
             engine=self.engine,
