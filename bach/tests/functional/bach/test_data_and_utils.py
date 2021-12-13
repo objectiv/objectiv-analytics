@@ -132,13 +132,12 @@ def _get_bt(
     # in the same table, then tests will be confused anyway
     lookup_key = table
     if lookup_key not in _TABLE_DATAFRAME_CACHE:
-        import pandas as pd
         df = get_pandas_df(dataset, columns)
         _TABLE_DATAFRAME_CACHE[lookup_key] = get_from_df(table, df, convert_objects)
     # We don't even renew the 'engine', as creating the database connection takes a bit of time too. If
     # we ever do into trouble because of stale connection or something, then we can change it at that point
     # in time.
-    return _TABLE_DATAFRAME_CACHE[lookup_key].copy_override()
+    return _TABLE_DATAFRAME_CACHE[lookup_key].copy_detach_base_node()
 
 
 def get_pandas_df(dataset: List[List[Any]], columns: List[str]) -> pandas.DataFrame:

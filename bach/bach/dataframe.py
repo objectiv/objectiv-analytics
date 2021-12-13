@@ -1,4 +1,4 @@
-from copy import copy
+from copy import copy, deepcopy
 from typing import List, Set, Union, Dict, Any, Optional, Tuple, cast, NamedTuple, \
     TYPE_CHECKING, Callable
 from uuid import UUID
@@ -559,20 +559,40 @@ class DataFrame:
             order_by=order_by
         )
 
-    def copy(self):
+    def copy(self) -> 'DataFrame':
         """
         Return a copy of this DataFrame.
 
         As this dataframe only represents data in the backing SQL store, and does not contain any data,
         this is a metadata copy only, no actual data is duplicated and changes to the underlying data
         will represented in both copy and original.
-        Changes to data, index, sorting, grouping etc. on the copy will not affect the original.
+
+        Changes to data, index, sorting, grouping etc. on the copy will not affect the original. However
+        changes to the base_node in either the original dataframe or the copy are shared with the other
+        dataframe. See :py:meth:`copy_detach_base_node()` for creating a deepcopy that doesn't share the
+        base_node.
 
         If you want to create a snapshot of the data, have a look at :py:meth:`get_sample()`
 
         :returns: a copy of the dataframe
         """
         return self.copy_override()
+
+    def copy_detach_base_node(self) -> 'DataFrame':
+        # TODO: comments, and test
+        df = self.copy_override()
+        new_base_node = deepcopy(df.base_node)
+        new_index = {}
+        new_data = {}
+        for name, index in df.index.items():
+            new_index[name] = index.copy_override(base_node=new_base_node)
+        for name, series in df.data.items():
+            new_data[name] = series.copy_override(index=new_index, base_node=new_base_node)
+        return self.copy_override(
+            base_node=new_base_node,
+            index=new_index,
+            series=new_data
+        )
 
     def set_savepoint(
             self,
@@ -590,12 +610,10 @@ class DataFrame:
             raise ValueError(f'DataFrame is already saved as savepoint {self.base_node.materialization_name}')
 
         if not self.is_materialized:
-            self._materialize(
+            self.materialize(
                 node_name='savepoint',
                 inplace=True,
                 limit=None,
-                materialization=materialization,
-                savepoint_name=name
             )
         # TODO: check that name doesn't conflict with earlier savepoints in the graph
         self.base_node.set_materialization(materialization)

@@ -2,6 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import pytest
+from sqlalchemy.future import Engine
 
 from bach.savepoints import Savepoints
 from sql_models.model import Materialization
@@ -95,15 +96,15 @@ def test_execute_query():
 def test_execute_table():
     df = get_bt_with_test_data()
     engine = df.engine
-    sp = Savepoints()
+    sps = Savepoints()
 
     df = df.materialize()
     df.base_node\
         .set_materialization(Materialization.TABLE)\
         .set_materialization_name('sp_first_point')
 
-    sp.add_df(df)
-    result = sp.execute(engine)
+    sps.add_df(df)
+    result = sps.execute(engine)
     assert result == {}
 
 
@@ -114,7 +115,7 @@ def test_execute_table():
         .set_materialization(Materialization.TABLE)\
         .set_materialization_name('sp_second_point')
 
-    sp.add_df(df)
+    sps.add_df(df)
 
     # Change columns in df and add savepoint
     df = df[['skating_order', 'city', 'founding']]
@@ -123,14 +124,14 @@ def test_execute_table():
     df.base_node\
         .set_materialization(Materialization.TABLE)\
         .set_materialization_name('sp_third_point')
-    sp.add_df(df)
+    sps.add_df(df)
 
     # No changes, add query
     df = df.materialize()
     df.base_node\
         .set_materialization(Materialization.QUERY)\
         .set_materialization_name('sp_final_point')
-    sp.add_df(df)
+    sps.add_df(df)
 
     expected_result = {
         'sp_final_point': [
@@ -138,23 +139,31 @@ def test_execute_table():
         ]
     }
 
-    assert sp.tables_created == ['sp_first_point']
-    result = sp.execute(engine)
-    assert sp.tables_created == ['sp_first_point', 'sp_second_point', 'sp_third_point']
+    assert sps.tables_created == ['sp_first_point']
+    result = sps.execute(engine)
+    assert sps.tables_created == ['sp_first_point', 'sp_second_point', 'sp_third_point']
     assert result == expected_result
-    assert sp.to_sql()['sp_final_point'] == \
+    assert sps.to_sql()['sp_final_point'] == \
            'select "_index_skating_order", "skating_order", "city", "founding", "x" from ' \
            '"sp_third_point"   limit all'
 
     # executing multiple times doesn't create tables multiple times or changes the result.
-    result = sp.execute(engine)
-    result = sp.execute(engine)
+    result = sps.execute(engine)
+    result = sps.execute(engine)
     assert result == expected_result
 
     # Test clean up:
     # TODO: make test clean-up robust to failures half-way
+    remove_created_db_objects(sps, engine)
+
+
+def remove_created_db_objects(sps: Savepoints, engine: Engine):
+    """ Utility function: remove all tables and views that Savepoints has created. """
     with engine.connect() as conn:
-        for table in sp.tables_created:
-            conn.execute(f'drop table "{table}";')
-
-
+        for name, materialization in reversed(sps.created):
+            if materialization == Materialization.TABLE:
+                conn.execute(f'drop table "{name}";')
+            elif materialization == Materialization.VIEW:
+                conn.execute(f'drop view "{name}";')
+            else:
+                raise Exception("unhandled case")
