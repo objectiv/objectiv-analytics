@@ -3,8 +3,9 @@ Copyright 2021 Objectiv B.V.
 """
 import pytest
 
-from sql_models.model import SqlModelBuilder, CustomSqlModel
-from sql_models.sql_generator import to_sql
+from sql_models.graph_operations import get_node
+from sql_models.model import SqlModelBuilder, CustomSqlModel, Materialization
+from sql_models.sql_generator import to_sql, _check_hash_is_unique, to_sql_materialized_nodes
 from tests.unit.sql_models.test_graph_operations import get_simple_test_graph
 from tests.unit.sql_models.util import assert_roughly_equal_sql
 
@@ -261,3 +262,26 @@ def test_code_deduplication_multiple_reference_many_paths():
     assert sql
     assert sql.count('select 1 as val') == 1
     assert sql.count('one.val + two.val') == depth
+
+
+def test_detect_duplicate_hash_problems():
+    graph = Add.build(
+        one=SourceTable.build(),
+        two=SourceTable.build()
+    )
+    # All is fine
+    _check_hash_is_unique(graph, {})
+    sql = to_sql(graph)
+    assert sql
+    sql_statements = to_sql_materialized_nodes(graph)
+    assert sql_statements
+
+    # Change the materialization of ('one', ), but not of ('two', ). Now both will still have the same hash
+    # but different materialization. We won't allow this as it leads to problems with caching results.
+    get_node(graph, ('one',)).set_materialization(Materialization.VIEW)
+    with pytest.raises(ValueError, match='Two different SqlModels have the same hash'):
+        _check_hash_is_unique(graph, {})
+    with pytest.raises(ValueError, match='Two different SqlModels have the same hash'):
+        to_sql(graph)
+    with pytest.raises(ValueError, match='Two different SqlModels have the same hash'):
+        to_sql_materialized_nodes(graph)

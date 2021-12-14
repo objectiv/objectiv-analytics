@@ -398,9 +398,7 @@ class SqlModel(Generic[T]):
             1. generic_name
             2. sql
             3. properties
-            4. materialization
-            5. references, and recursively their sql, properties, materialization, and their references
-            6. specific_name
+            4. references, and recursively their sql, properties, materialization, and their references
         :return: 32 character string representation of md5 hash
         """
         data = {
@@ -547,9 +545,14 @@ class SqlModel(Generic[T]):
     def __eq__(self, other) -> bool:
         """
         Two SqlModels are equal if they have the same unique hash, and the same property_formatter.
-        This means the SqlModels effectively will lead to the same sql code when compiled. And
-        additionally, derived models (e.g. through .set()) will be equal too if they are derived in the
-        same way.
+
+        Materialization of the model, or of referenced models is not part of the equality check.
+
+        This means two equal SqlModels will compile to sql that when executed at the same time will give the
+        same result. However materialization differences can lead to difference in the actual queries, and
+
+        Additionally, derived models (e.g. through .set()) of two models that are equal will be equal too
+        if they are derived in the same way.
 
         This equality check does not take into account whether the classes are of the same (sub)class
         type, or whether the model_spec is the same type. As that ultimately won't affect the generated
@@ -574,7 +577,7 @@ class SqlModel(Generic[T]):
             self._property_formatter == other._property_formatter
 
     def __hash__(self) -> int:
-        """ python hash. Must not be confused with the unique hash that is self.hash """
+        """ python hash. Must not be confused with the semi-unique hash that is self.hash """
         return hash(self.hash)
 
 
