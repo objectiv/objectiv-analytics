@@ -15,48 +15,32 @@ _SQL = \
     '''
     with session_starts_{{id}} as (
         select
-            cookie_id as cookie_id,
-            event_id as event_id,
-            coalesce(
+            *,
+            case when coalesce(
                 extract(
                     epoch from (moment - lag(moment, 1)
-                        over (partition by cookie_id order by moment, event_id))
+                        over (partition by user_id order by moment, event_id))
                 ) > {session_gap_seconds},
                 true
-            ) as is_start_of_session,
-            moment as moment
+            ) then true end as is_start_of_session
         from {{extracted_contexts}}
     ),
     session_id_and_start_{{id}} as (
         select
-               -- TODO: do something smart so this can scale.
-               -- currently we always have to query all data. We want to have consistent session_ids,
-               -- but don't want to calculate them from scratch every time.
-               -- uuid_generate_v1() as session_id,
-               row_number() over (order by moment asc) as session_id,
-               cookie_id,
-               event_id,
-               moment as moment
+            *,
+            -- generates a session_start_id for each is_start_of_session
+            case
+                when is_start_of_session then
+                    row_number() over (partition by is_start_of_session order by moment asc)
+            end as session_start_id,
+            -- generates a unique number for each session, but not in the right order.
+            count(is_start_of_session) over (order by user_id, moment, event_id) as is_one_session
         from session_starts_{{id}}
-        where is_start_of_session
     )
     select
-            s.session_id as session_id,
-            row_number() over (partition by s.session_id order by d.moment, d.event_id asc)
-                as session_hit_number,
-            d.cookie_id as user_id,
-            d.*
-    from {{extracted_contexts}} as d
-    inner join session_id_and_start_{{id}} as s on s.cookie_id = d.cookie_id and s.moment <= d.moment
-    where not exists (
-        select *
-        from session_id_and_start_{{id}} as s2
-        where
-          -- a session start for the same cookie
-              s2.cookie_id = d.cookie_id
-          and s2.moment <= d.moment
-          -- and that session is closer to pq.moment than the selected session s
-          and s2.moment > s.moment
-    )
-    order by session_id, moment
+        *,
+        -- populates the correct session_id for all rows with the same value for is_one_session
+        first_value(session_start_id) over (partition by is_one_session order by moment) as session_id,
+        row_number() over (partition by is_one_session order by moment, event_id asc) as session_hit_number
+    from session_id_and_start_{{id}}
     '''
