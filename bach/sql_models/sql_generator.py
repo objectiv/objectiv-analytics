@@ -15,6 +15,11 @@ def to_sql(model: SqlModel) -> str:
     :param model: model to convert to sql
     :return: executable select query
     """
+    # We assume that if two models have the same hash, that they then are the same model. Verify that this
+    # assumption holds by running _check_hash_is_unique. If the assumption doesn't hold we'll get an early
+    # error.
+    _check_hash_is_unique(model, {})
+
     compiler_cache: Dict[str, List['SemiCompiledTuple']] = {}
     return _to_sql_materialized_node(model=model, compiler_cache=compiler_cache)
 
@@ -28,11 +33,11 @@ def to_sql_materialized_nodes(start_node: SqlModel, include_start_node=True) -> 
     :return: A dict of sql statements. The order of the items in the dict is significant: earlier statements
         will create views and/or tables that might be used by later statements.
     """
-    # TODO: Make sure we never have non-identical sql-models with the same hash. Either:
-    #  1) Traverse the tree and make sure that all models with the same hash are identical or throw an error
-    #  2) Use a singleton pattern to guarantee that there is only one instance of a node with a given hash
-    #  3) ??
-    # Contemplate this a bit, and add tests after implementing
+    # We assume that if two models have the same hash, that they then are the same model. Verify that this
+    # assumption holds by running _check_hash_is_unique. If the assumption doesn't hold we'll get an early
+    # error. todo: add tests
+    _check_hash_is_unique(start_node, {})
+
     result: Dict[str, str] = {}
     compiler_cache: Dict[str, List['SemiCompiledTuple']] = {}
     # find all nodes that are materialized as view or table, and the start_node if needed
@@ -115,6 +120,26 @@ class SemiCompiledTuple(NamedTuple):
     # quoted and escaped.
     quoted_cte_name: str
     sql: str
+
+
+def _check_hash_is_unique(model: SqlModel, seen: Dict[str, SqlModel]):
+    """
+    Recursively check all references models and check that if two models have the same hash, then they are
+    in fact equal. Will raise an error if two non-equal models share the same hash.
+
+    :param model: start point for recursive search
+    :param seen: mapping of hash to model, with all already seen models. Invoke this function with seen as
+        an empty dictionary.
+    """
+    if model.hash not in seen:
+        seen[model.hash] = model
+    elif seen[model.hash] != model:
+        raise ValueError(f'Two different SqlModels have the same hash. '
+                         f'Hash: {model.hash}; '
+                         f'Model 1: {seen[model.hash]}; '
+                         f'Model 2: {model}; ')
+    for ref in model.references.values():
+        _check_hash_is_unique(ref, seen)
 
 
 def _check_names_unique(models: Iterable[SqlModel]):
