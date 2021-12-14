@@ -8,7 +8,7 @@ def get_app(Dash, feature_frame, url_base_pathname='/', dash_options=None):
     external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
     event_dropdown_options = [{'label': i, 'value': i} for i in
-                              set(feature_frame[feature_frame.event_column].values)]
+                              set(feature_frame.event_type.values)]
     event_dropdown_options.append({'label': 'all', 'value': 'all'})
 
     features = [key for key, value in feature_frame.dtypes.items() if value == 'objectiv_location_stack']

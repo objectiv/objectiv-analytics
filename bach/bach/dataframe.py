@@ -9,12 +9,10 @@ from sqlalchemy.future import Connection
 
 from bach.savepoints import Savepoints
 from bach.expression import Expression, SingleValueExpression
-from bach.sql_model import BachSqlModel, SampleSqlModel
+from bach.sql_model import BachSqlModel
 from bach.types import get_series_type_from_dtype, get_dtype_from_db_dtype
-from sql_models.graph_operations import replace_node_in_graph, find_node
 from sql_models.model import SqlModel, Materialization
 from sql_models.sql_generator import to_sql
-from sql_models.util import quote_identifier
 
 if TYPE_CHECKING:
     from bach.partitioning import Window, GroupBy
@@ -673,7 +671,7 @@ class DataFrame:
         self._index = df.index
         self._data = df.data
         self._group_by = df.group_by
-        self._order_by = df._order_by
+        self._order_by = df.order_by
         return self
 
     def get_sample(self,

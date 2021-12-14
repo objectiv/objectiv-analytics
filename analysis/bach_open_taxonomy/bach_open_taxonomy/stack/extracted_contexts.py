@@ -16,10 +16,10 @@ _SQL = \
     SELECT event_id,
             day,
             moment,
-            cookie_id,
-            JSON_EXTRACT_PATH(value, 'global_contexts') AS global_contexts,
-            JSON_EXTRACT_PATH(value, 'location_stack') AS location_stack,
+            cookie_id AS user_id,
+            CAST(JSON_EXTRACT_PATH(value, 'global_contexts') AS jsonb) AS global_contexts,
+            CAST(JSON_EXTRACT_PATH(value, 'location_stack') AS jsonb) AS location_stack,
             value->>'_type' AS event_type,
-            JSON_EXTRACT_PATH(value, '_types') AS stack_event_types
+            CAST(JSON_EXTRACT_PATH(value, '_types') AS jsonb) AS stack_event_types
      FROM data
      '''

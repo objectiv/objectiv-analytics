@@ -1,11 +1,14 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-from bach.series import SeriesJsonb, SeriesString
+from bach.series import SeriesJsonb
 from bach.expression import Expression, quote_string, quote_identifier
-from bach.sql_model import BachSqlModel
+from bach.sql_model import SampleSqlModel
 from bach import DataFrame
-from bach.types import register_dtype
+from bach.types import register_dtype, get_dtype_from_db_dtype
+from bach_open_taxonomy.stack.util import sessionized_data_model
+from sql_models.graph_operations import find_node
+from bach.dataframe import _escape_parameter_characters
 
 
 class ObjectivStack(SeriesJsonb.Json):
@@ -239,143 +242,129 @@ class SeriesLocationStack(SeriesJsonb):
         return self.LocationStack(self)
 
 
-class FeatureFrame(DataFrame):
-    """
-    Class that is based on Bach DataFrame. It shares functionality with Bach DataFrame, but it is
-    focussed on feature creation. It allows you to create features on a small dataset and write them
-    to the entire dataset when done.
-    """
-
-    def __init__(
-            self,
-            engine,
-            base_node,
-            index,
-            series,
-            group_by,
-            order_by,
-            original_df,
-            location_stack_column,
-            event_column):
-        self._original_df = original_df
-        self.location_stack_column = location_stack_column
-        self.event_column = event_column
-        super().__init__(engine=engine,
-                         base_node=base_node,
-                         index=index,
-                         series=series,
-                         group_by=group_by,
-                         order_by=order_by)
+class ObjectivFrame(DataFrame):
+    # TODO what if you use the constructor to create a objectiv frame? nothing to prevent you from this.
+    # TODO get_sample returns a normal DataFrame
+    # TODO it is possible to change event_type and location_stack, but they are assumed to contain expected
+    #  data in this ObjectivFrame
 
     @classmethod
-    def from_data_frame(cls,
-                        df: DataFrame,
-                        location_stack_column: str,
-                        event_column: str,
-                        overwrite: bool = False,
-                        temp_table_name: str = 'objectiv_tmp_feature_data'):
+    def from_table(cls, engine):
+        table_name = 'data'  # todo make this a parameter
+
+        sql = f"""
+            select column_name, data_type
+            from information_schema.columns
+            where table_name = '{table_name}'
+            order by ordinal_position
         """
-        Instantiates a Feature Frame from an original Bach Data Frame. The Bach Data Frame should contain
-        a location stack column and an event column. The database will be queried to create a table with
-        all unique features.
+        with engine.connect() as conn:
+            res = conn.execute(sql)
+        dtypes = {x[0]: get_dtype_from_db_dtype(x[1]) for x in res.fetchall()}
 
-        :param df: The original Bach DataFrame
-        :param location_stack_column: The name of the column that contains the location stack.
-        :param event_column: The name of the column that contains the event type.
-        :param overwrite: If True, the temporary table to store the feature data will be overwritten if it
-            exists
-        :param temp_table_name: The name of the temporary table that will be used to store the feature data.
-        """
-        event_series, location_stack_series = cls.check_supported(df, location_stack_column, event_column)
+        if dtypes != {'event_id': 'uuid', 'day': 'date', 'moment': 'timestamp', 'cookie_id': 'uuid',
+                      'value': 'json'}:
+            raise KeyError(f'Expected columns not in table {table_name}')
 
-        feature_df = location_stack_series.to_frame()
-        feature_df[event_column] = event_series
-        feature_df['feature_hash'] = cls.hash_features(feature_df, location_stack_column, event_column)
+        index_dtype = {'event_id': dtypes.pop('event_id')}
+        # remove key that don't end up in final data.
+        dtypes.pop('value')
+        dtypes['user_id'] = dtypes.pop('cookie_id')
 
-        window = feature_df.groupby(feature_df['feature_hash']).window()
-        feature_df['event_count'] = window[event_column].count()
-        feature_df['event_number'] = window[event_column].window_row_number()
+        model = sessionized_data_model()
 
-        feature_df = feature_df.materialize('features')
+        dtypes.update({'session_id': 'int64',
+                       'session_hit_number': 'int64',
+                       'global_contexts': 'jsonb',
+                       'location_stack': 'jsonb',
+                       'event_type': 'string',
+                       'stack_event_types': 'jsonb'})
 
-        feature_df = feature_df[feature_df.event_number == 1][[location_stack_column,
-                                                               event_column,
-                                                               'feature_hash',
-                                                               'event_count']]
-        drop_table = ''
-        if overwrite:
-            drop_table = f'drop table if exists {temp_table_name};'
-        sql = f'''
-            {drop_table}
-            create temporary table {temp_table_name} AS
-            ({feature_df.view_sql()})
-        '''
-        with feature_df.engine.connect() as conn:
-            conn.execute(sql)
+        df = cls.get_instance(engine=engine,
+                              base_node=model,
+                              index_dtypes=index_dtype,
+                              dtypes=dtypes,
+                              group_by=None
+                              )
 
-        feature_df = feature_df.set_index('feature_hash')
+        df['global_contexts'] = df.global_contexts.astype('objectiv_global_context')
+        df['location_stack'] = df.location_stack.astype('objectiv_location_stack')
 
-        new_base_node = BachSqlModel(sql=f'select * from {temp_table_name}').instantiate()
-        new_index = {key: value.dtype for key, value in feature_df.index.items()}
-        new_data = {key: value.dtype for key, value in feature_df._data.items()}
-
-        feature_df_new = DataFrame.get_instance(feature_df.engine,
-                                                base_node=new_base_node,
-                                                index_dtypes=new_index,
-                                                dtypes=new_data,
-                                                group_by=None)
-
-        return FeatureFrame(engine=feature_df_new.engine,
-                            base_node=feature_df_new.base_node,
-                            index=feature_df_new.index,
-                            series=feature_df_new._data,
-                            group_by=None,
-                            order_by=None,
-                            original_df=df,
-                            location_stack_column=location_stack_column,
-                            event_column=event_column)
+        return df
 
     @staticmethod
-    def check_supported(df, location_stack_column, event_column):
-        if not isinstance(df[event_column], SeriesString):
-            raise TypeError('only string supported for event column')
-        if isinstance(df[location_stack_column], SeriesLocationStack):
-            location_stack_series = df[location_stack_column]
-        elif isinstance(df[location_stack_column], SeriesJsonb):
-            location_stack_series = df[location_stack_column].astype('objectiv_location_stack')
-        else:
-            raise TypeError('only jsonb type supported for location column')
+    def from_model():
+        raise NotImplementedError('Use ObjectivFrame.from_table(engine) to instantiate')
 
-        return df[event_column], location_stack_series.ls.feature_stack
+    @staticmethod
+    def from_pandas():
+        raise NotImplementedError('Use ObjectivFrame.from_table(engine) to instantiate')
 
-    @classmethod
-    def hash_features(cls, df, location_stack_column, event_column):
-        event_series, location_stack_series = cls.check_supported(df, location_stack_column, event_column)
+    def _hash_features(self, location_stack_column='location_stack'):
         expression_str = "md5(concat({} #>> {}, {}))"
         expression = Expression.construct(
             expression_str,
-            location_stack_series,
+            self[location_stack_column].ls.feature_stack,
             Expression.string_value('{}'),
-            event_series
+            self.event_type
         )
-        return location_stack_series.copy_override(dtype='string', expression=expression)
+        return self[location_stack_column].copy_override(dtype='string', expression=expression)
 
-    def write_to_full_frame(self):
-        """
-        Returns the original data frame on which this feature frame is based, but with all created
-        features added to it.
-        """
-        created_features = [x for x in self.data_columns if x not in [self.location_stack_column,
-                                                                      self.event_column,
-                                                                      'event_count']]
+    def _prepare_sample(self, location_stack_column='location_stack'):
+        df = self[[location_stack_column, 'event_type']]
+        df[location_stack_column] = df[location_stack_column].ls.feature_stack
+        feature_hash = df._hash_features(location_stack_column=location_stack_column)
+        window = df.groupby(feature_hash).window()
+        df['event_count'] = window['event_type'].count()
+        df['event_number'] = window['event_type'].window_row_number()
+        df = df.materialize('features')
+        original_node = df.get_current_node(name='before_featureing')
+        filter = df.event_number == 1
+        df = df[filter]
+        return df.drop(columns=['event_number']), original_node
 
-        feature_hash = self.hash_features(self._original_df,
-                                          self.location_stack_column,
-                                          self.event_column)
+    def create_sample_feature_frame(self, table_name, overwrite=False):
+        df, original_node = self._prepare_sample()
 
-        self._original_df['feature_hash'] = feature_hash
+        with df.engine.connect() as conn:
+            if overwrite:
+                sql = f'DROP TABLE IF EXISTS {quote_identifier(table_name)}'
+                sql = _escape_parameter_characters(conn, sql)
+                conn.execute(sql)
+            sql = f'create temporary table {quote_identifier(table_name)} as ({df.view_sql()})'
+            sql = _escape_parameter_characters(conn, sql)
+            conn.execute(sql)
 
-        return self._original_df.merge(self[created_features], left_on='feature_hash', right_index=True)
+        new_base_node = SampleSqlModel(table_name=table_name, previous=original_node, name='feature_sample')
+
+        return ObjectivFrame.get_instance(engine=df.engine,
+                                          base_node=new_base_node,
+                                          index_dtypes=df.index_dtypes,
+                                          dtypes=df.dtypes,
+                                          group_by=None,
+                                          order_by=None)
+
+    # def apply_feature_frame_sample_changes(self, feature_frame):
+    #     # todo some assertions that this works
+    #     # todo this way would be nice if we can apply changes directly on top of self (instead of merge)
+    #     #  merge is super slow
+    #
+    #     created_features = [x for x in feature_frame.data_columns if x not in ['location_stack',
+    #                                                                   'event_type',
+    #                                                                   'event_count']]
+    #
+    #     return self.merge(feature_frame.get_unsampled()[created_features], left_index=True,
+    #     right_index=True)
+
+    def apply_feature_frame_sample_changes(self, feature_frame):
+        created_features = [x for x in feature_frame.data_columns if x not in ['location_stack',
+                                                                               'event_type',
+                                                                               'event_count']]
+        df = feature_frame[['location_stack', 'event_type'] + created_features]
+        df['feature_hash'] = df._hash_features()
+        self['feature_hash'] = self._hash_features()
+
+        return self.merge(df[created_features + ['feature_hash']].reset_index(drop=True), on='feature_hash')
 
     def stack_flows_from_feature_df(self,
                                     stack_column: str = None,
@@ -387,17 +376,30 @@ class FeatureFrame(DataFrame):
         :param stack_column: The column that contains the stack for which the links will be calculated.
         :param count_method: The function for aggregating the data.
         """
-        import pandas as pd
-        df = self.to_pandas()
-        if stack_column is None:
-            stack_column = self.location_stack_column
-        contexts = df[stack_column].map(lambda x: [[a, y] for a, y in enumerate(x)]).explode()
-        contexts.dropna(inplace=True)
-        sankey_prep = df.join(pd.DataFrame(contexts.to_list(),
-                                           index=contexts.index,
-                                           columns=['context_index', 'context'])
-                              ).reset_index()
+        sampled_node_tuple = find_node(
+            start_node=self.base_node,
+            function=lambda node: isinstance(node, SampleSqlModel)
+        )
 
+        if sampled_node_tuple:
+            if sampled_node_tuple[0].generic_name == 'feature_sample':
+                df = self.copy_override()
+            else:
+                raise NotImplementedError('feature functions not available for sample data')
+        else:
+            df, _ = self._prepare_sample(location_stack_column=stack_column)
+        if stack_column is None:
+            stack_column = 'location_stack'
+        df['feature_hash'] = df._hash_features(location_stack_column=stack_column)
+
+        import pandas as pd
+        pdf = df.to_pandas()
+        contexts = pdf[stack_column].map(lambda x: [[a, y] for a, y in enumerate(x)]).explode()
+        contexts.dropna(inplace=True)
+        sankey_prep = pdf.join(pd.DataFrame(contexts.to_list(),
+                                            index=contexts.index,
+                                            columns=['context_index', 'context'])
+                               ).reset_index()
         sankey_prep = sankey_prep[['feature_hash', 'context_index', 'context', 'event_count']].sort_values(
             'context_index', ascending=False)
         sankey_prep['source'] = sankey_prep.context.map(repr).astype('str')
@@ -429,7 +431,7 @@ class FeatureFrame(DataFrame):
             text_in_title = str(text_in_title)
 
         if stack_column is None:
-            stack_column = self.location_stack_column
+            stack_column = 'location_stack'
         df = self.stack_flows_from_feature_df(stack_column)
         node = dict(
             pad=15,
@@ -444,29 +446,3 @@ class FeatureFrame(DataFrame):
         fig.update_layout(title_text=text_in_title, font_size=10)
 
         return fig
-
-    def copy_override(self,
-                      engine=None,
-                      base_node=None,
-                      index=None,
-                      series=None,
-                      group_by=None,
-                      order_by=None,
-                      index_dtypes=None,
-                      series_dtypes=None,
-                      single_value=None,
-                      **kwargs
-                      ):
-        return super().copy_override(engine=engine,
-                                     base_node=base_node,
-                                     index=index,
-                                     series=series,
-                                     group_by=group_by,
-                                     order_by=order_by,
-                                     index_dtypes=index_dtypes,
-                                     series_dtypes=series_dtypes,
-                                     single_value=single_value,
-                                     original_df=self._original_df,
-                                     location_stack_column=self.location_stack_column,
-                                     event_column=self.event_column,
-                                     **kwargs)

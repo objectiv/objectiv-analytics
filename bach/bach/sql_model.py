@@ -65,11 +65,11 @@ class SampleSqlModel(SqlModel):
 
     See the DataFrame.sample() implementation for more information
     """
-    def __init__(self, table_name: str, previous: SqlModel):
+    def __init__(self, table_name: str, previous: SqlModel, name: str = 'sample_node'):
         self.previous = previous
         sql = 'SELECT * FROM {table_name}'
         super().__init__(
-            model_spec=CustomSqlModel(sql=sql, name='sample_node'),
+            model_spec=CustomSqlModel(sql=sql, name=name),
             properties={'table_name': quote_identifier(table_name)},
             references={},
             materialization=Materialization.CTE

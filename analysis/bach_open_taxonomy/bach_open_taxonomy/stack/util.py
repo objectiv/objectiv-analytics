@@ -9,7 +9,6 @@ from sql_models.model import SqlModel
 
 def basic_feature_model(session_gap_seconds=1800) -> SqlModel:
     """ Give a linked BasicFeatures model"""
-    # hashed_features = HashedFeatures(extracted_contexts=ExtractedContexts())
     extracted_contexts = ExtractedContexts()
     return BasicFeatures.build(
         sessionized_data=SessionizedData(
@@ -17,3 +16,12 @@ def basic_feature_model(session_gap_seconds=1800) -> SqlModel:
             extracted_contexts=extracted_contexts
         )
     )
+
+
+def sessionized_data_model(session_gap_seconds=1800) -> SqlModel:
+    """ Give a linked SessionizedData model"""
+    extracted_contexts = ExtractedContexts()
+    return SessionizedData.build(
+            session_gap_seconds=session_gap_seconds,
+            extracted_contexts=extracted_contexts
+        )
