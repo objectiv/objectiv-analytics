@@ -328,13 +328,36 @@ class DataFrame:
         return {column: data.dtype for column, data in self.data.items()}
 
     @property
-    def group_by(self):
+    def group_by(self) -> Optional['GroupBy']:
         """
         Get this DataFrame's grouping, if any.
 
         If `group_by` is not None, the DataFrame can be used to perform aggregations on.
         """
         return copy(self._group_by)
+
+    @property
+    def is_materialized(self) -> bool:
+        """
+        Return true if this DataFrame is in a materialized state, i.e. all information about the
+        DataFrame's values is encoded in self.base_node.
+
+        A DataFrame that's freshly constructed with :py:meth:`from_table`,
+        :py:meth:`from_model`, or :py:meth:`from_pandas` will be in a materialized state. Operations on such
+        a DataFrame will change it to be not materialized. Calling :py:meth:`materialize` on a
+        non-materialized DataFrame will return a new DataFrame that is materialized.
+
+        TODO: a known problem is that DataFrames with 'json' columns are never in a materialized state, and
+         cannot be materialized with materialize()
+
+        :returns: True if this DataFrame is in a materialized state, False otherwise
+        """
+        if self.group_by or self.order_by:
+            return False
+        for name, series in self.all_series.items():
+            if series.expression != Expression.column_reference(name):
+                return False
+        return True
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, DataFrame):
@@ -363,7 +386,7 @@ class DataFrame:
             order by ordinal_position;
         """
         with engine.connect() as conn:
-            sql = _escape_parameter_characters(conn, sql)
+            sql = escape_parameter_characters(conn, sql)
             res = conn.execute(sql)
         return {x[0]: get_dtype_from_db_dtype(x[1]) for x in res.fetchall()}
 
@@ -558,31 +581,39 @@ class DataFrame:
         make sense for very large expressions, or for non-deterministic expressions (e.g. see
         :py:meth:`SeriesUuid.sql_gen_random_uuid`).
 
+        TODO: a known problem is that DataFrames with 'json' columns cannot be fully materialized.
+
         :param node_name: The name of the node that's going to be created
-        :param inplace: Perform operation on self if ``inplace=True``, or create a copy. Not supported yet.
+        :param inplace: Perform operation on self if ``inplace=True``, or create a copy.
         :param limit: The limit (slice, int) to apply.
-        :returns: New DataFrame with the current DataFrame's state as base_node
+        :returns: DataFrame with the current DataFrame's state as base_node
 
         .. note::
             Calling materialize() resets the order of the dataframe. Call :py:meth:`sort_values()` again on
             the result if order is important.
         """
-        if inplace:
-            raise NotImplementedError("inplace materialization is not supported")
-
         index_dtypes = {k: v.dtype for k, v in self._index.items()}
         series_dtypes = {k: v.dtype for k, v in self._data.items()}
-
         node = self.get_current_node(name=node_name, limit=limit)
-        return self.copy_override(
+
+        df = self.get_instance(
+            engine=self.engine,
             base_node=node,
             index_dtypes=index_dtypes,
-            series_dtypes=series_dtypes,
-            group_by=[None],
-            # materializing resets any sorting as we don't have a way to translate the sorting expressions
-            # to new columns reliably. This needs attention # TODO
+            dtypes=series_dtypes,
+            group_by=None,
             order_by=[]
         )
+
+        if not inplace:
+            return df
+        self._engine = df.engine
+        self._base_node = df.base_node
+        self._index = df.index
+        self._data = df.data
+        self._group_by = df.group_by
+        self._order_by = df.order_by
+        return self
 
     def get_sample(self,
                    table_name: str,
@@ -599,6 +630,9 @@ class DataFrame:
         Use :py:meth:`get_unsampled` to switch back to the unsampled data later on. This returns a new
         DataFrame with all operations that have been done on the sample, applied to that DataFrame.
 
+        This function requires the DataFrame to be in a materialized state (see :py:attr:`is_materialized`),
+        otherwise an exception is raised.
+
         :param table_name: the name of the underlying sql table that stores the sampled data.
         :param filter: a filter to apply to the dataframe before creating the sample. If a filter is applied,
             sample_percentage is ignored and thus the bernoulli sample creation is skipped.
@@ -613,54 +647,14 @@ class DataFrame:
             All data in the DataFrame to be sampled is queried to create the sample.
         """
         # todo if_exists and overwrite are two different syntax for the same thing. should we align?
-        if sample_percentage is None and filter is None:
-            raise ValueError('Either sample_percentage or filter must be set')
-
-        original_node = self.get_current_node(name='before_sampling')
-        df = self
-        if filter is not None:
-            sample_percentage = None
-            from bach.series import SeriesBoolean
-            if not isinstance(filter, SeriesBoolean):
-                raise TypeError('Filter parameter needs to be a SeriesBoolean instance.')
-            # Boolean argument implies return type of self[filter], help mypy a bit
-            df = cast('DataFrame', self[filter])
-
-        if df._group_by is not None:
-            raise NotImplementedError('Dataframes that have an active grouping can currently not be sampled. '
-                                      'Call df.materialize() first.')
-
-        with df.engine.connect() as conn:
-            if overwrite:
-                sql = f'DROP TABLE IF EXISTS {quote_identifier(table_name)}'
-                sql = _escape_parameter_characters(conn, sql)
-                conn.execute(sql)
-
-            if sample_percentage:
-                repeatable = f'repeatable ({seed})' if seed else ''
-
-                sql = f'''
-                    create temporary table tmp_table_name on commit drop as
-                    ({df.view_sql()});
-                    create temporary table {quote_identifier(table_name)} as
-                    (select * from tmp_table_name
-                    tablesample bernoulli({sample_percentage}) {repeatable})
-                '''
-            else:
-                sql = f'create temporary table {quote_identifier(table_name)} as ({df.view_sql()})'
-            sql = _escape_parameter_characters(conn, sql)
-            conn.execute(sql)
-
-        # Use SampleSqlModel, that way we can keep track of the current_node and undo this sampling
-        # in get_unsampled() by switching this new node for the old node again.
-        new_base_node = SampleSqlModel(table_name=table_name, previous=original_node)
-
-        return DataFrame.get_instance(
-            engine=df.engine,
-            base_node=new_base_node,
-            index_dtypes=df.index_dtypes,
-            dtypes=df.dtypes,
-            group_by=None
+        from bach.sample import get_sample
+        return get_sample(
+            df=self,
+            table_name=table_name,
+            filter=filter,
+            sample_percentage=sample_percentage,
+            overwrite=overwrite,
+            seed=seed
         )
 
     def get_unsampled(self) -> 'DataFrame':
@@ -676,29 +670,8 @@ class DataFrame:
 
         :returns: an unsampled copy of the current sampled DataFrame.
         """
-        df = self
-        if df._group_by:
-            df = df.materialize(node_name='get_unsampled')
-
-        # The returned DataFrame has a modified base_node graph, in which the node that introduced the
-        # sampling is removed.
-        sampled_node_tuple = find_node(
-            start_node=df.base_node,
-            function=lambda node: isinstance(node, SampleSqlModel)
-        )
-        if sampled_node_tuple is None:
-            raise ValueError('No sampled node found. Cannot un-sample data that has not been sampled.')
-
-        assert isinstance(sampled_node_tuple.model, SampleSqlModel)  # help mypy
-        updated_graph = replace_node_in_graph(
-            start_node=df.base_node,
-            reference_path=sampled_node_tuple.reference_path,
-            replacement_model=sampled_node_tuple.model.previous
-        )
-
-        index = {s.name: s.copy_override(base_node=updated_graph) for s in df._index.values()}
-        series = {s.name: s.copy_override(base_node=updated_graph, index=index) for s in df._data.values()}
-        return df.copy_override(base_node=updated_graph, index=index, series=series)
+        from bach.sample import get_unsampled
+        return get_unsampled(df=self)
 
     def __getitem__(self,
                     key: Union[str, List[str], Set[str], slice, 'SeriesBoolean']) -> DataFrameOrSeries:
@@ -1359,7 +1332,7 @@ class DataFrame:
                      if series.dtype_to_pandas is not None}
 
             # read_sql_query expects a parameterized query, so we need to escape the parameter characters
-            sql = _escape_parameter_characters(conn, sql)
+            sql = escape_parameter_characters(conn, sql)
             pandas_df = pandas.read_sql_query(sql, conn).astype(dtype)
 
             if len(self._index):
@@ -1441,7 +1414,7 @@ class DataFrame:
 
         limit_clause = Expression.construct('' if limit_str is None else f'{limit_str}')
         where_clause = where_clause if where_clause else Expression.construct('')
-        if self._group_by:
+        if self.group_by:
 
             not_aggregated = [s.name for s in self._data.values()
                               if not s.expression.has_aggregate_function]
@@ -1525,11 +1498,22 @@ class DataFrame:
         combined columns of both dataframes, and the rows that result from joining on the specified columns.
         The columns that are joined on can consist (partially or fully) out of index columns.
 
-        See :py:meth:`bach.merge.merge` for more information.
         The interface of this function is similar to pandas' merge, but the following parameters are not
         supported: `sort`, `copy`, `indicator`, and `validate`.
         Additionally when merging two frames that have conflicting columns names, and joining on indices,
         then the resulting columns/column names can differ slightly from Pandas.
+
+
+        :param right: DataFrame or Series to join on self
+        :param how: supported values: {‘left’, ‘right’, ‘outer’, ‘inner’, ‘cross’}
+        :param on: optional, column(s) to join left and right on.
+        :param left_on: optional, column(s) from the left df to join on
+        :param right_on: optional, column(s) from the right df/series to join on
+        :param left_index: If true uses the index of the left df as columns to join on
+        :param right_index: If true uses the index of the right df/series as columns to join on
+        :param suffixes: Tuple of two strings. Will be used to suffix duplicate column names. Must make
+            column names unique
+        :return: A new Dataframe. The original frames are not modified.
         """
         from bach.merge import merge
         return merge(
@@ -1878,7 +1862,7 @@ def dict_name_series_equals(a: Dict[str, 'Series'], b: Dict[str, 'Series']):
     )
 
 
-def _escape_parameter_characters(conn: Connection, raw_sql: str) -> str:
+def escape_parameter_characters(conn: Connection, raw_sql: str) -> str:
     """
     Return a modified copy of the given sql with the query-parameter special characters escaped.
     e.g. if the connection uses '%' to mark a parameter, then all occurrences of '%' will be replaced by '%%'

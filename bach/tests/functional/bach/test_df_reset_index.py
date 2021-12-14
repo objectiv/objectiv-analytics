@@ -142,13 +142,11 @@ def test_reset_index_materialize():
     assert list(bt.index.keys()) == ['municipality']
     assert list(rbt.index.keys()) == []
 
-    # inplace not supported when materialization is needed, as we can not make those changes
-    # to a dataframe yet.
-    with pytest.raises(NotImplementedError,
-                       match="inplace materialization is not supported"):
-        bt.reset_index(inplace=True)
 
-    for r in [bt, rbt]:
+    bt_copy = bt.copy()
+    bt_copy.reset_index(inplace=True)
+
+    for r in [bt, rbt, bt_copy]:
         for s in r.index.values():
             assert(s.index == {})
         for s in r.data.values():

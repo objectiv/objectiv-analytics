@@ -1,8 +1,10 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+import pandas
 import pytest
 
+from bach import from_pandas
 from sql_models.graph_operations import get_graph_nodes_info
 from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data
 
@@ -93,24 +95,40 @@ def test_sample_operations_filter():
     )
 
 
+def test_combine_unsampled_with_before_data():
+    # Test that the get_unsampled() df has a base_node and state that is compatible with the base_node and
+    # state of the original df
+    dff = get_bt_with_test_data(True)
+    dff_s = dff[['municipality', 'city']].get_sample(
+        'sample_example_table', overwrite=True, sample_percentage=50
+    )
+    dff_s['e'] = dff_s.city + '_extended'
+    new_dff = dff_s.get_unsampled()
+    dff['e'] = new_dff.e
+
+
 def test_get_unsampled_multiple_nodes():
     # 1. Start with dataframe with multiple nodes in graph
     # 2. Create sampled dataframe
     # 3. Add node to sampled dataframe
     # 4. Go back to unsampled data
     bt = get_bt_with_test_data(False)
+    assert len(get_graph_nodes_info(bt.base_node)) == 1
     bt = bt[['municipality', 'inhabitants', 'founding']]
     bt['inhabitants_more'] = bt['inhabitants'] + 1000
     bt = bt.materialize()
     bt['inhabitants_more'] = bt['inhabitants_more'] + 1000
+    bt = bt.materialize()
 
     node_count_bt = len(get_graph_nodes_info(bt.base_node))
-    assert node_count_bt == 2
+    assert node_count_bt == 3
 
     bt_sample = bt.get_sample(table_name='test_data_sample',
                               sample_percentage=50,
                               seed=200,
                               overwrite=True)
+    # bt_sample is based on newly created table, so there will only be a single node in the graph
+    assert len(get_graph_nodes_info(bt_sample.base_node)) == 1
     bt_sample = bt_sample[['municipality', 'inhabitants_more', 'founding']]
     bt_sample['inhabitants_plus_3000'] = bt_sample['inhabitants_more'] + 1000
     del bt_sample['inhabitants_more']
@@ -126,7 +144,7 @@ def test_get_unsampled_multiple_nodes():
 
     node_count_bt2 = len(get_graph_nodes_info(bt2.base_node))
     # since sample was grouped, it needs to materialize internally, we expect one more node
-    assert node_count_bt2 == (node_count_bt + node_count_bt_sample + 1) == 5
+    assert node_count_bt2 == (node_count_bt + node_count_bt_sample) == 5
 
     with pytest.raises(ValueError, match='has not been sampled'):
         bt2.get_unsampled()

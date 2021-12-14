@@ -144,7 +144,7 @@ def test_is_constant():
     assert not WindowFunctionExpression.construct('agg({}, {}, {})', const1, const2, const3).is_constant
 
 
-def test_is_constant():
+def test_is_single_value():
     df = get_fake_df(['i'], ['duration', 'irrelevant'])
     notsingle1 = Expression.column_reference('year')
     notsingle2 = Expression.construct('cast({} as bigint)', df.duration)
