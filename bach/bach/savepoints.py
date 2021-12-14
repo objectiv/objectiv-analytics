@@ -195,9 +195,6 @@ class Savepoints:
                 continue
             filtered_statements[name] = sql
 
-        print(f'filtered statements: {filtered_statements}')
-        print(f'drop statements: {drop_statements}')
-
         result = {}
         with engine.connect() as conn:
             with conn.begin() as transaction:
