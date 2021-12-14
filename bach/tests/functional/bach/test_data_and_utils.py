@@ -138,7 +138,7 @@ def _get_bt(
     # We don't even renew the 'engine', as creating the database connection takes a bit of time too. If
     # we ever do into trouble because of stale connection or something, then we can change it at that point
     # in time.
-    return _TABLE_DATAFRAME_CACHE[lookup_key].copy_override()
+    return _TABLE_DATAFRAME_CACHE[lookup_key].copy(detach_base_node=True)
 
 
 def get_pandas_df(dataset: List[List[Any]], columns: List[str]) -> pandas.DataFrame:

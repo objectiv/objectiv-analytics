@@ -1,4 +1,4 @@
-from copy import copy
+from copy import copy, deepcopy
 from typing import List, Set, Union, Dict, Any, Optional, Tuple, cast, NamedTuple, \
     TYPE_CHECKING, Callable
 from uuid import UUID
@@ -8,12 +8,10 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.future import Connection
 
 from bach.expression import Expression, SingleValueExpression
-from bach.sql_model import BachSqlModel, SampleSqlModel
+from bach.sql_model import BachSqlModel
 from bach.types import get_series_type_from_dtype, get_dtype_from_db_dtype
-from sql_models.graph_operations import replace_node_in_graph, find_node
 from sql_models.model import SqlModel
 from sql_models.sql_generator import to_sql
-from sql_models.util import quote_identifier
 
 if TYPE_CHECKING:
     from bach.partitioning import Window, GroupBy
@@ -185,77 +183,6 @@ class DataFrame:
         if set(index.keys()) & set(series.keys()):
             raise ValueError(f"The names of the index series and data series should not intersect. "
                              f"Index series: {sorted(index.keys())} data series: {sorted(series.keys())}")
-
-    def copy_override(
-            self,
-            engine: Engine = None,
-            base_node: SqlModel[BachSqlModel] = None,
-            index: Dict[str, 'Series'] = None,
-            series: Dict[str, 'Series'] = None,
-            group_by: List[Union['GroupBy', None]] = None,  # List so [None] != None
-            order_by: List[SortColumn] = None,
-            index_dtypes: Dict[str, str] = None,
-            series_dtypes: Dict[str, str] = None,
-            single_value: bool = False,
-            **kwargs
-    ) -> 'DataFrame':
-        """
-        INTERNAL
-
-        Create a copy of self, with the given arguments overridden
-
-        Big fat warning: group_by can legally be None, but if you want to set that,
-        set the param in a list: [None], or [someitem]. If you set None, it will be left alone.
-
-        There are three special parameters: index_dtypes, series_dtypes and single_value. These are used to
-        create new index and data series iff index and/or series are not given. `single_value` determines
-        whether the Expressions for those newly created series should be SingleValueExpressions or not.
-        All other arguments are passed through to `__init__`, filled with current instance values if None is
-        given in the parameters.
-        """
-
-        if index_dtypes and index:
-            raise ValueError("Can not set both index and index_dtypes")
-
-        if series_dtypes and series:
-            raise ValueError("Can not set both series and series_dtypes")
-
-        args = {
-            'engine': engine if engine is not None else self.engine,
-            'base_node': base_node if base_node is not None else self._base_node,
-            'index': index if index is not None else self._index,
-            'series': series if series is not None else self._data,
-            'group_by': self._group_by if group_by is None else group_by[0],
-            'order_by': order_by if order_by is not None else self._order_by
-        }
-
-        expression_class = SingleValueExpression if single_value else Expression
-
-        if index_dtypes:
-            new_index: Dict[str, Series] = {}
-            for key, value in index_dtypes.items():
-                index_type = get_series_type_from_dtype(value)
-                new_index[key] = index_type(
-                    engine=args['engine'], base_node=args['base_node'],
-                    index={},  # Empty index for index series
-                    name=key, expression=expression_class.column_reference(key),
-                    group_by=args['group_by']
-                )
-            args['index'] = new_index
-
-        if series_dtypes:
-            new_series: Dict[str, Series] = {}
-            for key, value in series_dtypes.items():
-                series_type = get_series_type_from_dtype(value)
-                new_series[key] = series_type(
-                    engine=args['engine'], base_node=args['base_node'],
-                    index=args['index'],
-                    name=key, expression=expression_class.column_reference(key),
-                    group_by=args['group_by']
-                )
-                args['series'] = new_series
-
-        return self.__class__(**args, **kwargs)
 
     @property
     def engine(self):
@@ -556,20 +483,119 @@ class DataFrame:
             order_by=order_by
         )
 
-    def copy(self):
+    def copy_override(
+            self,
+            engine: Engine = None,
+            base_node: SqlModel[BachSqlModel] = None,
+            index: Dict[str, 'Series'] = None,
+            series: Dict[str, 'Series'] = None,
+            group_by: List[Union['GroupBy', None]] = None,  # List so [None] != None
+            order_by: List[SortColumn] = None,
+            index_dtypes: Dict[str, str] = None,
+            series_dtypes: Dict[str, str] = None,
+            single_value: bool = False,
+            **kwargs
+    ) -> 'DataFrame':
+        """
+        INTERNAL
+
+        Create a copy of self, with the given arguments overridden
+
+        Big fat warning: group_by can legally be None, but if you want to set that,
+        set the param in a list: [None], or [someitem]. If you set None, it will be left alone.
+
+        There are three special parameters: index_dtypes, series_dtypes and single_value. These are used to
+        create new index and data series iff index and/or series are not given. `single_value` determines
+        whether the Expressions for those newly created series should be SingleValueExpressions or not.
+        All other arguments are passed through to `__init__`, filled with current instance values if None is
+        given in the parameters.
+        """
+
+        if index_dtypes and index:
+            raise ValueError("Can not set both index and index_dtypes")
+
+        if series_dtypes and series:
+            raise ValueError("Can not set both series and series_dtypes")
+
+        args = {
+            'engine': engine if engine is not None else self.engine,
+            'base_node': base_node if base_node is not None else self._base_node,
+            'index': index if index is not None else self._index,
+            'series': series if series is not None else self._data,
+            'group_by': self._group_by if group_by is None else group_by[0],
+            'order_by': order_by if order_by is not None else self._order_by
+        }
+
+        expression_class = SingleValueExpression if single_value else Expression
+
+        if index_dtypes:
+            new_index: Dict[str, Series] = {}
+            for key, value in index_dtypes.items():
+                index_type = get_series_type_from_dtype(value)
+                new_index[key] = index_type(
+                    engine=args['engine'], base_node=args['base_node'],
+                    index={},  # Empty index for index series
+                    name=key, expression=expression_class.column_reference(key),
+                    group_by=args['group_by']
+                )
+            args['index'] = new_index
+
+        if series_dtypes:
+            new_series: Dict[str, Series] = {}
+            for key, value in series_dtypes.items():
+                series_type = get_series_type_from_dtype(value)
+                new_series[key] = series_type(
+                    engine=args['engine'], base_node=args['base_node'],
+                    index=args['index'],
+                    name=key, expression=expression_class.column_reference(key),
+                    group_by=args['group_by']
+                )
+                args['series'] = new_series
+
+        return self.__class__(**args, **kwargs)
+
+    def copy_override_base_node(self, base_node: SqlModel) -> 'DataFrame':
+        """
+        INTERNAL
+
+        Create a copy of self, with the base_node overridden in both the returned DataFrame and the Series
+        that are part of that DataFrame.
+
+        This is different from :py:meth:`copy_override()`, which when provided with a new base_node only
+        overrides the base_node of the DataFrame and not of the Series that make up the DataFrame.
+        """
+        new_index = {}
+        new_data = {}
+        for name, index in self.index.items():
+            new_index[name] = index.copy_override(base_node=base_node)
+        for name, series in self.data.items():
+            new_data[name] = series.copy_override(index=new_index, base_node=base_node)
+        return self.copy_override(
+            base_node=base_node,
+            index=new_index,
+            series=new_data
+        )
+
+    def copy(self, detach_base_node=False) -> 'DataFrame':
         """
         Return a copy of this DataFrame.
 
         As this dataframe only represents data in the backing SQL store, and does not contain any data,
         this is a metadata copy only, no actual data is duplicated and changes to the underlying data
         will represented in both copy and original.
-        Changes to data, index, sorting, grouping etc. on the copy will not affect the original.
+
+        Changes to data, index, sorting, grouping etc. on the copy will not affect the original. However
+        changes to the base_node in either the original dataframe or the copy are shared with the other
+        dataframe, unless detach_base_node is set.
 
         If you want to create a snapshot of the data, have a look at :py:meth:`get_sample()`
 
+        :params detach_base_node: create a deepcopy of the base_node
         :returns: a copy of the dataframe
         """
-        return self.copy_override()
+        if not detach_base_node:
+            return self.copy_override()
+        return self.copy_override_base_node(base_node=deepcopy(self.base_node))
 
     def materialize(self, node_name='manual_materialize', inplace=False, limit: Any = None) -> 'DataFrame':
         """
