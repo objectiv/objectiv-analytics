@@ -53,26 +53,9 @@ jobs:
           cd tracker
           yarn test:ci:coverage
 
-      - name: Send coverage to Coveralls (Core Tracker)
+      - name: Send coverage to Coveralls
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          base-path: tracker/core/tracker
-          path-to-lcov: tracker/core/tracker/coverage/lcov.info
-          git-branch: 'core-tracker'
-
-      - name: Send coverage to Coveralls (Web DocumentContext Plugin)
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          base-path: tracker/plugins/web-document-context
-          path-to-lcov: tracker/plugins/web-document-context/coverage/lcov.info
-          git-branch: 'plugin-web-document-context'
-
-      - name: Send coverage to Coveralls (BrowserTracker)
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          base-path: tracker/trackers/browser
-          path-to-lcov: tracker/trackers/browser/coverage/lcov.info
-          git-branch: 'browser-tracker'
+          base-path: tracker
+          path-to-lcov: tracker/coverage/lcov.info
