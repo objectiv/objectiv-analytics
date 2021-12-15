@@ -22,6 +22,7 @@
     "test": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-angular --verbose run test",
     "test:ci": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-angular --verbose run test:ci",
     "test:coverage": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-angular --verbose run test:coverage",
+    "test:ci:coverage": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-angular --verbose run test:ci:coverage",
     "check:dependencies": "yarn workspaces foreach --exclude root --exclude @objectiv/tracker-angular --verbose run check:dependencies",
     "publish": "yarn check:dependencies && yarn workspaces foreach --exclude root --exclude @objectiv/utilities --verbose run npm-publish",
     "publish:verdaccio": "yarn workspaces foreach --exclude root --exclude @objectiv/utilities --verbose run npm-publish:verdaccio",

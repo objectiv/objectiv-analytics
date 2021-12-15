@@ -165,6 +165,10 @@ Runs the tests for all packages in CI mode.
 Runs the tests for all packages and collects coverage.
 Coverage output will be produced in a `/coverage` folder under each package.
 
+### `yarn test:ci:coverage`
+Runs the tests for all packages and collects coverage in CI mode.
+Coverage output will be produced in a `/coverage` folder under each package.
+
 ### `yarn build`
 Builds all packages.
 Build output will be produced in a `/dist` folder under each package.

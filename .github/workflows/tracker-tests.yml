@@ -17,20 +17,42 @@ jobs:
         with:
           node-version: '14'
           check-latest: true
+
       - name: Install monorepo dependencies
         run: |
           cd tracker
           yarn install
-      - name: Run tests for all packages
-        run: |
-          cd tracker
-          yarn test:ci
+
       - name: Check dependencies
         run: |
           cd tracker
           yarn check:dependencies
-      - name: test if TS schema is up to date
+
+      - name: Test if TS schema is up to date
         run: |
           cd tracker
           yarn utils:generate
           test $(git status -s -uno | wc -l) -eq 0
+
+      - name: Run tests for all packages with coverage
+        run: |
+          cd tracker
+          yarn test:ci:coverage
+
+      - name: Send coverage to Coveralls (Core Tracker)
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          base-path: tracker/core/tracker
+
+      - name: Send coverage to Coveralls (Web DocumentContext Plugin)
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          base-path: tracker/plugins/web-document-context
+
+      - name: Send coverage to Coveralls (BrowserTracker)
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          base-path: tracker/trackers/browser
