@@ -35,7 +35,7 @@ def to_sql_materialized_nodes(start_node: SqlModel, include_start_node=True) -> 
     """
     # We assume that if two models have the same hash, that they then are the same model. Verify that this
     # assumption holds by running _check_hash_is_unique. If the assumption doesn't hold we'll get an early
-    # error. todo: add tests
+    # error.
     _check_hash_is_unique(start_node, {})
 
     result: Dict[str, str] = {}

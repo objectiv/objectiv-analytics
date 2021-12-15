@@ -8,7 +8,7 @@ from bach import DataFrame
 from bach.types import register_dtype, get_dtype_from_db_dtype
 from bach_open_taxonomy.stack.util import sessionized_data_model
 from sql_models.graph_operations import find_node
-from bach.dataframe import _escape_parameter_characters
+from bach.dataframe import escape_parameter_characters
 
 
 class ObjectivStack(SeriesJsonb.Json):
@@ -329,10 +329,10 @@ class ObjectivFrame(DataFrame):
         with df.engine.connect() as conn:
             if overwrite:
                 sql = f'DROP TABLE IF EXISTS {quote_identifier(table_name)}'
-                sql = _escape_parameter_characters(conn, sql)
+                sql = escape_parameter_characters(conn, sql)
                 conn.execute(sql)
             sql = f'create temporary table {quote_identifier(table_name)} as ({df.view_sql()})'
-            sql = _escape_parameter_characters(conn, sql)
+            sql = escape_parameter_characters(conn, sql)
             conn.execute(sql)
 
         new_base_node = SampleSqlModel(table_name=table_name, previous=original_node, name='feature_sample')
