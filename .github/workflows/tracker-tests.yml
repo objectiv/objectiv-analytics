@@ -7,6 +7,9 @@ on:
       - 'tracker/**'
       # Also run if we update this file, or any other workflow
       - '.github/**'
+  pull_request:
+    paths:
+      - 'tracker/**'
 
 jobs:
   run-tracker-tests:
