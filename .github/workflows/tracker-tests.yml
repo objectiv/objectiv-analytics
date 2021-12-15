@@ -58,18 +58,18 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           base-path: tracker/core/tracker
-          path-to-lcov: tracker/core/tracker/coverage
+          path-to-lcov: tracker/core/tracker/coverage/lcov.info
 
       - name: Send coverage to Coveralls (Web DocumentContext Plugin)
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           base-path: tracker/plugins/web-document-context
-          path-to-lcov: tracker/plugins/web-document-context/coverage
+          path-to-lcov: tracker/plugins/web-document-context/coverage/lcov.info
 
       - name: Send coverage to Coveralls (BrowserTracker)
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           base-path: tracker/trackers/browser
-          path-to-lcov: tracker/trackers/browser/coverage
+          path-to-lcov: tracker/trackers/browser/coverage/lcov.info
