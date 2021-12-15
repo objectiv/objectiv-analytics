@@ -31,9 +31,13 @@ class ExecutedStatement(NamedTuple):
     name: str
     sql: str
     materialization: Materialization
+    node_hash: str
 
 
 class Savepoints:
+    """
+    TODO: comments
+    """
 
     def __init__(self):
         self._entries: Dict[str, 'DataFrame'] = {}
@@ -41,6 +45,7 @@ class Savepoints:
 
     @property
     def created(self) -> List[Tuple[str, Materialization]]:
+        """ List of all created database objects, in order of creation. """
         return [
             (name, exec_statement.materialization)
             for name, exec_statement in self._executed_statements.items()
@@ -71,9 +76,9 @@ class Savepoints:
             raise ValueError(f'Savepoint with name "{name}" already exists.')
         if name is None or not re.match('^[a-zA-Z0-9_]+$', name):
             raise ValueError(f'Name must match ^[a-zA-Z0-9_]+$, name: "{name}"')
-
         self._entries[name] = df_copy
-        # TODO: should we execute the
+
+    # todo: also support removing saveponts
 
     def get_df(self, savepoint_name: str) -> 'DataFrame':
         return self._entries[savepoint_name].copy()
@@ -132,15 +137,29 @@ class Savepoints:
                 that execute() was invoked
             * Run all queries and return the results
         :param engine: engine to execute the sql statements
+        :overwrite_existing: If True, then any savepoint that creates a table or view will be reexecuted,
+            even if nothing changed in the sql of that table/view.
         :return: The result of all savepoints with materialization type QUERY. A dictionary mapping
             the savepoint name to a List of tuples representing the rows that the queries returned.
         """
         # todo: store engine as part of __init__?
-        # todo: support removing created views/tables that have been created but have changed later
         if isinstance(savepoint_names, str):
             savepoint_names = [savepoint_names]
         sql_statements = self.to_sql(name_filter=savepoint_names)
         return self._execute_sql(engine, sql_statements, overwrite_existing)
+
+    def _has_changed(self, name) -> bool:
+        if name not in self._executed_statements:
+            # If this savepoint has not been executed yet, then it has changed since last time when it
+            # didn't exist
+            return True
+        current_df = self._entries[name]
+        executed_stmt = self._executed_statements[name]
+        if executed_stmt.materialization != current_df.base_node.materialization:
+            return True
+        if executed_stmt.node_hash != current_df.base_node.hash:
+            return True
+        return False
 
     def _execute_sql(
             self,
@@ -161,57 +180,50 @@ class Savepoints:
         :return: The result of all savepoints with materialization type QUERY. A dictionary mapping
             the savepoint name to a List of tuples representing the rows that the queries returned.
         """
-        # todo: store engine as part of __init__?
+        # todo: store engine as part of __init__? advantage of having it as a parameter is that we can
+        # switch DB, e.g. to the production DB at some point
 
-        drop_statements = {}  # drop table/view statements that should run first
-        for name, sql in sql_statements.items():
-            materialization = self._entries[name].base_node.materialization
-            if name not in self._executed_statements:
+        drop_statements = []  # drop table/view statements that should run first
+        for name, previous_materialization in self.created:
+            if name not in sql_statements:
                 continue
-            if not materialization.modifies_db:
+            if not overwrite_existing and not self._has_changed(name):
                 continue
-            # todo: track hash and materialization, and use that to determine whether sql changed
-            sql_changed = (
-                self._executed_statements[name].materialization.modifies_db
-                and self._executed_statements[name].sql != sql
-            )
-            if not overwrite_existing and not sql_changed:
-                continue
-
-            previous_materialization = self._executed_statements[name].materialization
             if previous_materialization == Materialization.TABLE:
-                drop_statements[name] = f'drop table if exists {quote_identifier(name)}'
+                drop_statements.append(f'drop table if exists {quote_identifier(name)}')
             elif previous_materialization == Materialization.VIEW:
-                drop_statements[name] = f'drop view if exists {quote_identifier(name)}'
+                drop_statements.append(f'drop view if exists {quote_identifier(name)}')
 
         filtered_statements = {}  # sql statements, without the statements that don't need to run again
         for name, sql in sql_statements.items():
             materialization = self._entries[name].base_node.materialization
-            if name not in drop_statements \
-                    and name in self._executed_statements \
-                    and self._executed_statements[name].materialization.modifies_db \
-                    and materialization.modifies_db:
-                # if the table/view already exists and will continue to exist, then don't rewrite it
-                continue
-            filtered_statements[name] = sql
+            if not materialization.modifies_db or self._has_changed(name) or overwrite_existing:
+                filtered_statements[name] = sql
 
         result = {}
         with engine.connect() as conn:
             with conn.begin() as transaction:
-                drop_sql = '; '.join(reversed(drop_statements.values()))
+                # This is a bit fragile. Drop statements might fail if other objects (which we might not
+                # consider) depend on a view/table. TODO: we need to do this smarter
+                drop_sql = '; '.join(reversed(drop_statements))
 
                 if drop_sql:
                     conn.execute(drop_sql)
                 for name, sql in filtered_statements.items():
                     query_result = conn.execute(sql)
 
-                    materialization = self._entries[name].base_node.materialization
-                    self._executed_statements[name] = \
-                        ExecutedStatement(name=name, sql=sql, materialization=materialization)
+                    sql_model = self._entries[name].base_node
+                    self._executed_statements[name] = ExecutedStatement(
+                        name=name,
+                        sql=sql,
+                        materialization=sql_model.materialization,
+                        node_hash=sql_model.hash
+                    )
 
-                    if materialization == Materialization.QUERY:
+                    if sql_model.materialization == Materialization.QUERY:
                         # We return the combined result of all sql statements with QUERY materialization
                         # TODO: change format so it includes column names?
+                        #  Perhaps return full pandas DFs, similar to what to_pandas() does?
                         result[name] = list(query_result)
                 transaction.commit()
         return result

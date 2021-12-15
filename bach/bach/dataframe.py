@@ -605,10 +605,18 @@ class DataFrame:
             save_points: Savepoints,
             name: str,
             materialization: Materialization = Materialization.QUERY,
-            execute_now: bool = False
     ):
         """
+        Set the current state as a savepoint in save_points.
+        If the given materialization creates an object (e.g. TABLE or VIEW), then that object is directly
+        created in the database. Which might result in a very long running transaction.
 
+        :param save_points: Savepoints object that's responsible for tracking all savepoints.
+        :param name: Name for the savepoint. This will be the name of the table or view if that's set as
+            materialization. Must be unique both within the Savepoints and within the base_node.
+        :param materialization: materialization of the savepoint in the database.
+            QUERY and CTE: do not create a database object
+            TABLE and VIEW: create a database object
         """
         if self.is_materialized \
                 and self.base_node.materialization != Materialization.CTE \
