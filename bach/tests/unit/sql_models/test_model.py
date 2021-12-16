@@ -7,7 +7,7 @@ from typing import List
 import pytest
 
 from sql_models.graph_operations import get_node, get_graph_nodes_info
-from sql_models.model import SqlModel, RefPath, CustomSqlModel
+from sql_models.model import SqlModel, RefPath, CustomSqlModelBuilder
 from sql_models.sql_generator import to_sql
 from tests.unit.sql_models.util import RefModel, ValueModel, JoinModel
 
@@ -46,7 +46,7 @@ def test_equality_base_cases():
 def test_equality_different_classes():
     vm1 = ValueModel.build(key='X', val=1)
     vm2 = ValueModel.build(key='X', val=2)
-    csm1 = CustomSqlModel(
+    csm1 = CustomSqlModelBuilder(
         sql="select '{key}' as key, {val} as value",
     )(key='X', val=2)
     # csm1 has the same sql, properties, references, and materialization as vm2, but not the same name
@@ -57,7 +57,7 @@ def test_equality_different_classes():
     # csm2 has the same attributes as vm2: sql, properties, references, materialization, generic name, and
     # the properties are formatted by the same function into sql. The fact that it is actually a different
     # sub-class of SqlModel doesn't matter for the sql generation nor for the equality check, cs2m == vm2
-    csm2 = CustomSqlModel(
+    csm2 = CustomSqlModelBuilder(
         sql="select '{key}' as key, {val} as value",
         name='ValueModel'
     )(key='X', val=2)
@@ -66,8 +66,8 @@ def test_equality_different_classes():
 
 
 def test_equality_different_property_formatters():
-    csm_builder = CustomSqlModel(sql='select {val} as value')
-    csm_alt_builder = CustomSqlModel(sql='select {val} as value')
+    csm_builder = CustomSqlModelBuilder(sql='select {val} as value')
+    csm_alt_builder = CustomSqlModelBuilder(sql='select {val} as value')
     csm_alt_builder.properties_to_sql = \
         lambda properties: {key: f'{val + 1}' for key, val in properties.items()}
     csm1 = csm_builder(val=2)

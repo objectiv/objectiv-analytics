@@ -2,11 +2,9 @@
  * Copyright 2021 Objectiv B.V.
  */
 
+import { matchUUID, SpyTransport } from '@objectiv/testing-tools';
 import { makeWebDocumentContext, Tracker } from '@objectiv/tracker-core';
 import { trackDocumentLoadedEvent } from '../src/';
-import { SpyTransport } from './mocks/SpyTransport';
-
-const UUID_REGEX = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 
 describe('WebDocumentLoadedEvent', () => {
   it('should track as expected when document has been loaded already', () => {
@@ -29,7 +27,7 @@ describe('WebDocumentLoadedEvent', () => {
     expect(spyTransport.handle).toHaveBeenCalledWith({
       __non_interactive_event: true,
       _type: 'DocumentLoadedEvent',
-      id: expect.stringMatching(UUID_REGEX),
+      id: matchUUID,
       global_contexts: [
         {
           __global_context: true,
@@ -85,7 +83,7 @@ describe('WebDocumentLoadedEvent', () => {
     expect(spyTransport.handle).toHaveBeenCalledWith({
       __non_interactive_event: true,
       _type: 'DocumentLoadedEvent',
-      id: expect.stringMatching(UUID_REGEX),
+      id: matchUUID,
       global_contexts: [
         {
           __global_context: true,

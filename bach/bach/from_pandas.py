@@ -9,7 +9,7 @@ from sqlalchemy.engine import Engine
 from bach import DataFrame, get_series_type_from_dtype
 from bach.expression import Expression
 from sql_models.util import quote_identifier
-from bach.sql_model import BachSqlModel
+from bach.sql_model import BachSqlModelBuilder
 
 
 def from_pandas(engine: Engine,
@@ -64,7 +64,7 @@ def from_pandas_store_table(engine: Engine,
     conn.close()
 
     # Todo, this should use from_table from here on.
-    model_builder = BachSqlModel(sql='select * from {table_name}', name=table_name)
+    model_builder = BachSqlModelBuilder(sql='select * from {table_name}', name=table_name)
     model = model_builder(table_name=quote_identifier(table_name))
 
     # Should this also use _df_or_series?
@@ -130,7 +130,7 @@ def from_pandas_ephemeral(
     )
 
     sql = 'select * from (values \n{all_values_expr}\n) as t({column_names_expr})\n'
-    model_builder = BachSqlModel(sql=sql, name=name)
+    model_builder = BachSqlModelBuilder(sql=sql, name=name)
     model = model_builder(all_values_expr=all_values_expr, column_names_expr=column_names_expr)
 
     return DataFrame.get_instance(

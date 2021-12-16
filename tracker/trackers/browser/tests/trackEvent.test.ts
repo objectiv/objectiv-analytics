@@ -2,10 +2,12 @@
  * Copyright 2021 Objectiv B.V.
  */
 
+import { matchUUID } from '@objectiv/testing-tools';
 import {
   generateUUID,
   makeAbortedEvent,
   makeApplicationLoadedEvent,
+  makeButtonContext,
   makeClickEvent,
   makeCompletedEvent,
   makeInputChangeEvent,
@@ -36,7 +38,6 @@ import {
   trackVisibility,
 } from '../src';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
-import { matchUUID } from './mocks/matchUUID';
 
 describe('trackEvent', () => {
   const testElement = document.createElement('div');
@@ -97,10 +98,10 @@ describe('trackEvent', () => {
         id: matchUUID,
         global_contexts: [],
         location_stack: [
-          { _type: 'SectionContext', id: 'main' },
-          { _type: 'SectionContext', id: 'parent' },
-          { _type: 'SectionContext', id: 'child' },
-          { _type: 'ButtonContext', id: 'button', text: 'button' },
+          makeSectionContext({ id: 'main' }),
+          makeSectionContext({ id: 'parent' }),
+          makeSectionContext({ id: 'child' }),
+          makeButtonContext({ id: 'button', text: 'button' }),
         ],
       })
     );
@@ -114,12 +115,7 @@ describe('trackEvent', () => {
         _type: 'ClickEvent',
         id: matchUUID,
         global_contexts: [],
-        location_stack: [
-          {
-            _type: 'SectionContext',
-            id: 'custom',
-          },
-        ],
+        location_stack: [makeSectionContext({ id: 'custom' })],
       })
     );
 
@@ -132,12 +128,7 @@ describe('trackEvent', () => {
         _type: 'ClickEvent',
         id: matchUUID,
         global_contexts: [],
-        location_stack: [
-          {
-            _type: 'SectionContext',
-            id: 'custom',
-          },
-        ],
+        location_stack: [makeSectionContext({ id: 'custom' })],
       })
     );
   });

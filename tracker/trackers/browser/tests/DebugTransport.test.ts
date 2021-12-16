@@ -2,9 +2,9 @@
  * Copyright 2021 Objectiv B.V.
  */
 
+import { mockConsole } from '@objectiv/testing-tools';
 import { TrackerEvent } from '@objectiv/tracker-core';
 import { DebugTransport } from '../src/';
-import { mockConsole } from './mocks/MockConsole';
 
 describe('DebugTransport', () => {
   const testEvent = new TrackerEvent({

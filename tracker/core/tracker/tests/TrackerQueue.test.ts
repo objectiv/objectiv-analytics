@@ -2,8 +2,8 @@
  * Copyright 2021 Objectiv B.V.
  */
 
+import { mockConsole } from '@objectiv/testing-tools';
 import { TrackerEvent, TrackerQueue, TrackerQueueMemoryStore } from '../src';
-import { mockConsole } from './mocks/MockConsole';
 
 beforeEach(() => {
   jest.useFakeTimers();

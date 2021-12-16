@@ -2,6 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
+import { LogTransport, mockConsole, UnusableTransport } from '@objectiv/testing-tools';
 import {
   ApplicationContextPlugin,
   ContextsConfig,
@@ -13,9 +14,6 @@ import {
   TrackerQueue,
   TrackerQueueMemoryStore,
 } from '../src';
-import { LogTransport } from './mocks/LogTransport';
-import { mockConsole } from './mocks/MockConsole';
-import { UnusableTransport } from './mocks/UnusableTransport';
 
 describe('Tracker', () => {
   it('should instantiate with just applicationId', () => {
@@ -287,6 +285,74 @@ describe('Tracker', () => {
         `%c｢objectiv:Tracker:app-id｣ New state: inactive`,
         'font-weight: bold'
       );
+    });
+
+    it('should wait and/or flush the queue according to the given options', async () => {
+      const testTracker = new Tracker({ applicationId: 'app-id' });
+
+      // Default > no waiting and no flush
+      jest.spyOn(testTracker, 'flushQueue');
+      jest.spyOn(testTracker, 'waitForQueue').mockResolvedValue(true);
+      expect(testTracker.flushQueue).not.toHaveBeenCalled();
+      expect(testTracker.waitForQueue).not.toHaveBeenCalled();
+      await testTracker.trackEvent(testEvent);
+      expect(testTracker.waitForQueue).not.toHaveBeenCalled();
+      expect(testTracker.flushQueue).not.toHaveBeenCalled();
+
+      jest.resetAllMocks();
+
+      // FlushQueue `true` > no waiting and flush
+      jest.spyOn(testTracker, 'flushQueue');
+      jest.spyOn(testTracker, 'waitForQueue').mockResolvedValue(true);
+      expect(testTracker.flushQueue).not.toHaveBeenCalled();
+      expect(testTracker.waitForQueue).not.toHaveBeenCalled();
+      await testTracker.trackEvent(testEvent, { flushQueue: true });
+      expect(testTracker.waitForQueue).not.toHaveBeenCalled();
+      expect(testTracker.flushQueue).toHaveBeenCalledTimes(1);
+
+      jest.resetAllMocks();
+
+      // FlushQueue `onTimeout` and waitForQueue not configured > no waiting and no flush
+      jest.spyOn(testTracker, 'flushQueue');
+      jest.spyOn(testTracker, 'waitForQueue').mockResolvedValue(true);
+      expect(testTracker.flushQueue).not.toHaveBeenCalled();
+      expect(testTracker.waitForQueue).not.toHaveBeenCalled();
+      await testTracker.trackEvent(testEvent, { flushQueue: 'onTimeout' });
+      expect(testTracker.waitForQueue).not.toHaveBeenCalled();
+      expect(testTracker.flushQueue).not.toHaveBeenCalled();
+
+      jest.resetAllMocks();
+
+      // FlushQueue: `onTimeout` and waitForQueue `true` and not timed out > waiting and no flush
+      jest.spyOn(testTracker, 'flushQueue');
+      jest.spyOn(testTracker, 'waitForQueue').mockResolvedValue(true);
+      expect(testTracker.flushQueue).not.toHaveBeenCalled();
+      expect(testTracker.waitForQueue).not.toHaveBeenCalled();
+      await testTracker.trackEvent(testEvent, { waitForQueue: true, flushQueue: 'onTimeout' });
+      expect(testTracker.waitForQueue).toHaveBeenCalledTimes(1);
+      expect(testTracker.flushQueue).not.toHaveBeenCalled();
+
+      jest.resetAllMocks();
+
+      // FlushQueue: `onTimeout` and waitForQueue `true` and timed out > waiting and flush
+      jest.spyOn(testTracker, 'flushQueue');
+      jest.spyOn(testTracker, 'waitForQueue').mockResolvedValue(true);
+      expect(testTracker.flushQueue).not.toHaveBeenCalled();
+      expect(testTracker.waitForQueue).not.toHaveBeenCalled();
+      await testTracker.trackEvent(testEvent, { waitForQueue: true, flushQueue: true });
+      expect(testTracker.waitForQueue).toHaveBeenCalledTimes(1);
+      expect(testTracker.flushQueue).toHaveBeenCalledTimes(1);
+
+      jest.resetAllMocks();
+
+      // FlushQueue: `onTimeout` and waitForQueue `{ intervalMs: 100 }` and timed out > waiting and flush
+      jest.spyOn(testTracker, 'flushQueue');
+      jest.spyOn(testTracker, 'waitForQueue').mockResolvedValue(true);
+      expect(testTracker.flushQueue).not.toHaveBeenCalled();
+      expect(testTracker.waitForQueue).not.toHaveBeenCalled();
+      await testTracker.trackEvent(testEvent, { waitForQueue: { intervalMs: 100 }, flushQueue: true });
+      expect(testTracker.waitForQueue).toHaveBeenCalledTimes(1);
+      expect(testTracker.flushQueue).toHaveBeenCalledTimes(1);
     });
   });
 

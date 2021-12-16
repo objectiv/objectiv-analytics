@@ -2,6 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
+import { matchUUID } from '@objectiv/testing-tools';
 import {
   tagButton,
   tagElement,
@@ -13,7 +14,6 @@ import {
   tagNavigation,
   tagOverlay,
 } from '../src';
-import { matchUUID } from './mocks/matchUUID';
 
 describe('tagLocationHelpers', () => {
   beforeEach(() => {

@@ -2,10 +2,9 @@
  * Copyright 2021 Objectiv B.V.
  */
 
+import { localStorageMock, mockConsole } from '@objectiv/testing-tools';
 import { TrackerEvent } from '@objectiv/tracker-core';
 import { TrackerQueueLocalStorage } from '../src';
-import { localStorageMock } from './mocks/localStorageMock';
-import { mockConsole } from './mocks/MockConsole';
 
 describe('TrackerQueueLocalStorage', () => {
   const TrackerEvent1 = new TrackerEvent({ id: 'a', _type: 'a' });

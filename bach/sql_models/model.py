@@ -7,7 +7,7 @@ Models:
 * `SqlModelSpec`: Specification class, that specifies basic properties of an SqlModel instance
 * `SqlModelBuilder`: Helper class to instantiate the (immutable) SqlModel objects. Generally models should
   extend this class and not the SqlModel class.
-* `CustomSqlModel`: Utility child of SqlModelSpec that can be used to add a node with custom sql to a
+* `CustomSqlModelBuilder`: Utility child of SqlModelSpec that can be used to add a node with custom sql to a
   model graph.
 
 """
@@ -15,7 +15,7 @@ import hashlib
 from abc import abstractmethod, ABCMeta
 from copy import deepcopy
 from enum import Enum
-from typing import TypeVar, Generic, Dict, Any, Set, Tuple, Type, Union, Hashable, NamedTuple, Optional, cast
+from typing import TypeVar, Generic, Dict, Any, Set, Tuple, Type, Union, Hashable, NamedTuple, Optional
 
 from sql_models.util import extract_format_fields
 
@@ -252,7 +252,7 @@ class SqlModelBuilder(SqlModelSpec, metaclass=ABCMeta):
 
     def instantiate(self: TB) -> 'SqlModel[TB]':
         """
-        Create an instance of SqlModel[T] based on the properties, references,
+        Create an instance of SqlModel[TB] based on the properties, references,
         materialization, and properties_to_sql of self.
 
         If the exact same instance (as determined by result.hash, result.materialization, and
@@ -581,9 +581,9 @@ class SqlModel(Generic[T]):
         return hash(self.hash)
 
 
-class CustomSqlModel(SqlModelBuilder):
+class CustomSqlModelBuilder(SqlModelBuilder):
     """
-    Model that can run custom sql and refer custom tables.
+    Builder that instantiates a SqlModel that can run custom sql and refer custom tables.
     """
 
     def __init__(self, sql: str, name: str = None):
@@ -595,7 +595,7 @@ class CustomSqlModel(SqlModelBuilder):
         if name:
             self._generic_name = name
         else:
-            self._generic_name = self.__class__.__name__
+            self._generic_name = 'CustomSqlModel'
         super().__init__()
 
     @property

@@ -7,7 +7,8 @@
     "core/**",
     "plugins/**",
     "trackers/angular",
-    "trackers/browser"
+    "trackers/browser",
+    "trackers/react"
   ],
   "scripts": {
     "clear": "yarn exec make clean && yarn test --clearCache && yarn cache clean",
@@ -19,12 +20,12 @@
     "prettify:generated": "yarn workspace @objectiv/schema prettify:generated && yarn workspace @objectiv/tracker-core prettify:generated",
     "list": "yarn workspaces list",
     "tsc": "yarn workspaces foreach --exclude root  --verbose run tsc",
-    "test": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-angular --verbose run test",
-    "test:ci": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-angular --verbose run test:ci",
-    "test:coverage": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/tracker-angular --verbose run test:coverage",
+    "test": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/testing-tools --exclude @objectiv/tracker-angular --verbose run test",
+    "test:ci": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/testing-tools --exclude @objectiv/tracker-angular --verbose run test:ci",
+    "test:coverage": "yarn workspaces foreach --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/testing-tools --exclude @objectiv/tracker-angular --verbose run test:coverage",
     "check:dependencies": "yarn workspaces foreach --exclude root --exclude @objectiv/tracker-angular --verbose run check:dependencies",
-    "publish": "yarn check:dependencies && yarn workspaces foreach --exclude root --exclude @objectiv/utilities --verbose run npm-publish",
-    "publish:verdaccio": "yarn workspaces foreach --exclude root --exclude @objectiv/utilities --verbose run npm-publish:verdaccio",
+    "publish": "yarn check:dependencies && yarn workspaces foreach --exclude root --exclude @objectiv/utilities --exclude @objectiv/testing-tools --verbose run npm-publish",
+    "publish:verdaccio": "yarn workspaces foreach --exclude root --exclude @objectiv/utilities --exclude @objectiv/testing-tools --verbose run npm-publish:verdaccio",
     "utils:generate": "yarn workspace @objectiv/utilities generate && yarn prettify:generated && yarn tsc"
   }
 }

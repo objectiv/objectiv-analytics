@@ -1,3 +1,4 @@
 # objectiv-bach-open-taxonomy:
 -e ../../bach
+sqlalchemy
 dash

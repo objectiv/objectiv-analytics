@@ -2,6 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
+import { matchUUID, mockConsole } from '@objectiv/testing-tools';
 import {
   makeButtonContext,
   makeExpandableSectionContext,
@@ -14,8 +15,6 @@ import {
 } from '@objectiv/tracker-core';
 import { StructError } from 'superstruct';
 import { tagElement, TaggingAttribute, tagLocation } from '../src';
-import { matchUUID } from './mocks/matchUUID';
-import { mockConsole } from './mocks/MockConsole';
 
 describe('tagLocation', () => {
   beforeEach(() => {

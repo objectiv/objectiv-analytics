@@ -2,7 +2,8 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { generateUUID } from '@objectiv/tracker-core';
+import { matchUUID } from '@objectiv/testing-tools';
+import { generateUUID, makeSectionContext } from '@objectiv/tracker-core';
 import {
   AutoTrackingState,
   BrowserTracker,
@@ -15,7 +16,6 @@ import {
   TaggingAttribute,
 } from '../src';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
-import { matchUUID } from './mocks/matchUUID';
 
 describe('startAutoTracking', () => {
   beforeEach(() => {
@@ -163,12 +163,7 @@ describe('makeMutationCallback - new nodes', () => {
         _type: 'SectionVisibleEvent',
         id: matchUUID,
         global_contexts: [],
-        location_stack: [
-          {
-            _type: 'SectionContext',
-            id: 'div',
-          },
-        ],
+        location_stack: [makeSectionContext({ id: 'div' })],
       })
     );
     expect(getTracker().trackEvent).toHaveBeenNthCalledWith(
@@ -177,12 +172,7 @@ describe('makeMutationCallback - new nodes', () => {
         _type: 'SectionVisibleEvent',
         id: matchUUID,
         global_contexts: [],
-        location_stack: [
-          {
-            _type: 'SectionContext',
-            id: 'div',
-          },
-        ],
+        location_stack: [makeSectionContext({ id: 'div' })],
       })
     );
   });
@@ -245,12 +235,7 @@ describe('makeMutationCallback - removed nodes', () => {
         _type: 'SectionHiddenEvent',
         id: matchUUID,
         global_contexts: [],
-        location_stack: [
-          {
-            _type: 'SectionContext',
-            id: 'div',
-          },
-        ],
+        location_stack: [makeSectionContext({ id: 'div' })],
       })
     );
   });

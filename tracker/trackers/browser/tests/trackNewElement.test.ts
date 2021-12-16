@@ -2,18 +2,18 @@
  * Copyright 2021 Objectiv B.V.
  */
 
+import { matchUUID, mockConsole } from '@objectiv/testing-tools';
 import {
   generateUUID,
   LocationCollision,
   makeButtonContext,
   makeInputContext,
+  makeSectionContext,
   TrackerElementLocations,
 } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker, TaggingAttribute } from '../src';
 import { trackNewElement } from '../src/mutationObserver/trackNewElement';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
-import { matchUUID } from './mocks/matchUUID';
-import { mockConsole } from './mocks/MockConsole';
 
 describe('trackNewElement', () => {
   beforeEach(() => {
@@ -121,12 +121,7 @@ describe('trackNewElement', () => {
         _type: 'SectionVisibleEvent',
         id: matchUUID,
         global_contexts: [],
-        location_stack: [
-          {
-            _type: 'SectionContext',
-            id: 'test',
-          },
-        ],
+        location_stack: [makeSectionContext({ id: 'test' })],
       })
     );
   });

@@ -89,7 +89,7 @@ describe('TrackerEvent', () => {
     ]);
   });
 
-  it('should serialize to JSON without discriminating properties', () => {
+  it('should serialize to JSON without internal properties', () => {
     const testEvent = new TrackerEvent(
       makeVideoLoadEvent({
         location_stack: [makeOverlayContext({ id: 'player' })],

@@ -61,6 +61,22 @@ export const makeTrackerDefaultPluginsList = (trackerConfig: TrackerConfig) => [
 ];
 
 /**
+ * The parameters object of Tracker.waitForQueue(parameters?: WaitForQueueParameters).
+ */
+export type WaitForQueueParameters = {
+  intervalMs?: number;
+  timeoutMs?: number;
+};
+
+/**
+ * The `options` parameter of Tracker.trackEvent(event: TrackerEventConfig, options?: TrackEventOptions).
+ */
+export type TrackEventOptions = {
+  waitForQueue?: true | WaitForQueueParameters;
+  flushQueue?: true | 'onTimeout';
+};
+
+/**
  * Our basic platform-agnostic JavaScript Tracker interface and implementation
  */
 export class Tracker implements Contexts, TrackerConfig {
@@ -71,7 +87,7 @@ export class Tracker implements Contexts, TrackerConfig {
   readonly transport?: TrackerTransportInterface;
   readonly plugins: TrackerPlugins;
 
-  // By default trackers are active
+  // By default, trackers are active
   active: boolean = false;
 
   // Contexts interface
@@ -183,7 +199,7 @@ export class Tracker implements Contexts, TrackerConfig {
    * Waits for Queue `isIdle` in an attempt to wait for it to finish its job.
    * Resolves regardless if the Queue reaches an idle state or timeout is reached.
    */
-  async waitForQueue(parameters?: { intervalMs?: number; timeoutMs?: number }): Promise<boolean> {
+  async waitForQueue(parameters?: WaitForQueueParameters): Promise<boolean> {
     if (this.queue) {
       // Some - hopefully - sensible defaults. 100ms for polling and double the Queue's batch delay as timeout.
       const intervalMs = parameters?.intervalMs ?? 100;
@@ -200,7 +216,7 @@ export class Tracker implements Contexts, TrackerConfig {
   /**
    * Merges Tracker Location and Global contexts, runs all Plugins and sends the Event via the TrackerTransport.
    */
-  async trackEvent(event: TrackerEventConfig): Promise<TrackerEvent> {
+  async trackEvent(event: TrackerEventConfig, options?: TrackEventOptions): Promise<TrackerEvent> {
     // TrackerEvent and Tracker share the ContextsConfig interface. We can combine them by creating a new TrackerEvent.
     const trackedEvent = new TrackerEvent(event, this);
 
@@ -238,6 +254,22 @@ export class Tracker implements Contexts, TrackerConfig {
         await this.queue.push(trackedEvent);
       } else {
         await this.transport.handle(trackedEvent);
+      }
+    }
+
+    // Check whether we need to wait for the Tracker to wait for its Queue and/or whether we should flush it afterwards
+    if (options) {
+      const { waitForQueue, flushQueue } = options;
+
+      let isQueueEmpty = true;
+      if (waitForQueue) {
+        // Attempt to wait for the Tracker to finish up its work - this is best-effort: may or may not time out
+        isQueueEmpty = await this.waitForQueue(waitForQueue === true ? {} : waitForQueue);
+      }
+
+      // Flush the Queue - unless specifically configured not to do so
+      if (flushQueue === true || (flushQueue === 'onTimeout' && !isQueueEmpty)) {
+        this.flushQueue();
       }
     }
 

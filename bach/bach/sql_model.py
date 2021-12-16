@@ -5,12 +5,12 @@ from typing import Dict, Any, Union, Sequence, TypeVar
 
 from bach.expression import Expression
 from sql_models.util import quote_identifier
-from sql_models.model import CustomSqlModel, SqlModel, SqlModelBuilder, SqlModelSpec, Materialization
+from sql_models.model import CustomSqlModelBuilder, SqlModel, SqlModelBuilder, SqlModelSpec, Materialization
 
-TB = TypeVar('TB', bound='BachSqlModel')
+TB = TypeVar('TB', bound='BachSqlModelBuilder')
 
 
-class BachSqlModel(CustomSqlModel):
+class BachSqlModelBuilder(CustomSqlModelBuilder):
 
     def __call__(self: TB, **values: Union[int, str, Expression, Sequence[Expression],
                                            SqlModel, SqlModelBuilder]) -> SqlModel[TB]:
@@ -59,7 +59,7 @@ class SampleSqlModel(SqlModel):
     extra property: previous.
 
     The previous property is not used in the generated sql at all, but can be used to track a previous
-    SqlModel. This is useful for how we implemented sampling, as that effectively insert a sql-model in the
+    SqlModel. This is useful for how we implemented sampling, as that effectively inserts a sql-model in the
     graph that has no regular reference to the previous node in the graph. By storing the previous node
     here, we can later still reconstruct what the actual previous node was with some custom logic.
 
@@ -69,7 +69,7 @@ class SampleSqlModel(SqlModel):
         self.previous = previous
         sql = 'SELECT * FROM {table_name}'
         super().__init__(
-            model_spec=CustomSqlModel(sql=sql, name=name),
+            model_spec=CustomSqlModelBuilder(sql=sql, name=name),
             properties={'table_name': quote_identifier(table_name)},
             references={},
             materialization=Materialization.CTE

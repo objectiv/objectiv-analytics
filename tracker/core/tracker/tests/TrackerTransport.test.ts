@@ -2,6 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
+import { ConfigurableMockTransport, LogTransport, mockConsole, UnusableTransport } from '@objectiv/testing-tools';
 import {
   ContextsConfig,
   Tracker,
@@ -12,10 +13,6 @@ import {
   TrackerTransportSwitch,
   TransportSendError,
 } from '../src';
-import { ConfigurableMockTransport } from './mocks/ConfigurableMockTransport';
-import { LogTransport } from './mocks/LogTransport';
-import { mockConsole } from './mocks/MockConsole';
-import { UnusableTransport } from './mocks/UnusableTransport';
 
 const testEventName = 'test-event';
 const testContexts: ContextsConfig = {

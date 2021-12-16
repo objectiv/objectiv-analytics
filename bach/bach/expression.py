@@ -9,7 +9,7 @@ from sql_models.util import quote_string, quote_identifier
 
 if TYPE_CHECKING:
     from bach import Series
-    from bach.sql_model import BachSqlModel
+    from bach.sql_model import BachSqlModelBuilder
 
 
 @dataclass(frozen=True)
@@ -49,7 +49,7 @@ class ColumnReferenceToken(ExpressionToken):
 
 @dataclass(frozen=True)
 class ModelReferenceToken(ExpressionToken):
-    model: SqlModel['BachSqlModel']
+    model: SqlModel['BachSqlModelBuilder']
 
     def refname(self) -> str:
         return f'reference{self.model.hash}'
@@ -160,7 +160,7 @@ class Expression:
         return cls([ColumnReferenceToken(field_name)])
 
     @classmethod
-    def model_reference(cls, model: SqlModel['BachSqlModel']) -> 'Expression':
+    def model_reference(cls, model: SqlModel['BachSqlModelBuilder']) -> 'Expression':
         """ Construct an expression for model, where model is a reference to a model. """
         return cls([ModelReferenceToken(model)])
 
@@ -227,7 +227,7 @@ class Expression:
                 result.append(data_item)
         return self.__class__(result)
 
-    def get_references(self) -> Dict[str, SqlModel['BachSqlModel']]:
+    def get_references(self) -> Dict[str, SqlModel['BachSqlModelBuilder']]:
         rv = {}
         for data_item in self.data:
             if isinstance(data_item, Expression):

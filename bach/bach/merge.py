@@ -7,7 +7,7 @@ from typing import Union, List, Tuple, Optional, Dict, Set, NamedTuple, TYPE_CHE
 from bach import DataFrameOrSeries, DataFrame, ColumnNames, Series
 from bach.expression import Expression
 from sql_models.util import quote_identifier
-from bach.sql_model import BachSqlModel
+from bach.sql_model import BachSqlModelBuilder
 from sql_models.model import SqlModel
 
 
@@ -274,7 +274,7 @@ def _get_merge_sql_model(
         real_left_on: List[str],
         real_right_on: List[str],
         new_column_list: List[ResultColumn],
-) -> SqlModel[BachSqlModel]:
+) -> SqlModel[BachSqlModelBuilder]:
     """
     Give the SqlModel to join left and right and select the new_column_list. This model also uses the
     join-type of how, matching rows on real_left_on and real_right_on.
@@ -301,7 +301,7 @@ def _get_merge_sql_model(
         from {{left_node}} as l {join_type}
         join {{right_node}} as r {on}
         '''
-    model_builder = BachSqlModel(name='merge_sql', sql=sql)
+    model_builder = BachSqlModelBuilder(name='merge_sql', sql=sql)
     model = model_builder(
         columns=columns_expr,
         join_type=join_type_expr,

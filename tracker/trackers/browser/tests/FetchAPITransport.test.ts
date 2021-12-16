@@ -2,10 +2,10 @@
  * Copyright 2021 Objectiv B.V.
  */
 
+import { mockConsole } from '@objectiv/testing-tools';
 import { TrackerEvent, TransportSendError } from '@objectiv/tracker-core';
 import fetchMock from 'jest-fetch-mock';
 import { defaultFetchFunction, defaultFetchParameters, FetchAPITransport } from '../src';
-import { mockConsole } from './mocks/MockConsole';
 
 const MOCK_ENDPOINT = 'http://test-endpoint';
 

@@ -22,4 +22,5 @@ _SQL = \
             value->>'_type' AS event_type,
             CAST(JSON_EXTRACT_PATH(value, '_types') AS jsonb) AS stack_event_types
      FROM data
+     {date_range}
      '''

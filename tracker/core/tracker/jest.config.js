@@ -9,5 +9,6 @@ module.exports = {
   collectCoverageFrom: ['src/**.ts'],
   moduleNameMapper: {
     '@objectiv/schema': '<rootDir>../../core/schema/src',
+    '@objectiv/testing-tools': '<rootDir>../../core/testing-tools/src',
   },
 };

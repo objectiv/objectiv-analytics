@@ -4,7 +4,7 @@ Copyright 2021 Objectiv B.V.
 import pytest
 
 from sql_models.graph_operations import get_node
-from sql_models.model import SqlModelBuilder, CustomSqlModel, Materialization
+from sql_models.model import SqlModelBuilder, CustomSqlModelBuilder, Materialization
 from sql_models.sql_generator import to_sql, _check_hash_is_unique, to_sql_materialized_nodes
 from tests.unit.sql_models.test_graph_operations import get_simple_test_graph
 from tests.unit.sql_models.util import assert_roughly_equal_sql
@@ -38,7 +38,7 @@ def test__escape_value():
 
 def test_format_injection():
     # Make sure that (parts of) format strings in the properties of a model don't mess up the sql generation.
-    mb = CustomSqlModel('select {a} from x')
+    mb = CustomSqlModelBuilder('select {a} from x')
     result = to_sql(mb(a='y'))
     assert result == 'select y from x'
     result = to_sql(mb(a="'{y}'"))
@@ -51,7 +51,7 @@ def test_format_injection():
     assert result == "select '{{{y}' from x"
 
     model = mb(a="'{{y}}'")
-    mb = CustomSqlModel('select {a} from {{x}}')
+    mb = CustomSqlModelBuilder('select {a} from {{x}}')
     result = to_sql(mb(a='y', x=model))
     expected = 'with "CustomSqlModel___898cb76e5f8de581ff9524b39e665f94" as (select \'{{y}}\' from x)\n' \
                'select y from "CustomSqlModel___898cb76e5f8de581ff9524b39e665f94"'
