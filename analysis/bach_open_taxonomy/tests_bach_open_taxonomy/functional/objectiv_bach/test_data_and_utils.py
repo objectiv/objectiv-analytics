@@ -7,11 +7,13 @@ This file does not contain any test, but having the file's name start with `test
 as a test file. This makes pytest rewrite the asserts to give clearer errors.
 """
 
-from tests.functional.bach.test_data_and_utils import run_query, DB_TEST_URL, _get_bt
+from tests.functional.bach.test_data_and_utils import run_query, _get_bt
 from bach_open_taxonomy import ObjectivFrame
 from bach import DataFrame
 import sqlalchemy
+import os
 
+DB_TEST_URL = os.environ.get('OBJ_DB_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
 
 # all data below is generated dummy data
 TEST_DATA_JSON_REAL = [
