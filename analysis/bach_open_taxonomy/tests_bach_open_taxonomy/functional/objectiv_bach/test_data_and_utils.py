@@ -70,7 +70,7 @@ def get_objectiv_frame():
     );
 
     alter table objectiv_data
-        owner to hendrik;
+        owner to objectiv;
     """
     run_query(sqlalchemy.create_engine(DB_TEST_URL), sql)
     run_query(sqlalchemy.create_engine(DB_TEST_URL), TEST_DATA_OBJECTIV)
