@@ -119,7 +119,7 @@ def test_get_objectiv_stack():
     get_objectiv_frame()
 
 def test_objectiv_frame_unique_users():
-    df = ObjectivFrame.from_table(table_name='objectiv_data')
+    df = get_objectiv_frame()
     bts = df.model_hub.aggregate.unique_users()
 
     assert_equals_data(
@@ -130,7 +130,7 @@ def test_objectiv_frame_unique_users():
         ]
     )
     # using time_aggregation
-    df = ObjectivFrame.from_table(time_aggregation='YYYY-MM-DD', table_name='objectiv_data')
+    df = get_objectiv_frame(time_aggregation='YYYY-MM-DD')
     bts = df.model_hub.aggregate.unique_users()
 
     assert_equals_data(
@@ -146,7 +146,7 @@ def test_objectiv_frame_unique_users():
     )
 
 def test_objectiv_frame_unique_sessions():
-    df = ObjectivFrame.from_table(table_name='objectiv_data')
+    df = get_objectiv_frame()
     bts = df.model_hub.aggregate.unique_sessions()
 
     assert_equals_data(
@@ -157,7 +157,7 @@ def test_objectiv_frame_unique_sessions():
         ]
     )
     # using time_aggregation
-    df = ObjectivFrame.from_table(time_aggregation='YYYY-MM-DD', table_name='objectiv_data')
+    df = get_objectiv_frame(time_aggregation='YYYY-MM-DD')
     bts = df.model_hub.aggregate.unique_sessions()
 
     assert_equals_data(
@@ -170,7 +170,7 @@ def test_objectiv_frame_unique_sessions():
 
 
 def test_objectiv_frame_filters():
-    df = ObjectivFrame.from_table(time_aggregation='YYYY-MM-DD', table_name='objectiv_data')
+    df = get_objectiv_frame(time_aggregation='YYYY-MM-DD')
     is_first_session = df.mh.filter.is_first_session()
 
     assert_equals_data(

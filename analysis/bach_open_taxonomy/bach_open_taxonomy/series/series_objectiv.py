@@ -499,15 +499,15 @@ class ObjectivFrame(DataFrame):
         self.conversion_events[name] = location_stack, event_type
 
     @staticmethod
-    def from_table():
+    def from_table(*args, **kwargs):
         raise NotImplementedError('Use ObjectivFrame.from_objectiv_data() to instantiate')
 
     @staticmethod
-    def from_model():
+    def from_model(*args, **kwargs):
         raise NotImplementedError('Use ObjectivFrame.from_objectiv_data() to instantiate')
 
     @staticmethod
-    def from_pandas():
+    def from_pandas(*args, **kwargs):
         raise NotImplementedError('Use ObjectivFrame.from_objectiv_data() to instantiate')
 
     def _hash_features(self, location_stack_column='location_stack'):

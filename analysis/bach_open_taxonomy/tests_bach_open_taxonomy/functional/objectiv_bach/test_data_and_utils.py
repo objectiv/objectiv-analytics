@@ -56,7 +56,7 @@ def get_bt_with_json_data_real() -> DataFrame:
     bt['location_stack'] = bt.location_stack.astype('jsonb')
     return bt
 
-def get_objectiv_frame():
+def get_objectiv_frame(time_aggregation=None):
     sql = """
     drop table if exists objectiv_data;
 
@@ -75,4 +75,4 @@ def get_objectiv_frame():
     run_query(sqlalchemy.create_engine(DB_TEST_URL), sql)
     run_query(sqlalchemy.create_engine(DB_TEST_URL), TEST_DATA_OBJECTIV)
 
-    return ObjectivFrame.from_table(table_name='objectiv_data')
+    return ObjectivFrame.from_objectiv_data(table_name='objectiv_data', time_aggregation=time_aggregation)
