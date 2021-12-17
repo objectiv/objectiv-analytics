@@ -4,9 +4,10 @@ Copyright 2021 Objectiv B.V.
 
 # Any import from from bach_open_taxonomy initializes all the types, do not remove
 from bach_open_taxonomy import __version__
-
-from tests.functional.bach.test_data_and_utils import get_bt_with_json_data_real, assert_equals_data
-
+from tests_bach_open_taxonomy.functional.objectiv_bach.test_data_and_utils import get_bt_with_json_data_real, get_objectiv_frame
+from tests.functional.bach.test_data_and_utils import assert_equals_data
+from bach_open_taxonomy import ObjectivFrame
+from uuid import UUID
 
 def test_get_real_data():
     bt = get_bt_with_json_data_real()
@@ -111,4 +112,90 @@ def test_objectiv_stack_type5():
             [4, 'Section: yBwD4iYcWC4 located at Web Document: #document => Section: home => Section: new'],
             [5, 'Section: eYuUAGXN0KM located at Web Document: #document => Section: home => Section: new']
         ]
+    )
+
+
+def test_get_objectiv_stack():
+    get_objectiv_frame()
+
+def test_objectiv_frame_unique_users():
+    df = ObjectivFrame.from_table(table_name='objectiv_data')
+    bts = df.model_hub.aggregate.unique_users()
+
+    assert_equals_data(
+        bts,
+        expected_columns=['unique_users'],
+        expected_data=[
+            [4]
+        ]
+    )
+    # using time_aggregation
+    df = ObjectivFrame.from_table(time_aggregation='YYYY-MM-DD', table_name='objectiv_data')
+    bts = df.model_hub.aggregate.unique_users()
+
+    assert_equals_data(
+        bts,
+        expected_columns=['moment', 'unique_users'],
+        expected_data=[
+            ['2021-11-29', 1],
+            ['2021-11-30', 2],
+            ['2021-12-01', 1],
+            ['2021-12-02', 1],
+            ['2021-12-03', 1]
+        ]
+    )
+
+def test_objectiv_frame_unique_sessions():
+    df = ObjectivFrame.from_table(table_name='objectiv_data')
+    bts = df.model_hub.aggregate.unique_sessions()
+
+    assert_equals_data(
+        bts,
+        expected_columns=['unique_sessions'],
+        expected_data=[
+            [7]
+        ]
+    )
+    # using time_aggregation
+    df = ObjectivFrame.from_table(time_aggregation='YYYY-MM-DD', table_name='objectiv_data')
+    bts = df.model_hub.aggregate.unique_sessions()
+
+    assert_equals_data(
+        bts,
+        expected_columns=['moment', 'unique_sessions'],
+        expected_data=[
+            ['2021-11-29', 1], ['2021-11-30', 2], ['2021-12-01', 1], ['2021-12-02', 2], ['2021-12-03', 1]
+        ]
+    )
+
+
+def test_objectiv_frame_filters():
+    df = ObjectivFrame.from_table(time_aggregation='YYYY-MM-DD', table_name='objectiv_data')
+    is_first_session = df.mh.filter.is_first_session()
+
+    assert_equals_data(
+        is_first_session,
+        expected_columns=['user_id', 'is_first_session'],
+        expected_data=[
+            [UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b1'), True],
+            [UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b1'), False],
+            [UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b1'), False],
+            [UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b2'), True],
+            [UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b2'), True],
+            [UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b2'), False],
+            [UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b2'), False],
+            [UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b2'), False],
+            [UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b3'), True],
+            [UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b3'), True],
+            [UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b3'), False],
+            [UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b4'), True]]
+
+    )
+
+    bts = df.mh.agg.unique_users(filter=is_first_session)
+
+    assert_equals_data(
+        bts,
+        expected_columns=['moment', 'unique_users_is_first_session'],
+        expected_data=[['2021-11-29', 1], ['2021-11-30', 1], ['2021-12-02', 1], ['2021-12-03', 1]]
     )

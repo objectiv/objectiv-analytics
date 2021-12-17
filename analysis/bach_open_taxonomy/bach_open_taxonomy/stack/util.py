@@ -22,11 +22,14 @@ def _get_date_range(start_date, end_date):
     return date_range
 
 
-def basic_feature_model(session_gap_seconds=1800, start_date=None, end_date=None) -> SqlModel:
+def basic_feature_model(session_gap_seconds=1800,
+                        start_date=None,
+                        end_date=None,
+                        table_name='data') -> SqlModel:
     """ Give a linked BasicFeatures model"""
     date_range = _get_date_range(start_date, end_date)
 
-    extracted_contexts = ExtractedContexts(date_range=date_range)
+    extracted_contexts = ExtractedContexts(date_range=date_range, table_name=table_name)
     return BasicFeatures.build(
         sessionized_data=SessionizedData(
             session_gap_seconds=session_gap_seconds,
@@ -35,11 +38,14 @@ def basic_feature_model(session_gap_seconds=1800, start_date=None, end_date=None
     )
 
 
-def sessionized_data_model(session_gap_seconds=1800, start_date=None, end_date=None) -> SqlModel:
+def sessionized_data_model(session_gap_seconds=1800,
+                           start_date=None,
+                           end_date=None,
+                           table_name='data') -> SqlModel:
     """ Give a linked SessionizedData model"""
     date_range = _get_date_range(start_date, end_date)
 
-    extracted_contexts = ExtractedContexts(date_range=date_range)
+    extracted_contexts = ExtractedContexts(date_range=date_range, table_name=table_name)
     return SessionizedData.build(
             session_gap_seconds=session_gap_seconds,
             extracted_contexts=extracted_contexts

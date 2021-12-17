@@ -36,6 +36,7 @@ _SQL = \
             -- generates a unique number for each session, but not in the right order.
             count(is_start_of_session) over (order by user_id, moment, event_id) as is_one_session
         from session_starts_{{id}}
+        order by user_id, moment, event_id
     )
     select
         *,
