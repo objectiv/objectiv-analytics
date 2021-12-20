@@ -10,9 +10,11 @@ as a test file. This makes pytest rewrite the asserts to give clearer errors.
 from tests.functional.bach.test_data_and_utils import _get_bt, create_objectiv_table
 from bach_open_taxonomy import ObjectivFrame
 from bach import DataFrame
+import sqlalchemy
 import os
 
 
+DB_TEST_URL = os.environ.get('OBJ_DB_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
 # all data below is generated dummy data
 TEST_DATA_JSON_REAL = [
     [1,
@@ -58,5 +60,5 @@ def get_bt_with_json_data_real() -> DataFrame:
 
 def get_objectiv_frame(time_aggregation=None):
     create_objectiv_table()
-
-    return ObjectivFrame.from_objectiv_data(table_name='objectiv_data', time_aggregation=time_aggregation)
+    engine = sqlalchemy.create_engine(DB_TEST_URL)
+    return ObjectivFrame.from_objectiv_data(engine=engine, table_name='objectiv_data', time_aggregation=time_aggregation)
