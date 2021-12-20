@@ -1,3 +1,5 @@
 pytest==6.2.5
 mypy==0.910
 pycodestyle==2.7.0
+# mypy types for used libraries
+types-requests
