@@ -397,7 +397,8 @@ class MetaBase:
         response = self._do_request(url=f'{self._url}/api/card', method='get')
 
         if response.status_code != 200:
-            raise MetaBaseException(f'Failed to obtain list of existing cards with code: {response.status_code}')
+            response_code = response.status_code
+            raise MetaBaseException(f'Failed to obtain list of existing cards with code: {response_code}')
 
         # the default is to create a new card
         method = 'post'
@@ -425,9 +426,11 @@ class MetaBase:
 
         dashboard_info = self.update_dashboard(card_id=card_id, dashboard_id=self._dashboard_id)
 
+        dashboard_name = dashboard_info["name"].lower().replace(" ", "-")
+
         return {
             'card': f'{self._web_url}/card/{card_id}',
-            'dashboard': f'{self._web_url}/dashboard/{self._dashboard_id}-{dashboard_info["name"].lower().replace(" ", "-")}',
+            'dashboard': f'{self._web_url}/dashboard/{self._dashboard_id}-{dashboard_name}',
             'username': self._username,
             'password': self._password
         }
@@ -649,7 +652,7 @@ class ObjectivFrame(DataFrame):
                            table_name: str = 'data') -> 'ObjectivFrame':
         """
         :param engine: a Sqlalchemy Engine for the database. If not given, env DSN is used to create one. If
-            that's not there, the default of 'postgresql://objectiv:@localhost:5432/objectiv' will be used.
+            that's not there, the default of 'postgresql://@localhost:5432/postgres' will be used.
         :param start_date: first date for which data is loaded to the DataFrame. If None, data is loaded from
             the first date in the sql table.
         :param end_date: last date for which data is loaded to the DataFrame. If None, data is loaded up to
@@ -662,7 +665,7 @@ class ObjectivFrame(DataFrame):
         if engine is None:
             import sqlalchemy
             import os
-            dsn = os.environ.get('DSN', 'postgresql://objectiv:@localhost:5432/objectiv')
+            dsn = os.environ.get('DSN', 'postgresql://@localhost:5432/postgres')
             engine = sqlalchemy.create_engine(dsn, pool_size=1, max_overflow=0)
 
         sql = f"""
