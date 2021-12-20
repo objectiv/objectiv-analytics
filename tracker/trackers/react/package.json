@@ -43,6 +43,7 @@
     "npm-publish:verdaccio": "shx cp ../../verdaccio/.npmrc .npmrc && npm publish && shx rm -f .npmrc"
   },
   "devDependencies": {
+    "@objectiv/testing-tools": "0.0.1",
     "@rollup/plugin-commonjs": "^21.0.1",
     "@rollup/plugin-node-resolve": "^13.0.6",
     "@types/jest": "^27.0.2",
@@ -59,11 +60,13 @@
     "rollup-plugin-ts": "^1.4.7",
     "shx": "^0.3.3",
     "ts-jest": "^27.0.7",
-    "typescript": "^4.4.4",
-    "xhr-mock": "^2.5.1"
+    "typescript": "^4.4.4"
   },
   "dependencies": {
+    "@objectiv/queue-local-storage": "^0.0.1",
     "@objectiv/tracker-core": "~0.0.1",
-    "@objectiv/tracker-core-react": "~0.0.1"
+    "@objectiv/tracker-core-react": "~0.0.1",
+    "@objectiv/transport-fetch": "^0.0.1",
+    "@objectiv/transport-xhr": "^0.0.1"
   }
 }

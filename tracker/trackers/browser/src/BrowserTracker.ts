@@ -22,11 +22,11 @@ import { BrowserTrackerConfig } from './definitions/BrowserTrackerConfig';
  *
  *  const trackerId = trackerConfig.trackerId ?? trackerConfig.applicationId;
  *  const console = trackerConfig.console;
- *  const fetchTransport = new FetchAPITransport({ endpoint: '/endpoint', console });
- *  const xmlHttpRequestTransport = new XMLHttpRequestTransport({ endpoint: '/endpoint', console });
- *  const transportSwitch = new TransportSwitch({ transports: [fetchTransport, xmlHttpRequestTransport], console });
+ *  const fetchTransport = new FetchTransport({ endpoint: '/endpoint', console });
+ *  const xhrTransport = new XHRTransport({ endpoint: '/endpoint', console });
+ *  const transportSwitch = new TransportSwitch({ transports: [fetchTransport, xhrTransport], console });
  *  const transport = new RetryTransport({ transport: transportSwitch, console });
- *  const queueStorage = new TrackerQueueLocalStorage({ trackerId, console })
+ *  const queueStorage = new LocalStorageQueueStore({ trackerId, console })
  *  const trackerQueue = new TrackerQueue({ storage: trackerStorage, console });
  *  const applicationContextPlugin = new ApplicationContextPlugin({ applicationId: 'app-id', console });
  *  const webDocumentContextPlugin = new WebDocumentContextPlugin({ console });

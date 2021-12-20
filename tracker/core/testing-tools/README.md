@@ -1,24 +1,6 @@
-# Objectiv Schema TypeScript
+# Objectiv Testing Tools
 
-TypeScript implementation of the open taxonomy for analytics for Objectiv trackers.
-
----
-
-## Package installation
-
-```sh
-yarn add @objectiv/schema --dev
-```
-
-### or
-
-```sh
-npm install @objectiv/schema --dev
-```
-
-## Usage
-
-For a detailed usage guide, see the documentation: [https://objectiv.io/docs](https://objectiv.io/docs)
+Mocks and other testing utilities shared across Objectiv Trackers
 
 ## Copyright and license
 

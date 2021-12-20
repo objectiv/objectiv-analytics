@@ -19,14 +19,17 @@ The Objectiv JavaScript Tracker is composed of three workspaces.
 
 This is a complete list of the currently available packages.
 
-| Name                                  | Type    | Path                          | Links                                                     |
-| ------------------------------------- | ------- | ----------------------------- | --------------------------------------------------------- |
-| @objectiv/schema                      | core    | /core/schema                  | [README](/tracker/core/schema/README.md)                  |
-| @objectiv/tracker-core                | core    | /core/tracker                 | [README](/tracker/core/tracker/README.md)                 |
-| @objectiv/utilities                   | core    | /core/utilities               | [README](/tracker/core/utilities/README.md)               |
-| @objectiv/plugin-web-document-context | plugin  | /plugins/web-document-context | [README](/tracker/plugins/web-document-context/README.md) |
-| @objectiv/tracker-angular             | tracker | /trackers/angular             | [README](/tracker/trackers/angular/README.md)             |
-| @objectiv/tracker-browser             | tracker | /trackers/browser             | [README](/tracker/trackers/browser/README.md)             |
+| Name                                  | Type      | Path                          | Links                                                     |
+|---------------------------------------|-----------|-------------------------------|-----------------------------------------------------------|
+| @objectiv/schema                      | core      | /core/schema                  | [README](/tracker/core/schema/README.md)                  |
+| @objectiv/tracker-core                | core      | /core/tracker                 | [README](/tracker/core/tracker/README.md)                 |
+| @objectiv/utilities                   | core      | /core/utilities               | [README](/tracker/core/utilities/README.md)               |
+| @objectiv/plugin-web-document-context | plugin    | /plugins/web-document-context | [README](/tracker/plugins/web-document-context/README.md) |
+| @objectiv/tracker-angular             | tracker   | /trackers/angular             | [README](/tracker/trackers/angular/README.md)             |
+| @objectiv/tracker-browser             | tracker   | /trackers/browser             | [README](/tracker/trackers/browser/README.md)             |
+| @objectiv/transport-debug             | transport | /transports/browser           | [README](/tracker/transports/debug/README.md)             |
+| @objectiv/transport-fetch             | transport | /transports/browser           | [README](/tracker/transports/fetch/README.md)             |
+| @objectiv/transport-xhr               | transport | /transports/browser           | [README](/tracker/transports/xhr/README.md)               |
 
 >Note: Packages may be completely independent of each other. Currently, many of them share the same testing framework or bundler but that's not required. Each has its own local configurations and may diverge if needed.
 

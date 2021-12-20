@@ -13,10 +13,7 @@ CONTAINER_REPO=eu.gcr.io/objectiv-production
 all: build-all-images
 
 # what to build
-build-all-images: build-backend build-ds
-
-# ds images, build jupyter notebook with DB requirements
-build-ds: build-ds-notebook
+build-all-images: build-backend build-notebook
 
 # what images to push
 push-images: push-image-backend push-image-notebook

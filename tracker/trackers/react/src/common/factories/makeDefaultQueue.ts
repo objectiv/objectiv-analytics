@@ -2,8 +2,8 @@
  * Copyright 2021 Objectiv B.V.
  */
 
+import { LocalStorageQueueStore } from '@objectiv/queue-local-storage';
 import { TrackerQueue, TrackerQueueInterface } from '@objectiv/tracker-core';
-import { TrackerQueueLocalStorage } from '../../queues/TrackerQueueLocalStorage';
 import { ReactTrackerConfig } from '../../ReactTracker';
 
 /**
@@ -11,7 +11,7 @@ import { ReactTrackerConfig } from '../../ReactTracker';
  */
 export const makeDefaultQueue = (trackerConfig: ReactTrackerConfig): TrackerQueueInterface =>
   new TrackerQueue({
-    store: new TrackerQueueLocalStorage({
+    store: new LocalStorageQueueStore({
       trackerId: trackerConfig.trackerId ?? trackerConfig.applicationId,
       console: trackerConfig.console,
     }),

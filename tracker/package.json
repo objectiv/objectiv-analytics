@@ -4,18 +4,20 @@
   "private": true,
   "license": "Apache-2.0",
   "workspaces": [
-    "core/**",
-    "plugins/**",
-    "trackers/angular",
-    "trackers/browser",
-    "trackers/react"
+    "core/*",
+    "plugins/*",
+    "queues/*",
+    "trackers/*",
+    "transports/*"
   ],
   "scripts": {
     "clear": "yarn exec make clean && yarn test --clearCache && yarn cache clean",
     "build-core": "yarn workspaces foreach -p --include @objectiv/tracker-core --verbose run build",
     "build-plugins": "yarn workspaces foreach -p --include '@objectiv/plugin**' --verbose run build",
-    "build-trackers": "yarn workspace @objectiv/tracker-browser build && yarn workspace @objectiv/tracker-angular build",
-    "build": "yarn build-core && yarn build-plugins && yarn build-trackers",
+    "build-queues": "yarn workspaces foreach -p --include '@objectiv/queue**' --verbose run build",
+    "build-transports": "yarn workspaces foreach -p --include '@objectiv/transport**' --verbose run build",
+    "build-trackers": "yarn workspace @objectiv/tracker-browser build & yarn workspace @objectiv/tracker-angular build",
+    "build": "yarn build-core && yarn build-plugins & yarn build-queues & yarn build-transports && yarn build-trackers",
     "prettify": "yarn workspaces foreach --exclude root --verbose run prettify",
     "prettify:generated": "yarn workspace @objectiv/schema prettify:generated && yarn workspace @objectiv/tracker-core prettify:generated",
     "list": "yarn workspaces list",

@@ -554,6 +554,28 @@ class DataFrame:
 
         return self.__class__(**args, **kwargs)
 
+    def copy_override_base_node(self, base_node: SqlModel) -> 'DataFrame':
+        """
+        INTERNAL
+
+        Create a copy of self, with the base_node overridden in both the returned DataFrame and the Series
+        that are part of that DataFrame. If self.group_by is not None, then it's base_node is updated as
+        well.
+        This is different from :py:meth:`copy_override()`, which when provided with a new base_node only
+        overrides the base_node of the DataFrame and not of the Series that make up the DataFrame nor of
+        the GroupBy.
+        """
+        index = {name: series.copy_override(base_node=base_node) for name, series in self.index.items()}
+
+        group_by = self.group_by
+        if group_by is not None:
+            group_by = group_by.copy_override_base_node(base_node=base_node)
+
+        series = {name: series.copy_override(base_node=base_node, group_by=[group_by], index=index)
+                  for name, series in self.data.items()}
+
+        return self.copy_override(base_node=base_node, index=index, series=series, group_by=[group_by])
+
     def copy(self):
         """
         Return a copy of this DataFrame.
@@ -627,9 +649,6 @@ class DataFrame:
 
         Use :py:meth:`get_unsampled` to switch back to the unsampled data later on. This returns a new
         DataFrame with all operations that have been done on the sample, applied to that DataFrame.
-
-        This function requires the DataFrame to be in a materialized state (see :py:attr:`is_materialized`),
-        otherwise an exception is raised.
 
         :param table_name: the name of the underlying sql table that stores the sampled data.
         :param filter: a filter to apply to the dataframe before creating the sample. If a filter is applied,

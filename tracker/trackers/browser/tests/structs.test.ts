@@ -22,7 +22,7 @@ import {
   ValidateAttribute,
 } from '../src';
 
-describe('Custom structs', () => {
+describe('structs', () => {
   describe('Location Contexts', () => {
     it('Should stringify and parse Section Context', () => {
       const context = makeSectionContext({ id: 'test' });
@@ -192,6 +192,7 @@ describe('Custom structs', () => {
             [TaggingAttribute.parentElementId]: undefined,
             [TaggingAttribute.trackBlurs]: undefined,
             [TaggingAttribute.trackClicks]: undefined,
+            [TaggingAttribute.trackVisibility]: undefined,
             [TaggingAttribute.validate]: undefined,
           },
         }))

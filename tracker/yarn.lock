@@ -2466,6 +2466,30 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@objectiv/queue-local-storage@^0.0.1, @objectiv/queue-local-storage@workspace:queues/local-storage":
+  version: 0.0.0-use.local
+  resolution: "@objectiv/queue-local-storage@workspace:queues/local-storage"
+  dependencies:
+    "@objectiv/testing-tools": 0.0.1
+    "@objectiv/tracker-core": ~0.0.1
+    "@rollup/plugin-commonjs": ^21.0.1
+    "@rollup/plugin-node-resolve": ^13.0.6
+    "@types/jest": ^27.0.2
+    depcheck: ^1.4.2
+    jest: ^27.3.1
+    jest-standard-reporter: ^2.0.0
+    prettier: ^2.4.1
+    rollup: ^2.58.3
+    rollup-plugin-filesize: ^9.1.1
+    rollup-plugin-sizes: ^1.0.4
+    rollup-plugin-terser: ^7.0.2
+    rollup-plugin-ts: ^1.4.7
+    shx: ^0.3.3
+    ts-jest: ^27.0.7
+    typescript: ^4.4.4
+  languageName: unknown
+  linkType: soft
+
 "@objectiv/schema@^0.0.1, @objectiv/schema@workspace:core/schema, @objectiv/schema@~0.0.1":
   version: 0.0.0-use.local
   resolution: "@objectiv/schema@workspace:core/schema"
@@ -2505,6 +2529,7 @@ __metadata:
     zone.js: ^0.11.4
   peerDependencies:
     "@objectiv/tracker-browser": ^0.0.1
+    uuid-random: ^1.3.2
   languageName: unknown
   linkType: soft
 
@@ -2513,8 +2538,12 @@ __metadata:
   resolution: "@objectiv/tracker-browser@workspace:trackers/browser"
   dependencies:
     "@objectiv/plugin-web-document-context": ^0.0.1
+    "@objectiv/queue-local-storage": ^0.0.1
     "@objectiv/testing-tools": 0.0.1
     "@objectiv/tracker-core": ^0.0.1
+    "@objectiv/transport-debug": ^0.0.1
+    "@objectiv/transport-fetch": ^0.0.1
+    "@objectiv/transport-xhr": ^0.0.1
     "@rollup/plugin-commonjs": ^21.0.1
     "@rollup/plugin-node-resolve": ^13.0.6
     "@types/jest": ^27.0.2
@@ -2533,7 +2562,6 @@ __metadata:
     superstruct: ^0.15.3
     ts-jest: ^27.0.7
     typescript: ^4.4.4
-    xhr-mock: ^2.5.1
   peerDependencies:
     uuid-random: ^1.3.2
   languageName: unknown
@@ -2604,8 +2632,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@objectiv/tracker-react@workspace:trackers/react"
   dependencies:
+    "@objectiv/queue-local-storage": ^0.0.1
+    "@objectiv/testing-tools": 0.0.1
     "@objectiv/tracker-core": ~0.0.1
     "@objectiv/tracker-core-react": ~0.0.1
+    "@objectiv/transport-fetch": ^0.0.1
+    "@objectiv/transport-xhr": ^0.0.1
     "@rollup/plugin-commonjs": ^21.0.1
     "@rollup/plugin-node-resolve": ^13.0.6
     "@types/jest": ^27.0.2
@@ -2614,6 +2646,79 @@ __metadata:
     jest-fetch-mock: ^3.0.3
     jest-standard-reporter: ^2.0.0
     jest-useragent-mock: ^0.1.1
+    prettier: ^2.4.1
+    rollup: ^2.58.3
+    rollup-plugin-filesize: ^9.1.1
+    rollup-plugin-sizes: ^1.0.4
+    rollup-plugin-terser: ^7.0.2
+    rollup-plugin-ts: ^1.4.7
+    shx: ^0.3.3
+    ts-jest: ^27.0.7
+    typescript: ^4.4.4
+  languageName: unknown
+  linkType: soft
+
+"@objectiv/transport-debug@^0.0.1, @objectiv/transport-debug@workspace:transports/debug":
+  version: 0.0.0-use.local
+  resolution: "@objectiv/transport-debug@workspace:transports/debug"
+  dependencies:
+    "@objectiv/testing-tools": 0.0.1
+    "@objectiv/tracker-core": ~0.0.1
+    "@rollup/plugin-commonjs": ^21.0.1
+    "@rollup/plugin-node-resolve": ^13.0.6
+    "@types/jest": ^27.0.2
+    depcheck: ^1.4.2
+    jest: ^27.3.1
+    jest-standard-reporter: ^2.0.0
+    prettier: ^2.4.1
+    rollup: ^2.58.3
+    rollup-plugin-filesize: ^9.1.1
+    rollup-plugin-sizes: ^1.0.4
+    rollup-plugin-terser: ^7.0.2
+    rollup-plugin-ts: ^1.4.7
+    shx: ^0.3.3
+    ts-jest: ^27.0.7
+    typescript: ^4.4.4
+  languageName: unknown
+  linkType: soft
+
+"@objectiv/transport-fetch@^0.0.1, @objectiv/transport-fetch@workspace:transports/fetch":
+  version: 0.0.0-use.local
+  resolution: "@objectiv/transport-fetch@workspace:transports/fetch"
+  dependencies:
+    "@objectiv/testing-tools": 0.0.1
+    "@objectiv/tracker-core": ~0.0.1
+    "@rollup/plugin-commonjs": ^21.0.1
+    "@rollup/plugin-node-resolve": ^13.0.6
+    "@types/jest": ^27.0.2
+    depcheck: ^1.4.2
+    jest: ^27.3.1
+    jest-fetch-mock: ^3.0.3
+    jest-standard-reporter: ^2.0.0
+    prettier: ^2.4.1
+    rollup: ^2.58.3
+    rollup-plugin-filesize: ^9.1.1
+    rollup-plugin-sizes: ^1.0.4
+    rollup-plugin-terser: ^7.0.2
+    rollup-plugin-ts: ^1.4.7
+    shx: ^0.3.3
+    ts-jest: ^27.0.7
+    typescript: ^4.4.4
+  languageName: unknown
+  linkType: soft
+
+"@objectiv/transport-xhr@^0.0.1, @objectiv/transport-xhr@workspace:transports/xhr":
+  version: 0.0.0-use.local
+  resolution: "@objectiv/transport-xhr@workspace:transports/xhr"
+  dependencies:
+    "@objectiv/testing-tools": 0.0.1
+    "@objectiv/tracker-core": ~0.0.1
+    "@rollup/plugin-commonjs": ^21.0.1
+    "@rollup/plugin-node-resolve": ^13.0.6
+    "@types/jest": ^27.0.2
+    depcheck: ^1.4.2
+    jest: ^27.3.1
+    jest-standard-reporter: ^2.0.0
     prettier: ^2.4.1
     rollup: ^2.58.3
     rollup-plugin-filesize: ^9.1.1
@@ -3902,33 +4007,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"caniuse-lite@npm:^1.0.30000981, caniuse-lite@npm:^1.0.30001109, caniuse-lite@npm:^1.0.30001259":
-  version: 1.0.30001260
-  resolution: "caniuse-lite@npm:1.0.30001260"
-  dependencies:
-    nanocolors: ^0.1.0
-  checksum: a3a61073204636e02bc3972bfdcd8b3c3a2fb56f29b5ffa95fad7e5a01e2eece2ed92f1246728185992618a04f9221cbd83ddd96d2ef68083353d55ffe660e29
-  languageName: node
-  linkType: hard
-
-"caniuse-lite@npm:^1.0.30001219":
-  version: 1.0.30001228
-  resolution: "caniuse-lite@npm:1.0.30001228"
-  checksum: d7ea2234d3ad1841dab6cd0b6ee16e89958f5893ef2e024a7447d6f889f496e40b6dafe000f391b8d4f0c0ef08671dbb5969fd66e6f74d402994865ce5705a53
-  languageName: node
-  linkType: hard
-
-"caniuse-lite@npm:^1.0.30001254":
-  version: 1.0.30001255
-  resolution: "caniuse-lite@npm:1.0.30001255"
-  checksum: 6889855b5e4d4496d183c52eb214327d8a8120b2c7b935948ae44cf64748c7b2f3c13d3917a10bb47697b9ba5e9a4bfd4b1ed8319f7f8e6609b3ebd3ba1184b3
-  languageName: node
-  linkType: hard
-
-"caniuse-lite@npm:^1.0.30001260, caniuse-lite@npm:^1.0.30001271":
-  version: 1.0.30001271
-  resolution: "caniuse-lite@npm:1.0.30001271"
-  checksum: 0271e234e17c588fa203a34523f90c5a21ab62f41a2c3acabe96f0251593ac92f192cadd7a3dcbcf49bb28de4f57ca274d775c75700c3f38e9c42028d3becb0f
+"caniuse-lite@npm:^1.0.30000981, caniuse-lite@npm:^1.0.30001109, caniuse-lite@npm:^1.0.30001219, caniuse-lite@npm:^1.0.30001254, caniuse-lite@npm:^1.0.30001259, caniuse-lite@npm:^1.0.30001260, caniuse-lite@npm:^1.0.30001271":
+  version: 1.0.30001287
+  resolution: "caniuse-lite@npm:1.0.30001287"
+  checksum: b53c26a3a267a2920394e4aa5d1f60a76f891943914068066700e5497dda512f096d8a77dfefda17306a9df06e16ce9c6b5179f8856cc0efbcd8873d13b2fbea
   languageName: node
   linkType: hard
 
@@ -7015,7 +7097,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nanocolors@npm:^0.1.0, nanocolors@npm:^0.1.5":
+"nanocolors@npm:^0.1.5":
   version: 0.1.12
   resolution: "nanocolors@npm:0.1.12"
   checksum: 2ce58f57006ddd1d2680d05fe21f54d858db8ba81bd13381598ddc546f7637e33c4407da2ea7da40ea1c96794250e7c14a4d00358b48eeae4d917d6a92bafe4c

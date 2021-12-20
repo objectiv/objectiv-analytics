@@ -1,10 +1,8 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-import pandas
 import pytest
 
-from bach import from_pandas
 from sql_models.graph_operations import get_graph_nodes_info
 from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data
 
@@ -113,15 +111,11 @@ def test_get_unsampled_multiple_nodes():
     # 3. Add node to sampled dataframe
     # 4. Go back to unsampled data
     bt = get_bt_with_test_data(False)
-    assert len(get_graph_nodes_info(bt.base_node)) == 1
     bt = bt[['municipality', 'inhabitants', 'founding']]
     bt['inhabitants_more'] = bt['inhabitants'] + 1000
     bt = bt.materialize()
     bt['inhabitants_more'] = bt['inhabitants_more'] + 1000
-    bt = bt.materialize()
-
-    node_count_bt = len(get_graph_nodes_info(bt.base_node))
-    assert node_count_bt == 3
+    assert len(get_graph_nodes_info(bt.base_node)) == 2  # assert graph contains multiple nodes
 
     bt_sample = bt.get_sample(table_name='test_data_sample',
                               sample_percentage=50,
@@ -132,19 +126,11 @@ def test_get_unsampled_multiple_nodes():
     bt_sample = bt_sample[['municipality', 'inhabitants_more', 'founding']]
     bt_sample['inhabitants_plus_3000'] = bt_sample['inhabitants_more'] + 1000
     del bt_sample['inhabitants_more']
-    bt_sample = bt_sample.materialize()
     bt_sample = bt_sample.groupby('municipality').sum(numeric_only=True)
     bt_sample['inhabitants_plus_3000_sum'] -= 3000
 
-    node_count_bt_sample = len(get_graph_nodes_info(bt_sample.base_node))
-    assert node_count_bt_sample == 2
-
     bt2 = bt_sample.get_unsampled()
     bt2['extra_ppl'] = bt2.inhabitants_plus_3000_sum + 5
-
-    node_count_bt2 = len(get_graph_nodes_info(bt2.base_node))
-    # since sample was grouped, it needs to materialize internally, we expect one more node
-    assert node_count_bt2 == (node_count_bt + node_count_bt_sample) == 5
 
     with pytest.raises(ValueError, match='has not been sampled'):
         bt2.get_unsampled()
@@ -158,5 +144,62 @@ def test_get_unsampled_multiple_nodes():
         expected_data=[
             ['Leeuwarden', 1, 1285, 93485, 93490],
             ['Súdwest-Fryslân', 5, 2724, 39575, 39580]
+        ]
+    )
+
+
+def test_sample_grouped():
+    bt = get_bt_with_test_data(True)
+    bt = bt[['municipality', 'inhabitants', 'founding']]
+    bt['founding_century'] = (bt['founding'] // 100) + 1
+    btg = bt.groupby('municipality').sort_values('municipality')
+    btg_min = btg.min()
+
+    btg_sample = btg.get_sample(table_name='test_data_sample',
+                                sample_percentage=50,
+                                seed=200,
+                                overwrite=True)
+    btg_sample_max = btg_sample.max()
+    btg_sample_max = btg_sample_max[['founding_century_max']]
+    btg_sample_max['founding_century_max_plus_10'] = btg_sample_max['founding_century_max'] + 10
+    del btg_sample_max['founding_century_max']
+
+    btg_unsampled_max = btg_sample_max.get_unsampled()
+    # btg_sample_max was grouped at the moment that we unsample it. Make sure that the unsampled df
+    # is grouped in the same way
+    assert btg_unsampled_max.group_by.index.keys() == btg_sample_max.group_by.index.keys()
+
+    btg_unsampled_max['after_unsample_plus_20'] = btg_unsampled_max.founding_century_max_plus_10 + 10
+    btg_unsampled_max['founding_century_min'] = btg_min['founding_century_min']
+
+    with pytest.raises(ValueError, match='has not been sampled'):
+        btg_unsampled_max.get_unsampled()
+
+    # Assert sampled data first.
+    # We expect less rows than in the unsampled data. Which rows are returned should be deterministic
+    # given the seed and sample_percentage.
+    assert_equals_data(
+        btg_sample_max,
+        expected_columns=['municipality', 'founding_century_max_plus_10'],
+        expected_data=[
+            ['De Friese Meren', 25.0],
+            ['Súdwest-Fryslân', 23.0]
+        ]
+    )
+
+    # Assert unsampled data.
+    # Should have all rows, and a few more columns as we added those after unsampling.
+    assert_equals_data(
+        btg_unsampled_max,
+        expected_columns=[
+            'municipality', 'founding_century_max_plus_10', 'after_unsample_plus_20', 'founding_century_min'
+        ],
+        expected_data=[
+            ['De Friese Meren', 25.0, 35.0, 15.0],
+            ['Harlingen', 23.0, 33.0, 13.0],
+            ['Leeuwarden', 23.0, 33.0, 13.0],
+            ['Noardeast-Fryslân', 23.0, 33.0, 13.0],
+            ['Súdwest-Fryslân', 25.0, 35.0, 11.0],
+            ['Waadhoeke', 24.0, 34.0, 14.0]
         ]
     )

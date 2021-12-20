@@ -2,3 +2,7 @@
 -e ../../bach
 sqlalchemy
 dash
+
+# metabase
+requests
+

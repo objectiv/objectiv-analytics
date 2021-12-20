@@ -10,7 +10,7 @@ import { stringifyTrackClicks } from '../common/stringifiers/stringifyTrackClick
 import { stringifyTrackVisibility } from '../common/stringifiers/stringifyTrackVisibility';
 import { stringifyValidate } from '../common/stringifiers/stringifyValidate';
 import { trackerErrorHandler } from '../common/trackerErrorHandler';
-import { AnyClickableContext, AnySectionContext, InputContext } from '../definitions/LocationContext';
+import { AnyClickableContext, AnyShowableContext, InputContext } from '../definitions/LocationContext';
 import { TaggingAttribute } from '../definitions/TaggingAttribute';
 import { TagLocationAttributes } from '../definitions/TagLocationAttributes';
 import { TagLocationParameters } from '../definitions/TagLocationParameters';
@@ -38,12 +38,12 @@ export const tagLocation = (parameters: TagLocationParameters): TagLocationRetur
     // Determine Context type
     const isClickable = is(instance, AnyClickableContext);
     const isInput = is(instance, InputContext);
-    const isSection = is(instance, AnySectionContext);
+    const isShowable = is(instance, AnyShowableContext);
 
     // Process options. Gather default attribute values
     const trackClicks = options?.trackClicks ?? (isClickable ? true : undefined);
     const trackBlurs = options?.trackBlurs ?? (isInput ? true : undefined);
-    const trackVisibility = options?.trackVisibility ?? (isSection ? { mode: 'auto' } : undefined);
+    const trackVisibility = options?.trackVisibility ?? (isShowable ? { mode: 'auto' } : undefined);
     const parentElementId = options?.parent ? options.parent[TaggingAttribute.elementId] : undefined;
 
     // Create output attributes object

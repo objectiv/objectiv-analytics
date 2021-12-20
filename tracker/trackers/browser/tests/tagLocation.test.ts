@@ -79,7 +79,6 @@ describe('tagLocation', () => {
         _type: 'SectionContext',
         id: 'test',
       }),
-      [TaggingAttribute.trackVisibility]: '{"mode":"auto"}',
     });
     expect(
       tagElement({
@@ -114,7 +113,6 @@ describe('tagLocation', () => {
         _type: 'SectionContext',
         id: 'test',
       }),
-      [TaggingAttribute.trackVisibility]: '{"mode":"auto"}',
     });
     expect(tagElement({ id: 'test', options: { parent } })).toStrictEqual({
       [TaggingAttribute.elementId]: matchUUID,
@@ -126,7 +124,6 @@ describe('tagLocation', () => {
         _type: 'SectionContext',
         id: 'test',
       }),
-      [TaggingAttribute.trackVisibility]: '{"mode":"auto"}',
     });
   });
 
@@ -162,7 +159,6 @@ describe('tagLocation', () => {
         _type: 'SectionContext',
         id: 'test-section',
       }),
-      [TaggingAttribute.trackVisibility]: '{"mode":"auto"}',
     };
 
     expect(taggingAttributes).toStrictEqual(expectedTaggingAttributes);
@@ -238,7 +234,6 @@ describe('tagLocation', () => {
         _type: 'MediaPlayerContext',
         id: 'test-media-player',
       }),
-      [TaggingAttribute.trackVisibility]: '{"mode":"auto"}',
     };
 
     expect(taggingAttributes).toStrictEqual(expectedTaggingAttributes);
@@ -255,7 +250,6 @@ describe('tagLocation', () => {
         _type: 'NavigationContext',
         id: 'test-nav',
       }),
-      [TaggingAttribute.trackVisibility]: '{"mode":"auto"}',
     };
 
     expect(taggingAttributes).toStrictEqual(expectedTaggingAttributes);

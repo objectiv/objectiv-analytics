@@ -35,9 +35,11 @@
       "@objectiv/testing-tools": ["core/testing-tools/src"],
       "@objectiv/schema": ["core/schema/src"],
       "@objectiv/plugin-*": ["plugins/*/src"],
+      "@objectiv/queue-*": ["queues/*/src"],
       "@objectiv/tracker-core": ["core/tracker/src"],
       "@objectiv/tracker-core-react": ["core/react/src"],
       "@objectiv/tracker-*": ["trackers/*/src"],
+      "@objectiv/transport-*": ["transports/*/src"]
     }
   },
   "exclude": [

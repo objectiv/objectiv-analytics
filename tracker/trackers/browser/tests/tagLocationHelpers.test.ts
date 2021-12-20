@@ -92,7 +92,6 @@ describe('tagLocationHelpers', () => {
         _type: 'SectionContext',
         id: 'test-section',
       }),
-      [TaggingAttribute.trackVisibility]: '{"mode":"auto"}',
     };
 
     expect(taggingAttributes).toStrictEqual(expectedTaggingAttributes);
@@ -164,7 +163,6 @@ describe('tagLocationHelpers', () => {
         _type: 'MediaPlayerContext',
         id: 'test-media-player',
       }),
-      [TaggingAttribute.trackVisibility]: '{"mode":"auto"}',
     };
 
     expect(taggingAttributes).toStrictEqual(expectedTaggingAttributes);
@@ -181,7 +179,6 @@ describe('tagLocationHelpers', () => {
         _type: 'NavigationContext',
         id: 'test-nav',
       }),
-      [TaggingAttribute.trackVisibility]: '{"mode":"auto"}',
     };
 
     expect(taggingAttributes).toStrictEqual(expectedTaggingAttributes);

@@ -59,6 +59,8 @@ services:
     image: postgres:latest
     networks:
       - obj
+    ports:
+      - 5432:5432
     environment:
       <<: *db_env_variables
       # WARNING: Disabling authentication here
@@ -86,12 +88,42 @@ services:
       - objectiv_collector
     environment:
       <<: *db_env_variables
+      METABASE_URL: "http://objectiv_metabase:3000"
+      METABASE_WEB_URL: "http://localhost:3000"
+      METABASE_USERNAME: "demo@objectiv.io"
+      METABASE_PASSWORD: "metabase1"
+      METABASE_DASHBOARD_ID: 1 # 1-model-hub
+      METABASE_DATABASE_ID: 2 # objectiv database
+      METABASE_COLLECTION_ID: 2 # 2-objectiv
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8888" ]
       interval: 30s
       timeout: 2s
       retries: 3
 
+  objectiv_metabase:
+    container_name: objectiv_metabase
+    image: metabase/metabase
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - obj
+    depends_on:
+      # depend on notebook, as that will init the db
+      - objectiv_postgres
+      - objectiv_notebook
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabase
+      MB_DB_PORT: 5432
+      MB_DB_USER: metabase
+      MB_DB_PASS: metabase
+      MB_DB_HOST: objectiv_postgres
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000" ]
+      interval: 30s
+      timeout: 2s
+      retries: 3
 
 # use bridged networking, so we can access services provided from the host
 networks:

@@ -60,12 +60,15 @@
     "rollup-plugin-ts": "^1.4.7",
     "shx": "^0.3.3",
     "ts-jest": "^27.0.7",
-    "typescript": "^4.4.4",
-    "xhr-mock": "^2.5.1"
+    "typescript": "^4.4.4"
   },
   "dependencies": {
     "@objectiv/plugin-web-document-context": "^0.0.1",
+    "@objectiv/queue-local-storage": "^0.0.1",
     "@objectiv/tracker-core": "^0.0.1",
+    "@objectiv/transport-debug": "^0.0.1",
+    "@objectiv/transport-fetch": "^0.0.1",
+    "@objectiv/transport-xhr": "^0.0.1",
     "superstruct": "^0.15.3"
   },
   "peerDependencies": {

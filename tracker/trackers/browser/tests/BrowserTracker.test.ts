@@ -4,9 +4,10 @@
 
 import { mockConsole } from '@objectiv/testing-tools';
 import { TrackerEvent, TrackerPlugins, TrackerQueue, TrackerTransportRetry } from '@objectiv/tracker-core';
+import { defaultFetchFunction, FetchTransport } from '@objectiv/transport-fetch';
 import fetchMock from 'jest-fetch-mock';
 import { clear, mockUserAgent } from 'jest-useragent-mock';
-import { BrowserTracker, defaultFetchFunction, FetchAPITransport } from '../src/';
+import { BrowserTracker } from '../src/';
 
 describe('BrowserTracker', () => {
   beforeEach(() => {
@@ -34,7 +35,7 @@ describe('BrowserTracker', () => {
         new BrowserTracker({
           applicationId: 'app-id',
           endpoint: 'localhost',
-          transport: new FetchAPITransport({
+          transport: new FetchTransport({
             endpoint: 'localhost',
           }),
         })
@@ -56,7 +57,7 @@ describe('BrowserTracker', () => {
       transport: {
         transportName: 'TrackerTransportSwitch',
         firstUsableTransport: {
-          transportName: 'FetchAPITransport',
+          transportName: 'FetchTransport',
           endpoint: 'localhost',
           fetchFunction: defaultFetchFunction,
         },
@@ -71,7 +72,7 @@ describe('BrowserTracker', () => {
       processFunction: expect.any(Function),
       processingEventIds: [],
       store: {
-        queueStoreName: 'TrackerQueueLocalStorage',
+        queueStoreName: 'LocalStorageQueueStore',
         localStorageKey: 'objectiv-events-queue-app-id',
       },
     });
@@ -80,10 +81,10 @@ describe('BrowserTracker', () => {
   it('should instantiate with `transport`', () => {
     const testTracker = new BrowserTracker({
       applicationId: 'app-id',
-      transport: new FetchAPITransport({ endpoint: 'localhost' }),
+      transport: new FetchTransport({ endpoint: 'localhost' }),
     });
     expect(testTracker).toBeInstanceOf(BrowserTracker);
-    expect(testTracker.transport).toBeInstanceOf(FetchAPITransport);
+    expect(testTracker.transport).toBeInstanceOf(FetchTransport);
   });
 
   describe('env sensitive logic', () => {
@@ -102,7 +103,7 @@ describe('BrowserTracker', () => {
 
       const testTracker = new BrowserTracker({
         applicationId: 'app-id',
-        transport: new FetchAPITransport({ endpoint: 'localhost' }),
+        transport: new FetchTransport({ endpoint: 'localhost' }),
       });
 
       expect(testTracker.console).toEqual(console);
@@ -113,7 +114,7 @@ describe('BrowserTracker', () => {
 
       const testTracker = new BrowserTracker({
         applicationId: 'app-id',
-        transport: new FetchAPITransport({ endpoint: 'localhost' }),
+        transport: new FetchTransport({ endpoint: 'localhost' }),
       });
 
       expect(testTracker.console).toEqual(undefined);
@@ -124,7 +125,7 @@ describe('BrowserTracker', () => {
 
       const testTracker = new BrowserTracker({
         applicationId: 'app-id',
-        transport: new FetchAPITransport({ endpoint: 'localhost' }),
+        transport: new FetchTransport({ endpoint: 'localhost' }),
         console: mockConsole,
       });
 
@@ -136,7 +137,7 @@ describe('BrowserTracker', () => {
 
       const testTracker = new BrowserTracker({
         applicationId: 'app-id',
-        transport: new FetchAPITransport({ endpoint: 'localhost' }),
+        transport: new FetchTransport({ endpoint: 'localhost' }),
         console: mockConsole,
       });
 

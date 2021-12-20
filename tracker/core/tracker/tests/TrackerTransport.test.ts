@@ -366,7 +366,6 @@ describe('TrackerTransportRetry', () => {
   });
 
   it('should stop retrying if we reached maxRetryMs', async () => {
-    jest.useRealTimers();
     const slowFailingTransport = {
       transportName: 'SlowFailingTransport',
       handle: async () => new Promise((_, reject) => setTimeout(() => reject(new TransportSendError()), 100)),
@@ -386,6 +385,8 @@ describe('TrackerTransportRetry', () => {
     await expect(retryTransportAttempt.run()).rejects.toEqual(
       expect.arrayContaining([new Error('maxRetryMs reached')])
     );
+
+    jest.runAllTimers();
 
     expect(retryTransportAttempt.retry).toHaveBeenCalledTimes(1);
     expect(slowFailingTransport.handle).toHaveBeenCalledTimes(1);

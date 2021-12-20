@@ -4,9 +4,9 @@
  */
 
 import { generateUUID, makeClickEvent } from '@objectiv/tracker-core';
+import { DebugTransport } from '@objectiv/transport-debug';
 import {
   BrowserTracker,
-  DebugTransport,
   getLocationHref,
   getTracker,
   makeMutationCallback,
@@ -15,7 +15,6 @@ import {
   trackAborted,
   trackApplicationLoaded,
   trackCompleted,
-  TrackerQueueLocalStorage,
   trackEvent,
   trackURLChange,
 } from '../src';
@@ -116,11 +115,5 @@ describe('Without DOM', () => {
 
     expect(tracker.trackEvent).not.toHaveBeenCalled();
     expect(console.error).toHaveBeenCalledTimes(1);
-  });
-
-  it('should throw if TrackerQueueLocalStorage gets constructed', async () => {
-    expect(() => new TrackerQueueLocalStorage({ trackerId: 'app-id' })).toThrow(
-      'TrackerQueueLocalStorage: failed to initialize: window.localStorage is not available.'
-    );
   });
 });

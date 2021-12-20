@@ -102,12 +102,6 @@ export * from './mutationObserver/trackRemovedElements';
 export * from './mutationObserver/trackVisibilityHiddenEvent';
 export * from './mutationObserver/trackVisibilityVisibleEvent';
 
-export * from './queues/TrackerQueueLocalStorage';
-
-export * from './transports/DebugTransport';
-export * from './transports/FetchAPITransport';
-export * from './transports/XMLHttpRequestTransport';
-
 export * from './BrowserTracker';
 export * from './getOrMakeTracker';
 export * from './getTracker';

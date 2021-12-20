@@ -231,3 +231,10 @@ export type AnyActionContext = Infer<typeof AnyActionContext>;
 export const AnyClickableContext = union([AnyActionContext, ExpandableSectionContext]);
 
 export type AnyClickableContext = Infer<typeof AnyClickableContext>;
+
+/**
+ * Struct union to match any Showable Context, that is Overlays and ExpandableSectionContext
+ */
+export const AnyShowableContext = union([OverlayContext, ExpandableSectionContext]);
+
+export type AnyShowableContext = Infer<typeof AnyShowableContext>;

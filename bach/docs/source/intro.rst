@@ -12,7 +12,7 @@ full dataset, and you can output models to SQL with a single command. It include
 enable effective feature creation for datasets that embrace the open taxonomy of analytics.
 
 We've set up a online `sandboxed notebook <https://notebook.objectiv.io/lab?path=product_analytics.ipynb>`_
-with Objective Analytics data for you to play around, to demonstrate what Bach can do without the need to
+with Objectiv Analytics data for you to play around, to demonstrate what Bach can do without the need to
 install anything. Beware this is python compiled to javascript, running in the browser; so the performance
 is not the same as running Bach in a normal python notebook. Especially the initial loading can be slow.
 
