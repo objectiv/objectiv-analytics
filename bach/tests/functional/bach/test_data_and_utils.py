@@ -257,7 +257,10 @@ def create_objectiv_table():
         moment    timestamp ,
         cookie_id uuid      ,
         value     json
-    )
+    );
+
+    alter table objectiv_data
+        owner to objectiv
     """
 
     run_query(sqlalchemy.create_engine(DB_TEST_URL), sql)
