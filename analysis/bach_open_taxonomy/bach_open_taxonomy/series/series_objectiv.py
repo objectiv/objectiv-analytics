@@ -652,7 +652,7 @@ class ObjectivFrame(DataFrame):
                            table_name: str = 'data') -> 'ObjectivFrame':
         """
         :param engine: a Sqlalchemy Engine for the database. If not given, env DSN is used to create one. If
-            that's not there, the default of 'postgresql://@localhost:5432/postgres' will be used.
+            that's not there, the default of 'postgresql://objectiv:@localhost:5432/objectiv' will be used.
         :param start_date: first date for which data is loaded to the DataFrame. If None, data is loaded from
             the first date in the sql table.
         :param end_date: last date for which data is loaded to the DataFrame. If None, data is loaded up to
@@ -665,7 +665,7 @@ class ObjectivFrame(DataFrame):
         if engine is None:
             import sqlalchemy
             import os
-            dsn = os.environ.get('DSN', 'postgresql://@localhost:5432/postgres')
+            dsn = os.environ.get('DSN', 'postgresql://objectiv:@localhost:5432/objectiv')
             engine = sqlalchemy.create_engine(dsn, pool_size=1, max_overflow=0)
 
         sql = f"""
