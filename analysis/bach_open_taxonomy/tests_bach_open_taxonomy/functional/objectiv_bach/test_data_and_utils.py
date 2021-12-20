@@ -74,6 +74,7 @@ def get_objectiv_frame(time_aggregation=None):
     alter table objectiv_data
         owner to objectiv;
     """
+    print(DB_TEST_URL)
     run_query(sqlalchemy.create_engine(DB_TEST_URL), sql)
     run_query(sqlalchemy.create_engine(DB_TEST_URL), TEST_DATA_OBJECTIV)
 
