@@ -7,13 +7,11 @@ This file does not contain any test, but having the file's name start with `test
 as a test file. This makes pytest rewrite the asserts to give clearer errors.
 """
 
-from tests.functional.bach.test_data_and_utils import run_query, _get_bt
+from tests.functional.bach.test_data_and_utils import _get_bt, create_objectiv_table
 from bach_open_taxonomy import ObjectivFrame
 from bach import DataFrame
-import sqlalchemy
 import os
 
-DB_TEST_URL = os.environ.get('OBJ_DB_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
 
 # all data below is generated dummy data
 TEST_DATA_JSON_REAL = [
@@ -59,23 +57,6 @@ def get_bt_with_json_data_real() -> DataFrame:
     return bt
 
 def get_objectiv_frame(time_aggregation=None):
-    sql = """
-    drop table if exists objectiv_data;
-
-    create table objectiv_data
-    (
-        event_id  uuid      ,
-        day       date      ,
-        moment    timestamp ,
-        cookie_id uuid      ,
-        value     json
-    );
-
-    alter table objectiv_data
-        owner to objectiv;
-    """
-    print(DB_TEST_URL)
-    run_query(sqlalchemy.create_engine(DB_TEST_URL), sql)
-    run_query(sqlalchemy.create_engine(DB_TEST_URL), TEST_DATA_OBJECTIV)
+    create_objectiv_table()
 
     return ObjectivFrame.from_objectiv_data(table_name='objectiv_data', time_aggregation=time_aggregation)
