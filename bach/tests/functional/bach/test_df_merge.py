@@ -327,6 +327,33 @@ def test_merge_outer_join():
         order_by=['_index_station_id']
     )
 
+    # outer join on index
+    mt2 = get_bt_with_test_data(full_data_set=True)
+    result_merge = bt.merge(mt2, how='outer', left_index=True, right_index=True)
+
+    assert_equals_data(
+        result_merge,
+        expected_columns=[
+            '_index_skating_order',
+            'skating_order_x', 'city_x', 'skating_order_y', 'city_y', 'municipality', 'inhabitants', 'founding'
+        ],
+        # in bt there is no row with _index_skating_order >= 4, in mt2 there is. expect to show the union of
+        # indexes.
+        expected_data=[
+            [1, 1.0, 'Ljouwert', 1, 'Ljouwert', 'Leeuwarden', 93485, 1285],
+            [2, 2.0, 'Snits', 2, 'Snits', 'Súdwest-Fryslân', 33520, 1456],
+            [3, 3.0, 'Drylts', 3, 'Drylts', 'Súdwest-Fryslân', 3055, 1268],
+            [4, None, None, 4, 'Sleat', 'De Friese Meren', 700, 1426],
+            [5, None, None, 5, 'Starum', 'Súdwest-Fryslân', 960, 1061],
+            [6, None, None, 6, 'Hylpen', 'Súdwest-Fryslân', 870, 1225],
+            [7, None, None, 7, 'Warkum', 'Súdwest-Fryslân', 4440, 1399],
+            [8, None, None, 8, 'Boalsert', 'Súdwest-Fryslân', 10120, 1455],
+            [9, None, None, 9, 'Harns', 'Harlingen', 14740, 1234],
+            [10, None, None, 10, 'Frjentsjer', 'Waadhoeke', 12760, 1374],
+            [11, None, None, 11, 'Dokkum', 'Noardeast-Fryslân', 12675, 1298]
+        ]
+    )
+
 
 def test_merge_cross_join():
     bt = get_bt_with_test_data(full_data_set=False)[['city']]
