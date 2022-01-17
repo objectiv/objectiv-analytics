@@ -12,5 +12,6 @@ def test_value_counts() -> None:
     value_counter = ValueCounter(
         df=get_bt_with_test_data(full_data_set=False),
         subset=['municipality'],
+        normalize=True,
     )
     result = value_counter.get_value_counts()

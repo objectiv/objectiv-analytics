@@ -72,9 +72,15 @@ class ValueCounter:
     def _generate_counts_df(self, hashed_df: DataFrame) -> DataFrame:
         counts_per_hash = hashed_df.copy_override()
         counts_per_hash['row_count'] = 1
-        if not self.normalize:
-            counts_per_hash = counts_per_hash.groupby(by=self.ROW_HASH_COLUMN_NAME).agg({'row_count': 'sum'})
-            counts_per_hash = counts_per_hash.rename({'row_count_sum': self.COUNT_COLUMN_NAME})
+
+        counts_per_hash = (
+            counts_per_hash.groupby(by=self.ROW_HASH_COLUMN_NAME).agg({'row_count': 'sum'})
+            .materialize()
+            .rename(columns={'row_count_sum': self.COUNT_COLUMN_NAME})
+        )
+        if self.normalize:
+            counts_per_hash[self.COUNT_COLUMN_NAME] /= counts_per_hash[self.COUNT_COLUMN_NAME].sum()
+
         counts_per_hash = counts_per_hash.reset_index(drop=False)
         counts_per_hash = counts_per_hash[[self.ROW_HASH_COLUMN_NAME, self.COUNT_COLUMN_NAME]]
         return counts_per_hash.materialize(node_name='counts_per_row_hash')
