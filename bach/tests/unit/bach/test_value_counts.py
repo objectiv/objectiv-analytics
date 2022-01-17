@@ -10,8 +10,9 @@ def test_value_counts() -> None:
         dtype={'a': 'string', 'b': 'integer', 'c': 'date'},
     )
     value_counter = ValueCounter(
-        df=get_bt_with_test_data(full_data_set=False),
-        subset=['municipality'],
+        df=get_bt_with_test_data(full_data_set=True),
+        subset=['inhabitants'],
+        bins=2,
         normalize=True,
     )
     result = value_counter.get_value_counts()

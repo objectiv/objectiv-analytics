@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
-from bach import Series, DataFrame, SeriesString
+from bach import Series, DataFrame, SeriesString, SeriesAbstractNumeric
 from bach.expression import Expression
 from bach.sql_model import BachSqlModelBuilder
 from sql_models.util import quote_identifier
@@ -13,7 +13,8 @@ def value_counts(
     normalize: bool = False,
     sort: bool = True,
     ascending: bool = False,
-    dropna: bool = True
+    dropna: bool = True,
+    bins: Optional[int] = None,
 ) -> Series:
     ...
 
@@ -26,6 +27,7 @@ class ValueCounter:
     sort: bool = True
     ascending: bool = False
     dropna: bool = True
+    bins: Optional[int] = None
 
     ROW_HASH_COLUMN_NAME = 'row_hash'
     COUNT_COLUMN_NAME = 'row_hash_agg_count'
@@ -48,14 +50,21 @@ class ValueCounter:
     def _process_params(self) -> None:
         if not self.subset:
             self.subset = list(self.df.data.keys())
-            return
 
         for sub_series in self.subset:
             if sub_series not in self.df.data:
                 raise ValueError(f'{sub_series} was not found in dataframe.')
 
+        if self.bins and len(self.subset) > 1:
+            raise ValueError('Can only group bins for a single series.')
+
+        if self.bins and not isinstance(self.df.data[self.subset[0]], SeriesAbstractNumeric):
+            raise ValueError('Can only group bins for numerical series.')
+
     def _generate_hashed_subset_df(self) -> DataFrame:
         subset_df = self.df[self.subset].reset_index(drop=True)
+        if self.bins:
+            subset_df = self._generate_bins(subset_df)
 
         row_hash_expr = Expression.construct(fmt=f"md5(row({','.join(self.subset)})::text)")
         subset_df[self.ROW_HASH_COLUMN_NAME] = SeriesString(
@@ -68,6 +77,30 @@ class ValueCounter:
         )
         subset_df = subset_df.materialize()
         return subset_df
+
+    def _generate_bins(self, subset_df: DataFrame) -> DataFrame:
+        subset_series = subset_df[self.subset[0]]
+        min_max_totals = subset_df.agg(['min', 'max', 'count']).materialize()
+        bins_df = subset_df.copy_override()
+        bins_df['bin'] = subset_series.copy_override(
+            name='bin',
+            expression=Expression.construct(
+                f'width_bucket({{}}, {{}}, {{}}, {self.bins})',
+                subset_series,
+                Series.as_independent_subquery(min_max_totals[f'{subset_series.name}_min']),
+                Series.as_independent_subquery(min_max_totals[f'{subset_series.name}_max']),
+            ),
+        )
+        '''
+        def range(series, partition):
+            return series._derived_agg_func(
+                partition=partition,
+                expression=AggregateFunctionExpression.construct("int8range(min({}), max({}), '[]')",
+                                                                 series, series),
+                dtype='string'
+            )
+        '''
+        print('hola')
 
     def _generate_counts_df(self, hashed_df: DataFrame) -> DataFrame:
         counts_per_hash = hashed_df.copy_override()
