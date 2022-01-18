@@ -42,3 +42,10 @@ def test__eq__():
     assert left != right
     left._order_by = [SortColumn(expression=Expression.column_reference('a'), asc=True)]
     assert left == right
+
+    left = left.set_variable('a', 1234)
+    right = right.set_variable('a', '1234')
+    assert left != right
+    left = left.set_variable('a', '1234')
+    right = right.set_variable('a', 1234)
+    assert left == right

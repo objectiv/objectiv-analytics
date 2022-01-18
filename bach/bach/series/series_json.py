@@ -245,9 +245,13 @@ class SeriesJsonb(Series):
         return self.Json(self)
 
     @classmethod
-    def supported_value_to_expression(cls, value: Union[dict, list]) -> Expression:
+    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
+        return Expression.construct('cast({} as jsonb)', literal)
+
+    @classmethod
+    def supported_value_to_literal(cls, value: Union[dict, list]) -> Expression:
         json_value = json.dumps(value)
-        return Expression.construct('cast({} as jsonb)', Expression.string_value(json_value))
+        return Expression.string_value(json_value)
 
     @classmethod
     def dtype_to_expression(cls, source_dtype: str, expression: Expression) -> Expression:

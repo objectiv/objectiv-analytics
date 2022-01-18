@@ -86,12 +86,14 @@ class SeriesTimestamp(SeriesAbstractDateTime):
     supported_value_types = (datetime.datetime, datetime.date, str)
 
     @classmethod
-    def supported_value_to_expression(cls, value: Union[str, datetime.datetime]) -> Expression:
-        value = str(value)
+    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
+        return Expression.construct('cast({} as timestamp without time zone)', literal)
+
+    @classmethod
+    def supported_value_to_literal(cls, value: Union[str, datetime.datetime]) -> Expression:
         # TODO: check here already that the string has the correct format
-        return Expression.construct(
-            'cast({} as timestamp without time zone)', Expression.string_value(value)
-        )
+        str_value = str(value)
+        return Expression.string_value(str_value)
 
     @classmethod
     def dtype_to_expression(cls, source_dtype: str, expression: Expression) -> Expression:
@@ -128,11 +130,15 @@ class SeriesDate(SeriesAbstractDateTime):
     supported_value_types = (datetime.datetime, datetime.date, str)
 
     @classmethod
-    def supported_value_to_expression(cls, value: Union[str, datetime.date]) -> Expression:
+    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
+        return Expression.construct(f'cast({{}} as date)', literal)
+
+    @classmethod
+    def supported_value_to_literal(cls, value: Union[str, datetime.date]) -> Expression:
         if isinstance(value, datetime.date):
             value = str(value)
         # TODO: check here already that the string has the correct format
-        return Expression.construct(f'cast({{}} as date)', Expression.string_value(value))
+        return Expression.string_value(value)
 
     @classmethod
     def dtype_to_expression(cls, source_dtype: str, expression: Expression) -> Expression:
@@ -184,10 +190,14 @@ class SeriesTime(SeriesAbstractDateTime):
     supported_value_types = (datetime.time, str)
 
     @classmethod
-    def supported_value_to_expression(cls, value: Union[str, datetime.time]) -> Expression:
+    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
+        return Expression.construct('cast({} as time without time zone)', literal)
+
+    @classmethod
+    def supported_value_to_literal(cls, value: Union[str, datetime.time]) -> Expression:
         value = str(value)
         # TODO: check here already that the string has the correct format
-        return Expression.construct('cast({} as time without time zone)', Expression.string_value(value))
+        return Expression.string_value(value)
 
     @classmethod
     def dtype_to_expression(cls, source_dtype: str, expression: Expression) -> Expression:
@@ -212,13 +222,17 @@ class SeriesTimedelta(SeriesAbstractDateTime):
     supported_value_types = (datetime.timedelta, numpy.timedelta64, str)
 
     @classmethod
-    def supported_value_to_expression(
+    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
+        return Expression.construct('cast({} as interval)', literal)
+
+    @classmethod
+    def supported_value_to_literal(
             cls,
             value: Union[str, numpy.timedelta64, datetime.timedelta]
     ) -> Expression:
         value = str(value)
         # TODO: check here already that the string has the correct format
-        return Expression.construct('cast({} as interval)', Expression.string_value(value))
+        return Expression.string_value(value)
 
     @classmethod
     def dtype_to_expression(cls, source_dtype: str, expression: Expression) -> Expression:

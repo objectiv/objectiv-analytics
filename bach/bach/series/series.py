@@ -14,9 +14,7 @@ from bach.dataframe import ColumnFunction, dict_name_series_equals
 from bach.expression import Expression, NonAtomicExpression, ConstValueExpression, \
     IndependentSubqueryExpression, SingleValueExpression, AggregateFunctionExpression
 from bach.sql_model import BachSqlModel
-from sql_models.util import quote_identifier
 from bach.types import value_to_dtype
-from sql_models.model import SqlModel
 
 if TYPE_CHECKING:
     from bach.partitioning import GroupBy, Window
@@ -158,20 +156,37 @@ class Series(ABC):
     def supported_value_types(cls) -> Tuple[Type, ...]:
         """
         INTERNAL: List of python types that can be converted to database values using
-        the `supported_value_to_expression()` method.
+        the :meth:`supported_value_to_literal()` and :meth:`supported_literal_to_expression()` methods.
 
         Subclasses can override this value to indicate what types are supported
-        by supported_value_to_expression().
+        by :meth:`supported_value_to_literal()`.
         """
         return tuple()
 
     @classmethod
     @abstractmethod
-    def supported_value_to_expression(cls, value: Any) -> Expression:
+    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
         """
-        INTERNAL: Give the expression for the given value.
+        INTERNAL: Given an expression representing a literal as returned by
+        :meth:`supported_value_to_literal()`, this returns an Expression representing the actual value with
+        the correct type.
 
-        Consider calling the wrapper value_to_expression() instead.
+        Example for dtype `int64`:
+            supported_value_to_literal(123) will return an expression representing '123'
+            supported_literal_to_expression('123') should then turn that into 'cast(123 to bigint)'
+        """
+        raise NotImplementedError()
+
+    @classmethod
+    @abstractmethod
+    def supported_value_to_literal(cls, value: Any) -> Expression:
+        """
+        INTERNAL: Gives an expression for the sql-literal of the given value.
+
+        Note that this is not always the same as the sql representation of the given value!
+        e.g. for the int64 value `123`, the literal we generate is `123` (excluding the quotes), which
+        is a smallint, not a bigint. We then add the cast to 'bigint', but this function _only_ returns the
+        literal not the cast.
 
         Implementations of this function are responsible for correctly quoting and escaping special
         characters in the given value. Either by using ExpressionTokens that allow unsafe values (e.g.
@@ -181,7 +196,7 @@ class Series(ABC):
         Implementations only need to be able to support the value specified by supported_value_types.
 
         :param value: All values of types listed by self.supported_value_types should be supported.
-        :return: Expression representing the the value
+        :return: Expression of a sql-literal for the value
         """
         raise NotImplementedError()
 
@@ -267,9 +282,11 @@ class Series(ABC):
         """
         INTERNAL: Give the expression for the given value.
 
-        Wrapper around cls.supported_value_to_expression() that handles two generic cases:
-            If value is None a simple 'NULL' expresison is returned.
-            If value is not in supported_value_types raises an error.
+        Wrapper around :meth:`Series.supported_value_to_literal()` and
+        :meth:`Series.supported_literal_to_expression()` that handles two generic cases:
+            1. If value is None a simple 'NULL' expression is returned.
+            2. If value is not in supported_value_types raises an error.
+
         :raises TypeError: if value is not an instance of cls.supported_value_types, and not None
         """
         # We should wrap this in a ConstValueExpression or something
@@ -279,7 +296,8 @@ class Series(ABC):
         if not isinstance(value, supported_types):
             raise TypeError(f'value should be one of {supported_types}'
                             f', actual type: {type(value)}')
-        return cls.supported_value_to_expression(value)
+        literal = cls.supported_value_to_literal(value)
+        return cls.supported_literal_to_expression(literal)
 
     @classmethod
     def from_const(cls,
@@ -346,11 +364,7 @@ class Series(ABC):
     def get_column_expression(self, table_alias: str = None) -> Expression:
         """ INTERNAL: Get the column expression for this Series """
         expression = self.expression.resolve_column_references(table_alias)
-        quoted_column_name = quote_identifier(self.name)
-        if expression.to_sql() == quoted_column_name:
-            return expression
-
-        return Expression.construct('{} as {}', expression, Expression.raw(quoted_column_name))
+        return Expression.construct_expr_as_name(expression, self.name)
 
     def _get_supported(self, operation_name: str, supported_dtypes: Tuple[str, ...], other: 'Series'):
         """
@@ -1166,3 +1180,28 @@ def const_to_series(base: Union[Series, DataFrame],
     dtype = value_to_dtype(value)
     series_type = get_series_type_from_dtype(dtype)
     return series_type.from_const(base=base, value=value, name=name)
+
+
+def variable_series(base: Union[Series, DataFrame], value: Any, name: str) -> Series:
+    """
+    INTERNAL: Return a series with the same dtype as the value, but with a VariableToken instead of the
+    value's literal in the series.expression.
+    :param base: Base series or DataFrame. The new Series object will share its engine, index, and
+        base_node with this one.
+    :param value: constant value, used to determine the dtype of the series and the VariableToken in the
+        series's expression.
+    :param name: name of the variable
+    """
+    if isinstance(value, Series):
+        return value
+    dtype = value_to_dtype(value)
+    series_type = get_series_type_from_dtype(dtype)
+    variable_placeholder = Expression.variable(dtype=dtype, name=name)
+    variable_expression = series_type.supported_literal_to_expression(variable_placeholder)
+    result = series_type.get_class_instance(
+        base=base,
+        name='__variable__',
+        expression=ConstValueExpression(variable_expression),
+        group_by=None,
+    )
+    return result

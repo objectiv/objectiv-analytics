@@ -1,15 +1,16 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-from abc import abstractmethod
+import re
 from dataclasses import dataclass
-from typing import Optional, Union, TYPE_CHECKING, List, Dict, Tuple
-from sql_models.model import SqlModel, SqlModelSpec
+from typing import Optional, Union, TYPE_CHECKING, List, Dict, Tuple, Set
+
+from sql_models.model import escape_raw_sql
 from sql_models.util import quote_string, quote_identifier
 
 if TYPE_CHECKING:
     from bach import Series
-    from bach.sql_model import BachSqlModelBuilder
+    from bach.sql_model import BachSqlModel
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,12 @@ class ExpressionToken:
             raise TypeError("Cannot instantiate ExpressionToken directly. Instantiate a subclass.")
 
     def to_sql(self):
+        """
+        Must be implemented by subclasses. Generated SQL must be assumed to be used as raw sql in
+        SqlModel.sql, therefore unknown/untrusted/etc. values should be properly escaped:
+         * escape_format_string() twice, unless the value is a specific SqlModel placeholder or reference
+         * other escaping/quoting as needed.
+        """
         # Not abstract so we can stay a dataclass.
         raise NotImplementedError()
 
@@ -31,7 +38,36 @@ class RawToken(ExpressionToken):
     raw: str
 
     def to_sql(self) -> str:
-        return SqlModelSpec.escape_format_string(self.raw)
+        return escape_raw_sql(self.raw)
+
+
+@dataclass(frozen=True)
+class VariableToken(ExpressionToken):
+    dtype: str
+    name: str
+
+    def to_sql(self) -> str:
+        return '{' + self.dtype_name_to_property_name(self.dtype, self.name) + '}'
+
+    @property
+    def dtype_name(self):
+        from bach.dataframe import DtypeNamePair
+        return DtypeNamePair(dtype=self.dtype, name=self.name)
+
+    @classmethod
+    def dtype_name_to_property_name(cls, dtype: str, name: str) -> str:
+        return f'___bach_variable___{dtype}___{name}'
+
+    @classmethod
+    def property_name_to_token(cls, property_name: str) -> Optional['VariableToken']:
+        """
+        Reverse of dtype_name_to_property_name.
+        Will return None if the property_name doesn't match the pattern
+        """
+        match = re.match('^___bach_variable___([a-zA-Z0-9)]+)___(.+)$', property_name)
+        if not match:
+            return None
+        return cls(match.group(1), match.group(2))
 
 
 @dataclass(frozen=True)
@@ -49,13 +85,13 @@ class ColumnReferenceToken(ExpressionToken):
 
 @dataclass(frozen=True)
 class ModelReferenceToken(ExpressionToken):
-    model: SqlModel['BachSqlModelBuilder']
+    model: 'BachSqlModel'
 
     def refname(self) -> str:
         return f'reference{self.model.hash}'
 
     def to_sql(self) -> str:
-        return f'{{{self.refname()}}}'
+        return f'{{{{{self.refname()}}}}}'
 
 
 @dataclass(frozen=True)
@@ -64,7 +100,15 @@ class StringValueToken(ExpressionToken):
     value: str
 
     def to_sql(self) -> str:
-        return SqlModelSpec.escape_format_string(quote_string(self.value))
+        return escape_raw_sql(quote_string(self.value))
+
+
+@dataclass(frozen=True)
+class IdentifierToken(ExpressionToken):
+    name: str
+
+    def to_sql(self) -> str:
+        return escape_raw_sql(quote_identifier(self.name))
 
 
 class Expression:
@@ -142,9 +186,25 @@ class Expression:
         return cls(data=data)
 
     @classmethod
+    def construct_expr_as_name(cls, expr: 'Expression', name: str) -> 'Expression':
+        """
+        Construct an expression that represents the sql: {expr} as "name"
+        """
+        ident_expr = Expression.identifier(name)
+        if expr.to_sql() == ident_expr.to_sql():
+            # this is to prevent generating sql of the form `x as x`, we'll just return `x` in that case
+            return expr
+        return cls.construct('{} as {}', expr, ident_expr)
+
+    @classmethod
     def raw(cls, raw: str) -> 'Expression':
         """ Return an expression that contains a single RawToken. """
         return cls([RawToken(raw)])
+
+    @classmethod
+    def variable(cls, dtype: str, name: str) -> 'Expression':
+        """ Return an expression that contains a single RawToken. """
+        return cls([VariableToken(dtype=dtype, name=name)])
 
     @classmethod
     def string_value(cls, value: str) -> 'Expression':
@@ -155,12 +215,16 @@ class Expression:
         return cls([StringValueToken(value)])
 
     @classmethod
+    def identifier(cls, name: str) -> 'Expression':
+        return cls([IdentifierToken(name=name)])
+
+    @classmethod
     def column_reference(cls, field_name: str) -> 'Expression':
         """ Construct an expression for field-name, where field-name is a column in a table or CTE. """
         return cls([ColumnReferenceToken(field_name)])
 
     @classmethod
-    def model_reference(cls, model: SqlModel['BachSqlModelBuilder']) -> 'Expression':
+    def model_reference(cls, model: 'BachSqlModel') -> 'Expression':
         """ Construct an expression for model, where model is a reference to a model. """
         return cls([ModelReferenceToken(model)])
 
@@ -227,7 +291,7 @@ class Expression:
                 result.append(data_item)
         return self.__class__(result)
 
-    def get_references(self) -> Dict[str, SqlModel['BachSqlModelBuilder']]:
+    def get_references(self) -> Dict[str, 'BachSqlModel']:
         rv = {}
         for data_item in self.data:
             if isinstance(data_item, Expression):
@@ -235,6 +299,15 @@ class Expression:
             elif isinstance(data_item, ModelReferenceToken):
                 rv[data_item.refname()] = data_item.model
         return rv
+
+    def get_all_tokens(self) -> List[ExpressionToken]:
+        result = []
+        for data_item in self.data:
+            if isinstance(data_item, Expression):
+                result.extend(data_item.get_all_tokens())
+            else:
+                result.append(data_item)
+        return result
 
     def to_sql(self, table_name: Optional[str] = None) -> str:
         """
@@ -305,3 +378,23 @@ class WindowFunctionExpression(Expression):
     def has_aggregate_function(self) -> bool:
         # If a window expression contains an aggregate function, it's not an aggregate expression
         return False
+
+
+def join_expressions(expressions: List[Expression], join_str: str = ', ') -> Expression:
+    """
+    Construct an expression consisting of the given list of expressions joined by the join_str.
+    """
+    fmt = join_str.join(['{}'] * len(expressions))
+    return Expression.construct(fmt, *expressions)
+
+
+def get_variable_tokens(expressions: List['Expression']) -> Set[VariableToken]:
+    """
+    Get the names of all VariableTokens in the list of expressions
+    """
+    found_tokens = set()
+    for expression in expressions:
+        for token in expression.get_all_tokens():
+            if isinstance(token, VariableToken):
+                found_tokens.add(token)
+    return found_tokens

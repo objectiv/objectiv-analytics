@@ -1,13 +1,15 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+from copy import copy
 from enum import Enum
-from typing import Union, List, Tuple, Optional, Dict, Set, NamedTuple
+from typing import Union, List, Tuple, Optional, Dict, Set, NamedTuple, Hashable
 
 from bach import DataFrameOrSeries, DataFrame, ColumnNames, Series
-from bach.expression import Expression
-from sql_models.util import quote_identifier
-from bach.sql_model import BachSqlModelBuilder, BachSqlModel
+from bach.dataframe import DtypeNamePair
+from bach.expression import Expression, join_expressions
+from sql_models.model import Materialization, CustomSqlModelBuilder
+from bach.sql_model import BachSqlModel, get_variable_values_sql, filter_variables, construct_references
 
 
 class How(Enum):
@@ -247,20 +249,27 @@ def merge(
         left=left, right=right, left_on=real_left_on, right_on=real_right_on, suffixes=suffixes
     )
 
+    if isinstance(right, Series):
+        from bach.savepoints import Savepoints
+        right_savepoints = Savepoints()
+        right_variables = {}
+    else:
+        right_savepoints = right.savepoints
+        right_variables = right.variables
+    # copy right_variables, and then overwrite with left. This means that the left variables 'win' in case
+    # where the same variable name/dtype exist in both left and right
+    variables = copy(right_variables)
+    variables.update(left.variables)
+
     model = _get_merge_sql_model(
         left=left,
         right=right,
         how=real_how,
         real_left_on=real_left_on,
         real_right_on=real_right_on,
-        new_column_list=new_index_list + new_data_list
+        new_column_list=new_index_list + new_data_list,
+        variables=variables
     )
-
-    if isinstance(right, Series):
-        from bach.savepoints import Savepoints
-        right_savepoints = Savepoints()
-    else:
-        right_savepoints = right.savepoints
 
     return left.copy_override(
         engine=left.engine,
@@ -269,7 +278,8 @@ def merge(
         series_dtypes={rc.name: rc.dtype for rc in new_data_list},
         group_by=None,
         order_by=[],  # merging resets any sorting
-        savepoints=left.savepoints.merge(right_savepoints)
+        savepoints=left.savepoints.merge(right_savepoints),
+        variables=variables
     )
 
 
@@ -280,6 +290,7 @@ def _get_merge_sql_model(
         real_left_on: List[str],
         real_right_on: List[str],
         new_column_list: List[ResultColumn],
+        variables: Dict['DtypeNamePair', Hashable]
 ) -> BachSqlModel:
     """
     Give the SqlModel to join left and right and select the new_column_list. This model also uses the
@@ -298,28 +309,20 @@ def _get_merge_sql_model(
     else:
         on_clause = Expression.construct('')
 
-    columns_fmt_str = ", ".join(f'{{}} as {quote_identifier(rc.name)}' for rc in new_column_list)
-    columns_expr = Expression.construct(columns_fmt_str, *[rc.expression for rc in new_column_list])
+    columns_expr = join_expressions(
+        [Expression.construct_expr_as_name(rc.expression, rc.name) for rc in new_column_list]
+    )
     join_type_expr = Expression.construct('full outer' if how == How.outer else how.value)
 
-    sql = '''
-        select {columns}
-        from {{left_node}} as l {join_type}
-        join {{right_node}} as r {on}
-        '''
-    model_builder = BachSqlModelBuilder(
-        name='merge_sql',
-        sql=sql,
-        columns=tuple(col.name for col in new_column_list)
-    )
-    model = model_builder(
-        columns=columns_expr,
-        join_type=join_type_expr,
-        on=on_clause,
+    return MergeSqlModel(
+        column_names=tuple(rc.name for rc in new_column_list),
+        columns_expr=columns_expr,
+        join_type_expr=join_type_expr,
+        on_clause=on_clause,
         left_node=left.base_node,
-        right_node=right.base_node
+        right_node=right.base_node,
+        variables=variables
     )
-    return model
 
 
 def _get_expression(df_series: DataFrameOrSeries, label: str) -> Expression:
@@ -331,3 +334,55 @@ def _get_expression(df_series: DataFrameOrSeries, label: str) -> Expression:
     if isinstance(df_series, Series):
         return df_series.expression
     raise TypeError(f'df_series should be DataFrameOrSeries. type: {type(df_series)}')
+
+
+class MergeSqlModel(BachSqlModel):
+    def __init__(self, *,
+                 column_names: Tuple[str, ...],
+                 columns_expr: Expression,
+                 join_type_expr: Expression,
+                 on_clause: Expression,
+                 left_node: BachSqlModel,
+                 right_node: BachSqlModel,
+                 variables: Dict['DtypeNamePair', Hashable]):
+        """
+        :param column_names: tuple with the column_names in order
+        :param columns_expr: A single expression that expresses projecting all needed columns from either
+            left or right
+        :param join_type_expr: expression expressing the join type, e.g. an expression that represents
+            the string 'inner', 'cross', or similar
+        :param on_clause: single expression that expresses the on clause
+        :param left_node, sql-model of the materialized left side of the join
+        :param right_node, sql-model of the materialized right side of the join
+        :param variables: Dictionary of all variable values
+        """
+        columns_str = columns_expr.to_sql()
+        join_type_str = join_type_expr.to_sql()
+        on_str = on_clause.to_sql()
+
+        sql = f'''
+            select {columns_str}
+            from {{{{left_node}}}} as l {join_type_str}
+            join {{{{right_node}}}} as r {on_str}
+            '''
+        name = 'merge_sql'
+
+        # Add all references found in the Expressions to self.references
+        all_expressions = [columns_expr, join_type_expr, on_clause]
+        references = construct_references(
+            base_references={'left_node': left_node, 'right_node': right_node},
+            expressions=all_expressions
+        )
+
+        # Set all variables that are applicable to this model
+        filtered_variables = filter_variables(variables, all_expressions)
+        properties = get_variable_values_sql(filtered_variables)
+
+        super().__init__(
+            model_spec=CustomSqlModelBuilder(sql=sql, name=name),
+            properties=properties,
+            references=references,
+            materialization=Materialization.CTE,
+            materialization_name=None,
+            columns=column_names
+        )

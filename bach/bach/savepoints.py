@@ -2,11 +2,12 @@
 Copyright 2021 Objectiv B.V.
 """
 import re
-from typing import NamedTuple, Dict, List, Union
+from typing import NamedTuple, Dict, List, Union, cast
 
 from sqlalchemy.engine import Engine
 
 from bach import DataFrame
+from bach.sql_model import BachSqlModel
 from sql_models.model import Materialization, SqlModel, CustomSqlModelBuilder
 from sql_models.sql_generator import to_sql_materialized_nodes
 from sql_models.util import quote_identifier
@@ -150,7 +151,8 @@ class Savepoints:
         info = self._entries[savepoint_name]
         full_graph = self._get_combined_graph()
         graph = full_graph.references[f'ref_{info.name}']
-        new_df = info.df_original.copy_override_base_node(base_node=graph)
+        bach_graph = cast(BachSqlModel, graph)  # help mypy, see _get_virtual_node() for why this is correct
+        new_df = info.df_original.copy_override_base_node(base_node=bach_graph)
         if engine_override is not None:
             new_df = new_df.copy_override(engine=engine_override)
         return new_df
@@ -241,7 +243,7 @@ class Savepoints:
         The savepoints are referred by the returned sql-model as 'ref_{name}'.
         """
         entries = list(self._entries.values())
-        references: Dict[str, SqlModel] = {
+        references: Dict[str, BachSqlModel] = {
             f'ref_{entry.name}': entry.df_original.base_node for entry in entries
         }
         # Create one graph with all entries
@@ -278,7 +280,7 @@ class Savepoints:
         return string
 
 
-def _get_virtual_node(references: Dict[str, SqlModel]) -> SqlModel:
+def _get_virtual_node(references: Dict[str, BachSqlModel]) -> SqlModel:
     # TODO: move this to sqlmodel?
     # reference_sql is of form "{{ref_0}}, {{1}}, ..., {{n}}"
     reference_sql = ', '.join(f'{{{{{ref_name}}}}}' for ref_name in references.keys())

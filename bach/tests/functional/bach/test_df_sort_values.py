@@ -87,13 +87,14 @@ def test_sort_values_wrong_parameters():
 def test_generated_sql_order_last_select():
     # An earlier version of our code did include 'order by' statements, but not in the final select statement
     # This is not correct, but will often work and give a false sense of correctness.
-    # The order by statement should be present in the final sql select.
+    # The order by statement should be present in the final sql select. We test this by checking the last X
+    # characters, this is a bit fragile but works okayish.
     bt = get_bt_with_test_data(full_data_set=True)
     sql_not_sorted = bt.view_sql()
     bt_sorted = bt.sort_values(by='city')
     sql_sorted = bt_sorted.view_sql()
-    assert 'order by' not in sql_not_sorted[-50:]
-    assert 'order by "city" asc' in sql_sorted[-50:]
+    assert 'order by' not in sql_not_sorted[-60:]
+    assert 'order by "city" asc' in sql_sorted[-60:]
 
 
 def test_generated_sql_no_duplicate_sorting():

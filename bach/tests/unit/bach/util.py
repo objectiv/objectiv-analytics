@@ -9,8 +9,8 @@ from bach.savepoints import Savepoints
 
 
 def get_fake_df(index_names: List[str], data_names: List[str], dtype: Union[str, Dict[str, str]] = 'int64'):
-    engine = None,
-    base_node = None,
+    engine = None
+    base_node = None
     if isinstance(dtype, str):
         dtype = {
             col_name: dtype

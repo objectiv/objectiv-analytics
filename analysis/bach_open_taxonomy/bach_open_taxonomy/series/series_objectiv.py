@@ -828,7 +828,8 @@ class ObjectivFrame(DataFrame):
                               dtypes=dtypes,
                               group_by=None,
                               order_by=[],
-                              savepoints=Savepoints()
+                              savepoints=Savepoints(),
+                              variables={}
                               )
 
         df._time_aggregation = time_aggregation  # type: ignore

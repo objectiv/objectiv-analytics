@@ -91,9 +91,9 @@ def test_write_to_db_create_objects():
     expected_columns = ['_index_skating_order', 'skating_order', 'city', 'founding', 'x']
     expected_data = [[1, 1, 'Ljouwert', 1285, 12345]]
 
-    assert sps.to_sql()['sp_final_point'] == \
+    assert sps.to_sql()['sp_final_point'].replace('\n', '') == \
            'select "_index_skating_order", "skating_order", "city", "founding", "x" from ' \
-           '"sp_third_point"   limit all'
+           '"sp_third_point"     limit all '
 
     # get_materialized_df assumes that all tables and views have been created, so this will not yet work
     df_use_materialized = sps.get_materialized_df('sp_final_point')

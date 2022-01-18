@@ -19,12 +19,16 @@ class SeriesUuid(Series):
     supported_value_types = (UUID, str)
 
     @classmethod
-    def supported_value_to_expression(cls, value: Union[UUID, str]) -> Expression:
+    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
+        return Expression.construct('cast({} as uuid)', literal)
+
+    @classmethod
+    def supported_value_to_literal(cls, value: Union[UUID, str]) -> Expression:
         if isinstance(value, str):
             # Check that the string value is a valid UUID by converting it to a UUID
             value = UUID(value)
         uuid_as_str = str(value)
-        return Expression.construct('cast({} as uuid)', Expression.string_value(uuid_as_str))
+        return Expression.string_value(uuid_as_str)
 
     @classmethod
     def dtype_to_expression(cls, source_dtype: str, expression: Expression) -> Expression:

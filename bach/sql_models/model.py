@@ -11,11 +11,13 @@ Models:
   model graph.
 
 """
+import collections
 import hashlib
 from abc import abstractmethod, ABCMeta
 from copy import deepcopy
 from enum import Enum
-from typing import TypeVar, Generic, Dict, Any, Set, Tuple, Type, Union, Hashable, NamedTuple, Optional
+from typing import TypeVar, Generic, Dict, Any, Set, Tuple, Type, Union, Hashable, NamedTuple, Optional, \
+    Mapping, MutableMapping, cast
 
 from sql_models.util import extract_format_fields
 
@@ -128,12 +130,7 @@ class SqlModelSpec:
         raise NotImplementedError()
 
     @staticmethod
-    def escape_format_string(value: str) -> str:
-        """ Escape value for python's format() function. i.e. `_escape_value(value).format() == value` """
-        return value.replace('{', '{{').replace('}', '}}')
-
-    @staticmethod
-    def properties_to_sql(properties: Dict[str, Any]) -> Dict[str, str]:
+    def properties_to_sql(properties: Mapping[str, Any]) -> Dict[str, str]:
         """
         Child classes can override this function if some of the properties require conversion before being
         used in format(). Should be a constant, pure, and immutable function.
@@ -143,11 +140,11 @@ class SqlModelSpec:
         """
         # Override for non-default behaviour
         # If we switch to jinja templates, then we won't need this function anymore.
-        return {key: SqlModelSpec.escape_format_string(str(val)) for key, val in properties.items()}
+        return {key: escape_placeholder_value(str(val)) for key, val in properties.items()}
 
     def assert_adheres_to_spec(self,
-                               references: Dict[str, 'SqlModel'],
-                               properties: Dict[str, Any]):
+                               references: Mapping[str, 'SqlModel'],
+                               properties: Mapping[str, Any]):
         """
         Verify that the references and properties adhere to the specifications of self.
         :raise Exception: If a reference or property is missing
@@ -300,11 +297,10 @@ class SqlModelBuilder(SqlModelSpec, metaclass=ABCMeta):
                     raise ValueError(f'reference ({key}) is of incorrect type: {type(value)}')
                 self._references[key] = value
             elif key in self.spec_properties:
-                # todo: enable below check, after we stop using lists in properties in Bach
-                # # There is not straightforward way to check whether a value is immutable. However virtual
-                # # all immutable objects are also hashable, so we check that instead.
-                # if not isinstance(value, collections.abc.Hashable):
-                #     raise ValueError(f'property ({key}) is of incorrect type: {type(value)}')
+                # There is no straightforward way to check whether a value is immutable. However virtual
+                # all immutable objects are also hashable, so we check that instead.
+                if not isinstance(value, collections.abc.Hashable):
+                    raise ValueError(f'property ({key}) is of incorrect type: {type(value)}')
                 self._properties[key] = value
             else:
                 raise ValueError(f'Provided parameter {key} is not a valid property nor reference for '
@@ -360,8 +356,8 @@ class SqlModel(Generic[T]):
     """
     def __init__(self,
                  model_spec: T,
-                 properties: Dict[str, Hashable],
-                 references: Dict[str, 'SqlModel'],
+                 properties: Mapping[str, Hashable],
+                 references: Mapping[str, 'SqlModel'],
                  materialization: Materialization,
                  materialization_name: Optional[str] = None
                  ):
@@ -379,8 +375,8 @@ class SqlModel(Generic[T]):
         self._model_spec = model_spec
         self._generic_name = model_spec.generic_name
         self._sql = model_spec.sql
-        self._references: Dict[str, 'SqlModel'] = references
-        self._properties: Dict[str, Any] = properties
+        self._references: Mapping[str, 'SqlModel'] = references
+        self._properties: Mapping[str, Any] = properties
         self._materialization = materialization
         self._materialization_name = materialization_name
         self._property_formatter = model_spec.properties_to_sql
@@ -438,15 +434,15 @@ class SqlModel(Generic[T]):
         return self._sql
 
     @property
-    def references(self) -> Dict[str, 'SqlModel']:
+    def references(self) -> MutableMapping[str, 'SqlModel']:
         # return shallow-copy of the dictionary.
         # keys are strings and thus immutable, values are included uncopied.
         return {key: value for key, value in self._references.items()}
 
     @property
-    def properties(self) -> Dict[str, Any]:
+    def properties(self) -> MutableMapping[str, Hashable]:
         # return deepcopy of the dictionary
-        return deepcopy(self._properties)
+        return cast(MutableMapping[str, Hashable], deepcopy(self._properties))
 
     @property
     def materialization(self) -> Materialization:
@@ -468,7 +464,7 @@ class SqlModel(Generic[T]):
     def properties_formatted(self) -> Dict[str, str]:
         return self._property_formatter(self._properties)
 
-    def copy_set(self, new_properties: Dict[str, Any]) -> 'SqlModel[T]':
+    def copy_set(self, new_properties: Mapping[str, Any]) -> 'SqlModel[T]':
         """
         Return a copy with the given properties of this model updated.
         """
@@ -669,3 +665,34 @@ class CustomSqlModelBuilder(SqlModelBuilder):
     @property
     def generic_name(self):
         return self._generic_name
+
+
+def escape_raw_sql(sql: str) -> str:
+    """
+    Take any raw sql that will be used in a model and escape all '{' and '}'. This prevents the sql_generator
+    from interpreting '{' and '}' as either placeholders or references.
+    """
+    return escape_format_string(sql, 2)
+
+
+def escape_placeholder_value(value: str) -> str:
+    """
+    Take any value that will be used as a placeholder value, and escape all '{' and '}'. This prevents
+    the sql_generator from interpreting '{' and '}' as references.
+    """
+    return escape_format_string(value, 1)
+
+
+def escape_format_string(value: str, times=1) -> str:
+    """
+    Escape value for python's format() function. i.e. `escape_format_string(value).format() == value`.
+
+    SqlModels.sql is formatted twice by the sql_generator.py's to_sql() function. Once to replace the
+    placeholder values, and once to replace the references.
+    So any raw sql that is part of a SqlModel.sql and contains either '{' or '}' should be escaped twice.
+    Any values that get inserted by the first call to format (replacing the placeholders), should be escaped
+    once.
+    """
+    for _ in range(times):
+        value = value.replace('{', '{{').replace('}', '}}')
+    return value

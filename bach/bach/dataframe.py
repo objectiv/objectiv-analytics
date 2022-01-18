@@ -1,16 +1,18 @@
 from copy import copy
 from typing import List, Set, Union, Dict, Any, Optional, Tuple, cast, NamedTuple, \
-    TYPE_CHECKING, Callable, Sequence
+    TYPE_CHECKING, Callable, Hashable, Sequence
 from uuid import UUID
 
 import pandas
 from sqlalchemy.engine import Engine
 from sqlalchemy.future import Connection
 
-from bach.expression import Expression, SingleValueExpression
-from bach.sql_model import BachSqlModelBuilder, BachSqlModel
+from bach.expression import Expression, SingleValueExpression, VariableToken
+from bach.sql_model import BachSqlModel, CurrentNodeSqlModel, get_variable_values_sql
 from bach.types import get_series_type_from_dtype, get_dtype_from_db_dtype
-from sql_models.model import SqlModel, Materialization, CustomSqlModelBuilder
+from sql_models.graph_operations import update_properties_in_graph, get_all_properties
+from sql_models.model import SqlModel, Materialization, CustomSqlModelBuilder, RefPath
+
 from sql_models.sql_generator import to_sql
 
 if TYPE_CHECKING:
@@ -37,6 +39,19 @@ ColumnFunction = Union[str, Callable, List[Union[str, Callable]]]
 class SortColumn(NamedTuple):
     expression: Expression
     asc: bool
+
+
+class DtypeNamePair(NamedTuple):
+    dtype: str  # TODO: make 'dtype' a type instead of using str
+    name: str
+
+
+class DefinedVariable(NamedTuple):
+    name: str
+    dtype: str
+    value: Optional[Hashable]
+    ref_path: Optional[RefPath]
+    old_value: Optional[Hashable]
 
 
 class DataFrame:
@@ -138,7 +153,8 @@ class DataFrame:
             series: Dict[str, 'Series'],
             group_by: Optional['GroupBy'],
             order_by: List[SortColumn],
-            savepoints: 'Savepoints'
+            savepoints: 'Savepoints',
+            variables: Dict['DtypeNamePair', Hashable] = None
     ):
         """
         Instantiate a new DataFrame.
@@ -162,6 +178,7 @@ class DataFrame:
         self._group_by = group_by
         self._order_by = order_by if order_by is not None else []
         self._savepoints = savepoints
+        self._variables = variables if variables else {}
         for key, value in series.items():
             if key != value.name:
                 raise ValueError(f'Keys in `series` should match the name of series. '
@@ -225,6 +242,17 @@ class DataFrame:
     @property
     def savepoints(self) -> 'Savepoints':
         return self._savepoints
+
+    @property
+    def variables(self) -> Dict[DtypeNamePair, Hashable]:
+        """
+        Get all variables for which values are set, which will be used when querying the database.
+
+        Note that there might also be variables defined earlier in self.base_node, that already have a value.
+        Those variables values will not be changed, unless they are listed here. To get an overview of all
+        variables on which the values in this DataFrame depend use :meth:`get_all_defined_variables()`
+        """
+        return copy(self._variables)
 
     @property
     def all_series(self) -> Dict[str, 'Series']:
@@ -296,6 +324,11 @@ class DataFrame:
         return True
 
     def __eq__(self, other: Any) -> bool:
+        """
+        Compares two DataFrames for equality.
+        Compares all fields that (potentially) influence the values of the data represented by the DataFrame,
+        i.e. all fields except for self.savepoints
+        """
         if not isinstance(other, DataFrame):
             return False
         # We cannot just compare the data and index properties, because the Series objects have
@@ -307,7 +340,8 @@ class DataFrame:
             self.engine == other.engine and \
             self.base_node == other.base_node and \
             self._group_by == other._group_by and \
-            self._order_by == other._order_by
+            self._order_by == other._order_by and \
+            self._variables == other._variables
 
     @classmethod
     def _get_dtypes(cls, engine: Engine, node: SqlModel) -> Dict[str, str]:
@@ -390,7 +424,8 @@ class DataFrame:
             dtypes=series_dtypes,
             group_by=None,
             order_by=[],
-            savepoints=Savepoints()
+            savepoints=Savepoints(),
+            variables={}
         )
 
     @classmethod
@@ -465,7 +500,8 @@ class DataFrame:
             dtypes: Dict[str, str],
             group_by: Optional['GroupBy'],
             order_by: List[SortColumn],
-            savepoints: 'Savepoints'
+            savepoints: 'Savepoints',
+            variables: Dict['DtypeNamePair', Hashable]
     ) -> 'DataFrame':
         """
         INTERNAL: Get an instance with the right series instantiated based on the dtypes array.
@@ -502,17 +538,19 @@ class DataFrame:
             series=series,
             group_by=group_by,
             order_by=order_by,
-            savepoints=savepoints
+            savepoints=savepoints,
+            variables=variables
         )
 
     def copy_override(
             self,
             engine: Engine = None,
-            base_node: SqlModel[BachSqlModelBuilder] = None,
+            base_node: BachSqlModel = None,
             index: Dict[str, 'Series'] = None,
             series: Dict[str, 'Series'] = None,
             group_by: List[Union['GroupBy', None]] = None,  # List so [None] != None
             order_by: List[SortColumn] = None,
+            variables: Dict[DtypeNamePair, Hashable] = None,
             index_dtypes: Dict[str, str] = None,
             series_dtypes: Dict[str, str] = None,
             single_value: bool = False,
@@ -545,9 +583,10 @@ class DataFrame:
             'base_node': base_node if base_node is not None else self._base_node,
             'index': index if index is not None else self._index,
             'series': series if series is not None else self._data,
-            'group_by': group_by[0] if group_by is not None else self._group_by,
-            'order_by': order_by if order_by is not None else self.order_by,
-            'savepoints': savepoints if savepoints is not None else self.savepoints
+            'group_by': self._group_by if group_by is None else group_by[0],
+            'order_by': order_by if order_by is not None else self._order_by,
+            'savepoints': savepoints if savepoints is not None else self.savepoints,
+            'variables': variables if variables is not None else self.variables
         }
 
         expression_class = SingleValueExpression if single_value else Expression
@@ -578,7 +617,7 @@ class DataFrame:
 
         return self.__class__(**args, **kwargs)
 
-    def copy_override_base_node(self, base_node: SqlModel) -> 'DataFrame':
+    def copy_override_base_node(self, base_node: BachSqlModel) -> 'DataFrame':
         """
         INTERNAL
 
@@ -621,6 +660,20 @@ class DataFrame:
     def __copy__(self):
         return self.copy()
 
+    def _update_self_from_df(self, df: 'DataFrame') -> 'DataFrame':
+        """
+        INTERNAL: Modify self by copying all properties of 'df' to self. Returns self.
+        """
+        self._engine = df.engine
+        self._base_node = df.base_node
+        self._index = df.index
+        self._data = df.data
+        self._group_by = df.group_by
+        self._order_by = df.order_by
+        self._savepoints = df.savepoints
+        self._variables = df.variables
+        return self
+
     def materialize(self, node_name='manual_materialize', inplace=False, limit: Any = None) -> 'DataFrame':
         """
         Create a copy of this DataFrame with as base_node the current DataFrame's state.
@@ -653,18 +706,13 @@ class DataFrame:
             dtypes=series_dtypes,
             group_by=None,
             order_by=[],
-            savepoints=self.savepoints
+            savepoints=self.savepoints,
+            variables=self.variables
         )
 
         if not inplace:
             return df
-        self._engine = df.engine
-        self._base_node = df.base_node
-        self._index = df.index
-        self._data = df.data
-        self._group_by = df.group_by
-        self._order_by = df.order_by
-        return self
+        return self._update_self_from_df(df)
 
     def set_savepoint(self, name: str, materialization: Union[Materialization, str] = Materialization.CTE):
         """
@@ -929,13 +977,7 @@ class DataFrame:
             df.drop(columns=[key + '__remove'], inplace=True)
         df.drop(columns=[value_index_name + '__index'], inplace=True, errors='ignore')
 
-        self._engine = df.engine
-        self._base_node = df.base_node
-        self._index = df.index
-        self._data = df.data
-        self._group_by = df.group_by
-        self._order_by = df.order_by
-        self._savepoints = df.savepoints
+        self._update_self_from_df(df)
 
     def rename(self, mapper: Union[Dict[str, str], Callable[[str], str]] = None,
                index: Union[Dict[str, str], Callable[[str], str]] = None,
@@ -1535,6 +1577,7 @@ class DataFrame:
         :param having_clause: The having-clause to apply in case group_by is set, if any
         :returns: SQL query as a SqlModel that represents the current state of this DataFrame.
         """
+        self._assert_all_variables_set()
 
         if isinstance(limit, int):
             limit = slice(0, limit)
@@ -1560,6 +1603,7 @@ class DataFrame:
 
         limit_clause = Expression.construct('' if limit_str is None else f'{limit_str}')
         where_clause = where_clause if where_clause else Expression.construct('')
+        group_by_clause = None
         if self.group_by:
 
             not_aggregated = [s.name for s in self._data.values()
@@ -1583,55 +1627,37 @@ class DataFrame:
 
             column_exprs += [s.get_column_expression() for s in self._data.values()]
             column_names += tuple(self._data.keys())
-
-            model_builder = BachSqlModelBuilder(
-                name=name,
-                sql="""
-                    select {column_exprs}
-                    from {{prev}}
-                    {where}
-                    {group_by}
-                    {having}
-                    {order_by} {limit}
-                    """,
-                columns=tuple(column_names)
-            )
-            return model_builder(
-                column_exprs=column_exprs,
-                where=where_clause,
-                group_by=group_by_clause,
-                having=having_clause,
-                order_by=self._get_order_by_clause(),
-                limit=limit_clause,
-                prev=self.base_node
-            )
         else:
-            model_builder = BachSqlModelBuilder(
-                name=name,
-                sql='select {columns} from {{_last_node}} {where} {order} {limit}',
-                columns=tuple(self.all_series.keys())
-            )
-            return model_builder(
-                columns=self._get_all_column_expressions(),
-                _last_node=self.base_node,
-                where=where_clause,
-                order=self._get_order_by_clause(),
-                limit=limit_clause
-            )
+            column_exprs = [s.get_column_expression() for s in self.all_series.values()]
+            column_names = tuple(self.all_series.keys())
+
+        return CurrentNodeSqlModel(
+            name=name,
+            column_names=column_names,
+            column_exprs=column_exprs,
+            where_clause=where_clause,
+            group_by_clause=group_by_clause,
+            having_clause=having_clause,
+            order_by_clause=self._get_order_by_clause(),
+            limit_clause=limit_clause,
+            previous_node=self.base_node,
+            variables=self.variables
+        )
 
     def view_sql(self, limit: Union[int, slice] = None) -> str:
         """
         Translate the current state of this DataFrame into a SQL query.
 
+        This includes setting all variable values that are in self.variables.
+
         :param limit: the limit to apply, either as a max amount of rows or a slice of the data.
         :returns: SQL query
         """
         model = self.get_current_node('view_sql', limit=limit)
+        property_values = get_variable_values_sql(variable_values=self.variables)
+        # TODO: fix typing here, or move all BachSqlModel logic to SqlModel, or both?
+        model = update_properties_in_graph(start_node=model, property_values=property_values)  # type: ignore
         return to_sql(model)
-
-    def _get_all_column_expressions(self) -> List[Expression]:
-        """ Get a list of Expression for every column including indices in this df """
-        return [series.get_column_expression() for series in self.all_series.values()]
 
     def merge(
             self,
@@ -1651,9 +1677,12 @@ class DataFrame:
 
         The interface of this function is similar to pandas' merge, but the following parameters are not
         supported: `sort`, `copy`, `indicator`, and `validate`.
-        Additionally when merging two frames that have conflicting columns names, and joining on indices,
+        Additionally, when merging two frames that have conflicting columns names, and joining on indices,
         then the resulting columns/column names can differ slightly from Pandas.
 
+        If variables are set (see :meth:`DataFrame.variables`), then values from self will be used in cases
+        where a variable name/dtype combination has been defined in both the `self` and `right`
+        DataFramesOrSeries.
 
         :param right: DataFrame or Series to join on self
         :param how: supported values: {‘left’, ‘right’, ‘outer’, ‘inner’, ‘cross’}
@@ -2007,6 +2036,119 @@ class DataFrame:
         """
         return self._aggregate_func('var', axis, level, numeric_only,
                                     skipna=skipna, ddof=ddof, **kwargs)
+
+    def create_variable(
+            self,
+            name: str,
+            value: Any,
+            *, dtype: Optional[str] = None
+    ) -> Tuple['DataFrame', 'Series']:
+        """
+        Create a Series object that can be used as a variable, within the returned DataFrame. The
+        DataFrame will have the variable with the given values set in :meth:`DataFrame.variables`.
+
+        The variable value can later be changed using :meth:`DataFrame.set_variable`
+
+        ## Multiple variables with the same name
+        For variables the combination (name, dtype) uniquely identifies a variable. That means that there
+        can be multiple variables with the same name, if they are of different types. This is counter to
+        how a lot of programming languages handle variables. But it prevents a lot of error conditions and
+        edge cases around merging DataFrames and Series with the same variables, and building on top of
+        SqlModels that already have variables.
+
+        :param name: name of variable to update
+        :param value: value of variable
+        :param dtype: optional. If not set it will be derived from the value, if set we check that it
+            matches the value. If dtype doesn't match the value's dtype, then an Exception is raised.
+        :return: Tuple with DataFrame and Series object.
+        """
+        from bach.series.series import variable_series
+        series = variable_series(base=self, value=value, name=name)
+        if dtype is not None and dtype != series.dtype:
+            raise ValueError(f"Dtype of value ({series.dtype}) and provided dtype ({dtype}) don't match.")
+        variables = self.variables
+        variables[DtypeNamePair(dtype=series.dtype, name=name)] = value
+        df = self.copy_override(variables=variables)
+        return df, series
+
+    def set_variable(self, name: str, value: Any, *, dtype: Optional[str] = None) -> 'DataFrame':
+        """
+        Return a copy of this DataFrame with the variable value updated.
+        :param name: name of variable to update
+        :param value: new value of variable
+        :param dtype: optional. If not set it will be derived from the value, if set we check that it
+            matches the value. If dtype doesn't match the value's dtype, then an Exception is raised.
+        :return: copy of this DataFrame, with the value updated.
+        """
+        df, _ = self.create_variable(name, value, dtype=dtype)
+        return df
+
+    def get_all_variable_usage(self) -> List[DefinedVariable]:
+        """
+        Get all variables that influence the values of this DataFrame.
+        This includes both variables that are used in the current `self.series`, but also variables that
+        were used in earlier steps, i.e. in the SqlModels of `self.base_node`.
+
+        The output of this method can be useful for diagnosing issues with variables. If a variable is used
+        multiple times, then it will appear here multiple times. If a variable has conflicting definitions
+        then the conflicting dtypes and/or values are all returned.
+
+        :return: List of DefinedVariable tuples. The fields in each tuple:
+            - name: name of the variable
+            - dtype: dtype
+            - value: value that is currently set in `self.variables`, or None if there is no value
+            - ref_path: If the variable is used in an already materialized part of the DataFrame, i.e.
+                the usage is in self.base_node, then this is the reference path from self.base_node to the
+                SqlModel in which the variable usage occurs. If the variable is used in self.series instead,
+                then this is None
+            - old_value: If the variable is used in an already materialized part of the DataFrame, then it
+                also has a value already. That is this value. Will be None if this variable usage is not in
+                self.base_node.
+        """
+        return self._get_all_used_variables_series() + self._get_all_used_variables_base_node()
+
+    def _get_all_used_variables_series(self) -> List[DefinedVariable]:
+        all_tokens = []
+        for series in self.all_series.values():
+            all_tokens.extend(series.expression.get_all_tokens())
+        variable_tokens = [token for token in all_tokens if isinstance(token, VariableToken)]
+
+        result = []
+        for vt in variable_tokens:
+            dtype_name = DtypeNamePair(dtype=vt.dtype, name=vt.name)
+            value = None if dtype_name not in self.variables else self.variables[dtype_name]
+            result.append(
+                DefinedVariable(name=vt.name, dtype=vt.dtype, value=value, ref_path=None, old_value=None)
+            )
+        return result
+
+    def _get_all_used_variables_base_node(self) -> List[DefinedVariable]:
+        result = []
+        all_properties = get_all_properties(self.base_node)
+        for property_name, values_dict in all_properties.items():
+            token = VariableToken.property_name_to_token(property_name)
+            if token is None:
+                continue
+            for ref_path, old_value in values_dict.items():
+                dtype_name = token.dtype_name
+                value = None if dtype_name not in self.variables else self.variables[dtype_name]
+                result.append(
+                    DefinedVariable(
+                        name=dtype_name.name, dtype=dtype_name.dtype,
+                        value=value, ref_path=ref_path, old_value=old_value)
+                )
+        return result
+
+    def _assert_all_variables_set(self):
+        """
+        Asserts that all variables used in the series are set. Raises an Exception if a variable is not set.
+        """
+        used_variables = self._get_all_used_variables_series()
+        for var in used_variables:
+            dtype_name = DtypeNamePair(dtype=var.dtype, name=var.name)
+            if dtype_name not in self.variables:
+                raise Exception(f'Variable {dtype_name.name}, with dtype {dtype_name.dtype} is used, '
+                                f'but not set. Use create_variable() to assign a value')
 
 
 def dict_name_series_equals(a: Dict[str, 'Series'], b: Dict[str, 'Series']):

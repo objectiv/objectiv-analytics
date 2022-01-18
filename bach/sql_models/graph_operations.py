@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 from collections import deque
-from typing import NamedTuple, List, Dict, Set, Tuple, Optional, Callable, Deque, Any, Hashable
+from typing import NamedTuple, List, Dict, Set, Tuple, Optional, Callable, Deque, Any, Hashable, Mapping
 
 from sql_models.model import SqlModel, RefPath
 
@@ -194,7 +194,7 @@ def replace_node_in_graph(start_node: SqlModel,
     )
 
 
-def get_all_properties(start_node: SqlModel) -> Dict[str, Dict[RefPath, Any]]:
+def get_all_properties(start_node: SqlModel) -> Dict[str, Dict[RefPath, Hashable]]:
     """
     Get all properties in the graph.
 
@@ -214,7 +214,7 @@ def _get_all_properties_recursive(start_node: SqlModel, path_so_far: RefPath):
     return result
 
 
-def update_properties_in_graph(start_node: SqlModel, property_values: Dict[str, Hashable]) -> SqlModel:
+def update_properties_in_graph(start_node: SqlModel, property_values: Mapping[str, Hashable]) -> SqlModel:
     """
     Return a copy of the SqlModel with the given properties updated throughout the tree.
 

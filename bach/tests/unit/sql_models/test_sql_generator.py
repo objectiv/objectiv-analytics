@@ -16,25 +16,6 @@ def test_simple():
     assert result
 
 
-def assert_escape_compare_value(value):
-    """ helper for test__escape_value. Assert that the escaped value, after formatting equals the original"""
-    escaped = SqlModelBuilder.escape_format_string(value)
-    assert escaped.format() == value
-
-
-def test__escape_value():
-    assert_escape_compare_value('test')
-    assert_escape_compare_value('te{s}t')
-    assert_escape_compare_value('te{{s}}t')
-    assert_escape_compare_value('te{st')
-    assert_escape_compare_value('te{{s}t')
-    assert_escape_compare_value('te{{st')
-    full_string = '{test}' + SqlModelBuilder.escape_format_string('{test}') + '{test}'
-    assert full_string.format(test='x') == 'x{test}x'
-    full_string = '{test}' + SqlModelBuilder.escape_format_string('{{test}}') + '{test}'
-    assert full_string.format(test='x') == 'x{{test}}x'
-
-
 def test_format_injection():
     # Make sure that (parts of) format strings in the properties of a model don't mess up the sql generation.
     mb = CustomSqlModelBuilder('select {a} from x')
