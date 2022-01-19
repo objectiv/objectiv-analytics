@@ -89,22 +89,19 @@ class ValueCounter:
 
         min_max_totals = subset_df.agg(['min', 'max']).materialize()
         min_max_totals['bin_size'] = (
-                min_max_totals[f'{subset_series.name}_max'] - min_max_totals[f'{subset_series.name}_min']
+            min_max_totals[f'{subset_series.name}_max'] - min_max_totals[f'{subset_series.name}_min']
         ) / self.bins
-        # TODO: Implement Series.ceil method
 
+        # TODO: Implement Series.floor method
         min_max_totals['casted_bin_size'] = min_max_totals['bin_size'].copy_override(
-            expression=Expression.construct(
-                'cast(floor({}) as int)',
-                min_max_totals['bin_size'],
-            ),
+            expression=Expression.construct('cast(floor({}) as int)', min_max_totals['bin_size']),
         )
+        # generate_series accepts only int types, we need to consider decimals
         min_max_totals['adjustment'] = min_max_totals['bin_size'] - min_max_totals['casted_bin_size']
         min_max_totals = min_max_totals.materialize()
 
         bin_gen_expr_str = (
-            'distinct cast(generate_series({}, {}, {}) + {} '
-            f'* generate_series(0, {self.bins}) as numeric)'
+            f'distinct cast(generate_series({{}}, {{}}, {{}}) + {{}} * generate_series(0, {self.bins}) as numeric)'
         )
         bin_ranges_df = SeriesInt64(
             engine=min_max_totals.engine,
@@ -157,6 +154,26 @@ class ValueCounter:
             index=subset_df.index,
         )
         return subset_df.materialize()
+
+    def _calculate_inbound_bin(self, min_max_totals: DataFrame) -> SeriesInt64:
+        bin_gen_expr_str = (
+            f'distinct cast(generate_series({{}}, {{}}, {{}}) + {{}} * generate_series(0, {self.bins}) as numeric)'
+        )
+        return SeriesInt64(
+            engine=min_max_totals.engine,
+            index={},
+            name='bin_inbound',
+            base_node=min_max_totals.base_node,
+            expression=Expression.construct(
+                bin_gen_expr_str,
+                min_max_totals[f'{self.subset[0]}_min'],
+                min_max_totals[f'{self.subset[0]}_max'],
+                min_max_totals['casted_bin_size'],
+                min_max_totals['adjustment'],
+
+            ),
+            group_by=None,
+        )
 
     def _generate_counts_df(self, hashed_df: DataFrame) -> DataFrame:
         counts_per_hash = hashed_df.copy_override()
