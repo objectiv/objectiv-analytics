@@ -325,7 +325,7 @@ for url in urls:
 
     if page == index_page:
         # special case where we map the index to Introduction
-        slug = f'/{module}'
+        slug = f'/{module}/'
         sidebar_label = 'Introduction'
 
     else:
