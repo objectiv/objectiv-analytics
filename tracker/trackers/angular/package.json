@@ -45,7 +45,7 @@
     "@angular/compiler-cli": "~9.1.13",
     "@angular/core": "~9.1.13",
     "@objectiv/tracker-browser": "^0.0.8",
-    "ng-packagr": "^9.0.0",
+    "ng-packagr": "^10.1.1",
     "prettier": "^2.5.1",
     "rxjs": "~6.5.4",
     "shx": "^0.3.3",
