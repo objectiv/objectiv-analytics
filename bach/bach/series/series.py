@@ -1349,6 +1349,8 @@ class Series(ABC):
         """
         Return a series with duplicated rows removed.
 
+        Note that we don't support 'inplace' as a parameter, as Series are immutable.
+
         :param keep: Supported values: "first", "last" and False. Determines which duplicates to keep:
 
             * `first`: drop all occurrences except the first one
@@ -1369,6 +1371,8 @@ class Series(ABC):
     def dropna(self: T) -> T:
         """
         Removes rows with missing values.
+
+        Note that we don't support 'inplace' as a parameter, as Series are immutable.
 
         :return: a new series with dropped rows if inplace = False, otherwise None.
         """
