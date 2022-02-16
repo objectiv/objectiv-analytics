@@ -2557,8 +2557,9 @@ class DataFrame:
             cases_fmt = f' + '.join([f'case when {{}} then 1 else 0 end'] * len(dropna_series))
             expression_fmt = f'{len(self.data_columns)} - ({cases_fmt}) < {thresh}'
 
-        drop_row_series = conditions[0].copy_override(
-            expression=Expression.construct(expression_fmt, *conditions),
+        drop_row_series = cast(
+            'SeriesBoolean',
+            conditions[0].copy_override(expression=Expression.construct(expression_fmt, *conditions))
         )
 
         dropna_df = self[~drop_row_series]

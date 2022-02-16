@@ -1,7 +1,7 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-from typing import Union, TYPE_CHECKING
+from typing import Union, TYPE_CHECKING, cast
 
 from bach.series import Series
 from bach.expression import Expression
@@ -72,7 +72,7 @@ class StringOperation:
                     else:
                         expression = Expression.construct("''")
 
-        return self._base.copy_override(dtype='string', expression=expression)
+        return cast('SeriesString', self._base.copy_override(dtype='string', expression=expression))
 
     def slice(self, start=None, stop=None) -> 'SeriesString':
         """

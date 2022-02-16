@@ -70,7 +70,7 @@ class SeriesBoolean(Series, ABC):
 
     def __invert__(self) -> 'SeriesBoolean':
         expression = Expression.construct('NOT ({})', self)
-        return self.copy_override(expression=expression)
+        return cast('SeriesBoolean', self.copy_override(expression=expression))
 
     def __and__(self, other) -> 'SeriesBoolean':
         return self._boolean_operator(other, 'AND')

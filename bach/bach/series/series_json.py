@@ -98,7 +98,7 @@ class SeriesJsonb(Series):
         """
         class with accessor methods to json(b) type data columns.
         """
-        def __init__(self, series_object):
+        def __init__(self, series_object: 'SeriesJsonb'):
             self._series_object = series_object
 
         def __getitem__(self, key: Union[str, int, slice]):

@@ -45,9 +45,10 @@ class SeriesAbstractNumeric(Series, ABC):
         Round the value of this series to the given amount of decimals.
         :param decimals: The amount of decimals to round to
         """
-        return self.copy_override(
-            expression=Expression.construct(f'round(cast({{}} as numeric), {decimals})', self)
-        )
+        result = self.copy_override(
+                expression=Expression.construct(f'round(cast({{}} as numeric), {decimals})', self)
+            )
+        return cast('SeriesAbstractNumeric', result)
 
     def _ddof_unsupported(self, ddof: Optional[int]):
         if ddof is not None and ddof != 1:

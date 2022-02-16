@@ -1,12 +1,16 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-from typing import Union
+from typing import Union, cast, TYPE_CHECKING
 from uuid import UUID
 
 from bach import DataFrameOrSeries
 from bach.series import Series, const_to_series
 from bach.expression import Expression
+
+
+if TYPE_CHECKING:
+    from bach.series import SeriesBoolean
 
 
 class SeriesUuid(Series):
@@ -66,7 +70,7 @@ class SeriesUuid(Series):
             group_by=None
         )
 
-    def _comparator_operation(self, other, comparator, other_dtypes=('uuid', 'string')):
+    def _comparator_operation(self, other, comparator, other_dtypes=('uuid', 'string')) -> 'SeriesBoolean':
         other = const_to_series(base=self, value=other)
         self_modified, other = self._get_supported(f"comparator '{comparator}'", other_dtypes, other)
         if other.dtype == 'uuid':
@@ -76,4 +80,4 @@ class SeriesUuid(Series):
                                               self_modified,
                                               other)
 
-        return self_modified.copy_override(dtype='bool', expression=expression)
+        return cast('SeriesBoolean', self_modified.copy_override(dtype='bool', expression=expression))

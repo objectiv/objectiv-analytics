@@ -138,7 +138,7 @@ class Series(ABC):
     def dtype_aliases(cls) -> Tuple[Union[Type, str], ...]:
         """
         INTERNAL: One or more aliases for the dtype.
-        For example a BooleanSeries might have dtype 'bool', and as an alias the string 'boolean' and
+        For example a SeriesBoolean might have dtype 'bool', and as an alias the string 'boolean' and
         the builtin `bool`. An alias can be used in a similar way as the real dtype, e.g. to cast data to a
         certain type: `x.astype('boolean')` is the same as `x.astype('bool')`.
 
@@ -361,7 +361,8 @@ class Series(ABC):
         return self.copy_override()
 
     def copy_override(
-        self: T,
+        self: 'Series',
+        *,
         dtype: Optional[str] = None,
         engine: Optional[Engine] = None,
         base_node: Optional[BachSqlModel] = None,
@@ -371,7 +372,7 @@ class Series(ABC):
         group_by: Optional[Union['GroupBy', NotSet]] = not_set,
         sorted_ascending: Optional[Union[bool, NotSet]] = not_set,
         index_sorting: Optional[List[bool]] = None
-    ) -> T:
+    ) -> 'Series':
         """
         INTERNAL: Copy this instance into a new one, with the given overrides
 
@@ -455,7 +456,12 @@ class Series(ABC):
         expression = self.expression.resolve_column_references(table_alias)
         return Expression.construct_expr_as_name(expression, self.name)
 
-    def _get_supported(self, operation_name: str, supported_dtypes: Tuple[str, ...], other: 'Series'):
+    def _get_supported(
+        self,
+        operation_name: str,
+        supported_dtypes: Tuple[str, ...],
+        other: 'Series'
+    ) -> Tuple['Series', 'Series']:
         """
         Check whether `other` is supported for this operation, and if not, possibly do something
         about it by using subquery / materialization / aligning base nodes using a merge.
@@ -473,7 +479,7 @@ class Series(ABC):
                     # todo now using private method from DataFrame. This will change to use merge, once this
                     #  type of 'index merge' works with that method.
                     df._index_merge(key='__other', value=other, how='outer')
-                    return df[self.name], df['__other']
+                    return cast('Series', df[self.name]), cast('Series', df['__other'])
                     # todo pandas: if name of both series are same, use that name of result. we always use
                     #  name of self
 
@@ -579,10 +585,10 @@ class Series(ABC):
         if not all(isinstance(asc, bool) for asc in ascending_list):
             raise ValueError('Parameter ascending should be a bool or a list of bools')
 
-        return self.copy_override(
+        return cast(T, self.copy_override(
             sorted_ascending=None,
             index_sorting=ascending_list
-        )
+        ))
 
     def view_sql(self):
         return self.to_frame().view_sql()
@@ -615,7 +621,7 @@ class Series(ABC):
         )
 
     @staticmethod
-    def as_independent_subquery(series, operation: str = None, dtype: str = None) -> 'Series':
+    def as_independent_subquery(series: 'Series', operation: str = None, dtype: str = None) -> 'Series':
         """
         INTERNAL: Get a series representing an independent subquery, created by materializing the series
         given and crafting a subquery expression from it, possibly adding the given operation.
@@ -667,14 +673,14 @@ class Series(ABC):
         """
         return Series.as_independent_subquery(self, 'all')
 
-    def isin(self, other: 'Series'):
+    def isin(self, other: 'Series') -> 'SeriesBoolean':
         """
         Evaluate for every row in this series whether the value is contained in other
 
         Example: a.isin(b) evaluates to True for a specific row if a > b for all values of b.
         """
         in_expr = Expression.construct('{} {}', self, Series.as_independent_subquery(other, 'in'))
-        return self.copy_override(expression=in_expr, dtype='boolean')
+        return cast('SeriesBoolean', self.copy_override(expression=in_expr, dtype='boolean'))
 
     def astype(self, dtype: Union[str, Type]) -> 'Series':
         """
@@ -738,7 +744,7 @@ class Series(ABC):
         # limit to 1 row, will make all series SingleValueExpression, and get that series.
         return frame[:1][self.name]
 
-    def isnull(self):
+    def isnull(self) -> 'SeriesBoolean':
         """
         Evaluate for every row in this series whether the value is missing or NULL.
 
@@ -755,9 +761,9 @@ class Series(ABC):
             expression_str,
             self
         )
-        return self.copy_override(dtype='bool', expression=expression)
+        return cast('SeriesBoolean', self.copy_override(dtype='bool', expression=expression))
 
-    def notnull(self):
+    def notnull(self) -> 'SeriesBoolean':
         """
         Evaluate for every row in this series whether the value is not missing or NULL.
 
@@ -774,7 +780,7 @@ class Series(ABC):
             expression_str,
             self
         )
-        return self.copy_override(dtype='bool', expression=expression)
+        return cast('SeriesBoolean', self.copy_override(dtype='bool', expression=expression))
 
     def fillna(self, other):
         """
@@ -797,7 +803,7 @@ class Series(ABC):
 
     def _binary_operation(self, other: 'Series', operation: str, fmt_str: str,
                           other_dtypes: Tuple[str, ...] = (),
-                          dtype: Union[str, Mapping[str, Optional[str]]] = None) -> 'Series':
+                          dtype: Union[str, None, Mapping[str, Optional[str]]] = None) -> 'Series':
         """
         The standard way to perform a binary operation
 
@@ -819,12 +825,15 @@ class Series(ABC):
         other = const_to_series(base=self, value=other)
         self_modified, other = self._get_supported(operation, other_dtypes, other)
         expression = NonAtomicExpression.construct(fmt_str, self_modified, other)
-        if isinstance(dtype, dict):
+        new_dtype: Optional[str]
+        if dtype is None or isinstance(dtype, str):
+            new_dtype = dtype
+        else:  # dtype is Mapping[str, Optional[str]]
             if other.dtype not in dtype:
-                dtype = None
+                new_dtype = None
             else:
-                dtype = dtype[other.dtype]
-        return self_modified.copy_override(dtype=dtype, expression=expression)
+                new_dtype = dtype[other.dtype]
+        return self_modified.copy_override(dtype=new_dtype, expression=expression)
 
     def _arithmetic_operation(self, other: 'Series', operation: str, fmt_str: str,
                               other_dtypes: Tuple[str, ...] = (),
