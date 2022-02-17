@@ -382,7 +382,7 @@ class Series(ABC):
         if index and index_sorting is None:
             index_sorting = []
 
-        klass: type = self.__class__ if dtype is None else get_series_type_from_dtype(dtype)
+        klass: Type['Series'] = self.__class__ if dtype is None else get_series_type_from_dtype(dtype)
         return klass(
             engine=self._engine if engine is None else engine,
             base_node=self._base_node if base_node is None else base_node,
