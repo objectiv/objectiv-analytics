@@ -32,7 +32,7 @@ class Map:
         series = first_session == self._df.session_id
         return series.copy_override(name='is_first_session', index=self._df.index)
 
-    def is_new_user(self, time_aggregation=None) -> 'SeriesBoolean':
+    def is_new_user(self, time_aggregation: str = None) -> 'SeriesBoolean':
         """
         Labels all hits True if the user is first seen in the period given time_aggregation.
 
@@ -40,13 +40,10 @@ class Map:
         :returns: SeriesBoolean with the same index as the ObjectivFrame this method is applied to.
         """
 
-        if not time_aggregation:
-            time_aggregation = self._df._time_aggregation
-
         window = self._df.groupby('user_id').window(end_boundary=WindowFrameBoundary.FOLLOWING)
         is_first_session = window['session_id'].min()
 
-        window = self._df.groupby([self._df.moment.dt.sql_format(time_aggregation),
+        window = self._df.groupby([self._df.mh.time_agg(),
                                    'user_id']).window(end_boundary=WindowFrameBoundary.FOLLOWING)
         is_first_session_time_aggregation = window['session_id'].min()
 

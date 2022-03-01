@@ -36,7 +36,7 @@ class ModelHub:
         # init metabase
         self._metabase = None
 
-    def time_agg(self, time_aggregation: Union[str, NotSet] = not_set) -> 'SeriesString':
+    def time_agg(self, time_aggregation: str = None) -> 'SeriesString':
         """
         Formats the moment column in the ObjectivFrame, returns a SeriesString.
 
@@ -49,7 +49,7 @@ class ModelHub:
         :param time_aggregation: if None, it uses the time_aggregation set in ObjectivFrame.
         :returns: SeriesString.
         """
-        time_aggregation = self._df.time_aggregation if time_aggregation is not_set else time_aggregation
+        time_aggregation = self._df.time_aggregation if time_aggregation is None else time_aggregation
         return self._df.moment.dt.sql_format(time_aggregation).copy_override(name='time_aggregation')
 
     def to_metabase(self, df, model_type: str = None, config: dict = None):

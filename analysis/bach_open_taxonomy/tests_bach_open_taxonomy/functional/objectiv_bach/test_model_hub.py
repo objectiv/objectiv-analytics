@@ -15,7 +15,11 @@ def test_get_objectiv_stack():
 
 def test_filter():
     df = get_objectiv_frame()
-    fdf = df.mh.filter(df.session_id == df[df.session_id<=4].session_id).session_id
+
+    # test with same base node
+    s = df.session_id<=4
+    assert s.base_node == df.base_node
+    fdf = df.mh.filter(s).session_id
 
     assert_equals_data(
         fdf,
@@ -32,6 +36,40 @@ def test_filter():
         ]
     )
 
+    # test with different base node
+    s_different_base_node = df.session_id == df[s].session_id
+    assert s_different_base_node.base_node != df.base_node
+    fdf = df.mh.filter(s_different_base_node).session_id
+
+    assert_equals_data(
+        fdf,
+        expected_columns=['event_id', 'session_id'],
+        expected_data=[
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac304'), 2],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac305'), 4],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac306'), 4],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), 1],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), 1],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), 3],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac302'), 3],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), 3]
+        ]
+    )
+
+    # test with has_windowed_aggregate_function
+    s_hwaf = df.groupby('session_id').window().session_hit_number.max()==1
+    assert s_hwaf.expression.has_windowed_aggregate_function
+    fdf = df.mh.filter(s_hwaf).session_id
+
+    assert_equals_data(
+        fdf,
+        expected_columns=['event_id', 'session_id'],
+        expected_data=[
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac304'), 2],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac309'), 6],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac310'), 7]
+        ]
+    )
 
 # map
 def test_is_first_session():
