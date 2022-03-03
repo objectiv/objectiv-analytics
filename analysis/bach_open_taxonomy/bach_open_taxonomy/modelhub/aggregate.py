@@ -15,10 +15,6 @@ GroupByType = Union[List[Union[str, Series]], str, Series, NotSet]
 class Aggregate:
     """
     Models that return aggregated data in some form from the original ObjectivFrame.
-
-    Methods in this class can be filtered with the filter parameter, which always takes SeriesBoolean. The
-    ModelHub can also create specific commonly used filters with methods that return SeriesBoolean from
-    :py:attr:`ModelHub.map`.
     """
 
     def __init__(self, df):
@@ -53,28 +49,18 @@ class Aggregate:
     def _generic_aggregation(self,
                              groupby: Union[List[Union[str, Series]], str, Series],
                              column: str,
-                             filter: Optional['SeriesBoolean'],
                              name: str):
         df = self._check_groupby(groupby=groupby,
                                  not_allowed_in_groupby=column)
-        if filter:
-            df['_filter'] = filter
-            if filter.expression.has_windowed_aggregate_function:
-                df = df.materialize()
-            df = df[df._filter]
-
-            name += '_' + filter.name
 
         series = df[column].nunique()
         return series.copy_override(name=name)
 
     def unique_users(self,
-                     filter: 'SeriesBoolean' = None,
                      groupby: GroupByType = not_set) -> 'SeriesInt64':
         """
         Calculate the unique users in the ObjectivFrame.
 
-        :param filter: the output of this model is only based on the rows for which the filter is True.
         :param groupby: sets the column(s) to group by.
             - if `not_set` it defaults to using :py:attr:`ObjectivFrame.model_hub.time_agg`.
             - if None it aggregates over all data.
@@ -85,16 +71,13 @@ class Aggregate:
 
         return self._generic_aggregation(groupby=groupby,
                                          column='user_id',
-                                         filter=filter,
                                          name='unique_users')
 
     def unique_sessions(self,
-                        filter: 'SeriesBoolean' = None,
                         groupby: GroupByType = not_set) -> 'SeriesInt64':
         """
         Calculate the unique sessions in the ObjectivFrame.
 
-        :param filter: the output of this model is only based on the rows for which the filter is True.
         :param groupby: sets the column(s) to group by.
             - if `not_set` it defaults to using :py:attr:`ObjectivFrame.model_hub.time_agg`.
             - if None it aggregates over all data.
@@ -105,7 +88,6 @@ class Aggregate:
 
         return self._generic_aggregation(groupby=groupby,
                                          column='session_id',
-                                         filter=filter,
                                          name='unique_sessions')
 
     def session_duration(self,
