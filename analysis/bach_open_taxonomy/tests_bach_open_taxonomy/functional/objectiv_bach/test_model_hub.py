@@ -163,18 +163,84 @@ def test_is_conversion_event():
     )
 
 
-def test_conversion_count():
+def test_conversions_counter():
     df, modelhub = get_objectiv_dataframe(time_aggregation='YYYY-MM-DD')
 
     # add conversion event
     modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
                             event_type='ClickEvent',
                             name='github_clicks')
-    s = modelhub.map.conversion_count(df, 'github_clicks')
+    s = modelhub.map.conversions_counter(df, 'github_clicks')
 
     assert_equals_data(
         s,
-        expected_columns=['event_id', 'conversion_count'],
+        expected_columns=['event_id', 'converted'],
+        expected_data=[
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), 1],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac302'), 1],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), 1],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac304'), 0],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac305'), 0],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac306'), 0],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac307'), 0],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac308'), 0],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac309'), 0],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac310'), 0],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), 0],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), 0]
+        ],
+        order_by='event_id'
+    )
+
+    # use created series to filter dataframe
+    df['s'] = s == 1
+
+    assert_equals_data(
+        df[df.s].s,
+        expected_columns=['event_id', 's'],
+        expected_data=[
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), 1],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac302'), 1],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), 1]
+        ],
+        order_by='event_id'
+    )
+
+    s = modelhub.map.conversions_counter(df, 'github_clicks', partition='user_id')
+
+    assert_equals_data(
+        s,
+        expected_columns=['event_id', 'converted'],
+        expected_data=[
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), 1],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac302'), 1],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), 1],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac304'), 0],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac305'), 0],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac306'), 0],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac307'), 0],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac308'), 0],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac309'), 0],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac310'), 0],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), 1],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), 1]
+        ],
+        order_by='event_id'
+    )
+
+
+def test_conversions_in_time():
+    df, modelhub = get_objectiv_dataframe(time_aggregation='YYYY-MM-DD')
+
+    # add conversion event
+    modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
+                            event_type='ClickEvent',
+                            name='github_clicks')
+    s = modelhub.map.conversions_in_time(df, 'github_clicks')
+
+    assert_equals_data(
+        s,
+        expected_columns=['event_id', 'conversions_in_time'],
         expected_data=[
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), 0],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac302'), 0],
