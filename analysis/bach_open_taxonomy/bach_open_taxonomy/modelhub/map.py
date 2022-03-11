@@ -108,7 +108,7 @@ class Map:
 
         return new_series
 
-    def conversion_count(self, name: str, partition='session_id'):
+    def conversion_count(self, *args, **kwargs):
         raise NotImplementedError('function is depecrecated please use `conversions_in_time`')
 
     def conversions_in_time(self, df, name: str, partition='session_id'):
@@ -164,7 +164,7 @@ class Map:
         self._mh._check_data_is_objectiv_data(df)
 
         df = df.copy_override()
-        df['__conversions'] = self._mh.map.conversion_count(df, name=name)
+        df['__conversions'] = self._mh.map.conversions_in_time(df, name=name)
 
         window = df.groupby(partition).window()
         converted = window['__conversions'].max()
