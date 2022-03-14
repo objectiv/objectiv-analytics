@@ -43,6 +43,7 @@ services:
       - "127.0.0.1:8081:8081"
     networks:
       - obj
+    restart: unless-stopped
     volumes:
       - ${SCHEMA_EXTENSION_DIRECTORY-./backend/tests/test_data/schemas1}/:/schema-extensions/
     environment:
@@ -60,6 +61,7 @@ services:
     image: postgres:latest
     networks:
       - obj
+    restart: unless-stopped
     ports:
       - "127.0.0.1:5432:5432"
     environment:
@@ -79,9 +81,9 @@ services:
     ports:
       - "127.0.0.1:8888:8888"
       - "127.0.0.1:8053:8053"
-
     networks:
       - obj
+    restart: unless-stopped
     depends_on:
       # we make it depend on the other instances
       # so we have the best chance of the db being up in time
@@ -109,6 +111,7 @@ services:
       - "127.0.0.1:3000:3000"
     networks:
       - obj
+    restart: unless-stopped
     depends_on:
       # depend on notebook, as that will init the db
       - objectiv_postgres
