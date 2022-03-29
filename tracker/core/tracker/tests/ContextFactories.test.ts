@@ -65,6 +65,17 @@ describe('Context Factories', () => {
       user_agent: 'ua',
       remote_address: '0.0.0.0',
     });
+
+    expect(
+      makeHttpContext({ id: 'http', referrer: 'referrer', user_agent: 'ua' })
+    ).toStrictEqual({
+      __global_context: true,
+      _type: 'HttpContext',
+      id: 'http',
+      referrer: 'referrer',
+      user_agent: 'ua',
+      remote_address: null
+    });
   });
 
   it('InputContext', () => {

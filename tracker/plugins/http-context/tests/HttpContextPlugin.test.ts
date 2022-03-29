@@ -46,7 +46,7 @@ describe('HttpContextPlugin', () => {
           _type: 'HttpContext',
           id: 'http_context',
           referrer: 'MOCK_REFERRER',
-          remote_address: '127.0.0.1',
+          remote_address: null,
           user_agent: 'MOCK_USER_AGENT',
         },
       ])
@@ -79,7 +79,7 @@ describe('HttpContextPlugin', () => {
           _type: 'HttpContext',
           id: 'http_context',
           referrer: '',
-          remote_address: '127.0.0.1',
+          remote_address: null,
           user_agent: '',
         },
       ])

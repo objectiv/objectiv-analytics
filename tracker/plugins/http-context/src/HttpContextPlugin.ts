@@ -42,8 +42,7 @@ export class HttpContextPlugin implements TrackerPluginInterface {
     const httpContext = makeHttpContext({
       id: 'http_context',
       referrer: document.referrer ?? '',
-      user_agent: navigator.userAgent ?? '',
-      remote_address: '127.0.0.1',
+      user_agent: navigator.userAgent ?? ''
     });
     tracker.global_contexts.push(httpContext);
   }

@@ -179,7 +179,8 @@
         },
         "remote_address": {
           "description": "(public) IP address of the agent that sent the event.",
-          "type": "string"
+          "type": "string",
+          "optional": true
         }
       }
     },

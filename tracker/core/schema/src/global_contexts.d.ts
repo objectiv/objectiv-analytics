@@ -54,7 +54,7 @@ export interface HttpContext extends AbstractGlobalContext {
   /**
    * (public) IP address of the agent that sent the event.
    */
-  remote_address: string;
+  remote_address: string | null;
 }
 
 /**

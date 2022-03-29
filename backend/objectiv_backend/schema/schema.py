@@ -108,8 +108,8 @@ class HttpContext(AbstractGlobalContext):
     def __init__(self,
                  referrer: str,
                  user_agent: str,
-                 remote_address: str,
                  id: str,
+                 remote_address: str = None,
                  **kwargs: Optional[Any]):
         """
         :param referrer: 
