@@ -22,9 +22,11 @@ class DBDialect(Enum):
     The values are equal to Dialect.name for specific SqlAlchemy Dialect classes e.g.
         DBDialects.POSTGRES.value == PGDialect.name
 
-    This class hardcodes the values, and thus does not depend on any specific python packages being
+    Generally we'll use the sqlalchemy.engine.Dialect class to define a certain database type (e.g. when
+    passing as a parameter). However, when needing to specify a database type in generic code, then use this
+    class. This class hardcodes the values, and thus does not depend on any specific python packages being
+    installed. i.e. accessing DBDialect.BIGQUERY works even if the 'sqlalchemy-bigquery' package is not
     installed.
-    i.e. accessing DBDialect.BIGQUERY works even if the 'sqlalchemy-bigquery' package is not installed.
     """
     POSTGRES = 'postgresql'  # value of PGDialect.name
     BIGQUERY = 'bigquery'  # value of BigQueryDialect.name

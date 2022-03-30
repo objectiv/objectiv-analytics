@@ -7,6 +7,7 @@ from enum import Enum
 from typing import Union, cast, List, Tuple
 
 import numpy
+from sqlalchemy.engine import Dialect
 
 from bach import DataFrame
 from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64
@@ -161,15 +162,18 @@ class SeriesTimestamp(SeriesAbstractDateTime):
     dtype_aliases = ('datetime64', 'datetime64[ns]', numpy.datetime64)
     supported_db_dtype = {
         DBDialect.POSTGRES: 'timestamp without time zone',
+        DBDialect.BIGQUERY: 'DATETIME',  # TODO: use TIMESTAMP instead?
     }
     supported_value_types = (datetime.datetime, datetime.date, str)
 
     @classmethod
-    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
-        return Expression.construct('cast({} as timestamp without time zone)', literal)
+    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
+        db_dialect = DBDialect.from_dialect(dialect)
+        db_dtype = cls.supported_db_dtype[db_dialect]
+        return Expression.construct(f'cast({{}} as {db_dtype})', literal)
 
     @classmethod
-    def supported_value_to_literal(cls, value: Union[str, datetime.datetime]) -> Expression:
+    def supported_value_to_literal(cls, dialect: Dialect, value: Union[str, datetime.datetime]) -> Expression:
         # TODO: check here already that the string has the correct format
         str_value = str(value)
         return Expression.string_value(str_value)
@@ -181,7 +185,8 @@ class SeriesTimestamp(SeriesAbstractDateTime):
         else:
             if source_dtype not in ['string', 'date']:
                 raise ValueError(f'cannot convert {source_dtype} to timestamp')
-            return Expression.construct(f'cast({{}} as {cls.supported_db_dtype})', expression)
+            db_dtype = 'timestamp without time zone'
+            return Expression.construct(f'cast({{}} as {db_dtype})', expression)
 
     def __add__(self, other) -> 'Series':
         return self._arithmetic_operation(other, 'add', '({}) + ({})', other_dtypes=tuple(['timedelta']))
@@ -211,11 +216,11 @@ class SeriesDate(SeriesAbstractDateTime):
     supported_value_types = (datetime.datetime, datetime.date, str)
 
     @classmethod
-    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
+    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         return Expression.construct(f'cast({{}} as date)', literal)
 
     @classmethod
-    def supported_value_to_literal(cls, value: Union[str, datetime.date]) -> Expression:
+    def supported_value_to_literal(cls, dialect: Dialect, value: Union[str, datetime.date]) -> Expression:
         if isinstance(value, datetime.date):
             value = str(value)
         # TODO: check here already that the string has the correct format
@@ -228,7 +233,8 @@ class SeriesDate(SeriesAbstractDateTime):
         else:
             if source_dtype not in ['string', 'timestamp']:
                 raise ValueError(f'cannot convert {source_dtype} to date')
-            return Expression.construct(f'cast({{}} as {cls.supported_db_dtype})', expression)
+            db_dtype = 'date'
+            return Expression.construct(f'cast({{}} as {db_dtype})', expression)
 
     def __add__(self, other) -> 'Series':
         type_mapping = {
@@ -269,15 +275,18 @@ class SeriesTime(SeriesAbstractDateTime):
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
     supported_db_dtype = {
         DBDialect.POSTGRES: 'time without time zone',
+        DBDialect.BIGQUERY: 'TIME',
     }
     supported_value_types = (datetime.time, str)
 
     @classmethod
-    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
-        return Expression.construct('cast({} as time without time zone)', literal)
+    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
+        db_dialect = DBDialect.from_dialect(dialect)
+        db_dtype = cls.supported_db_dtype[db_dialect]
+        return Expression.construct(f'cast({{}} as {db_dtype})', literal)
 
     @classmethod
-    def supported_value_to_literal(cls, value: Union[str, datetime.time]) -> Expression:
+    def supported_value_to_literal(cls, dialect: Dialect, value: Union[str, datetime.time]) -> Expression:
         value = str(value)
         # TODO: check here already that the string has the correct format
         return Expression.string_value(value)
@@ -289,7 +298,8 @@ class SeriesTime(SeriesAbstractDateTime):
         else:
             if source_dtype not in ['string', 'timestamp']:
                 raise ValueError(f'cannot convert {source_dtype} to time')
-            return Expression.construct(f'cast ({{}} as {cls.supported_db_dtype})', expression)
+            db_dtype = 'time without time zone'
+            return Expression.construct(f'cast({{}} as {db_dtype})', expression)
 
     # python supports no arithmetic on Time
 
@@ -307,12 +317,13 @@ class SeriesTimedelta(SeriesAbstractDateTime):
     supported_value_types = (datetime.timedelta, numpy.timedelta64, str)
 
     @classmethod
-    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
+    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         return Expression.construct('cast({} as interval)', literal)
 
     @classmethod
     def supported_value_to_literal(
             cls,
+            dialect: Dialect,
             value: Union[str, numpy.timedelta64, datetime.timedelta]
     ) -> Expression:
         value = str(value)

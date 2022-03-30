@@ -3,6 +3,8 @@ Copyright 2021 Objectiv B.V.
 """
 from typing import Union, TYPE_CHECKING
 
+from sqlalchemy.engine import Dialect
+
 from bach.series import Series
 from bach.expression import Expression
 from sql_models.constants import DBDialect
@@ -117,11 +119,11 @@ class SeriesString(Series):
     supported_value_types = (str, type(None))  # NoneType ends up as a string for now
 
     @classmethod
-    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
+    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         return literal
 
     @classmethod
-    def supported_value_to_literal(cls, value: str) -> Expression:
+    def supported_value_to_literal(cls, dialect: Dialect, value: str) -> Expression:
         return Expression.string_value(value)
 
     @classmethod

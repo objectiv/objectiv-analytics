@@ -11,6 +11,7 @@ from uuid import UUID
 
 import numpy
 import pandas
+from sqlalchemy.engine import Dialect
 from sqlalchemy.future import Engine
 
 from bach import DataFrame, SortColumn, DataFrameOrSeries, get_series_type_from_dtype
@@ -189,28 +190,28 @@ class Series(ABC):
 
     @classmethod
     @abstractmethod
-    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
+    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         """
         INTERNAL: Given an expression representing a literal as returned by
         :meth:`supported_value_to_literal()`, this returns an Expression representing the actual value with
         the correct type.
 
-        Example for dtype `int64`:
-            supported_value_to_literal(123) will return an expression representing '123'
-            supported_literal_to_expression('123') should then turn that into 'cast(123 to bigint)'
+        Example for dtype `int64`, with Postgres Dialect (`pgd`):
+            supported_value_to_literal(pgd, 123) will return an expression representing '123'
+            supported_literal_to_expression(pgd, '123') should then turn that into 'cast(123 to bigint)'
         """
         raise NotImplementedError()
 
     @classmethod
     @abstractmethod
-    def supported_value_to_literal(cls, value: Any) -> Expression:
+    def supported_value_to_literal(cls, dialect: Dialect, value: Any) -> Expression:
         """
         INTERNAL: Gives an expression for the sql-literal of the given value.
 
         Note that this is not always the same as the sql representation of the given value!
-        e.g. for the int64 value `123`, the literal we generate is `123` (excluding the quotes), which
-        is a smallint, not a bigint. We then add the cast to 'bigint', but this function _only_ returns the
-        literal not the cast.
+        e.g. for the int64 value `123`, the literal we generate on Postgres is `123` (excluding the quotes),
+        which is a smallint, not a bigint. We then add the cast to 'bigint', but this function _only_ returns
+        the literal not the cast.
 
         Implementations of this function are responsible for correctly quoting and escaping special
         characters in the given value. Either by using ExpressionTokens that allow unsafe values (e.g.
@@ -219,6 +220,7 @@ class Series(ABC):
 
         Implementations only need to be able to support the value specified by supported_value_types.
 
+        :param dialect: Database dialect
         :param value: All values of types listed by self.supported_value_types should be supported.
         :return: Expression of a sql-literal for the value
         """
@@ -311,7 +313,7 @@ class Series(ABC):
         )
 
     @classmethod
-    def value_to_expression(cls, value: Optional[Any]) -> Expression:
+    def value_to_expression(cls, dialect: Dialect, value: Optional[Any]) -> Expression:
         """
         INTERNAL: Give the expression for the given value.
 
@@ -320,6 +322,8 @@ class Series(ABC):
             1. If value is None a simple 'NULL' expression is returned.
             2. If value is not in supported_value_types raises an error.
 
+        :param dialect: Database dialect
+        :param value: value to convert to an expression
         :raises TypeError: if value is not an instance of cls.supported_value_types, and not None
         """
         # We should wrap this in a ConstValueExpression or something
@@ -328,8 +332,8 @@ class Series(ABC):
         if not isinstance(value, cls.supported_value_types):
             raise TypeError(f'value should be one of {cls.supported_value_types}'
                             f', actual type: {type(value)}')
-        literal = cls.supported_value_to_literal(value)
-        return cls.supported_literal_to_expression(literal)
+        literal = cls.supported_value_to_literal(dialect=dialect, value=value)
+        return cls.supported_literal_to_expression(dialect=dialect, literal=literal)
 
     @classmethod
     def from_const(cls,
@@ -344,10 +348,11 @@ class Series(ABC):
         :param value:   The value that this constant Series will have
         :param name:    The name that it will be known by (only for representation)
         """
+        expression = ConstValueExpression(cls.value_to_expression(dialect=base.engine.dialect, value=value))
         result = cls.get_class_instance(
             base=base,
             name=name,
-            expression=ConstValueExpression(cls.value_to_expression(value)),
+            expression=expression,
             group_by=None,
         )
         return result
@@ -805,6 +810,7 @@ class Series(ABC):
         if dtype == self.dtype or dtype in self.dtype_aliases:
             return self
         series_type = get_series_type_from_dtype(dtype)
+        # TODO: pass dialect to dtype_to_expression
         expression = series_type.dtype_to_expression(self.dtype, self.expression)
         new_dtype = series_type.dtype
         return self.copy_override_dtype(dtype=new_dtype).copy_override(expression=expression)
@@ -1421,7 +1427,7 @@ class Series(ABC):
         """
         # TODO Lag, lead etc. could check whether the window is setup correctly to include that value
         window = self._check_window(window)
-        default_expr = self.value_to_expression(default)
+        default_expr = self.value_to_expression(dialect=self.engine.dialect, value=default)
         return self._derived_agg_func(
             window,
             Expression.construct(f'lag({{}}, {offset}, {{}})', self, default_expr),
@@ -1439,7 +1445,7 @@ class Series(ABC):
         Defaults to None
         """
         window = self._check_window(window)
-        default_expr = self.value_to_expression(default)
+        default_expr = self.value_to_expression(dialect=self.engine.dialect, value=default)
         return self._derived_agg_func(
             window,
             Expression.construct(f'lead({{}}, {offset}, {{}})', self, default_expr),
@@ -1637,7 +1643,10 @@ def variable_series(base: Union[Series, DataFrame], value: Any, name: str) -> Se
     dtype = value_to_dtype(value)
     series_type = get_series_type_from_dtype(dtype)
     variable_placeholder = Expression.variable(dtype=dtype, name=name)
-    variable_expression = series_type.supported_literal_to_expression(variable_placeholder)
+    variable_expression = series_type.supported_literal_to_expression(
+        dialect=base.engine.dialect,
+        literal=variable_placeholder
+    )
     result = series_type.get_class_instance(
         base=base,
         name='__variable__',

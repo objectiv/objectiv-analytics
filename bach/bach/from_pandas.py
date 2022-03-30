@@ -103,7 +103,7 @@ def from_pandas_ephemeral(
         # start=1 is to account for the automatic index that pandas adds
         for i, series_type in enumerate(column_series_type, start=1):
             val = row[i]
-            per_column_expr.append(series_type.value_to_expression(val))
+            per_column_expr.append(series_type.value_to_expression(dialect=engine.dialect, value=val))
         row_expr = Expression.construct('({})', join_expressions(per_column_expr))
         per_row_expr.append(row_expr)
     all_values_str = join_expressions(per_row_expr, join_str=',\n').to_sql(engine.dialect)

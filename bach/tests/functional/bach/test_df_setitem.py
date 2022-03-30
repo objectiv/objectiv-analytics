@@ -19,7 +19,6 @@ from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, ass
 def check_set_const(engine, constant, expected_series: Type[Series], pg_db_type: str):
     bt = get_df_with_test_data(engine)
     bt['new_column'] = constant
-    print(f'\n\n-- ---\n{bt.view_sql()}\n\n-- ---\n')
 
     if is_postgres(engine):
         # we don't have an easy way to get the database type in BigQuery, so only support that check for PG
@@ -49,7 +48,6 @@ def test_set_const_int(engine):
 
 
 def test_set_const_float(engine):
-    #engine = get_postgres_engine_dialect().engine  # TODO: BigQuery
     check_set_const(engine, 5.1, SeriesFloat64, 'double precision')
 
 
@@ -65,13 +63,11 @@ def test_set_const_date(engine):
     check_set_const(engine, datetime.date(2019, 1, 5), SeriesDate, 'date')
 
 
-def test_set_const_datetime():
-    engine = get_postgres_engine_dialect().engine  # TODO: BigQuery
+def test_set_const_datetime(engine):
     check_set_const(engine, datetime.datetime.now(), SeriesTimestamp, 'timestamp without time zone')
 
 
-def test_set_const_time():
-    engine = get_postgres_engine_dialect().engine  # TODO: BigQuery
+def test_set_const_time(engine):
     check_set_const(
         engine,
         datetime.time.fromisoformat('00:05:23.283'),

@@ -4,6 +4,8 @@ Copyright 2021 Objectiv B.V.
 from typing import Union
 from uuid import UUID
 
+from sqlalchemy.engine import Dialect
+
 from bach import DataFrameOrSeries
 from bach.series import Series, const_to_series
 from bach.expression import Expression
@@ -24,11 +26,11 @@ class SeriesUuid(Series):
     supported_value_types = (UUID, str)
 
     @classmethod
-    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
+    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         return Expression.construct('cast({} as uuid)', literal)
 
     @classmethod
-    def supported_value_to_literal(cls, value: Union[UUID, str]) -> Expression:
+    def supported_value_to_literal(cls, dialect: Dialect, value: Union[UUID, str]) -> Expression:
         if isinstance(value, str):
             # Check that the string value is a valid UUID by converting it to a UUID
             value = UUID(value)

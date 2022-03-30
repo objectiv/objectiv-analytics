@@ -5,6 +5,7 @@ from abc import ABC
 from typing import cast, Union, TYPE_CHECKING, Optional, List
 
 import numpy
+from sqlalchemy.engine import Dialect
 
 from bach.series import Series
 from bach.expression import Expression, AggregateFunctionExpression
@@ -193,11 +194,13 @@ class SeriesInt64(SeriesAbstractNumeric):
     # https://www.postgresql.org/docs/14/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS
 
     @classmethod
-    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
-        return Expression.construct('cast({} as bigint)', literal)
+    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
+        db_dialect = DBDialect.from_dialect(dialect)
+        db_dtype = cls.supported_db_dtype[db_dialect]
+        return Expression.construct(f'cast({{}} as {db_dtype})', literal)
 
     @classmethod
-    def supported_value_to_literal(cls, value: int) -> Expression:
+    def supported_value_to_literal(cls, dialect: Dialect, value: int) -> Expression:
         return Expression.raw(str(value))
 
     @classmethod
@@ -257,11 +260,13 @@ class SeriesFloat64(SeriesAbstractNumeric):
     # https://www.postgresql.org/docs/14/datatype-numeric.html#DATATYPE-FLOAT
 
     @classmethod
-    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
-        return Expression.construct("cast({} as float)", literal)
+    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
+        db_dialect = DBDialect.from_dialect(dialect)
+        db_dtype = cls.supported_db_dtype[db_dialect]
+        return Expression.construct(f'cast({{}} as {db_dtype})', literal)
 
     @classmethod
-    def supported_value_to_literal(cls, value: Union[float, numpy.float64]) -> Expression:
+    def supported_value_to_literal(cls, dialect: Dialect, value: Union[float, numpy.float64]) -> Expression:
         return Expression.string_value(str(value))
 
     @classmethod

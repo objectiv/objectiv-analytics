@@ -4,6 +4,8 @@ Copyright 2021 Objectiv B.V.
 from abc import ABC
 from typing import cast
 
+from sqlalchemy.engine import Dialect
+
 from bach.series import Series, const_to_series
 from bach.expression import Expression
 from bach.series.series import WrappedPartition
@@ -42,11 +44,11 @@ class SeriesBoolean(Series, ABC):
     # See https://www.postgresql.org/docs/14/datatype-boolean.html
 
     @classmethod
-    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
+    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         return literal
 
     @classmethod
-    def supported_value_to_literal(cls, value: bool) -> Expression:
+    def supported_value_to_literal(cls, dialect: Dialect, value: bool) -> Expression:
         return Expression.raw(str(value))
 
     @classmethod

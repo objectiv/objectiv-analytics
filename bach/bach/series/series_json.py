@@ -4,6 +4,8 @@ Copyright 2021 Objectiv B.V.
 import json
 from typing import Optional, Dict, Union, TYPE_CHECKING, List, Tuple
 
+from sqlalchemy.engine import Dialect
+
 from bach.series import Series
 from bach.expression import Expression
 from bach.series.series import WrappedPartition
@@ -308,11 +310,11 @@ class SeriesJsonb(Series):
         return self.Json(self)
 
     @classmethod
-    def supported_literal_to_expression(cls, literal: Expression) -> Expression:
+    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         return Expression.construct('cast({} as jsonb)', literal)
 
     @classmethod
-    def supported_value_to_literal(cls, value: Union[dict, list]) -> Expression:
+    def supported_value_to_literal(cls, dialect: Dialect, value: Union[dict, list]) -> Expression:
         json_value = json.dumps(value)
         return Expression.string_value(json_value)
 
