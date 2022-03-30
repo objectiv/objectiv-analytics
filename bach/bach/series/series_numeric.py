@@ -195,21 +195,19 @@ class SeriesInt64(SeriesAbstractNumeric):
 
     @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        db_dialect = DBDialect.from_dialect(dialect)
-        db_dtype = cls.supported_db_dtype[db_dialect]
-        return Expression.construct(f'cast({{}} as {db_dtype})', literal)
+        return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
 
     @classmethod
     def supported_value_to_literal(cls, dialect: Dialect, value: int) -> Expression:
         return Expression.raw(str(value))
 
     @classmethod
-    def dtype_to_expression(cls, source_dtype: str, expression: Expression) -> Expression:
+    def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'int64':
             return expression
         if source_dtype not in ['float64', 'bool', 'string']:
             raise ValueError(f'cannot convert {source_dtype} to int64')
-        return Expression.construct('cast({} as bigint)', expression)
+        return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
     def _arithmetic_operation(self, other, operation, fmt_str, other_dtypes=('int64', 'float64'), dtype=None):
         # Override this method, because we need to return a float if we interact with one.
@@ -220,7 +218,18 @@ class SeriesInt64(SeriesAbstractNumeric):
         return super()._arithmetic_operation(other, operation, fmt_str, other_dtypes, type_mapping)
 
     def __truediv__(self, other) -> 'Series':
-        return self._arithmetic_operation(other, 'div', 'cast({} as float) / ({})', dtype='float64')
+        # What we do below is essentially the same as: return self.astype('float64') / other
+        # But somehow that fails some test cases and the below code works. The generated sql for the 'nice'
+        # code above doesn't seem to make sense in the broken cases. TODO: look into this
+
+        db_dialect = DBDialect.from_dialect(self.engine.dialect)
+        float_db_type = SeriesFloat64.supported_db_dtype[db_dialect]
+        return self._arithmetic_operation(
+            other=other,
+            operation='div',
+            fmt_str=f'cast({{}} as {float_db_type}) / ({{}})',
+            dtype='float64'
+        )
 
     def __rshift__(self, other):
         return self._arithmetic_operation(other, 'lshift', '({}) >> cast({} as int)',
@@ -261,18 +270,16 @@ class SeriesFloat64(SeriesAbstractNumeric):
 
     @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        db_dialect = DBDialect.from_dialect(dialect)
-        db_dtype = cls.supported_db_dtype[db_dialect]
-        return Expression.construct(f'cast({{}} as {db_dtype})', literal)
+        return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
 
     @classmethod
     def supported_value_to_literal(cls, dialect: Dialect, value: Union[float, numpy.float64]) -> Expression:
         return Expression.string_value(str(value))
 
     @classmethod
-    def dtype_to_expression(cls, source_dtype: str, expression: Expression) -> Expression:
+    def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'float64':
             return expression
         if source_dtype not in ['int64', 'string']:
             raise ValueError(f'cannot convert {source_dtype} to float64')
-        return Expression.construct('cast({} as float)', expression)
+        return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)

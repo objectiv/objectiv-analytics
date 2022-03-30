@@ -52,7 +52,7 @@ class SeriesBoolean(Series, ABC):
         return Expression.raw(str(value))
 
     @classmethod
-    def dtype_to_expression(cls, source_dtype: str, expression: Expression) -> Expression:
+    def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'bool':
             return expression
         if source_dtype not in ['int64', 'string']:

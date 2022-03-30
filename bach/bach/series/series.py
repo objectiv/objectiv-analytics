@@ -228,11 +228,15 @@ class Series(ABC):
 
     @classmethod
     @abstractmethod
-    def dtype_to_expression(cls, source_dtype: str, expression: Expression) -> Expression:
+    def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         """
         INTERNAL: Give the sql expression to convert the given expression, of the given source dtype to the
         dtype of this Series.
-        :return: sql expression
+
+        :param dialect: Database dialect
+        :param source_dtype: dtype of the expression parameter
+        :param expression: expression to cast
+        :return: a new expression that converts the given expression to the dtype of this class
         """
         raise NotImplementedError()
 
@@ -311,6 +315,12 @@ class Series(ABC):
             sorted_ascending=sorted_ascending,
             index_sorting=[] if index_sorting is None else index_sorting
         )
+
+    @classmethod
+    def get_db_dtype(cls, dialect: Dialect) -> str:
+        """ Given the db_dtype of this Series, for the given database dialect. """
+        db_dialect = DBDialect.from_dialect(dialect)
+        return cls.supported_db_dtype[db_dialect]
 
     @classmethod
     def value_to_expression(cls, dialect: Dialect, value: Optional[Any]) -> Expression:
@@ -811,7 +821,11 @@ class Series(ABC):
             return self
         series_type = get_series_type_from_dtype(dtype)
         # TODO: pass dialect to dtype_to_expression
-        expression = series_type.dtype_to_expression(self.dtype, self.expression)
+        expression = series_type.dtype_to_expression(
+            dialect=self.engine.dialect,
+            source_dtype=self.dtype,
+            expression=self.expression
+        )
         new_dtype = series_type.dtype
         return self.copy_override_dtype(dtype=new_dtype).copy_override(expression=expression)
 

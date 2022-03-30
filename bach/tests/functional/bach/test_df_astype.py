@@ -2,12 +2,12 @@
 Copyright 2021 Objectiv B.V.
 """
 from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data, \
-    get_bt_with_json_data, CITIES_INDEX_AND_COLUMNS
+    get_bt_with_json_data, CITIES_INDEX_AND_COLUMNS, get_df_with_test_data
 
 
-def test_astype_dtypes():
+def test_astype_dtypes(engine):
     # case 1: cast all columns to a type
-    bt = get_bt_with_test_data()
+    bt = get_df_with_test_data(engine)
     bt_int = bt[['inhabitants', 'founding']]
     bt_float = bt_int.astype('float64')
     assert bt_int.dtypes == {'founding': 'int64', 'inhabitants': 'int64'}
@@ -67,8 +67,8 @@ def test_astype_dtypes():
     )
 
 
-def test_astype_to_int():
-    bt = get_bt_with_test_data()
+def test_astype_to_int(engine):
+    bt = get_df_with_test_data(engine)
     bt = bt[['inhabitants']]
     bt['inhabitants'] = bt['inhabitants'] / 1000
     bt_int = bt.astype('int64')

@@ -319,7 +319,7 @@ class SeriesJsonb(Series):
         return Expression.string_value(json_value)
 
     @classmethod
-    def dtype_to_expression(cls, source_dtype: str, expression: Expression) -> Expression:
+    def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype in ['jsonb', 'json']:
             return expression
         if source_dtype != 'string':

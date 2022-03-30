@@ -179,7 +179,7 @@ class SeriesTimestamp(SeriesAbstractDateTime):
         return Expression.string_value(str_value)
 
     @classmethod
-    def dtype_to_expression(cls, source_dtype: str, expression: Expression) -> Expression:
+    def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'timestamp':
             return expression
         else:
@@ -228,7 +228,7 @@ class SeriesDate(SeriesAbstractDateTime):
         return Expression.string_value(value)
 
     @classmethod
-    def dtype_to_expression(cls, source_dtype: str, expression: Expression) -> Expression:
+    def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'date':
             return expression
         else:
@@ -293,7 +293,7 @@ class SeriesTime(SeriesAbstractDateTime):
         return Expression.string_value(value)
 
     @classmethod
-    def dtype_to_expression(cls, source_dtype: str, expression: Expression) -> Expression:
+    def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'time':
             return expression
         else:
@@ -332,7 +332,7 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         return Expression.string_value(value)
 
     @classmethod
-    def dtype_to_expression(cls, source_dtype: str, expression: Expression) -> Expression:
+    def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if source_dtype == 'timedelta':
             return expression
         else:
