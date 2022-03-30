@@ -7,7 +7,7 @@ import pytest
 
 from bach import SeriesDate
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_bt_with_food_data, \
-    assert_db_type, get_bt_with_test_data
+    assert_postgres_type, get_bt_with_test_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
 
 
@@ -18,7 +18,7 @@ def test_date_comparator(asstring: bool):
     # import code has no means to distinguish between date and timestamp
     mt['date'] = mt['date'].astype('date')
 
-    assert_db_type(mt['date'], 'date', SeriesDate)
+    assert_postgres_type(mt['date'], 'date', SeriesDate)
 
     from datetime import date
     dt = date(2021, 5, 3)

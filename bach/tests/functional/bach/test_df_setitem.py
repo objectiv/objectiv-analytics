@@ -12,7 +12,7 @@ from bach import SeriesInt64, SeriesString, SeriesFloat64, SeriesDate, SeriesTim
     SeriesJsonb, SeriesBoolean
 from sql_models.util import is_postgres
 from tests.conftest import get_postgres_engine_dialect
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_db_type, \
+from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_postgres_type, \
     assert_equals_data, CITIES_INDEX_AND_COLUMNS, get_bt_with_railway_data, get_df_with_test_data
 
 
@@ -22,7 +22,7 @@ def check_set_const(engine, constant, expected_series: Type[Series], pg_db_type:
 
     if is_postgres(engine):
         # we don't have an easy way to get the database type in BigQuery, so only support that check for PG
-        assert_db_type(bt['new_column'], pg_db_type, expected_series)
+        assert_postgres_type(bt['new_column'], pg_db_type, expected_series)
 
     assert_equals_data(
         bt,
@@ -104,7 +104,7 @@ def test_set_const_int_from_series():
     max_series = max['founding_sum']
     max_value = max_series.value
     bt['max_founding'] = max_value
-    assert_db_type(bt['max_founding'], 'bigint', SeriesInt64, )
+    assert_postgres_type(bt['max_founding'], 'bigint', SeriesInt64, )
 
     assert_equals_data(
         bt,
@@ -123,7 +123,7 @@ def test_set_const_int_from_series():
 def test_set_series_column():
     bt = get_bt_with_test_data()
     bt['duplicated_column'] = bt['founding']
-    assert_db_type(bt['duplicated_column'], 'bigint', SeriesInt64)
+    assert_postgres_type(bt['duplicated_column'], 'bigint', SeriesInt64)
     assert_equals_data(
         bt,
         expected_columns=[
@@ -188,7 +188,7 @@ def test_set_multiple():
 def test_set_existing():
     bt = get_bt_with_test_data()
     bt['city'] = bt['founding']
-    assert_db_type(bt['city'], 'bigint', SeriesInt64)
+    assert_postgres_type(bt['city'], 'bigint', SeriesInt64)
     assert_equals_data(
         bt,
         expected_columns=CITIES_INDEX_AND_COLUMNS,
@@ -224,7 +224,7 @@ def test_set_different_base_node():
     bt = get_bt_with_test_data()
     mt = get_bt_with_railway_data()
     bt['skating_order'] = mt['station']
-    assert_db_type(bt['skating_order'], 'text', SeriesString)
+    assert_postgres_type(bt['skating_order'], 'text', SeriesString)
     assert_equals_data(
         bt,
         expected_columns=CITIES_INDEX_AND_COLUMNS,
@@ -286,7 +286,7 @@ def test_set_different_group_by():
 def test_set_existing_referencing_other_column_experience():
     bt = get_bt_with_test_data()
     bt['city'] = bt['city'] + ' test'
-    assert_db_type(bt['city'], 'text', SeriesString)
+    assert_postgres_type(bt['city'], 'text', SeriesString)
     assert_equals_data(
         bt,
         expected_columns=CITIES_INDEX_AND_COLUMNS,
@@ -315,8 +315,8 @@ def test_set_existing_referencing_other_column_experience():
     )
     bt['skating_order'] = c
     bt['city'] = a + ' - ' + b
-    assert_db_type(bt['skating_order'], 'bigint', SeriesInt64)
-    assert_db_type(bt['city'], 'text', SeriesString)
+    assert_postgres_type(bt['skating_order'], 'bigint', SeriesInt64)
+    assert_postgres_type(bt['city'], 'text', SeriesString)
     assert_equals_data(
         bt,
         expected_columns=CITIES_INDEX_AND_COLUMNS,
@@ -333,7 +333,7 @@ def test_set_existing_referencing_other_column_experience():
 def test_set_series_expression():
     bt = get_bt_with_test_data()
     bt['time_travel'] = bt['founding'] + 1000
-    assert_db_type(bt['time_travel'], 'bigint', SeriesInt64, )
+    assert_postgres_type(bt['time_travel'], 'bigint', SeriesInt64, )
     assert_equals_data(
         bt,
         expected_columns=CITIES_INDEX_AND_COLUMNS + ['time_travel'],
@@ -399,7 +399,7 @@ def test_set_pandas_series():
     bt = get_bt_with_test_data()
     pandas_series = bt['founding'].to_pandas()
     bt['duplicated_column'] = pandas_series
-    assert_db_type(bt['duplicated_column'], 'bigint', SeriesInt64)
+    assert_postgres_type(bt['duplicated_column'], 'bigint', SeriesInt64)
     assert_equals_data(
         bt,
         expected_columns=[
@@ -418,7 +418,7 @@ def test_set_pandas_series_different_shape():
     bt = get_bt_with_test_data()
     pandas_series = bt['founding'].to_pandas()[1:]
     bt['duplicated_column'] = pandas_series
-    assert_db_type(bt['duplicated_column'], 'bigint', SeriesInt64)
+    assert_postgres_type(bt['duplicated_column'], 'bigint', SeriesInt64)
     assert_equals_data(
         bt,
         expected_columns=[
@@ -438,7 +438,7 @@ def test_set_pandas_series_different_shape_and_name():
     bt2 = get_bt_with_railway_data()  # has more rows and different name index
     pandas_series = bt2['town'].to_pandas()
     bt['the_town'] = pandas_series
-    assert_db_type(bt['the_town'], 'text', SeriesString)
+    assert_postgres_type(bt['the_town'], 'text', SeriesString)
     assert_equals_data(
         bt,
         expected_columns=[

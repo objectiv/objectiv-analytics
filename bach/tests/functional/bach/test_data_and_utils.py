@@ -280,13 +280,13 @@ def _get_to_pandas_data(df: DataFrame):
     return column_names, db_values
 
 
-def assert_db_type(
+def assert_postgres_type(
         series: Series,
         expected_db_type: str,
         expected_series_type: Type[Series]
 ):
     """
-    Check that the given Series has the expected data type in the database, and that it has the
+    Check that the given Series has the expected data type in the Postgres database, and that it has the
     expected Series type after being read back from the database.
     :param series: Series object to check the type of
     :param expected_db_type: one of the types listed on https://www.postgresql.org/docs/current/datatype.html

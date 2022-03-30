@@ -3,7 +3,7 @@ Copyright 2021 Objectiv B.V.
 """
 from bach import SeriesBoolean, SeriesInt64, SeriesString, \
     SeriesFloat64, SeriesTimestamp
-from tests.functional.bach.test_data_and_utils import get_bt, assert_db_type
+from tests.functional.bach.test_data_and_utils import get_bt, assert_postgres_type
 
 import datetime
 
@@ -17,11 +17,11 @@ def test_all_supported_types():
                 ['float', 'int', 'timestamp', 'string', 'bool'],
                 convert_objects=True)
 
-    assert_db_type(bt['float'], 'double precision', SeriesFloat64)
-    assert_db_type(bt['int'], 'bigint', SeriesInt64)
-    assert_db_type(bt['timestamp'], 'timestamp without time zone', SeriesTimestamp)
-    assert_db_type(bt['string'], 'text', SeriesString)
-    assert_db_type(bt['bool'], 'boolean', SeriesBoolean)
+    assert_postgres_type(bt['float'], 'double precision', SeriesFloat64)
+    assert_postgres_type(bt['int'], 'bigint', SeriesInt64)
+    assert_postgres_type(bt['timestamp'], 'timestamp without time zone', SeriesTimestamp)
+    assert_postgres_type(bt['string'], 'text', SeriesString)
+    assert_postgres_type(bt['bool'], 'boolean', SeriesBoolean)
 
 
 def test_string_as_index():
@@ -33,11 +33,11 @@ def test_string_as_index():
                 ['string', 'float', 'int', 'timestamp', 'bool'],
                 convert_objects=True)
 
-    assert_db_type(bt['float'], 'double precision', SeriesFloat64)
-    assert_db_type(bt['int'], 'bigint', SeriesInt64)
-    assert_db_type(bt['timestamp'], 'timestamp without time zone', SeriesTimestamp)
-    assert_db_type(bt['string'], 'text', SeriesString)
-    assert_db_type(bt['bool'], 'boolean', SeriesBoolean)
+    assert_postgres_type(bt['float'], 'double precision', SeriesFloat64)
+    assert_postgres_type(bt['int'], 'bigint', SeriesInt64)
+    assert_postgres_type(bt['timestamp'], 'timestamp without time zone', SeriesTimestamp)
+    assert_postgres_type(bt['string'], 'text', SeriesString)
+    assert_postgres_type(bt['bool'], 'boolean', SeriesBoolean)
 
 
 def test_load_df_without_conversion():
@@ -49,7 +49,7 @@ def test_load_df_without_conversion():
                 ['float', 'int', 'timestamp', 'bool'],
                 convert_objects=False)
 
-    assert_db_type(bt['float'], 'double precision', SeriesFloat64)
-    assert_db_type(bt['int'], 'bigint', SeriesInt64)
-    assert_db_type(bt['timestamp'], 'timestamp without time zone', SeriesTimestamp)
-    assert_db_type(bt['bool'], 'boolean', SeriesBoolean)
+    assert_postgres_type(bt['float'], 'double precision', SeriesFloat64)
+    assert_postgres_type(bt['int'], 'bigint', SeriesInt64)
+    assert_postgres_type(bt['timestamp'], 'timestamp without time zone', SeriesTimestamp)
+    assert_postgres_type(bt['bool'], 'boolean', SeriesBoolean)
