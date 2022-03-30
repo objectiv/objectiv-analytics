@@ -32,9 +32,10 @@ def get_dtypes_from_model(engine: Engine, node: SqlModel) -> Dict[str, str]:
 
 def get_dtypes_from_table(engine: Engine, table_name: str) -> Dict[str, str]:
     """ Query database to get dtypes of the given table. """
+    # using `INFORMATION_SCHEMA.COLUMNS` in capitals, as that way it works on both Postgres and BigQuery
     sql = f"""
         select column_name, data_type
-        from information_schema.columns
+        from INFORMATION_SCHEMA.COLUMNS
         where table_name = '{table_name}'
         order by ordinal_position;
     """

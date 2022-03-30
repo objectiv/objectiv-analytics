@@ -11,18 +11,24 @@ from sqlalchemy.engine import Engine
 
 from bach import DataFrame
 from sql_models.model import CustomSqlModelBuilder, SqlModel
+from sql_models.util import is_postgres, is_bigquery
 from tests.functional.bach.test_data_and_utils import DB_TEST_URL
 
 
 def _create_test_table(engine: Engine, table_name: str):
-    sql = f'drop table if exists {table_name}; ' \
-          f'create table {table_name}(a bigint, b text, c double precision, d date, e timestamp); '
+    if is_postgres(engine):
+        sql = f'drop table if exists {table_name}; ' \
+              f'create table {table_name}(a bigint, b text, c double precision, d date, e timestamp); '
+    elif is_bigquery(engine):
+        sql = f'drop table if exists {table_name}; ' \
+              f'create table {table_name}(a int64, b string, c float64, d date, e datetime); '
+    else:
+        raise Exception('Incomplete tests')
     with engine.connect() as conn:
         conn.execute(sql)
 
 
-def test_from_table_basic():
-    engine = sqlalchemy.create_engine(DB_TEST_URL)
+def test_from_table_basic(engine):
     table_name = 'test_df_from_table'
     _create_test_table(engine, table_name)
 
@@ -72,9 +78,8 @@ def test_from_model_basic():
     assert df == df_all_dtypes
 
 
-def test_from_table_column_ordering():
+def test_from_table_column_ordering(engine):
     # Create a Dataframe in which the index is not the first column in the table.
-    engine = sqlalchemy.create_engine(DB_TEST_URL)
     table_name = 'test_df_from_table'
     _create_test_table(engine, table_name)
 

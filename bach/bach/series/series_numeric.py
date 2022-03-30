@@ -246,7 +246,7 @@ class SeriesFloat64(SeriesAbstractNumeric):
     dtype_aliases = ('float', 'double', 'f8', float, numpy.float64, 'double precision')
     supported_db_dtype = {
         DBDialect.POSTGRES: 'double precision',
-        DBDialect.BIGQUERY: 'float64'
+        DBDialect.BIGQUERY: 'FLOAT64'
     }
     supported_value_types = (float, numpy.float64)
 

@@ -212,6 +212,7 @@ class SeriesDate(SeriesAbstractDateTime):
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
     supported_db_dtype = {
         DBDialect.POSTGRES: 'date',
+        DBDialect.BIGQUERY: 'DATE'
     }
     supported_value_types = (datetime.datetime, datetime.date, str)
 
