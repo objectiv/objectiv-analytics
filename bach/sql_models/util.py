@@ -6,6 +6,8 @@ from typing import Set, Union
 
 from sqlalchemy.engine import Dialect, Engine
 
+from sql_models.constants import DBDialect
+
 
 def extract_format_fields(format_string: str, nested=1) -> Set[str]:
     """
@@ -88,13 +90,11 @@ def quote_string(value: str) -> str:
 
 
 def is_postgres(dialect_engine: Union[Dialect, Engine]) -> bool:
-    return dialect_engine.name == 'postgresql'  # value of PGDialect.name
+    return DBDialect.POSTGRES.is_dialect(dialect_engine)
 
 
 def is_bigquery(dialect_engine: Union[Dialect, Engine]) -> bool:
-    # We hardcode the string value here instead of comparing against BigQueryDialect.name
-    # This way this code path will work, even if the BigQuery python package is not installed
-    return dialect_engine.name == 'bigquery'
+    return DBDialect.BIGQUERY.is_dialect(dialect_engine)
 
 
 class DatabaseNotSupportedException(Exception):

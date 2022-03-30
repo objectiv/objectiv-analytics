@@ -8,6 +8,7 @@ from bach import DataFrameOrSeries
 from bach.series import Series, const_to_series
 from bach.expression import Expression
 from bach.series.series import WrappedPartition
+from sql_models.constants import DBDialect
 
 
 class SeriesUuid(Series):
@@ -16,7 +17,10 @@ class SeriesUuid(Series):
     """
     dtype = 'uuid'
     dtype_aliases = ()
-    supported_db_dtype = 'uuid'
+    supported_db_dtype = {
+        DBDialect.POSTGRES: 'uuid',
+    }
+
     supported_value_types = (UUID, str)
 
     @classmethod

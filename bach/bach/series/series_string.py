@@ -5,6 +5,7 @@ from typing import Union, TYPE_CHECKING
 
 from bach.series import Series
 from bach.expression import Expression
+from sql_models.constants import DBDialect
 
 if TYPE_CHECKING:
     from bach.series import SeriesBoolean
@@ -110,7 +111,9 @@ class SeriesString(Series):
 
     dtype = 'string'
     dtype_aliases = ('text', str)
-    supported_db_dtype = 'text'
+    supported_db_dtype = {
+        DBDialect.POSTGRES: 'text',
+    }
     supported_value_types = (str, type(None))  # NoneType ends up as a string for now
 
     @classmethod

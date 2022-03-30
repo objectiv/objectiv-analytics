@@ -9,6 +9,7 @@ from bach.expression import Expression
 from bach.series.series import WrappedPartition
 from bach.sql_model import BachSqlModel
 from bach.types import DtypeOrAlias
+from sql_models.constants import DBDialect
 from sql_models.util import quote_string
 
 if TYPE_CHECKING:
@@ -119,7 +120,9 @@ class SeriesJsonb(Series):
     dtype = 'jsonb'
     # todo can only assign a type to one series type, and object is quite generic
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
-    supported_db_dtype = 'jsonb'
+    supported_db_dtype = {
+        DBDialect.POSTGRES: 'jsonb',
+    }
     supported_value_types = (dict, list)
     return_dtype = dtype
 
@@ -354,7 +357,9 @@ class SeriesJson(SeriesJsonb):
     """
     dtype = 'json'
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
-    supported_db_dtype = 'json'
+    supported_db_dtype = {
+        DBDialect.POSTGRES: 'json',
+    }
     return_dtype = 'jsonb'
 
     def __init__(self,

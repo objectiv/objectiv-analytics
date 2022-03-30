@@ -7,6 +7,7 @@ from typing import cast
 from bach.series import Series, const_to_series
 from bach.expression import Expression
 from bach.series.series import WrappedPartition
+from sql_models.constants import DBDialect
 
 
 class SeriesBoolean(Series, ABC):
@@ -30,7 +31,10 @@ class SeriesBoolean(Series, ABC):
     """
     dtype = 'bool'
     dtype_aliases = ('boolean', '?', bool)
-    supported_db_dtype = 'boolean'
+    supported_db_dtype = {
+        DBDialect.POSTGRES: 'boolean',
+        DBDialect.BIGQUERY: 'boolean',
+    }
     supported_value_types = (bool, )
 
     # Notes for supported_value_to_literal() and supported_literal_to_expression():

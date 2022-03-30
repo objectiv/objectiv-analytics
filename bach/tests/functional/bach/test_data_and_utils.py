@@ -15,6 +15,7 @@ from sqlalchemy.engine import ResultProxy, Engine
 
 from bach import DataFrame, Series
 from bach.types import get_series_type_from_db_dtype
+from sql_models.constants import DBDialect
 from sql_models.util import is_bigquery, is_postgres
 
 DB_TEST_URL = os.environ.get('OBJ_DB_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
@@ -298,5 +299,5 @@ def assert_db_type(
     db_type = db_values[0][0]
     if expected_db_type:
         assert db_type == expected_db_type
-    series_type = get_series_type_from_db_dtype(db_type)
+    series_type = get_series_type_from_db_dtype(DBDialect.POSTGRES, db_type)
     assert series_type == expected_series_type

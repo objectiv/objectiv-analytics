@@ -23,7 +23,7 @@ from bach.expression import Expression, NonAtomicExpression, ConstValueExpressio
 from bach.sql_model import BachSqlModel
 
 from bach.types import value_to_dtype, DtypeOrAlias
-from sql_models.constants import NotSet, not_set
+from sql_models.constants import NotSet, not_set, DBDialect
 
 if TYPE_CHECKING:
     from bach.partitioning import GroupBy, Window
@@ -82,10 +82,10 @@ class Series(ABC):
     Subclasses can override this value to indicate what strings they consider aliases for their dtype.
     """
 
-    supported_db_dtype: Optional[str] = None
+    supported_db_dtype: Mapping[DBDialect, str] = {}
     """
-    INTERNAL: Database level data type, that can be expressed using this Series type.
-    Example: 'double precision' for a float in Postgres
+    INTERNAL: Per supported database, the database's data type that can be expressed using this Series type.
+    Example: {DBDialect.POSTGRES: 'double precision'} for a float in Postgres
 
     Subclasses should override this value if they intend to be the default class to handle such types.
     When creating a DataFrame from existing data in a database, this field will be used to

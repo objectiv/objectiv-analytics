@@ -13,6 +13,7 @@ from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, Seri
 from bach.expression import Expression
 from bach.series.series import WrappedPartition
 from bach.types import DtypeOrAlias
+from sql_models.constants import DBDialect
 
 _SECONDS_IN_DAY = 24 * 60 * 60
 
@@ -158,7 +159,9 @@ class SeriesTimestamp(SeriesAbstractDateTime):
     """
     dtype = 'timestamp'
     dtype_aliases = ('datetime64', 'datetime64[ns]', numpy.datetime64)
-    supported_db_dtype = 'timestamp without time zone'
+    supported_db_dtype = {
+        DBDialect.POSTGRES: 'timestamp without time zone',
+    }
     supported_value_types = (datetime.datetime, datetime.date, str)
 
     @classmethod
@@ -202,7 +205,9 @@ class SeriesDate(SeriesAbstractDateTime):
     """
     dtype = 'date'
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
-    supported_db_dtype = 'date'
+    supported_db_dtype = {
+        DBDialect.POSTGRES: 'date',
+    }
     supported_value_types = (datetime.datetime, datetime.date, str)
 
     @classmethod
@@ -262,7 +267,9 @@ class SeriesTime(SeriesAbstractDateTime):
     """
     dtype = 'time'
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
-    supported_db_dtype = 'time without time zone'
+    supported_db_dtype = {
+        DBDialect.POSTGRES: 'time without time zone',
+    }
     supported_value_types = (datetime.time, str)
 
     @classmethod
@@ -294,7 +301,9 @@ class SeriesTimedelta(SeriesAbstractDateTime):
 
     dtype = 'timedelta'
     dtype_aliases = ('interval',)
-    supported_db_dtype = 'interval'
+    supported_db_dtype = {
+        DBDialect.POSTGRES: 'interval'
+    }
     supported_value_types = (datetime.timedelta, numpy.timedelta64, str)
 
     @classmethod

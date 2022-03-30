@@ -9,6 +9,7 @@ import numpy
 from bach.series import Series
 from bach.expression import Expression, AggregateFunctionExpression
 from bach.series.series import WrappedPartition
+from sql_models.constants import DBDialect
 
 if TYPE_CHECKING:
     from bach.series import SeriesBoolean
@@ -179,7 +180,10 @@ class SeriesAbstractNumeric(Series, ABC):
 class SeriesInt64(SeriesAbstractNumeric):
     dtype = 'int64'
     dtype_aliases = ('integer', 'bigint', 'i8', int, numpy.int64, 'int32')
-    supported_db_dtype = 'bigint'
+    supported_db_dtype = {
+        DBDialect.POSTGRES: 'bigint',
+        DBDialect.BIGQUERY: 'INT64'
+    }
     supported_value_types = (int, numpy.int64, numpy.int32)
 
     # Notes for supported_value_to_literal() and supported_literal_to_expression():
@@ -237,7 +241,10 @@ class SeriesInt64(SeriesAbstractNumeric):
 class SeriesFloat64(SeriesAbstractNumeric):
     dtype = 'float64'
     dtype_aliases = ('float', 'double', 'f8', float, numpy.float64, 'double precision')
-    supported_db_dtype = 'double precision'
+    supported_db_dtype = {
+        DBDialect.POSTGRES: 'double precision',
+        DBDialect.BIGQUERY: 'float64'
+    }
     supported_value_types = (float, numpy.float64)
 
     # Notes for supported_value_to_literal() and supported_literal_to_expression():

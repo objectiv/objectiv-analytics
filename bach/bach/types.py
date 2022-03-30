@@ -7,11 +7,14 @@ types.
 To prevent cyclic imports, the functions in this file should not be used by dataframe.py before the file
 is fully initialized (that is, only use within functions).
 """
+from collections import defaultdict
 from typing import Type, Tuple, Any, TypeVar, List, TYPE_CHECKING, Dict, Union, Sequence
 import datetime
 from uuid import UUID
 
 import numpy
+
+from sql_models.constants import DBDialect
 
 if TYPE_CHECKING:
     from bach.series import Series
@@ -25,14 +28,14 @@ def get_series_type_from_dtype(dtype: DtypeOrAlias) -> Type['Series']:
     return _registry.get_series_type_from_dtype(dtype)
 
 
-def get_series_type_from_db_dtype(db_dtype: str) -> Type['Series']:
+def get_series_type_from_db_dtype(db_dialect: DBDialect, db_dtype: str) -> Type['Series']:
     """ Given a database datatype, return the correct Series subclass. """
-    return _registry.get_series_type_from_db_dtype(db_dtype)
+    return _registry.get_series_type_from_db_dtype(db_dialect, db_dtype)
 
 
-def get_dtype_from_db_dtype(db_dtype: str) -> str:
+def get_dtype_from_db_dtype(db_dialect: DBDialect, db_dtype: str) -> str:
     """ Given a database datatype, return the dtype of the Series subclass for that datatype. """
-    return get_series_type_from_db_dtype(db_dtype).dtype
+    return get_series_type_from_db_dtype(db_dialect, db_dtype).dtype
 
 
 def value_to_dtype(value: Any) -> str:
@@ -72,8 +75,8 @@ class TypeRegistry:
         # dtype_series: Mapping of dtype to a subclass of Series
         self.dtype_to_series: Dict[DtypeOrAlias, Type['Series']] = {}
 
-        # db_type_to_dtype: Mapping of Postgres types to a subclass of Series
-        self.db_dtype_to_series: Dict[str, Type['Series']] = {}
+        # db_type_to_dtype: Mapping per database dialect, of database types to a subclass of Series
+        self.db_dtype_to_series: Dict[DBDialect, Dict[str, Type['Series']]] = defaultdict(dict)
 
         # value_type_to_series: Mapping of python types to matching Series types
         # note that some types could be in this dictionary multiple times. For a subtype its super types
@@ -144,13 +147,11 @@ class TypeRegistry:
             self.dtype_to_series[dtype_alias] = klass
 
     def _register_db_dtype_klass(self, klass: Type['Series'], override=False):
-        if klass.supported_db_dtype is None:
-            return
-        db_dtype: str = klass.supported_db_dtype
-        if db_dtype in self.db_dtype_to_series and not override:
-            raise Exception(f'Type {klass} claims db_dtype {db_dtype}, which is '
-                            f'already assigned to dtype {self.db_dtype_to_series[db_dtype]}')
-        self.db_dtype_to_series[db_dtype] = klass
+        for db_dialect, db_dtype in klass.supported_db_dtype.items():
+            if db_dtype in self.db_dtype_to_series[db_dialect] and not override:
+                raise Exception(f'Type {klass} claims db_dtype {db_dtype} for {db_dialect.value}, which is '
+                                f'already assigned to dtype {self.db_dtype_to_series[db_dialect][db_dtype]}')
+            self.db_dtype_to_series[db_dialect][db_dtype] = klass
 
     def _register_value_klass(self, value_type: Type, klass: Type['Series'], override=False):
         for vt, kt in self.value_type_to_series:
@@ -184,15 +185,15 @@ class TypeRegistry:
             raise ValueError(f'Unknown dtype: {dtype}')
         return self.dtype_to_series[dtype]
 
-    def get_series_type_from_db_dtype(self, db_dtype: str) -> Type['Series']:
+    def get_series_type_from_db_dtype(self, db_dialect: DBDialect, db_dtype: str) -> Type['Series']:
         """
         Given a db_dtype string, will return the correct Series object to represent such data from the
-        database..
+        database.
         """
         self._real_init()
-        if db_dtype not in self.db_dtype_to_series:
+        if db_dtype not in self.db_dtype_to_series[db_dialect]:
             raise ValueError(f'Unknown db_dtype: {db_dtype}')
-        return self.db_dtype_to_series[db_dtype]
+        return self.db_dtype_to_series[db_dialect][db_dtype]
 
     def value_to_dtype(self, value: Any) -> str:
         """
