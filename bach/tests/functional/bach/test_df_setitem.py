@@ -100,8 +100,8 @@ def test_set_const_json():
 
 def test_set_const_int_from_series():
     bt = get_bt_with_test_data()[['founding']]
-    max = bt.groupby()[['founding']].sum()
-    max_series = max['founding_sum']
+    max_df = bt.groupby()[['founding']].sum()
+    max_series = max_df['founding_sum']
     max_value = max_series.value
     bt['max_founding'] = max_value
     assert_postgres_type(bt['max_founding'], 'bigint', SeriesInt64, )
@@ -165,6 +165,7 @@ def test_set_series_column():
         ]
     )
     assert filtered_bt.town == filtered_bt['town']
+
 
 def test_set_multiple():
     bt = get_bt_with_test_data()
@@ -238,7 +239,7 @@ def test_set_different_base_node():
     # set dataframe
     bt = get_bt_with_test_data()
     mt = get_bt_with_railway_data()
-    bt[['a','city']] = mt[['town','station']]
+    bt[['a', 'city']] = mt[['town', 'station']]
     assert_equals_data(
         bt,
         expected_columns=CITIES_INDEX_AND_COLUMNS + ['a'],
@@ -357,7 +358,6 @@ def test_set_series_single_value():
     assert bt.maxi.expression.is_single_value
     # should recycle the same subquery
     assert bt.maxi.expression.get_references() == bt.maxii.expression.get_references()
-
 
     bt['moremax'] = bt.maxi + 5
     bt['constmoremax'] = bt.maxi + bt.const
