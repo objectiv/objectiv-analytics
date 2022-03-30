@@ -22,7 +22,7 @@ from bach.expression import Expression, NonAtomicExpression, ConstValueExpressio
 
 from bach.sql_model import BachSqlModel
 
-from bach.types import value_to_dtype
+from bach.types import value_to_dtype, DtypeOrAlias
 from sql_models.constants import NotSet, not_set
 
 if TYPE_CHECKING:
@@ -72,6 +72,35 @@ class Series(ABC):
     represented by this Series subclass. The dtype must be unique among all Series subclasses.
     """
 
+    dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
+    """
+    INTERNAL: One or more aliases for the dtype.
+    For example a SeriesBoolean might have dtype 'bool', and as an alias the string 'boolean' and
+    the builtin `bool`. An alias can be used in a similar way as the real dtype, e.g. to cast data to a
+    certain type: `x.astype('boolean')` is the same as `x.astype('bool')`.
+
+    Subclasses can override this value to indicate what strings they consider aliases for their dtype.
+    """
+
+    supported_db_dtype: Optional[str] = None
+    """
+    INTERNAL: Database level data type, that can be expressed using this Series type.
+    Example: 'double precision' for a float in Postgres
+
+    Subclasses should override this value if they intend to be the default class to handle such types.
+    When creating a DataFrame from existing data in a database, this field will be used to
+    determine what Series to instantiate for a column.
+    """
+
+    supported_value_types: Tuple[Type, ...] = tuple()
+    """
+    INTERNAL: List of python types that can be converted to database values using
+    the :meth:`supported_value_to_literal()` and :meth:`supported_literal_to_expression()` methods.
+
+    Subclasses can override this value to indicate what types are supported
+    by :meth:`supported_value_to_literal()`.
+    """
+
     def __init__(self,
                  engine,
                  base_node: BachSqlModel,
@@ -111,9 +140,13 @@ class Series(ABC):
         :param index_sorting: list of bools indicating whether to sort ascending/descending on the different
             columns of the index. Empty list for no sorting on index.
         """
-        # Series is an abstract class, besides the abstractmethods, subclasses MUST override the 'dtype'
-        # class property. Unfortunately defining dtype as an "abstract-classmethod-property" makes it hard
-        # to understand for mypy, sphinx, and python. Therefore we check here that we are instantiating a
+        # Series is an abstract class, besides the abstractmethods subclasses must/may override some
+        #   properties:
+        #   * subclasses MUST override one class property: 'dtype',
+        #   * subclasses MAY override the class properties 'dtype_aliases', 'supported_db_dtype', and
+        #       'supported_value_types'.
+        # Unfortunately defining these properties as an "abstract-classmethod-property" makes it hard
+        # to understand for mypy, sphinx, and python. Therefore, we check here that we are instantiating a
         # proper subclass, instead of just relying on @abstractmethod.
         # related links:
         # https://github.com/python/mypy/issues/8532#issuecomment-600132991
@@ -147,50 +180,12 @@ class Series(ABC):
         self._index_sorting = index_sorting
 
     @property
-    @classmethod
-    def dtype_aliases(cls) -> Tuple[Union[Type, str], ...]:
-        """
-        INTERNAL: One or more aliases for the dtype.
-        For example a SeriesBoolean might have dtype 'bool', and as an alias the string 'boolean' and
-        the builtin `bool`. An alias can be used in a similar way as the real dtype, e.g. to cast data to a
-        certain type: `x.astype('boolean')` is the same as `x.astype('bool')`.
-
-        Subclasses can override this value to indicate what strings they consider aliases for their dtype.
-        """
-        return tuple()
-
-    @property
     def dtype_to_pandas(self) -> Optional[str]:
         """
         INTERNAL: The dtype of this Series in a pandas.Series. Defaults to None
         Override to cast specifically, and set to None to let pandas choose.
         """
         return None
-
-    @property
-    @classmethod
-    def supported_db_dtype(cls) -> Optional[str]:
-        """
-        INTERNAL: Database level data type, that can be expressed using this Series type.
-        Example: 'double precision' for a float in Postgres
-
-        Subclasses should override this value if they intend to be the default class to handle such types.
-        When creating a DataFrame from existing data in a database, this field will be used to
-        determine what Series to instantiate for a column.
-        """
-        return None
-
-    @property
-    @classmethod
-    def supported_value_types(cls) -> Tuple[Type, ...]:
-        """
-        INTERNAL: List of python types that can be converted to database values using
-        the :meth:`supported_value_to_literal()` and :meth:`supported_literal_to_expression()` methods.
-
-        Subclasses can override this value to indicate what types are supported
-        by :meth:`supported_value_to_literal()`.
-        """
-        return tuple()
 
     @classmethod
     @abstractmethod
@@ -330,9 +325,8 @@ class Series(ABC):
         # We should wrap this in a ConstValueExpression or something
         if value is None:
             return Expression.raw('NULL')
-        supported_types = cast(Tuple[Type, ...], cls.supported_value_types)  # help mypy
-        if not isinstance(value, supported_types):
-            raise TypeError(f'value should be one of {supported_types}'
+        if not isinstance(value, cls.supported_value_types):
+            raise TypeError(f'value should be one of {cls.supported_value_types}'
                             f', actual type: {type(value)}')
         literal = cls.supported_value_to_literal(value)
         return cls.supported_literal_to_expression(literal)
@@ -806,13 +800,13 @@ class Series(ABC):
 
         A Series will be returned with the correct type set, if the conversion is available. An appropriate
         Exception will be raised if impossible to convert.
+        :param dtype: dtype or a dtype alias
         """
         if dtype == self.dtype or dtype in self.dtype_aliases:
             return self
         series_type = get_series_type_from_dtype(dtype)
         expression = series_type.dtype_to_expression(self.dtype, self.expression)
-        # get the real dtype, in case the provided dtype was an alias. mypy needs some help
-        new_dtype = cast(str, series_type.dtype)
+        new_dtype = series_type.dtype
         return self.copy_override_dtype(dtype=new_dtype).copy_override(expression=expression)
 
     def equals(self, other: Any, recursion: str = None) -> bool:

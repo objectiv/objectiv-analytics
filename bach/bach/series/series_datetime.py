@@ -4,7 +4,7 @@ Copyright 2021 Objectiv B.V.
 import datetime
 from abc import ABC
 from enum import Enum
-from typing import Union, cast, List
+from typing import Union, cast, List, Tuple
 
 import numpy
 
@@ -12,6 +12,7 @@ from bach import DataFrame
 from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64
 from bach.expression import Expression
 from bach.series.series import WrappedPartition
+from bach.types import DtypeOrAlias
 
 _SECONDS_IN_DAY = 24 * 60 * 60
 
@@ -200,7 +201,7 @@ class SeriesDate(SeriesAbstractDateTime):
         date
     """
     dtype = 'date'
-    dtype_aliases = tuple()  # type: ignore
+    dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
     supported_db_dtype = 'date'
     supported_value_types = (datetime.datetime, datetime.date, str)
 
@@ -260,7 +261,7 @@ class SeriesTime(SeriesAbstractDateTime):
         time without time zone
     """
     dtype = 'time'
-    dtype_aliases = tuple()  # type: ignore
+    dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
     supported_db_dtype = 'time without time zone'
     supported_value_types = (datetime.time, str)
 

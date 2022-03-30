@@ -2,12 +2,13 @@
 Copyright 2021 Objectiv B.V.
 """
 import json
-from typing import Optional, Dict, Union, TYPE_CHECKING, List
+from typing import Optional, Dict, Union, TYPE_CHECKING, List, Tuple
 
 from bach.series import Series
 from bach.expression import Expression
 from bach.series.series import WrappedPartition
 from bach.sql_model import BachSqlModel
+from bach.types import DtypeOrAlias
 from sql_models.util import quote_string
 
 if TYPE_CHECKING:
@@ -117,7 +118,7 @@ class SeriesJsonb(Series):
     """
     dtype = 'jsonb'
     # todo can only assign a type to one series type, and object is quite generic
-    dtype_aliases = tuple()  # type: ignore
+    dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
     supported_db_dtype = 'jsonb'
     supported_value_types = (dict, list)
     return_dtype = dtype
@@ -352,7 +353,7 @@ class SeriesJson(SeriesJsonb):
 
     """
     dtype = 'json'
-    dtype_aliases = tuple()  # type: ignore
+    dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
     supported_db_dtype = 'json'
     return_dtype = 'jsonb'
 

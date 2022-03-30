@@ -7,7 +7,7 @@ types.
 To prevent cyclic imports, the functions in this file should not be used by dataframe.py before the file
 is fully initialized (that is, only use within functions).
 """
-from typing import Type, Tuple, Any, TypeVar, List, TYPE_CHECKING, Dict, cast, Union
+from typing import Type, Tuple, Any, TypeVar, List, TYPE_CHECKING, Dict, Union, Sequence
 import datetime
 from uuid import UUID
 
@@ -17,7 +17,10 @@ if TYPE_CHECKING:
     from bach.series import Series
 
 
-def get_series_type_from_dtype(dtype: Union[Type, str]) -> Type['Series']:
+DtypeOrAlias = Union[Type, str]
+
+
+def get_series_type_from_dtype(dtype: DtypeOrAlias) -> Type['Series']:
     """ Given a dtype, return the correct Series subclass. """
     return _registry.get_series_type_from_dtype(dtype)
 
@@ -67,7 +70,7 @@ class TypeRegistry:
         # problems with cyclic imports.
 
         # dtype_series: Mapping of dtype to a subclass of Series
-        self.dtype_to_series: Dict[Union[Type, str], Type['Series']] = {}
+        self.dtype_to_series: Dict[DtypeOrAlias, Type['Series']] = {}
 
         # db_type_to_dtype: Mapping of Postgres types to a subclass of Series
         self.db_dtype_to_series: Dict[str, Type['Series']] = {}
@@ -132,7 +135,8 @@ class TypeRegistry:
         self._register_value_klass(list, SeriesJsonb)
 
     def _register_dtype_klass(self, klass: Type['Series'], override=False):
-        dtype_and_aliases: List[Union[Type, str]] = [klass.dtype] + list(klass.dtype_aliases)  # type: ignore
+        klass_dtype: DtypeOrAlias = klass.dtype
+        dtype_and_aliases: Sequence[DtypeOrAlias] = [klass_dtype] + list(klass.dtype_aliases)
         for dtype_alias in dtype_and_aliases:
             if dtype_alias in self.dtype_to_series and not override:
                 raise Exception(f'Type {klass} claims dtype (or dtype alias) {dtype_alias}, which is '
@@ -142,7 +146,7 @@ class TypeRegistry:
     def _register_db_dtype_klass(self, klass: Type['Series'], override=False):
         if klass.supported_db_dtype is None:
             return
-        db_dtype = cast(str, klass.supported_db_dtype)
+        db_dtype: str = klass.supported_db_dtype
         if db_dtype in self.db_dtype_to_series and not override:
             raise Exception(f'Type {klass} claims db_dtype {db_dtype}, which is '
                             f'already assigned to dtype {self.db_dtype_to_series[db_dtype]}')
@@ -152,7 +156,7 @@ class TypeRegistry:
         for vt, kt in self.value_type_to_series:
             if vt == value_type and kt != klass and not override:
                 raise Exception(f'Cannot register {value_type} twice, already coupled to {klass}')
-        if value_type not in klass.supported_value_types:  # type: ignore
+        if value_type not in klass.supported_value_types:
             raise ValueError(f'Cannot register {klass} for {value_type}. Type not supported.')
         type_tuple = value_type, klass
         self.value_type_to_series.append(type_tuple)
@@ -171,9 +175,9 @@ class TypeRegistry:
         for value_type in value_types:
             self._register_value_klass(value_type, series_type, override_registered_types)
 
-    def get_series_type_from_dtype(self, dtype: Union[Type, str]) -> Type['Series']:
+    def get_series_type_from_dtype(self, dtype: DtypeOrAlias) -> Type['Series']:
         """
-        Given a dtype string, will return the correct Series object to represent such data.
+        Given a dtype string or a dtype alias, will return the correct Series object to represent such data.
         """
         self._real_init()
         if dtype not in self.dtype_to_series:
@@ -204,8 +208,8 @@ class TypeRegistry:
         # match.
         for type_object, series_type in self.value_type_to_series[::-1]:
             if isinstance(value, type_object):
-                return series_type.dtype  # type: ignore
-        raise ValueError(f'No dtype know for {type(value)}')
+                return series_type.dtype
+        raise ValueError(f'No dtype known for {type(value)}')
 
 
 _registry = TypeRegistry()
