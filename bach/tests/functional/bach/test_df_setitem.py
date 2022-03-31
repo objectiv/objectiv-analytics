@@ -17,13 +17,13 @@ from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, ass
     assert_equals_data, CITIES_INDEX_AND_COLUMNS, get_bt_with_railway_data, get_df_with_test_data, run_query
 
 
-def check_set_const(engine, constant, expected_series: Type[Series], pg_db_type: str):
+def check_set_const(engine, constant, expected_series: Type[Series], expected_pg_db_type: str):
     bt = get_df_with_test_data(engine)
     bt['new_column'] = constant
 
     if is_postgres(engine):
         # we don't have an easy way to get the database type in BigQuery, so only support that check for PG
-        assert_postgres_type(bt['new_column'], pg_db_type, expected_series)
+        assert_postgres_type(bt['new_column'], expected_pg_db_type, expected_series)
 
     assert_equals_data(
         bt,

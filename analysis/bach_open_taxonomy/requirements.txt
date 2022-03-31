@@ -1,7 +1,0 @@
-# objectiv-bach-open-taxonomy:
--e ../../bach
-sqlalchemy
-
-# metabase
-requests
-

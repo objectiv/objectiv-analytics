@@ -14,7 +14,7 @@ help:
 
 clean:
 	rm -rf "$(SOURCEDIR)/DataFrame/"
-	rm -rf "$(SOURCEDIR)/Objectiv/"
+	rm -rf "$(SOURCEDIR)/modelhub_api_reference/"
 	rm -rf "$(SOURCEDIR)/Series/"
 
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) 0$(O)

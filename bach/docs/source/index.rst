@@ -3,9 +3,15 @@ Modeling
 ========
 
 .. toctree::
-    :maxdepth: 5
+    :maxdepth: 3
 
     intro
-    core_concepts
-    examples
-    reference
+    example_notebooks
+    models
+
+.. toctree::
+    :maxdepth: 6
+    :includehidden:
+
+    modelhub_api_reference
+    bach

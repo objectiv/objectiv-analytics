@@ -299,6 +299,8 @@ class SeriesJsonb(Series):
     @property
     def json(self):
         """
+        .. _json_accessor:
+
         Get access to json operations via the class that's return through this accessor.
         Use as `my_series.json.get_value()` or `my_series.json[:2]`
 

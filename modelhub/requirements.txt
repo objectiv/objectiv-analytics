@@ -1,0 +1,7 @@
+# modelhub:
+-e ../bach
+sqlalchemy
+
+# metabase
+requests
+

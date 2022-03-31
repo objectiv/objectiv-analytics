@@ -7,12 +7,10 @@ Basically, generating and publishing the API docs for `Bach` involve a few steps
   . venv/bin/activate
   # install sphinx requirements
   pip install -r requirements.txt
-  # install bach dependencies
-  pip install -r ../requirements.txt
   # install bach in edit mode
   pip install -e ../../bach
   # install objectiv_bach in edit mode
-  pip install -e ../../analysis/bach_open_taxonomy
+  pip install -e ../../modelhub
 ```
 
 2. Generate HTML fragments:

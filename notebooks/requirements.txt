@@ -1,0 +1,11 @@
+# install bach and modelhub in edit mode, so local changes are immediately usable
+-e ../bach
+-e ../modelhub
+
+# requirements for the product_analytics.ipynb notebook
+jupyter
+jupyter-dash
+matplotlib
+plotly
+seaborn
+sklearn

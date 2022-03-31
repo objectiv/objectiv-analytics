@@ -820,7 +820,6 @@ class Series(ABC):
         if dtype == self.dtype or dtype in self.dtype_aliases:
             return self
         series_type = get_series_type_from_dtype(dtype)
-        # TODO: pass dialect to dtype_to_expression
         expression = series_type.dtype_to_expression(
             dialect=self.engine.dialect,
             source_dtype=self.dtype,
