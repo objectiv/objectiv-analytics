@@ -34,7 +34,7 @@ jobs:
           - 5432:5432
     env:
       # tell tests to use the above defined postgres service
-      OBJ_DB_TEST_URL: 'postgresql://objectiv:no_password_set@localhost:5432/objectiv'
+      OBJ_DB_PG_TEST_URL: 'postgresql://objectiv:no_password_set@localhost:5432/objectiv'
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
