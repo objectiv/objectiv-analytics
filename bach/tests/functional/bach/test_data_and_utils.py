@@ -18,7 +18,7 @@ from bach.types import get_series_type_from_db_dtype
 from sql_models.constants import DBDialect
 from sql_models.util import is_bigquery, is_postgres
 
-DB_TEST_URL = os.environ.get('OBJ_DB_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
+DB_TEST_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
 
 # Three data tables for testing are defined here that can be used in tests
 # 1. cities: 3 rows (or 11 for the full dataset) of data on cities
