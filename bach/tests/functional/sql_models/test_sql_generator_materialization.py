@@ -10,10 +10,8 @@ from sqlalchemy.dialects.postgresql.base import PGDialect
 from sql_models.graph_operations import find_node, replace_node_in_graph
 from sql_models.model import Materialization
 from sql_models.sql_generator import to_sql_materialized_nodes
+from tests.functional.bach.test_data_and_utils import DB_TEST_URL
 from tests.unit.sql_models.util import ValueModel, RefModel, JoinModel, RefValueModel
-
-
-DB_TEST_URL = os.environ.get('OBJ_DB_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
 
 
 def test_execute_multi_statement_sql_materialization():

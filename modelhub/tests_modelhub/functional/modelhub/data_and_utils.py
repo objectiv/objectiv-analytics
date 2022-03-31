@@ -10,7 +10,7 @@ from bach import DataFrame
 import sqlalchemy
 import os
 
-DB_TEST_URL = os.environ.get('OBJ_DB_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
+DB_TEST_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
 
 # all data below is generated dummy data
 TEST_DATA_JSON_REAL = [
@@ -49,6 +49,7 @@ TEST_DATA_OBJECTIV = '''
     ('12b55ed5-4295-4fc1-bf1f-88d64d1ac312','2021-11-29','2021-11-29 10:23:36.287','b2df75d2-d7ca-48ac-9747-af47d7a4a2b2','{"_type": "ClickEvent", "location_stack": [{"_type": "WebDocumentContext", "id": "#document", "url": "https://objectiv.io/docs/taxonomy/", "_types": ["AbstractContext", "AbstractLocationContext", "SectionContext", "WebDocumentContext"]}, {"_type": "SectionContext", "id": "navbar-top", "_types": ["AbstractContext", "AbstractLocationContext", "SectionContext"]}, {"_type": "LinkContext", "id": "logo", "text": "Objectiv Documentation Logo", "href": "/docs/", "_types": ["AbstractContext", "AbstractLocationContext", "ActionContext", "ItemContext", "LinkContext"]}], "global_contexts": [{"_type": "ApplicationContext", "id": "objectiv-docs", "_types": ["AbstractContext", "AbstractGlobalContext", "ApplicationContext"]}, {"id": "http_context", "referrer": "https://objectiv.io/", "user_agent": "Mozilla/5.0 (Linux; Android 11; SM-G986B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.74 Mobile Safari/537.36", "_type": "HttpContext", "_types": ["AbstractContext", "AbstractGlobalContext", "HttpContext"]}, {"id": "81a8ace2-273b-4b95-b6a6-0fba33858a22", "cookie_id": "81a8ace2-273b-4b95-b6a6-0fba33858a22", "_type": "CookieIdContext", "_types": ["AbstractContext", "AbstractGlobalContext", "CookieIdContext"]}], "id": "e2445152-327a-466f-a2bf-116f0146ab7a", "time": 1636476196460, "_types": ["AbstractEvent", "ClickEvent", "InteractiveEvent"]}')
 '''
 
+
 def get_bt_with_json_data_real() -> DataFrame:
     bt = get_bt('test_json_table_real', TEST_DATA_JSON_REAL, JSON_COLUMNS_REAL, True)
     bt['global_contexts'] = bt.global_contexts.astype('jsonb')
@@ -78,7 +79,7 @@ def get_objectiv_dataframe_test(time_aggregation=None):
 
     kwargs = {}
     if time_aggregation:
-        kwargs = {'time_aggregation':time_aggregation}
+        kwargs = {'time_aggregation': time_aggregation}
     modelhub = ModelHub(**kwargs)
 
     return modelhub.get_objectiv_dataframe(DB_TEST_URL, table_name='objectiv_data'), modelhub
