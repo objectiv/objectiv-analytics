@@ -5,8 +5,9 @@ import pytest
 import sqlalchemy
 
 from bach import DataFrame
+from tests.conftest import DB_PG_TEST_URL
 from tests.functional.bach.test_data_and_utils import get_pandas_df, TEST_DATA_CITIES, CITIES_COLUMNS, \
-    DB_TEST_URL, assert_equals_data
+    assert_equals_data
 import datetime
 from uuid import UUID
 import pandas as pd
@@ -51,7 +52,7 @@ TYPES_COLUMNS = ['int_column', 'float_column', 'bool_column', 'datetime_column',
 
 def test_from_pandas_table():
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS)
-    engine = sqlalchemy.create_engine(DB_TEST_URL)
+    engine = sqlalchemy.create_engine(DB_PG_TEST_URL)
     bt = DataFrame.from_pandas(
         engine=engine,
         df=pdf,
@@ -65,7 +66,7 @@ def test_from_pandas_table():
 
 def test_from_pandas_table_injection():
     pdf = get_pandas_df(TEST_DATA_INJECTION, COLUMNS_INJECTION)
-    engine = sqlalchemy.create_engine(DB_TEST_URL)
+    engine = sqlalchemy.create_engine(DB_PG_TEST_URL)
     bt = DataFrame.from_pandas(
         engine=engine,
         df=pdf,
@@ -79,7 +80,7 @@ def test_from_pandas_table_injection():
 
 def test_from_pandas_ephemeral_basic():
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS)
-    engine = sqlalchemy.create_engine(DB_TEST_URL)
+    engine = sqlalchemy.create_engine(DB_PG_TEST_URL)
     bt = DataFrame.from_pandas(
         engine=engine,
         df=pdf,
@@ -92,7 +93,7 @@ def test_from_pandas_ephemeral_basic():
 
 def test_from_pandas_ephemeral_injection():
     pdf = get_pandas_df(TEST_DATA_INJECTION, COLUMNS_INJECTION)
-    engine = sqlalchemy.create_engine(DB_TEST_URL)
+    engine = sqlalchemy.create_engine(DB_PG_TEST_URL)
     bt = DataFrame.from_pandas(
         engine=engine,
         df=pdf,
@@ -105,7 +106,7 @@ def test_from_pandas_ephemeral_injection():
 
 def test_from_pandas_non_happy_path():
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS)
-    engine = sqlalchemy.create_engine(DB_TEST_URL)
+    engine = sqlalchemy.create_engine(DB_PG_TEST_URL)
     with pytest.raises(TypeError):
         # if convert_objects is false, we'll get an error, because pdf's dtype for 'city' and 'municipality'
         # is 'object
@@ -140,7 +141,7 @@ def test_from_pandas_non_happy_path():
 def test_from_pandas_index(materialization: str):
     # test multilevel index
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS).set_index(['skating_order', 'city'])
-    engine = sqlalchemy.create_engine(DB_TEST_URL)
+    engine = sqlalchemy.create_engine(DB_PG_TEST_URL)
     bt = DataFrame.from_pandas(
         engine=engine,
         df=pdf,
@@ -161,7 +162,7 @@ def test_from_pandas_index(materialization: str):
 
     # test nameless index
     pdf.reset_index(inplace=True)
-    engine = sqlalchemy.create_engine(DB_TEST_URL)
+    engine = sqlalchemy.create_engine(DB_PG_TEST_URL)
     bt = DataFrame.from_pandas(
         engine=engine,
         df=pdf,
@@ -186,7 +187,7 @@ def test_from_pandas_index(materialization: str):
 def test_from_pandas_types(materialization: str):
     pdf = pd.DataFrame.from_records(TYPES_DATA, columns=TYPES_COLUMNS)
     pdf.set_index(pdf.columns[0], drop=True, inplace=True)
-    engine = sqlalchemy.create_engine(DB_TEST_URL)
+    engine = sqlalchemy.create_engine(DB_PG_TEST_URL)
     df = DataFrame.from_pandas(
         engine=engine,
         df=pdf.loc[:, :'string_column'],
@@ -240,7 +241,7 @@ def test_from_pandas_types(materialization: str):
 def test_from_pandas_types_cte():
     pdf = pd.DataFrame.from_records(TYPES_DATA, columns=TYPES_COLUMNS)
     pdf.set_index(pdf.columns[0], drop=True, inplace=True)
-    engine = sqlalchemy.create_engine(DB_TEST_URL)
+    engine = sqlalchemy.create_engine(DB_PG_TEST_URL)
     df = DataFrame.from_pandas(
         engine=engine,
         df=pdf.loc[:, :'timedelta_column'],

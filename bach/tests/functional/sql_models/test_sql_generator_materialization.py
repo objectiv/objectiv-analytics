@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql.base import PGDialect
 from sql_models.graph_operations import find_node, replace_node_in_graph
 from sql_models.model import Materialization
 from sql_models.sql_generator import to_sql_materialized_nodes
-from tests.functional.bach.test_data_and_utils import DB_TEST_URL
+from tests.conftest import DB_PG_TEST_URL
 from tests.unit.sql_models.util import ValueModel, RefModel, JoinModel, RefValueModel
 
 
@@ -163,7 +163,7 @@ def run_queries(sql_statements: Dict[str, str]) -> Dict[str, Optional[Tuple[List
         raise ValueError('Expected non-empty dictionary')
     result = {}
 
-    engine = sqlalchemy.create_engine(DB_TEST_URL)
+    engine = sqlalchemy.create_engine(DB_PG_TEST_URL)
     with engine.connect() as conn:
         with conn.begin() as transaction:
             for name, sql in sql_statements.items():

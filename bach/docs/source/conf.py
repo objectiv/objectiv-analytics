@@ -25,8 +25,8 @@ import pandas as pd
 try:
     import os
     import sqlalchemy
-    DB_TEST_URL = os.environ.get('OBJ_DB_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
-    engine = sqlalchemy.create_engine(DB_TEST_URL)
+    DB_PG_TEST_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
+    engine = sqlalchemy.create_engine(DB_PG_TEST_URL)
 except Exception:
     engine = None
 '''
