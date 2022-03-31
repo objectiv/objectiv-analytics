@@ -8,7 +8,7 @@ import bach
 from modelhub.aggregate import Aggregate
 from modelhub.map import Map
 from modelhub.series.series_objectiv import MetaBase
-from sql_models.constants import NotSet
+from sql_models.constants import NotSet, DBDialect
 from modelhub.stack.util import sessionized_data_model
 
 if TYPE_CHECKING:
@@ -126,7 +126,11 @@ class ModelHub():
 
         with engine.connect() as conn:
             res = conn.execute(sql)
-        dtypes = {x[0]: bach.types.get_dtype_from_db_dtype(x[1]) for x in res.fetchall()}
+        db_dialect = DBDialect.from_engine(engine)
+        dtypes = {
+            x[0]: bach.types.get_dtype_from_db_dtype(db_dialect=db_dialect, db_dtype=x[1])
+            for x in res.fetchall()
+        }
 
         expected_columns = {'event_id': 'uuid',
                             'day': 'date',
