@@ -2,6 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import datetime
+import math
 from typing import Type
 import pytest
 
@@ -13,7 +14,7 @@ from bach import SeriesInt64, SeriesString, SeriesFloat64, SeriesDate, SeriesTim
 from sql_models.util import is_postgres
 from tests.conftest import get_postgres_engine_dialect
 from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_postgres_type, \
-    assert_equals_data, CITIES_INDEX_AND_COLUMNS, get_bt_with_railway_data, get_df_with_test_data
+    assert_equals_data, CITIES_INDEX_AND_COLUMNS, get_bt_with_railway_data, get_df_with_test_data, run_query
 
 
 def check_set_const(engine, constant, expected_series: Type[Series], pg_db_type: str):
@@ -49,6 +50,21 @@ def test_set_const_int(engine):
 
 def test_set_const_float(engine):
     check_set_const(engine, 5.1, SeriesFloat64, 'double precision')
+    check_set_const(engine, 0.0, SeriesFloat64, 'double precision')
+    check_set_const(engine, -5.1, SeriesFloat64, 'double precision')
+    check_set_const(engine, -0.0, SeriesFloat64, 'double precision')
+    check_set_const(engine, float('infinity'), SeriesFloat64, 'double precision')
+    check_set_const(engine, float('-infinity'), SeriesFloat64, 'double precision')
+
+    # Special case: test the float value 'Not a Number' (NaN). We cannot use check_set_const(), as that will
+    # check that the result contains NaN, and `NaN == NaN` gives `False`, and thus the test would incorrectly
+    # fail.
+    constant = float('NaN')
+    bt = get_df_with_test_data(engine)
+    bt['new_column'] = constant
+    result = run_query(engine=engine, sql=bt.view_sql())
+    for row in result:
+        assert math.isnan(row['new_column'])
 
 
 def test_set_const_bool(engine):

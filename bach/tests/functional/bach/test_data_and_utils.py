@@ -7,7 +7,7 @@ This file does not contain any test, but having the file's name start with `test
 as a test file. This makes pytest rewrite the asserts to give clearer errors.
 """
 import os
-from typing import List, Union, Type, Dict, Any
+from typing import List, Union, Type, Dict, Any, Tuple
 
 import pandas
 import sqlalchemy
@@ -255,7 +255,10 @@ def assert_equals_data(
     return db_values
 
 
-def _get_view_sql_data(df: DataFrame):
+def _get_view_sql_data(df: DataFrame) -> Tuple[List[str], List[List[Any]]]:
+    """
+    Execute the sql of the DataFrame
+    """
     sql = df.view_sql()
     db_rows = run_query(df.engine, sql)
     column_names = list(db_rows.keys())

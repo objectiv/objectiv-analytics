@@ -87,6 +87,7 @@ def test_dataframe_agg_skipna_parameter():
             # methods not present at all, so needs to raise
             bt.agg(agg, skipna=False)
 
+
 def test_dataframe_agg_dd_parameter():
     # test full parameter traversal
     bt = get_bt_with_test_data(full_data_set=True)[['inhabitants']]
@@ -272,4 +273,3 @@ def test_series_qcut() -> None:
                 continue
             np.testing.assert_almost_equal(exp.left, float(res.lower), decimal=2)
             np.testing.assert_almost_equal(exp.right, float(res.upper), decimal=2)
-
