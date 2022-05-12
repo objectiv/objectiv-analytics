@@ -66,6 +66,12 @@ class PlotHandler(object):
         # use calculated frequencies as weights, since Pandas will try to recalculate frequencies
         hist_data = pandas.DataFrame(data={col: freq_pdf['bin_edge'] for col in numeric_columns})
         weights = freq_pdf[numeric_columns].to_numpy()
+
+        bin_edges_no_nan = bin_edges[~numpy.isnan(bin_edges)]
+        if len(bin_edges_no_nan) == 1:
+            bin_edges = numpy.array([bin_edges_no_nan[0]-1, bin_edges_no_nan[0], bin_edges_no_nan[0]+1])
+            hist_data = pandas.DataFrame({hist_data.columns[0]: bin_edges[:2]})
+
         return hist_data.plot.hist(bins=bin_edges, weights=weights, **kwargs)
 
     def _calculate_hist_frequencies(self, bins: int, numeric_columns: List[str]) -> 'DataFrame':

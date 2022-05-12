@@ -8,3 +8,4 @@ from modelhub.aggregate import Aggregate
 from modelhub.map import Map
 from modelhub.stack import *
 from modelhub.series import *
+from modelhub.models import *

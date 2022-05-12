@@ -1263,21 +1263,24 @@ class DataFrame:
         :param value: Series that is set.
         """
 
-        if not (len(value.index) == 1 and len(self.index) == 1):
+        if not (len(value.index) == len(self.index) and len(self.index) > 0):
             raise ValueError(
-                'setting with different base nodes only supported for one level index'
+                'setting with different base nodes only supported for same length index'
             )
 
         from bach.partitioning import GroupBy
-        index_name = self.index_columns[0]
-        value_index_name = list(value.index.keys())[0]
-        if self.index[index_name].dtype != value.index[value_index_name].dtype:
-            raise ValueError('dtypes of indexes should be the same')
+        aligned_index = {}
+        for i, index_name in enumerate(self.index_columns):
+            value_index_name = list(value.index.keys())[i]
+            if self.index[index_name].dtype != value.index[value_index_name].dtype:
+                raise ValueError(f'Non matching dtypes of index series at position'
+                                 f' {i}: {self.index[index_name].dtype} '
+                                 f'!= {value.index[value_index_name].dtype}')
 
-        # align index names, this way we have all matched indexes in a single series after merge
-        # TODO: replace with value.rename(index={value_index_name: index_name})
-        #  when index renaming is supported
-        aligned_index = {index_name: value.index[value_index_name].copy_override(name=index_name)}
+            # align index names, this way we have all matched indexes in a single series after merge
+            # TODO: replace with value.rename(index={value_index_name: index_name})
+            #  when index renaming is supported
+            aligned_index[index_name] = value.index[value_index_name].copy_override(name=index_name)
         other = value.copy_override(
             index=aligned_index,
             name=key,

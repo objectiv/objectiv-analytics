@@ -1,12 +1,11 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-from typing import List, Union
-
 import bach
 from bach.series import Series
 from sql_models.constants import NotSet, not_set
 from typing import List, Union, TYPE_CHECKING
+from modelhub.models import LogisticRegression, FeatureImportance
 
 
 if TYPE_CHECKING:
@@ -169,3 +168,40 @@ class Aggregate:
         frequency = total_sessions_user.groupby(['session_id_nunique']).aggregate({'user_id': 'nunique'})
 
         return frequency.user_id_nunique
+
+    def create_feature_usage_data_set(self,
+                                      data: bach.DataFrame,
+                                      name: str,
+                                      feature_column: str,
+                                      partition: str = 'user_id'):
+
+        features = data.groupby(partition)[feature_column].value_counts()
+        features_unstacked = features.unstack(fill_value=0)
+
+        # y
+        df_copy = data.copy()
+        df_copy['is_converted'] = self._mh.map.conversions_counter(data=df_copy,
+                                                                   name=name,
+                                                                   partition=partition) > 0
+
+        user_conversion = df_copy[['is_converted', partition]].drop_duplicates().set_index('user_id')
+
+        # combine
+        features_set = features_unstacked.merge(user_conversion, left_index=True, right_index=True)
+
+        y = features_set.is_converted
+        X = features_set.drop(columns=['is_converted'])
+
+        return X, y
+
+    def LogisticRegression(self, *args, **kwargs):
+        return LogisticRegression(*args, **kwargs)
+
+    def feature_importance(self, data, name, feature_column, **kwargs):
+        X, y = self._mh.agg.create_feature_usage_data_set(
+            data=data,
+            name=name,
+            feature_column=feature_column)
+        model = FeatureImportance(**kwargs)
+
+        return X, y, model

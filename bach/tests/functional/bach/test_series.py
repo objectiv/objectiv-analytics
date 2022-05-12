@@ -278,7 +278,7 @@ def test_unique(engine):
     uq_single = muni_single.unique()
     assert uq_single.expression.is_single_value == muni_single.expression.is_single_value == True
 
-    with pytest.raises(ValueError, match='dtypes of indexes should be the same'):
+    with pytest.raises(ValueError, match='Non matching dtypes of index series at position'):
         # the uq series have an index with different dtypes
         bt['uq'] = uq
 

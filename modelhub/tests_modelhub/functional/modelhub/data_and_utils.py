@@ -83,3 +83,65 @@ def get_objectiv_dataframe_test(time_aggregation=None):
     modelhub = ModelHub(**kwargs)
 
     return modelhub.get_objectiv_dataframe(DB_TEST_URL, table_name='objectiv_data'), modelhub
+
+
+class TestLR:
+    def __init__(self, **kwargs):
+
+        from modelhub import ModelHub
+        modelhub = ModelHub(time_aggregation='YYYY-MM-DD')
+        df = modelhub.get_objectiv_dataframe(start_date='2022-02-01')
+        modelhub.add_conversion_event(location_stack=df.location_stack.json[{'id': 'objectiv-on-github',
+                                                                             '_type': 'LinkContext'}:].fillna(
+            df.location_stack.json[{'id': 'github', '_type': 'LinkContext'}:]),
+            event_type='PressEvent',
+            name='github_press')
+        df['root'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext',
+                                                                            key='id')
+        df['nice_name'] = df.location_stack.ls.nice_name
+        self.X, self.y = modelhub.agg.create_feature_usage_data_set(
+            data=df[df.event_type == 'PressEvent'],
+            name='github_press',
+            feature_column='root'
+        )
+
+        self.X_p = self.X.to_pandas()
+        self.y_p = self.y.to_pandas()
+
+        from sklearn.linear_model import LogisticRegression
+        self.sklearn_lr = LogisticRegression(**kwargs)
+        self.modelhub_lr = modelhub.agg.LogisticRegression(**kwargs)
+
+        self.sklearn_lr.fit(self.X_p, self.y_p)
+        self.modelhub_lr.fit(self.X, self.y)
+
+    def test_fit(self):
+        equals = self.sklearn_lr.coef_ == self.modelhub_lr.coef_
+
+        assert equals.all(), f"{self.sklearn_lr.coef_=} != {self.modelhub_lr.coef_=}"
+
+    def test_method(self, method_name, X=False, y=False):
+        """
+        tests if modelhub outcome is the same as sklearn. Only supported for methods from sklearn that
+        return arrays and modelhub that return a Bach Series.
+        """
+
+        sklearn_args = tuple()
+        modelhub_args = tuple()
+
+        if X:
+            sklearn_args = (self.X_p,)
+            modelhub_args = (self.X,)
+            if y:
+                sklearn_args = (self.X_p, self.y_p)
+                modelhub_args = (self.X, self.y)
+
+        sklearn_method = getattr(self.sklearn_lr, method_name)
+        modelhub_method = getattr(self.modelhub_lr, method_name)
+        sklearn_data = sklearn_method(*sklearn_args)
+        modelhub_data = modelhub_method(*modelhub_args).to_numpy()
+
+        equals = sklearn_data == modelhub_data
+
+        assert equals.all(), f"{sklearn_data=} != {modelhub_data=}"
+        print(f"test ok\n{sklearn_data=} \n==\n {modelhub_data=}")

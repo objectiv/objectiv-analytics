@@ -69,7 +69,7 @@ class ModelHub():
         """
         return self._conversion_events
 
-    def _check_data_is_objectiv_data(self, data):
+    def _check_data_is_objectiv_data(self, data: bach.DataFrame):
         if data.index_dtypes != {'event_id': 'uuid'}:
             raise ValueError(f"not right index {data.index_dtypes}")
 
