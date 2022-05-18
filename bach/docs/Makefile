@@ -20,9 +20,18 @@ clean:
 	rm -rf $(SOURCEDIR)/bach/api-reference/Series/AbstractDateTime/bach.SeriesAbstractDateTime* # not the index
 	rm -rf $(SOURCEDIR)/bach/api-reference/Series/AbstractNumeric/bach.SeriesAbstractNumeric* # not the index
 	rm -rf $(SOURCEDIR)/bach/api-reference/Series/Boolean/bach.SeriesBoolean* # not the index
+	rm -rf $(SOURCEDIR)/bach/api-reference/Series/Date/bach.SeriesDate* # not the index
+	rm -rf $(SOURCEDIR)/bach/api-reference/Series/Dict/bach.SeriesDict* # not the index
+	rm -rf $(SOURCEDIR)/bach/api-reference/Series/Dict/bach.SeriesInt* # not the index
+	rm -rf $(SOURCEDIR)/bach/api-reference/Series/Dict/bach.SeriesFloat* # not the index
 	rm -rf $(SOURCEDIR)/bach/api-reference/Series/Json/bach.SeriesJson* # not the index
 	rm -rf $(SOURCEDIR)/bach/api-reference/Series/Jsonb/bach.SeriesJsonb* # not the index
+	rm -rf $(SOURCEDIR)/bach/api-reference/Series/List/bach.SeriesList* # not the index
 	rm -rf $(SOURCEDIR)/bach/api-reference/Series/String/bach.SeriesString* # not the index
+	rm -rf $(SOURCEDIR)/bach/api-reference/Series/Time/bach.SeriesTime* # not the index
+	rm -rf $(SOURCEDIR)/bach/api-reference/Series/Timedelta/bach.SeriesTimedelta* # not the index
+	rm -rf $(SOURCEDIR)/bach/api-reference/Series/Timestamp/bach.SeriesTimestamp* # not the index
+	rm -rf $(SOURCEDIR)/bach/api-reference/Series/Uuid/bach.SeriesUuid* # not the index
 	rm -rf $(SOURCEDIR)/open-model-hub/models/**/modelhub.* # not the index
 	rm -rf $(SOURCEDIR)/open-model-hub/api-reference/**/modelhub.* # not the index
 
