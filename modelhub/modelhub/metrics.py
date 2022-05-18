@@ -57,7 +57,7 @@ class Metrics:
 
         """
         cm = cls._cm_prepare(y, y_pred).to_frame().reset_index()
-        return (cm[cm.y==cm.y_pred]['value_counts'].sum() / cm['value_counts'].sum()).value
+        return (cm[cm.y == cm.y_pred]['value_counts'].sum() / cm['value_counts'].sum()).value
 
     @classmethod
     def get_classification_report(cls, y, y_pred, output_dict: bool = False):

@@ -18,7 +18,7 @@ is easiest to set up a development environment as detailed in the `readme
 <https://github.com/objectiv/objectiv-analytics/tree/main/modelhub#setup-development-environment>`_.
 
 To get started we instantiate the model hub and the Objectiv DataFrame objects, as explained in
-:ref:`get_started_with_objectiv`.
+:ref:`getting_started_with_objectiv`.
 
 The feature importance model from the open model hub creates a Bach data set that can be used for the model
 as well as the model that returns the results. The model includes tools to assess the accuracy of your
@@ -165,8 +165,9 @@ negative impact on conversion, while 'tracking', 'blog' and 'taxonomy' most posi
     model.auc()
 
 The average AUC of our models is 0.69. This is better than a baseline model (0.5 AUC). However, it also
-means that it is not a perfect model and therefore the chosen features don't fully explain the conversion.
-Among others, some things that might improve further models are a larger test set, other explanatory
+means that it is not a perfect model and therefore the chosen features alone can't predict
+conversion completely.
+Among others, some things that might improve further models are a larger data set, other explanatory
 variables (i.e. more detailed locations instead of only root locations), more information on the users
 (i.e. user referrer as a proxy for user intent).
 
