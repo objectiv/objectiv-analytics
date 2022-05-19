@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 class SeriesAbstractNumeric(Series, ABC):
     """
-    Abstract Series class that represents the base numeric types and its specific operations
+    Abstract Series class that represents the base numeric types and its specific operations.
 
     **Operations**
 
