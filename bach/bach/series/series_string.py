@@ -111,6 +111,12 @@ class SeriesString(Series):
         c = a + b  # concat the strings.
         a.str[3]   # get one char
         a.str[3:5] # get a slice from char 3-5
+
+
+    **Database support and types**
+
+    * Postgres: utilizes the 'text' database type.
+    * BigQuery: utilizes the 'STRING' database type.
     """
 
     dtype = 'string'
