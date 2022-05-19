@@ -18,7 +18,7 @@ notify you when new models & taxonomy operations are available to use.
 
 **How?**
 
-An asynchronous HTTP request to https://version-check.objectiv.io is sent on package import. A Python warning 
+An HTTP request to https://version-check.objectiv.io is sent on package import. A Python warning
 message is issued in case a new version is available. 
 
 
