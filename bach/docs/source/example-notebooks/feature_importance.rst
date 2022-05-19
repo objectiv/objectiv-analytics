@@ -38,13 +38,14 @@ use as predictors.
     df['root'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
 
 In our example, the conversion goal is reaching the modeling section. We want to obtain the impact of
-pressing in individual sections (root location) on our website. We assume there is as causal relation
-between the number of clicks of a user per root location and conversion. For demonstration purposes these
-are appropriate features because of the limited amount of root locations in this data set.
-Make sure to think of this assumption when using this model on your own data. Therefore we estimate
-conversion by the number of presses in each root location on our site per user using a logistic regression
-model. The coefficients of this regression can be interpreted as the contribution to conversion (direction and
-magnitude).
+pressing in individual sections (root location) on our website. For demonstration purposes these
+are appropriate features because of the limited amount of root locations in this data set. We assume there
+is as causal relation between the number of clicks of a user per root location and conversion.
+Make sure to think of this assumption when using this model on your own data.
+
+We estimate conversion by the number of presses in each root location on our site per user using a logistic
+regression model. The coefficients of this regression can be interpreted as the contribution to conversion
+(direction and magnitude).
 
 Now the data set and untrained model can be instantiated.
 
@@ -58,9 +59,10 @@ Now the data set and untrained model can be instantiated.
 
 This let's you adjust the data set further or use the model as is. `y_temp` is a BooleanSeries that
 indicates conversion per user. `X_temp` is a DataFrame with the number
-of presses per user_id. For users that did converted in the selected data, only usage from _before_
+of presses per `user_id`. For users that converted in the selected data, only usage from _before_
 reaching conversion is counted. The `model` is the
 toolkit that can be used to assess the feature importance on our conversion goal.
+
 In this example we first review the data set with Bach before using it for the actual model training (hence
 the `_temp` suffix). We create a single DataFrame that has all the features, the target and a sum of all
 features.
@@ -113,7 +115,8 @@ explantory behavior for the goal.
 
 Those users might, for instance, be users that wanted to go to our modeling section, and this was the
 quickest way to get there with the results Google provided them. In that case, the intent of the user
-(something of which we can never be sure), was going to the modeling section. The features did not convince them.
+(something of which we can never be 100% sure), was going to the modeling section. The _features_ did not
+convince them.
 
 By filtering like this, it is more likely that the used features on our website did, or did not convince a
 user to check out the modeling section of our docs. This is exactly what we are after. An additional
@@ -129,7 +132,7 @@ advantage is that the distribution of feature usage will most likely get more fa
     # only use users with at least more than 1 press.
     data_set_temp = data_set_temp[data_set_temp.total_press>1]
 
-If we rerun the code above to review the data set we find that the data set is more balanced (16.5%
+If we now rerun the code above to review the data set we find that the data set is more balanced (16.5%
 converted), although it is a bit small now (406 samples). The distributions as shown by describing the data
 set and the histograms look indeed better for our model now. We will use this data set to create our X and
 y data set that we will use in the model.
@@ -149,7 +152,7 @@ sets. The feature importance model by default trains a logistic regression model
 data set split in three folds. This way we can not only calculate the AUC on one test after training the
 model. But also see whether the coefficients for the model are relatively stable when trained on different
 data. After fitting the model, the results (the average coefficients of the three models) as well as the
-performace of the three models can be retrieved with `model` methods.
+performance of the three models can be retrieved with `model` methods.
 
 .. code-block:: python
 
@@ -169,7 +172,7 @@ The average AUC of our models is 0.69. This is better than a baseline model (0.5
 means that it is not a perfect model and therefore the chosen features alone can't predict
 conversion completely.
 Among others, some things that might improve further models are a larger data set, other explanatory
-variables (i.e. more detailed locations instead of only root locations), more information on the users
+variables (i.e. more detailed locations instead of only root locations), and more information on the users
 (i.e. user referrer as a proxy for user intent).
 
 This concludes the demonstration of our upcoming feature importance model in the model hub. The pr for
