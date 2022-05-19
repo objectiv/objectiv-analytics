@@ -169,10 +169,10 @@ class SeriesTimestamp(SeriesAbstractDateTime):
     These timestamps have a microsecond precision at best, in contrast to numpy's datetime64 which supports
     up to attoseconds precision.
 
-    Depending on the database this Series is backed by different database types:
+    **Database support and types**
 
-    * On Postgres this utilizes the native 'timestamp without time zone' database type.
-    * On BigQuery this utilizes the generic 'TIMESTAMP' database type.
+    * Postgres: utilizes the 'timestamp without time zone' database type.
+    * BigQuery: utilizes the 'TIMESTAMP' database type.
     """
     dtype = 'timestamp'
     dtype_aliases = ('datetime64', 'datetime64[ns]', numpy.datetime64)
@@ -258,8 +258,10 @@ class SeriesDate(SeriesAbstractDateTime):
     """
     A Series that represents the date type and its specific operations
 
-    Types in PG that we want to support: https://www.postgresql.org/docs/9.1/datatype-datetime.html
-        date
+    **Database support and types**
+
+    * Postgres: utilizes the 'date' database type.
+    * BigQuery: utilizes the 'DATE' database type.
     """
     dtype = 'date'
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
@@ -326,8 +328,11 @@ class SeriesTime(SeriesAbstractDateTime):
     """
     A Series that represents the date time and its specific operations
 
-    Types in PG that we want to support: https://www.postgresql.org/docs/9.1/datatype-datetime.html
-        time without time zone
+
+    **Database support and types**
+
+    * Postgres: utilizes the 'time without time zone' database type.
+    * BigQuery: utilizes the 'TIME' database type.
     """
     dtype = 'time'
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
@@ -367,6 +372,11 @@ class SeriesTime(SeriesAbstractDateTime):
 class SeriesTimedelta(SeriesAbstractDateTime):
     """
     A Series that represents the timedelta type and its specific operations
+
+    **Database support and types**
+
+    * Postgres: utilizes the 'interval' database type.
+    * BigQuery: support coming soon
     """
 
     dtype = 'timedelta'
@@ -432,11 +442,11 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         return self._arithmetic_operation(other, 'div', '({}) / ({})', other_dtypes=('int64', 'float64'))
 
     @property
-    def dt(self) -> DateTimeOperation:
+    def dt(self) -> TimedeltaOperation:
         """
         Get access to date operations.
 
-        .. autoclass:: bach.series.series_datetime.DateTimeOperation
+        .. autoclass:: bach.series.series_datetime.TimedeltaOperation
             :members:
 
         """

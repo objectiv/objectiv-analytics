@@ -118,6 +118,11 @@ class SeriesJsonb(Series):
         1                                    None
         2    [{'l': ['m', 'n', 'o']}, {'p': 'q'}]
         Name: jsonb_column, dtype: object
+
+    **Database support and types**
+
+    * Postgres: utilizes the 'jsonb' database type.
+    * BigQuery: json support coming soon
     """
     dtype = 'jsonb'
     # todo can only assign a type to one series type, and object is quite generic
@@ -369,6 +374,10 @@ class SeriesJson(SeriesJsonb):
     cast to the jsonb type. As a result all methods of the :py:class:`SeriesJsonb` can also be used with this
     `json` type series.
 
+    **Database support and types**
+
+    * Postgres: utilizes the 'json' database type.
+    * BigQuery: support coming soon
     """
     dtype = 'json'
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
