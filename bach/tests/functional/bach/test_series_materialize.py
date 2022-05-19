@@ -59,9 +59,9 @@ def test_materialize_with_non_aggregation_series(engine):
         btg = btg.materialize()
     assert btg.base_node == bt.base_node
 
-    # sum
-    btg = btg.sum().materialize()
-    assert btg.base_node != bt.base_node
+    bt = bt['founding'].materialize()
+    btc = bt.copy().materialize()
+    assert btc.base_node != bt.base_node
 
 
 def test_is_materialized(engine):
