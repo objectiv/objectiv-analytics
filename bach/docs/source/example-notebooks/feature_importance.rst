@@ -5,11 +5,12 @@
 .. currentmodule:: bach
 
 ===========================
-Modeling Feature Importance
+Modeling feature importance
 ===========================
 
-In this example we will demo how the model hub provides a tool kit for modeling the importance of features
-on achieving a conversion goal.
+In this example we will demo how the model hub provides a toolkit for modeling the importance of features
+on achieving a conversion goal. The features in this model can be any interactions with your product's
+content.
 
 This model is currently in development. The draft pr is found `here
 <https://github.com/objectiv/objectiv-analytics/pull/662/>`_. This example page is based on the data that
