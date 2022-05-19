@@ -1,12 +1,12 @@
-.. _bach_reference_series_timedelta:
+.. _bach_reference_series_date:
 
 .. currentmodule:: bach
 
-=========
-Timedelta
-=========
+====
+Date
+====
 
-.. autoclass:: SeriesTimedelta
+.. autoclass:: SeriesDate
     :noindex:
 
 
@@ -16,3 +16,5 @@ Methods
 
 .. autosummary::
     :toctree: 
+
+    SeriesDate.dt

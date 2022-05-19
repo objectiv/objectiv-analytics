@@ -1,12 +1,12 @@
-.. _bach_reference_series_date:
+.. _bach_reference_series_uuid:
 
 .. currentmodule:: bach
 
 ====
-Date
+Uuid
 ====
 
-.. autoclass:: SeriesDate
+.. autoclass:: SeriesUuid
     :noindex:
 
 

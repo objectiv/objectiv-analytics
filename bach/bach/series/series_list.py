@@ -27,13 +27,14 @@ class SeriesList(Series):
     itself being an instance dtype. All values represented by such a Series must have the dtype of the item
     in the list.
 
-    | Example instance_dtype for a list consisting of floats
-    | BigQuery db_dtype: ``'ARRAY[FLOAT64]'``
-    | instance_dtype: ``['float64']``
+    Example - instance_dtype for a list consisting of floats.
+    BigQuery db_dtype: ``'ARRAY[FLOAT64]'``
+    instance_dtype: ``['float64']``
 
-    .. note::
-        SeriesList is only supported on BigQuery.
-        On Postgres use SeriesJson for similar functionality.
+    **Database support and types**
+
+    * Postgres: not supported. Use :class:`SeriesJson` for similar functionality.
+    * BigQuery: utilizes the 'ARRAY' database type.
     """
     dtype = 'list'
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()

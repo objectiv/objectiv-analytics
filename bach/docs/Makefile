@@ -8,7 +8,10 @@ SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = source
 BUILDDIR      = build
 DOCUSAURUSDIR = docusaurus
-TARGETDIR			= ../../../objectiv.io/docs/docs/modeling/
+DOCSTARGETDIR = ../../../objectiv.io/docs/docs/
+
+# Don't allow modelhub to check online whether a newer version is available while generating docs
+export OBJECTIV_VERSION_CHECK_DISABLE = true
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -25,10 +28,10 @@ clean:
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) 0$(O)
 
 clean-target:
-	rm -rf $(TARGETDIR)/**/
+	rm -rf $(DOCSTARGETDIR)modeling/*
 
 copy-target:
-	cp -a $(BUILDDIR)/$(DOCUSAURUSDIR)/* $(TARGETDIR)
+	cp -a $(BUILDDIR)/$(DOCUSAURUSDIR)/* $(DOCSTARGETDIR)modeling/
 
 .PHONY: help Makefile
 

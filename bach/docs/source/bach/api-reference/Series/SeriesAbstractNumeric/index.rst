@@ -7,7 +7,6 @@ AbstractNumeric
 ===============
 
 .. autoclass:: SeriesAbstractNumeric
-    :noindex:
 
 
 Methods
@@ -20,11 +19,11 @@ Methods
     SeriesAbstractNumeric.cut
     SeriesAbstractNumeric.mean
     SeriesAbstractNumeric.minmax_scale
+    SeriesAbstractNumeric.qcut
+    SeriesAbstractNumeric.quantile
     SeriesAbstractNumeric.round
     SeriesAbstractNumeric.scale
     SeriesAbstractNumeric.sem
     SeriesAbstractNumeric.std
     SeriesAbstractNumeric.sum
     SeriesAbstractNumeric.var
-    SeriesAbstractNumeric.qcut
-    SeriesAbstractNumeric.quantile

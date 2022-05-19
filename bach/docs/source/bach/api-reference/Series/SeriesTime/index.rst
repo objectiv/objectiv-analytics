@@ -16,3 +16,5 @@ Methods
 
 .. autosummary::
     :toctree: 
+
+    SeriesTime.dt

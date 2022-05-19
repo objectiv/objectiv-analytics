@@ -75,7 +75,7 @@ The location stack and global contexts are stored as json type data. Within the 
 **Slicing the json data**
 With the `.json[]` syntax you can slice the array using integers. Instead of integers, dictionaries can also be passed to 'query' the json array. If the passed dictionary matches a context object in the stack, all objects of the stack starting (or ending, depending on the slice) at that object will be returned.
 
-In case a json array does not contain the object, `None` is returned. More info at the :doc:`API reference <../bach/api-reference/Series/Jsonb/index>`.
+In case a json array does not contain the object, `None` is returned. More info at the :doc:`API reference <../bach/api-reference/Series/SeriesJsonb/index>`.
 
 .. _location_stack:
 
