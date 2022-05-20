@@ -1,10 +1,8 @@
-.PHONY: all build-all-images build-ds push-images
+.PHONY: all build-all-images
 
 # default tag, used to tag images
-# we use latest as default, for convenience
-export TAG ?= latest
-
-REVISION ?= $(shell git rev-parse HEAD)
+# default tag is current date
+TAG ?= $(shell date +%Y%m%d)
 
 # where to push docker images
 CONTAINER_REPO=eu.gcr.io/objectiv-production
@@ -13,26 +11,22 @@ CONTAINER_REPO=eu.gcr.io/objectiv-production
 all: build-all-images
 
 # what to build
-build-all-images: build-backend build-notebook
-
-# what images to push
-push-images: push-image-backend push-image-notebook
-
-# images are pushed, tagged both "latest" and $REVISION
-push-image-%:
-	$(eval MODULE = $(subst push-image-,,$@))
-	$(eval URL=$(CONTAINER_REPO)/$(MODULE))
-	docker tag objectiv/$(MODULE):$(TAG) $(URL):test
-	docker push $(URL):test
-	gcloud container images add-tag --quiet $(URL):test $(URL):$(REVISION)
-
+build-all-images: build-docker-backend-image-local build-docker-notebook-image-local
 
 ## build backend images
-build-backend:
-	cd backend && make docker-image
+build-docker-backend-image-local:
+	cd backend && make docker-image-local
 
-build-notebook:
-	docker build -t objectiv/notebook -f notebooks/docker/Dockerfile notebooks
+build-docker-backend-image:
+	cd backend&& make docker-image
+
+build-docker-notebook-image-local:
+	cd notebooks && docker build -t objectiv/notebook:${TAG} -f docker/Dockerfile .
+
+build-docker-notebook-image:
+	cd notebooks && docker buildx build --pull --rm --no-cache --output type=image,push=true \
+		--platform=linux/arm64,linux/amd64 --tag objectiv/notebook:${TAG} -f docker/Dockerfile .
+
 
 publish-tracker:
 	cd tracker && make publish
