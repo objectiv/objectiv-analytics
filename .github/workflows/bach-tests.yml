@@ -78,7 +78,7 @@ jobs:
       - name: Install BQ dependencies
         run: |
           cd bach
-          pip install -r requirements-bigquery.yxy
+          pip install -r requirements-bigquery.txt
       - name: Setup GCP Credentials
         run: |
           cd bach
