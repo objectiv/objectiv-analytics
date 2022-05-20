@@ -65,15 +65,16 @@ def test_from_pandas_table(pg_engine):
 @pytest.mark.xdist_group(name="from_pd_table")
 def test_from_pandas_table_injection(pg_engine):
     pdf = get_pandas_df(TEST_DATA_INJECTION, COLUMNS_INJECTION)
-    bt = DataFrame.from_pandas(
-        engine=pg_engine,
-        df=pdf,
-        convert_objects=True,
-        name='test_from_pd_{table}_"injection"',
-        materialization='table',
-        if_exists='replace'
-    )
-    assert_equals_data(bt, expected_columns=EXPECTED_COLUMNS_INJECTION, expected_data=EXPECTED_DATA_INJECTION)
+
+    with pytest.raises(ValueError, match="unexpected '{' in field name"):
+        DataFrame.from_pandas(
+            engine=pg_engine,
+            df=pdf,
+            convert_objects=True,
+            name='test_from_pd_{table}_"injection"',
+            materialization='table',
+            if_exists='replace',
+        )
 
 
 def test_from_pandas_ephemeral_basic(engine):

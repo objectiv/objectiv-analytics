@@ -584,7 +584,8 @@ class DataFrame:
             sql_table_name_template = f'{{bq_project_id}}.{sql_table_name_template}'
             sql_params['bq_project_id'] = quote_identifier(engine.dialect, bq_project_id)
 
-        sql = f'SELECT * FROM {sql_table_name_template}'
+        column_stmt = ','.join([quote_identifier(engine.dialect, col_name) for col_name in dtypes.keys()])
+        sql = f'SELECT {column_stmt} FROM {sql_table_name_template}'
         model_builder = CustomSqlModelBuilder(sql=sql, name='from_table')
         sql_model = model_builder(**sql_params)
 
