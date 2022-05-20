@@ -371,7 +371,7 @@ class SeriesJsonb(Series):
             limit: Any = None,
             distinct: bool = False,
     ):
-        raise Exception(f'Series of this type cannot be materialized.')
+        raise Exception(f'{self.__class__.__name__} cannot be materialized.')
 
 
 class SeriesJson(SeriesJsonb):
