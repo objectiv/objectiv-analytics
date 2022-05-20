@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import json
-from typing import Optional, Dict, Union, TYPE_CHECKING, List, Tuple
+from typing import Optional, Any, Dict, Union, TYPE_CHECKING, List, Tuple
 
 from sqlalchemy.engine import Dialect
 
@@ -364,6 +364,14 @@ class SeriesJsonb(Series):
     def max(self, partition: WrappedPartition = None, skipna: bool = True):
         """ INTERNAL: Only here to not trigger errors from describe """
         raise NotImplementedError()
+
+    def materialize(
+            self,
+            node_name='manual_materialize',
+            limit: Any = None,
+            distinct: bool = False,
+    ):
+        raise Exception(f'Series of this type cannot be materialized.')
 
 
 class SeriesJson(SeriesJsonb):

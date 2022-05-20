@@ -149,6 +149,14 @@ class SeriesDict(Series):
         """ Accessor to interact with the elements in the dictionary. """
         return DictAccessor(self)
 
+    def materialize(
+            self,
+            node_name='manual_materialize',
+            limit: Any = None,
+            distinct: bool = False,
+    ):
+        raise Exception(f'Series of this type cannot be materialized.')
+
 
 class DictAccessor:
     def __init__(self, series: SeriesDict):

@@ -335,11 +335,6 @@ class Series(ABC):
         Return true if this Series is in a materialized state, i.e. all information about the
         Series's values is encoded in self.base_node.
 
-        A Series that's freshly constructed with :py:meth:`from_table`,
-        :py:meth:`from_model`, or :py:meth:`from_pandas` will be in a materialized state. Operations on such
-        a Series will change it to be not materialized. Calling :py:meth:`materialize` on a
-        non-materialized Series will return a new Series that is materialized.
-
         :returns: True if this Series is in a materialized state, False otherwise
         """
         return self.to_frame().is_materialized

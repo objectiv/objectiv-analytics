@@ -33,8 +33,6 @@ def test_materialize(engine):
     if is_postgres(engine):
         expected_to_sql = f'"{series_name}"'
     elif is_bigquery(engine):
-        # TODO: This path is never taken, as we only test with Postgres dialect/engine.
-        # We use uuids in this test, which we need to support in Biguery before we can port this test.
         expected_to_sql = f'`{series_name}`'
     else:
         raise Exception('we need to expand this test')
