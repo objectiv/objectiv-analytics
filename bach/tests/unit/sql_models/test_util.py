@@ -7,14 +7,14 @@ from sql_models.util import extract_format_fields, quote_identifier, quote_strin
     is_bigquery
 
 
-pytestmark = [pytest.mark.db_independent]  # mark all tests here as database independent.
-
+@pytest.mark.db_independent
 def test_extract_format_fields():
     assert extract_format_fields('{test}') == {'test'}
     assert extract_format_fields('{test} more text {test}') == {'test'}
     assert extract_format_fields('text{test} more {{text}} {test2} te{x}t{test}') == {'test', 'test2', 'x'}
 
 
+@pytest.mark.db_independent
 def test_extract_format_fields_nested():
     # assert extract_format_fields('{test}', 2) == set()
     # assert extract_format_fields('{test} more text {test}', 2) == set()

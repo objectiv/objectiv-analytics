@@ -10,7 +10,6 @@ import numpy as np
 from bach import SeriesInt64, SeriesString, SeriesFloat64, SeriesDate, SeriesTimestamp, \
     SeriesTime, SeriesTimedelta, Series, \
     SeriesJsonb, SeriesBoolean
-from tests.conftest import get_postgres_engine_dialect
 from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_postgres_type, \
     assert_equals_data, CITIES_INDEX_AND_COLUMNS, get_bt_with_railway_data, get_df_with_test_data, \
     get_df_with_railway_data
@@ -59,7 +58,7 @@ def test_set_const_float(engine):
         -5.1
     ]
     check_set_const(engine, constants, SeriesFloat64, 'double precision')
-    # See also tests.functional.bach.test_series_float.test_from_const(), which tests some interesting
+    # See also tests.functional.bach.test_series_float.test_from_value(), which tests some interesting
     # special cases.
 
 
@@ -101,8 +100,8 @@ def test_set_const_time(engine):
     check_set_const(engine, constants, SeriesTime, 'time without time zone')
 
 
-def test_set_const_timedelta():
-    engine = get_postgres_engine_dialect().engine  # TODO: BigQuery
+def test_set_const_timedelta(pg_engine):
+    engine = pg_engine  # TODO: BigQuery
     constants = [
         np.datetime64('2005-02-25T03:30') - np.datetime64('2005-01-25T03:30'),
         datetime.datetime.now() - datetime.datetime(2015, 4, 6),
@@ -110,8 +109,8 @@ def test_set_const_timedelta():
     check_set_const(engine, constants, SeriesTimedelta, 'interval')
 
 
-def test_set_const_json():
-    engine = get_postgres_engine_dialect().engine  # TODO: BigQuery
+def test_set_const_json(pg_engine):
+    engine = pg_engine  # TODO: BigQuery
     constants = [
         ['a', 'b', 'c'],
         {'a': 'b', 'c': 'd'},

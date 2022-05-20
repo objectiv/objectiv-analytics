@@ -226,6 +226,21 @@
           "description": "[Optional] Used to differentiate similar content, or links within the same ad",
           "type": "string",
           "optional": true
+        },
+        "source_platform": {
+          "description": "[Optional] To differentiate similar content, or links within the same ad.",
+          "type": "string",
+          "optional": true
+        },
+        "creative_format": {
+          "description": "[Optional] Identifies the creative used (e.g., skyscraper, banner, etc).",
+          "type": "string",
+          "optional": true
+        },
+        "marketing_tactic": {
+          "description": "[Optional] Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).",
+          "type": "string",
+          "optional": true
         }
       }
     },

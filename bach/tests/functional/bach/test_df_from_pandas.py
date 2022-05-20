@@ -62,6 +62,7 @@ def test_from_pandas_table(pg_engine):
     assert_equals_data(bt, expected_columns=EXPECTED_COLUMNS, expected_data=EXPECTED_DATA)
 
 
+@pytest.mark.xdist_group(name="from_pd_table")
 def test_from_pandas_table_injection(pg_engine):
     pdf = get_pandas_df(TEST_DATA_INJECTION, COLUMNS_INJECTION)
     bt = DataFrame.from_pandas(
@@ -117,6 +118,7 @@ def test_from_pandas_ephemeral_injection(engine):
         raise Exception(f'Test does not support {engine.dialect}')
 
 
+@pytest.mark.xdist_group(name="from_pd_table")
 def test_from_pandas_non_happy_path(pg_engine):
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS)
     with pytest.raises(TypeError):
@@ -149,6 +151,7 @@ def test_from_pandas_non_happy_path(pg_engine):
         )
 
 
+@pytest.mark.xdist_group(name="from_pd_table")
 @pytest.mark.parametrize("materialization", ['cte', 'table'])
 def test_from_pandas_index(materialization: str, pg_engine):
     # test multilevel index
@@ -193,6 +196,7 @@ def test_from_pandas_index(materialization: str, pg_engine):
         expected_data=[[idx] + x[1:] for idx, x in enumerate(EXPECTED_DATA)])
 
 
+@pytest.mark.xdist_group(name="from_pd_table")
 @pytest.mark.parametrize("materialization", ['cte', 'table'])
 def test_from_pandas_types(materialization: str, pg_engine):
     pdf = pd.DataFrame.from_records(TYPES_DATA, columns=TYPES_COLUMNS)

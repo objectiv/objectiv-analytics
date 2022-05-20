@@ -33,10 +33,10 @@ def get_fake_df(
     dtype: Union[str, Dict[str, str]] = 'int64'
 ) -> DataFrame:
     engine = FakeEngine(dialect=dialect)
-    columns = index_names + data_names
+    column_names = index_names + data_names
     base_node = BachSqlModel.from_sql_model(
         sql_model=CustomSqlModelBuilder('select * from x', name='base')(),
-        column_expressions={c: Expression.column_reference(c) for c in columns},
+        column_expressions={cn: Expression.column_reference(cn) for cn in column_names},
     )
     if isinstance(dtype, str):
         dtype = {
@@ -55,7 +55,8 @@ def get_fake_df(
             expression=Expression.column_reference(name),
             group_by=cast('GroupBy', None),
             sorted_ascending=None,
-            index_sorting=[]
+            index_sorting=[],
+            instance_dtype=series_type.dtype
         )
 
     data: Dict[str, 'Series'] = {}
@@ -69,7 +70,8 @@ def get_fake_df(
             expression=Expression.column_reference(name),
             group_by=cast('GroupBy', None),
             sorted_ascending=None,
-            index_sorting=[]
+            index_sorting=[],
+            instance_dtype=series_type.dtype
         )
 
     return DataFrame(engine=engine, base_node=base_node,

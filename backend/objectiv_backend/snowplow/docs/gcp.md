@@ -76,3 +76,30 @@ are no errors in the collector logs, the events should be successfully pushed in
 Snowplow's enrichment.
 To check if messages have been successfully received by the PuSub topic, please refer to the monitoring of that specific 
 topic in the GCP console. The `Publish message request count` monitoring topic should show more than 0 requests/sec.
+
+## Big Query table
+In a standard Snowplow Big Query setup, all data is stored in a table called `events`. As this table holds a lot of data
+it contains over 100 columns. Objectiv events will be stored using the schema from iglu, and require just one column
+to hold the JSON structure of the event.
+
+If BQ is only used for Objectiv, there are obviously a lot of unused columns, often not even populated. This can be 
+solved in a few steps (as it's not possible to simply drop columns from BQ):
+1. Stop the Snowplow bigquery streamloader, to make sure we don't lose any data during the migration
+2. [optional] Create a backup of the events table
+3. Create a copy of the events table called `events_copy`
+4. Drop the `events` table
+5. Query desired columns:
+```sql
+SELECT app_id, platform, etl_tstamp, collector_tstamp, event, event_id, 
+  v_tracker, v_collector, v_etl, user_ipaddress, network_userid, 
+  page_url, page_urlscheme, page_urlhost, page_urlport, page_urlpath,
+  useragent, 
+  derived_tstamp, event_vendor, event_name, event_format, event_version, event_fingerprint,
+  load_tstamp, 
+  contexts_io_objectiv_taxonomy_1_0_0
+FROM `project.dataset.events_copy`;
+```
+6. Now select `Save results as BigQuery table`, and save the data as a new table in the current dataset called `events`. 
+7. Restart the Snowplow bigquery streamloader
+8. Verify new events end up in the `events` table
+9. Remove `events_copy`

@@ -10,6 +10,7 @@ from bach import (
 )
 from bach.operations.concat import DataFrameConcatOperation
 from bach.expression import Expression
+from sql_models.util import is_bigquery
 
 
 class SupportedStats(Enum):
@@ -234,4 +235,8 @@ class DescribeOperation:
                 ),
             )
         )
+
+        if is_bigquery(percentile_df.engine):
+            # BigQuery returns quantile per row, need to apply distinct
+            percentile_df = percentile_df.materialize(node_name='describe_quantile', distinct=True)
         return percentile_df

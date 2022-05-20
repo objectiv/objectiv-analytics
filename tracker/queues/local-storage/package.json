@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/queue-local-storage",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "description": "A TrackerQueueStore based on localStorage API",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
@@ -51,7 +51,7 @@
     "npm-publish:verdaccio": "shx cp ../../verdaccio/.npmrc .npmrc && npm publish && shx rm -f .npmrc"
   },
   "devDependencies": {
-    "@objectiv/testing-tools": "^0.0.18",
+    "@objectiv/testing-tools": "^0.0.19",
     "@types/jest": "^27.4.1",
     "jest": "^27.5.1",
     "jest-standard-reporter": "^2.0.0",
@@ -62,6 +62,6 @@
     "typescript": "^4.6.2"
   },
   "dependencies": {
-    "@objectiv/tracker-core": "~0.0.18"
+    "@objectiv/tracker-core": "~0.0.19"
   }
 }

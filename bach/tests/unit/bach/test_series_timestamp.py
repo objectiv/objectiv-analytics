@@ -12,7 +12,7 @@ from bach.expression import Expression
 
 def test_supported_value_to_literal(dialect):
     def assert_call(value, expected_token_value: str):
-        result = SeriesTimestamp.supported_value_to_literal(dialect, value)
+        result = SeriesTimestamp.supported_value_to_literal(dialect=dialect, value=value, dtype='timestamp')
         assert result == Expression.string_value(expected_token_value)
 
     # ## datetime
@@ -46,7 +46,8 @@ def test_supported_value_to_literal(dialect):
 
     # Special case: Not-a-Time will be represented as NULL
     nat = numpy.datetime64('NaT')
-    assert SeriesTimestamp.supported_value_to_literal(dialect, nat) == Expression.construct('NULL')
+    dtype = 'timestamp'
+    assert SeriesTimestamp.supported_value_to_literal(dialect, nat, dtype) == Expression.construct('NULL')
 
     # ## strings
     assert_call('2022-01-01 12:34:56.7800',    '2022-01-01 12:34:56.780000')
@@ -56,15 +57,16 @@ def test_supported_value_to_literal(dialect):
     assert_call('2022-01-03',                  '2022-01-03 00:00:00.000000')
 
     # ## None
-    assert SeriesTimestamp.supported_value_to_literal(dialect, None) == Expression.construct('NULL')
+    assert SeriesTimestamp.supported_value_to_literal(dialect, None, dtype) == Expression.construct('NULL')
 
 
 def test_supported_value_to_literal_str_non_happy_path(dialect):
+    dtype = 'timestamp'
     with pytest.raises(ValueError, match='Not a valid timestamp string literal'):
-        SeriesTimestamp.supported_value_to_literal(dialect, '2022-01-03 aa:bb')
+        SeriesTimestamp.supported_value_to_literal(dialect, '2022-01-03 aa:bb', dtype)
 
     with pytest.raises(ValueError, match='Not a valid timestamp string literal'):
-        SeriesTimestamp.supported_value_to_literal(dialect, '01/03/99 12:13:00')
+        SeriesTimestamp.supported_value_to_literal(dialect, '01/03/99 12:13:00', dtype)
 
     with pytest.raises(ValueError, match='Not a valid timestamp string literal'):
-        SeriesTimestamp.supported_value_to_literal(dialect, '01/03/99 12:13:00')
+        SeriesTimestamp.supported_value_to_literal(dialect, '01/03/99 12:13:00', dtype)

@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/plugin-react-router-tracked-components",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "description": "React Router 6 automatically tracked Link and NavLink Components for Objectiv React Tracker",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
@@ -54,11 +54,11 @@
     "npm-publish:verdaccio": "shx cp ../../verdaccio/.npmrc .npmrc && npm publish && shx rm -f .npmrc"
   },
   "dependencies": {
-    "@objectiv/tracker-core": "^0.0.18",
-    "@objectiv/tracker-react": "^0.0.18"
+    "@objectiv/tracker-core": "^0.0.19",
+    "@objectiv/tracker-react": "^0.0.19"
   },
   "devDependencies": {
-    "@objectiv/testing-tools": "^0.0.18",
+    "@objectiv/testing-tools": "^0.0.19",
     "@testing-library/react": "^12.1.4",
     "@types/jest": "^27.4.1",
     "jest": "^27.5.1",

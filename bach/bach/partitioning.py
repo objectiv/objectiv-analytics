@@ -1,13 +1,63 @@
+import itertools
 from copy import copy
 from enum import Enum
 from typing import List, Dict, Optional, cast, TypeVar
 
+from sqlalchemy.engine import Dialect
+
+from bach import SeriesAbstractMultiLevel
 from bach.series import Series
 from bach.expression import Expression, WindowFunctionExpression
 from bach.dataframe import SortColumn
 from bach.sql_model import BachSqlModel
+from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
 
 G = TypeVar('G', bound='GroupBy')
+
+
+class WindowFunction(Enum):
+    FIRST_VALUE = 'first_value'
+    LAST_VALUE = 'last_value'
+    NTH_VALUE = 'nth_value'
+    LEAD = 'lead'
+    LAG = 'lag'
+
+    RANK = 'rank'
+    DENSE_RANK = 'dense_rank'
+    PERCENT_RANK = 'percent_rank'
+    CUME_DIST = 'cume_dist'
+    NTILE = 'ntile'
+    ROW_NUMBER = 'row_number'
+
+    _NAVIGATION_FUNCTIONS = (
+        FIRST_VALUE,
+        LAST_VALUE,
+        NTH_VALUE,
+        LEAD,
+        LAG,
+    )
+
+    _NUMBERING_FUNCTIONS = (
+        RANK,
+        DENSE_RANK,
+        PERCENT_RANK,
+        CUME_DIST,
+        NTILE,
+        ROW_NUMBER,
+    )
+
+    _ALL_FUNCTIONS = (
+        *_NAVIGATION_FUNCTIONS,
+        *_NUMBERING_FUNCTIONS,
+    )
+
+    def supports_window_frame_clause(self, dialect: Dialect) -> bool:
+        if is_bigquery(dialect):
+            return self.value not in WindowFunction._NUMBERING_FUNCTIONS.value
+
+        if is_postgres(dialect):
+            return True
+        raise DatabaseNotSupportedException(dialect)
 
 
 class WindowFrameMode(Enum):
@@ -61,6 +111,15 @@ class GroupBy:
         for col in group_by_columns:
             if not isinstance(col, Series):
                 raise ValueError(f'Unsupported argument type: {type(col)}')
+
+            if (
+                isinstance(col, SeriesAbstractMultiLevel)
+                and any(lvl.expression.is_constant for lvl in col.levels.values())
+            ):
+                raise ValueError(
+                    'Level in multi-level series has a constant expression, '
+                    'please materialize first.'
+                )
             if col.expression.is_constant:
                 # We don't support this currently. If we allow this we would generate sql of the form (this
                 # assumes the constants is '5'): `... group by (5)`. The sql is valid, it groups by the
@@ -91,8 +150,28 @@ class GroupBy:
                 for n in self._index.keys())
         )
 
-    def get_index_column_expressions(self) -> List[Expression]:
-        return [g.get_column_expression() for g in self._index.values()]
+    def get_index_column_expressions(self, construct_multi_levels: bool = False) -> List[Expression]:
+        if construct_multi_levels:
+            return [g.get_column_expression() for g in self._index.values()]
+
+        from bach.series import SeriesAbstractMultiLevel
+        exprs = [
+            [g.get_column_expression()] if not isinstance(g, SeriesAbstractMultiLevel)
+            else g.get_all_level_column_expression()
+            for g in self._index.values()
+        ]
+
+        return list(itertools.chain.from_iterable(exprs))
+
+    def get_index_expressions(self) -> List[Expression]:
+        from bach.series import SeriesAbstractMultiLevel
+        exprs = [
+            [g.expression]
+            if not isinstance(g, SeriesAbstractMultiLevel)
+            else g.level_expressions
+            for g in self.index.values()
+        ]
+        return list(itertools.chain.from_iterable(exprs))
 
     def get_group_by_column_expression(self) -> Optional[Expression]:
         """
@@ -104,8 +183,12 @@ class GroupBy:
         """
         if not self.index:
             return None
-        fmtstr = ', '.join(['{}'] * len(self.index))
-        return Expression.construct(f'{fmtstr}', *[g.expression for g in self.index.values()])
+
+        exprs = self.get_index_expressions()
+        fmt_strs = ['{}'] * len(exprs)
+
+        fmtstr = ', '.join(fmt_strs)
+        return Expression.construct(f'{fmtstr}', *exprs)
 
     def copy_override_base_node(self: G, base_node: BachSqlModel) -> G:
         new_cols = [col.copy_override(base_node=base_node) for col in self.index.values()]
@@ -258,9 +341,9 @@ class Window(GroupBy):
                  group_by_columns: List['Series'],
                  order_by: List[SortColumn],
                  mode: WindowFrameMode = WindowFrameMode.RANGE,
-                 start_boundary: WindowFrameBoundary = WindowFrameBoundary.PRECEDING,
+                 start_boundary: Optional[WindowFrameBoundary] = WindowFrameBoundary.PRECEDING,
                  start_value: int = None,
-                 end_boundary: WindowFrameBoundary = WindowFrameBoundary.CURRENT_ROW,
+                 end_boundary: Optional[WindowFrameBoundary] = WindowFrameBoundary.CURRENT_ROW,
                  end_value: int = None,
                  min_values: int = None):
         """
@@ -273,8 +356,8 @@ class Window(GroupBy):
         if mode is None:
             raise ValueError("Mode needs to be defined")
 
-        if start_boundary is None:
-            raise ValueError("At least start_boundary needs to be defined")
+        if start_boundary is None and end_boundary is not None:
+            raise ValueError("start_boundary needs to be defined if end_boundary is present.")
 
         if start_boundary == WindowFrameBoundary.FOLLOWING and start_value is None:
             raise ValueError("Start of frame can not be unbounded following")
@@ -290,7 +373,7 @@ class Window(GroupBy):
                 and (start_value is not None or end_value is not None):
             raise ValueError("start_value or end_value cases only supported in ROWS mode.")
 
-        if end_boundary is not None:
+        if start_boundary is not None and end_boundary is not None:
             if start_boundary.value > end_boundary.value:
                 raise ValueError("frame boundaries defined in wrong order.")
 
@@ -316,10 +399,10 @@ class Window(GroupBy):
         self._min_values = 0 if min_values is None else min_values
 
         # TODO This should probably be an expression
-        self._frame_clause: str
-        if end_boundary is None:
+        self._frame_clause: str = ''
+        if start_boundary and end_boundary is None:
             self._frame_clause = f'{mode.name} {start_boundary.frame_clause(start_value)}'
-        else:
+        elif start_boundary and end_boundary:
             self._frame_clause = f'{mode.name} BETWEEN {start_boundary.frame_clause(start_value)}'\
                                 f' AND {end_boundary.frame_clause(end_value)}'
 
@@ -341,10 +424,10 @@ class Window(GroupBy):
                          mode:
                          WindowFrameMode = WindowFrameMode.RANGE,
                          start_boundary:
-                         WindowFrameBoundary = WindowFrameBoundary.PRECEDING,
+                         Optional[WindowFrameBoundary] = WindowFrameBoundary.PRECEDING,
                          start_value: int = None,
                          end_boundary:
-                         WindowFrameBoundary = WindowFrameBoundary.CURRENT_ROW,
+                         Optional[WindowFrameBoundary] = WindowFrameBoundary.CURRENT_ROW,
                          end_value: int = None) -> 'Window':
         """
         Convenience function to clone this window with new frame parameters
@@ -380,15 +463,16 @@ class Window(GroupBy):
         else:
             frame_clause = self.frame_clause
 
+        index_exprs = []
         if len(self._index) == 0:
             partition_fmt = ''
         else:
-            partition_fmt = 'partition by ' + ', '.join(['{}'] * len(self.index))
+            index_exprs = self.get_index_expressions()
+            fmt_stmts = ['{}'] * len(index_exprs)
+            partition_fmt = 'partition by ' + ', '.join(fmt_stmts)
 
         over_fmt = f'over ({partition_fmt} {{}} {frame_clause})'
-        over_expr = Expression.construct(over_fmt,
-                                         *[i.expression for i in self.index.values()],
-                                         order_by)
+        over_expr = Expression.construct(over_fmt, *index_exprs, order_by)
 
         if self._min_values is None or self._min_values == 0:
             return WindowFunctionExpression.construct(f'{{}} {{}}', window_func, over_expr)

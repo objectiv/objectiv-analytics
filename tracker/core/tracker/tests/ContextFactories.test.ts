@@ -123,6 +123,9 @@ describe('Context Factories', () => {
       source: 'test-source',
       term: null,
       content: null,
+      source_platform: null,
+      creative_format: null,
+      marketing_tactic: null,
     });
 
     expect(
@@ -133,6 +136,9 @@ describe('Context Factories', () => {
         source: 'test-source',
         term: 'test-term',
         content: 'test-content',
+        source_platform: 'test-source-platform',
+        creative_format: 'test-creative-format',
+        marketing_tactic: 'test-marketing-tactic',
       })
     ).toStrictEqual({
       __instance_id: matchUUID,
@@ -144,6 +150,9 @@ describe('Context Factories', () => {
       source: 'test-source',
       term: 'test-term',
       content: 'test-content',
+      source_platform: 'test-source-platform',
+      creative_format: 'test-creative-format',
+      marketing_tactic: 'test-marketing-tactic',
     });
   });
 
