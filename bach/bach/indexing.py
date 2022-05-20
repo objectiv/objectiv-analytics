@@ -186,14 +186,14 @@ class LocIndexer(BaseLocIndex):
         """
         modifies a subset from the caller based on a key.
         """
-        from bach.series.series import Series, const_to_series
+        from bach.series.series import Series, value_to_series
         if isinstance(key, tuple):
             index_labels, column_labels = key
             parsed_column_labels = self._get_data_columns_subset(column_labels)
         else:
             index_labels = key
             parsed_column_labels = self.obj.data_columns
-        series_value = value if isinstance(value, Series) else const_to_series(self.obj, value)
+        series_value = value if isinstance(value, Series) else value_to_series(self.obj, value)
 
         if not isinstance(index_labels, slice):
             df = self._set_item_by_labels(index_labels, parsed_column_labels, series_value)

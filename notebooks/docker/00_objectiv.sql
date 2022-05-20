@@ -1,2 +1,3 @@
 TRUNCATE data;
 
+

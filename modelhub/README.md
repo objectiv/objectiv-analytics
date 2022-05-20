@@ -1,5 +1,9 @@
 # Open model hub
 
+The open model hub consists of pre-built models and operations that you can combine to build advanced compound models with little effort. The open model hub is powered by [Bach](https://objectiv.io/docs/modeling/bach/), our python-based modeling library.
+
+Visit [Objectiv Docs](https://objectiv.io/docs/modeling/open-model-hub/) to learn more
+
 ## Start modeling with Objectiv
 If you want to use the open model hub, install the package from Pypi as follows:
 ```bash
@@ -16,7 +20,7 @@ made (see below). All other instructions live in the README.md in the link above
 
 ### Your own code
 To use the model hub in your own code, you can import the package and use it to get a Bach DataFrame 
-([What is Bach?](https://www.objectiv.io/docs/modeling/bach_whatisbach)) to 
+([What is Bach?](https://www.objectiv.io/docs/modeling/bach/what-is-bach/)) to 
 perform your operations on. The object can be instantiated as follows, where the `db_url` and `table_name`
 should be adjusted depending on where the data is stored and how to access it.
 ```python

@@ -34,7 +34,7 @@ def test_include_exclude(dialect) -> None:
         dialect=dialect,
         index_names=[],
         data_names=['a', 'b', 'c', 'd'],
-        dtype={'a': 'json', 'b': 'int64', 'c': 'float64', 'd': 'timestamp'}
+        dtype={'a': 'string', 'b': 'int64', 'c': 'float64', 'd': 'timestamp'}
     )
     obj = DescribeOperation(
         obj=df,
@@ -54,7 +54,7 @@ def test_include_exclude(dialect) -> None:
     assert obj.series_to_describe == ['b', 'c']
     obj = DescribeOperation(
         obj=df,
-        include=['json', 'timestamp'],
+        include=['string', 'timestamp'],
         exclude=(),
         datetime_is_numeric=False,
         percentiles=None,
@@ -62,7 +62,7 @@ def test_include_exclude(dialect) -> None:
     assert obj.series_to_describe == ['a', 'd']
     obj = DescribeOperation(
         obj=df,
-        include='json',
+        include='string',
         exclude=(),
         datetime_is_numeric=False,
         percentiles=None,

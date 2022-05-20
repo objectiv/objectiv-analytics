@@ -4,11 +4,13 @@ Copyright 2021 Objectiv B.V.
 from decimal import Decimal
 
 import numpy
+import pandas as pd
 import pytest
+from psycopg2._range import NumericRange
 
-from bach import Series, SeriesAbstractNumeric
+from bach import Series, SeriesAbstractNumeric, SeriesNumericInterval
 from bach.partitioning import GroupingList, GroupingSet, Rollup, Cube
-from sql_models.util import is_postgres
+from sql_models.util import is_postgres, is_bigquery
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
@@ -688,3 +690,64 @@ def test_materialize_on_double_aggregation(engine):
     value = btg_materialized_mean.to_numpy()[0]
     # avg() of BigQuery gives a slightly different result than Postgres or python, so use assert_almost_equal
     numpy.testing.assert_almost_equal(value, 2413.5)
+
+
+def test_groupby_w_multi_level_series(engine):
+    bt = get_df_with_test_data(engine, full_data_set=True)
+    bt['lower'] = 0
+
+    bt.loc[bt['inhabitants'] > 900, 'lower'] = 1
+    bt.loc[bt['inhabitants'] > 2000, 'lower'] = 2
+    bt.loc[bt['inhabitants'] > 4000, 'lower'] = 3
+
+    bt['upper'] = bt['lower'] * 2 + 1
+
+    bt['range'] = SeriesNumericInterval.from_value(
+        base=bt,
+        value={'lower': bt['lower'], 'upper': bt['upper'], 'bounds': '[]'},
+        name='range',
+    )
+    bt = bt[['range', 'municipality', 'inhabitants', 'skating_order']].reset_index(drop=True)
+
+    if is_postgres(engine):
+        # BQ already materializes when doing groupby
+        with pytest.raises(ValueError, match=r'Level in multi-level series has a constant expression'):
+            bt.groupby(by=['range', 'municipality'])
+        bt = bt.materialize()
+
+    expected = bt.to_pandas().groupby(by=['range', 'municipality']).sum()
+    result = bt.groupby(by=['range', 'municipality']).sum(numeric_only=True).sort_index()
+
+    result_pdf = result.rename(
+        columns={'inhabitants_sum': 'inhabitants', 'skating_order_sum': 'skating_order'},
+    ).to_pandas()
+    pd.testing.assert_frame_equal(expected.sort_index(), result_pdf)
+
+    if is_postgres(engine):
+        range_1 = NumericRange(lower=Decimal('0.'), upper=Decimal('1.'), bounds='[]')
+        range_2 = NumericRange(lower=Decimal('1.'), upper=Decimal('3.'), bounds='[]')
+        range_3 = NumericRange(lower=Decimal('2.'), upper=Decimal('5.'), bounds='[]')
+        range_4 = NumericRange(lower=Decimal('3.'), upper=Decimal('7.'), bounds='[]')
+    elif is_bigquery(engine):
+        range_1 = {'lower': 0., 'upper': 1., 'bounds': '[]'}
+        range_2 = {'lower': 1., 'upper': 3., 'bounds': '[]'}
+        range_3 = {'lower': 2., 'upper': 5., 'bounds': '[]'}
+        range_4 = {'lower': 3., 'upper': 7., 'bounds': '[]'}
+    else:
+        raise Exception()
+
+    assert_equals_data(
+        result,
+        expected_columns=['range', 'municipality', 'inhabitants_sum', 'skating_order_sum'],
+        expected_data=[
+            [range_1, 'De Friese Meren', 700, 4],
+            [range_1, 'Súdwest-Fryslân', 870, 6],
+            [range_2, 'Súdwest-Fryslân', 960, 5],
+            [range_3, 'Súdwest-Fryslân', 3055, 3],
+            [range_4, 'Harlingen', 14740, 9],
+            [range_4, 'Leeuwarden', 93485, 1],
+            [range_4, 'Noardeast-Fryslân', 12675, 11],
+            [range_4, 'Súdwest-Fryslân', 48080, 17],
+            [range_4, 'Waadhoeke', 12760, 10],
+        ],
+    )

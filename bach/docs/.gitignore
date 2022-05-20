@@ -1,6 +1,8 @@
-source/**/*.rst
+source/open-model-hub/models/**/modelhub*
+source/open-model-hub/api-reference/**/modelhub*
+source/bach/api-reference/**/bach.DataFrame*
+source/bach/api-reference/**/bach.Series*
 
 !source/conf.py
-!source/*.rst
 build/
 

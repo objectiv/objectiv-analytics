@@ -1,14 +1,14 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Set
 
 import numpy
 import pandas
 from sqlalchemy.engine import Engine, Dialect
 
 from bach import DataFrame, get_series_type_from_dtype
-from bach.types import value_to_dtype
+from bach.types import value_to_dtype, DtypeOrAlias, Dtype
 from bach.expression import Expression, join_expressions
 from bach.utils import is_valid_column_name
 from sql_models.model import CustomSqlModelBuilder
@@ -115,7 +115,9 @@ def from_pandas_ephemeral(
         # start=1 is to account for the automatic index that pandas adds
         for i, series_type in enumerate(column_series_type, start=1):
             val = row[i]
-            per_column_expr.append(series_type.value_to_expression(dialect=engine.dialect, value=val))
+            per_column_expr.append(
+                series_type.value_to_expression(dialect=engine.dialect, value=val, dtype=series_type.dtype)
+            )
         row_expr = Expression.construct('({})', join_expressions(per_column_expr))
         per_row_expr.append(row_expr)
     all_values_str = join_expressions(per_row_expr, join_str=',\n').to_sql(engine.dialect)
@@ -181,7 +183,7 @@ def _from_pd_shared(
         df: pandas.DataFrame,
         convert_objects: bool,
         cte: bool
-) -> Tuple[pandas.DataFrame, Dict[str, str], Dict[str, str]]:
+) -> Tuple[pandas.DataFrame, Dict[str, Dtype], Dict[str, Dtype]]:
     """
     Pre-processes the given Pandas DataFrame, and do some checks. This results in a new DataFrame and two
     dictionaries with meta data. The returned DataFrame contains all processed data in the data columns, this
@@ -219,12 +221,12 @@ def _from_pd_shared(
     df_copy.reset_index(inplace=True)
 
     supported_pandas_dtypes = ['int64', 'float64', 'string', 'datetime64[ns]', 'bool', 'int32']
-    all_dtypes = {}
+    all_dtypes_or_alias: Dict[str, DtypeOrAlias] = {}
     for column in df_copy.columns:
         dtype = df_copy[column].dtype.name
 
         if dtype in supported_pandas_dtypes:
-            all_dtypes[str(column)] = dtype
+            all_dtypes_or_alias[str(column)] = dtype
             continue
 
         if df_copy[column].dropna().empty:
@@ -246,10 +248,12 @@ def _from_pd_shared(
                 raise TypeError(f'multiple types found in column {column}: {types}')
             dtype = value_to_dtype(non_nullables.iloc[0])
 
-        all_dtypes[str(column)] = dtype
+        all_dtypes_or_alias[str(column)] = dtype
 
     _assert_column_names_valid(dialect=dialect, df=df_copy)
 
+    all_dtypes = {name: get_series_type_from_dtype(dtype_or_alias).dtype
+                  for name, dtype_or_alias in all_dtypes_or_alias.items()}
     index_dtypes = {index_name: all_dtypes[index_name] for index_name in index}
 
     df_copy = df_copy.replace({numpy.nan: None})
