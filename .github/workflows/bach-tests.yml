@@ -53,11 +53,12 @@ jobs:
           # This path is specific to Ubuntu
           path: ~/.cache/pip
           key: pip-${{ matrix.python-version }}-${{ hashFiles('bach/requirements.txt', 'bach/requirements-dev.txt') }}
-      - name: Install dependencies
+      - name: Install dependencies (requirements + requirements-dev)
+        # install base dependencies + -dev, but not BQ
         run: |
           cd bach
           python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt -r requirements.txt -r requirements-bigquery.txt
+          pip install -r requirements-dev.txt -r requirements.txt
       - name: Typecheck with mypy
         run: |
           cd bach
@@ -66,15 +67,27 @@ jobs:
         run: |
           cd bach
           pycodestyle bach sql_models
+      - name: Unit tests postgres
+        run: |
+          cd bach
+          pytest -n 4 --dist loadgroup --postgres tests/unit tests/ -W error::DeprecationWarning
+      - name: Functional tests postgres
+        run: |
+          cd bach
+          pytest -n 4 --dist loadgroup --postgres tests/functional tests/ -W error::DeprecationWarning
+      - name: Install BQ dependencies
+        run: |
+          cd bach
+          pip install -r requirements-bigquery.yxy
       - name: Setup GCP Credentials
         run: |
           cd bach
           echo $GCP_SERVICE_ACCOUNT > $OBJ_DB_BQ_CREDENTIALS_PATH
-      - name: Unit tests
+      - name: Unit tests BQ
         run: |
           cd bach
-          pytest -n 4 --dist loadgroup --all tests/unit tests/ -W error::DeprecationWarning
-      - name: Functional tests
+          pytest -n 4 --dist loadgroup --big-query tests/unit tests/ -W error::DeprecationWarning
+      - name: Functional tests BQ
         run: |
           cd bach
-          pytest -n 4 --dist loadgroup --all tests/functional tests/ -W error::DeprecationWarning
+          pytest -n 4 --dist loadgroup --big-query tests/functional tests/ -W error::DeprecationWarning
