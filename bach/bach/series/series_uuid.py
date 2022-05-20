@@ -17,13 +17,12 @@ from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigqu
 
 class SeriesUuid(Series):
     """
-    A Series that represents the UUID type and its specific operations.
+    A Series that represents the UUID type and has UUID specific operations.
 
-    Depending on the database this Series is backed by different databse types:
+    **Database support and types**
 
-    * On Postgres this utilizes the native 'uuid' database type.
-    * On BigQuery this utilizes the generic 'STRING' database type.
-
+    * Postgres: utilizes the native 'uuid' database type.
+    * BigQuery: utilizes the generic 'STRING' database type.
     """
     dtype = 'uuid'
     dtype_aliases = ()

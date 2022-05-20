@@ -478,6 +478,10 @@ class Series(ABC):
 
     @classmethod
     def assert_engine_dialect_supported(cls, dialect_engine: Union[Dialect, Engine]):
+        """
+        INTERNAL: check that the given dialect/engine is in cls.supported_db_dtype.
+        :raises DatabaseNotSupportedException: if dialect/engine is not supported.
+        """
         if isinstance(dialect_engine, Engine):
             db_dialect = DBDialect.from_engine(dialect_engine)
         else:
