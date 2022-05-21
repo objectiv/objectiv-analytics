@@ -4,9 +4,6 @@
 # default tag is current date
 TAG ?= $(shell date +%Y%m%d)
 
-# where to push docker images
-CONTAINER_REPO=eu.gcr.io/objectiv-production
-
 # by default we build all images
 all: build-all-images
 
