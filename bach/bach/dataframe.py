@@ -2138,7 +2138,9 @@ class DataFrame:
 
         :param right: DataFrame or Series to join on self
         :param how: supported values: {‘left’, ‘right’, ‘outer’, ‘inner’, ‘cross’}
-        :param on: optional, column(s) to join left and right on.
+        :param on: optional, column(s) or condition(s) to join left and right on.
+            If *on* is based on a condition (``SeriesBoolean``), the condition MUST make reference to both
+            nodes involved in the merge.
         :param left_on: optional, column(s) from the left df to join on
         :param right_on: optional, column(s) from the right df/series to join on
         :param left_index: If true uses the index of the left df as columns to join on
