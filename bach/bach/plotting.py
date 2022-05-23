@@ -92,7 +92,7 @@ class PlotHandler(object):
 
         # create frequency distribution dataframe per label (numeric column)
         # labels are contained in __stacked_index series (result from DataFrame.stack)
-        frequencies = bins_per_col_df.groupby(by=['__stacked_index', 'range']).count()
+        frequencies = bins_per_col_df.reset_index().groupby(by=['__stacked_index', 'range']).count()
         frequencies = frequencies.reset_index(drop=False)
 
         # rename columns to meaningful names

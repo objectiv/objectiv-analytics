@@ -89,11 +89,11 @@ def test_min_max(pg_engine):
     )
     assert_equals_data(
         df.min(),
-        expected_columns=['_index_skating_order_min', 'founding_min', 'mixed_min', 'yes_min', 'no_min'],
-        expected_data=[[1, 1268, False, True, False]]
+        expected_columns=['founding_min', 'mixed_min', 'yes_min', 'no_min'],
+        expected_data=[[1268, False, True, False]]
     )
     assert_equals_data(
         df.max(),
-        expected_columns=['_index_skating_order_max', 'founding_max', 'mixed_max', 'yes_max', 'no_max'],
-        expected_data=[[3, 1456, True, True, False]]
+        expected_columns=['founding_max', 'mixed_max', 'yes_max', 'no_max'],
+        expected_data=[[1456, True, True, False]]
     )
