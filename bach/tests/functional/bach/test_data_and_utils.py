@@ -208,7 +208,7 @@ def get_bt_with_railway_data() -> DataFrame:
 
 
 def get_df_with_json_data(engine: Engine, dtype='json') -> DataFrame:
-    assert dtype in ('string', 'json', 'json_pg')
+    assert dtype in ('string', 'json', 'json_postgres')
     df = DataFrame.from_pandas(
         engine=engine,
         df=get_pandas_df(TEST_DATA_JSON, JSON_COLUMNS),

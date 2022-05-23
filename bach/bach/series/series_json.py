@@ -301,7 +301,7 @@ class SeriesJson(Series):
         raise Exception(f'{self.__class__.__name__} cannot be materialized.')
 
 
-class SeriesJsonPG(SeriesJson):
+class SeriesJsonPostgres(SeriesJson):
     """
     A Series that represents the json type.
 
@@ -314,7 +314,7 @@ class SeriesJsonPG(SeriesJson):
     * Postgres: utilizes the 'json' database type.
     * BigQuery: support coming soon
     """
-    dtype = 'json_pg'
+    dtype = 'json_postgres'
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
     supported_db_dtype = {
         DBDialect.POSTGRES: 'json',

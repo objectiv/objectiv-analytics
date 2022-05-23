@@ -136,7 +136,7 @@ class ModelHub():
                             'day': 'date',
                             'moment': 'timestamp',
                             'cookie_id': 'uuid',
-                            'value': 'json_pg'}
+                            'value': 'json_postgres'}
         if dtypes != expected_columns:
             raise KeyError(f'Expected columns not in table {table_name}. Found: {dtypes}')
 
