@@ -2912,8 +2912,10 @@ class DataFrame:
 
         :param axis: only ``axis=0`` is supported. This means rows that contain missing values are dropped.
         :param how: determines when a row is removed. Supported values:
-           - 'any': rows with at least one missing value are removed
-           - 'all': rows with all missing values are removed
+
+            - 'any': rows with at least one missing value are removed
+            - 'all': rows with all missing values are removed
+
         :param thresh: determines the least amount of non-missing values a row needs to have
             in order to be kept
         :param subset: series label or sequence of labels to be considered for missing values.
@@ -2979,8 +2981,10 @@ class DataFrame:
         :param value: A literal/series to fill all NULL values on each series
             or a dictionary specifying which literal/series to use for each series.
         :param method: Method to use for filling NULL values on all DataFrame series. Supported values:
-           - "ffill"/"pad": Fill missing values by propagating the last non-nullable value in the series.
-           - "bfill"/"backfill": Fill missing values with the next non-nullable value in the series.
+
+            - "ffill"/"pad": Fill missing values by propagating the last non-nullable value in the series.
+            - "bfill"/"backfill": Fill missing values with the next non-nullable value in the series.
+
         :param axis: only ``axis=0`` is supported.
         :param sort_by: series label or sequence of labels used to sort values.
             Sorting of values is needed since result might be non-deterministic, as rows with NULLs might

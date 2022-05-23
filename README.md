@@ -60,7 +60,7 @@ A [growing collection of pre-built models](https://objectiv.io/docs/modeling/ope
 
 Python-based [modeling library](https://www.objectiv.io/docs/modeling/bach/) that enables using pandas-like operations on the full SQL dataset.
 
-* Includes specific operations to easily work with datasets that embrace the open analytics taxonomy
+* Includes specific operations to easily work with data sets that embrace the open analytics taxonomy
 * Pandas-compatible: use popular pandas ML libraries in your models
 * Output your entire model to SQL with a single command
 

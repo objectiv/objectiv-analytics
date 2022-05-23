@@ -20,25 +20,18 @@ if TYPE_CHECKING:
 
 class SeriesAbstractNumeric(Series, ABC):
     """
-    A Series that represents the base numeric types and its specific operations
+    Abstract Series class that represents the base numeric types and its specific operations.
 
-    ** Operations **
+    **Operations**
 
-    All common arithmetic operations are supported, as well as the most common aggregation operations:
+    All common arithmetic operations are supported, as well as common aggregation functions, and statistical
+    functions.
 
+    Supported arithmetic operations:
     - add (+), subtract (-)
-    - multiply (*), divide (/), floordiv (//)
+    - multiply (*), divide (/), floordiv (//), mod (%)
     - lshift (<<) and rshift(>>) for Integer types
 
-    And the aggregations/statistical functions:
-
-    - :py:meth:`sum`
-    - :py:meth:`mean`
-    - :py:meth:`sem`
-    - :py:meth:`std`
-    - :py:meth:`var`
-
-    Integer types also support lshift (<<) and rshift(>>)
     """
     def _arithmetic_operation(self, other, operation, fmt_str,
                               other_dtypes=('int64', 'float64'), dtype=None):
@@ -208,6 +201,28 @@ class SeriesAbstractNumeric(Series, ABC):
 
 
 class SeriesInt64(SeriesAbstractNumeric):
+    """
+    Series type for integer data.
+
+    **Operations and Functions**
+
+    All common arithmetic operations are supported, as well as common aggregation functions, and statistical
+    functions.
+
+    Supported arithmetic operations:
+    - add (+), subtract (-)
+    - multiply (*), divide (/), floordiv (//), mod (%)
+    - lshift (<<) and rshift(>>)
+
+    See the base class :class:`SeriesAbstractNumeric` for an overview of the supported aggregation and
+    statistical functions.
+
+
+    **Database support and types**
+
+    * Postgres: utilizes the 'bigint' database type.
+    * BigQuery: utilizes the 'INT64' database type.
+    """
     dtype = 'int64'
     dtype_aliases = ('integer', 'bigint', 'i8', int, numpy.int64, 'int32')
     supported_db_dtype = {
@@ -285,6 +300,26 @@ class SeriesInt64(SeriesAbstractNumeric):
 
 
 class SeriesFloat64(SeriesAbstractNumeric):
+    """
+    Series type for float data.
+
+    **Operations and Functions**
+
+    All common arithmetic operations are supported, as well as common aggregation functions, and statistical
+    functions.
+
+    Supported arithmetic operations:
+    - add (+), subtract (-)
+    - multiply (*), divide (/), floordiv (//), mod (%)
+
+    See the base class :class:`SeriesAbstractNumeric` for an overview of the supported aggregation and
+    statistical functions.
+
+    **Database support and types**
+
+    * Postgres: utilizes the 'double precision' database type.
+    * BigQuery: utilizes the 'FLOAT64' database type.
+    """
     dtype = 'float64'
     dtype_aliases = ('float', 'double', 'f8', float, numpy.float64, 'double precision')
     supported_db_dtype = {

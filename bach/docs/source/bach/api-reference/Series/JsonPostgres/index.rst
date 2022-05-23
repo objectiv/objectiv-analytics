@@ -1,4 +1,4 @@
-.. _bach_reference_series_json_pg:
+.. _bach_reference_series_json_postgres:
 
 .. currentmodule:: bach
 

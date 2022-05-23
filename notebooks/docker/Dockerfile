@@ -20,7 +20,9 @@ COPY requirements.txt /services
 
 RUN . /services/venv/bin/activate && \
     cd /services && \
+    pip install --no-use-pep517  sklearn && \
     pip install -r requirements.txt
+
 
 COPY docker/entrypoint.sh /
 RUN chmod +x /entrypoint.sh
@@ -28,4 +30,5 @@ RUN chmod +x /entrypoint.sh
 COPY *.ipynb $APP
 
 USER notebook
+ENV OBJECTIV_VERSION_CHECK_DISABLE=true
 ENTRYPOINT /entrypoint.sh

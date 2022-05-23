@@ -1,6 +1,6 @@
 # Objectiv Angular Tracker 
 
-Objectiv tracker for Angular that embraces the open taxonomy for analytics. Supports all core tracking methods out of the box, and provides added shorthands for Angular components. Also provides default auto-tracking (ApplicationLoaded) out of the box.
+Objectiv tracker for Angular that embraces the open analytics taxonomy. Supports all core tracking methods out of the box, and provides added shorthands for Angular components. Also provides default auto-tracking (ApplicationLoaded) out of the box.
 
 ---
 ## Package Installation
