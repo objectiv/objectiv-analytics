@@ -333,8 +333,8 @@ class DataFrame:
         a DataFrame will change it to be not materialized. Calling :py:meth:`materialize` on a
         non-materialized DataFrame will return a new DataFrame that is materialized.
 
-        TODO: a known problem is that DataFrames with 'json_pg' columns are never in a materialized state,
-         and cannot be materialized with materialize()
+        TODO: a known problem is that DataFrames with 'json_postgres' columns are never in a materialized
+         state, and cannot be materialized with materialize()
 
         :returns: True if this DataFrame is in a materialized state, False otherwise
         """
@@ -987,7 +987,7 @@ class DataFrame:
         make sense for very large expressions, or for non-deterministic expressions (e.g. see
         :py:meth:`SeriesUuid.sql_gen_random_uuid`).
 
-        TODO: a known problem is that DataFrames with 'json_pg' columns cannot be fully materialized.
+        TODO: a known problem is that DataFrames with 'json_postgres' columns cannot be fully materialized.
 
         :param node_name: The name of the node that's going to be created
         :param inplace: Perform operation on self if ``inplace=True``, or create a copy.

@@ -6,7 +6,7 @@
 Jsonb
 =====
 
-.. autoclass:: SeriesJsonPG
+.. autoclass:: SeriesJsonPostgres
     :noindex:
 
 

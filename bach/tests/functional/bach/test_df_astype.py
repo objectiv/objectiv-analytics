@@ -163,7 +163,7 @@ def test_astype_to_time(engine):
         ]
     )
 
-@pytest.mark.parametrize('dtype', ('json', 'json_pg'))
+@pytest.mark.parametrize('dtype', ('json', 'json_postgres'))
 def test_astype_to_json(pg_engine, dtype):
     # TODO: BigQuery
     bt = get_df_with_json_data(engine=pg_engine, dtype='string')

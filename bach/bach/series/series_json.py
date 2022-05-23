@@ -33,8 +33,8 @@ class SeriesJson(Series):
         type has limited functionality.
 
         This class is the standard and recommended type to use for handling json like data. Having said that,
-        there is a special SeriesJsonPG type that uses the 'json' data type on Postgres, but internally that
-        casts all data to 'jsonb' too.
+        there is a special SeriesJsonPostgres type that uses the 'json' data type on Postgres, but internally
+        that casts all data to 'jsonb' too.
 
     **Getting data**
 
@@ -189,9 +189,9 @@ class SeriesJson(Series):
     @classmethod
     def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
         if is_postgres(dialect):
-            if source_dtype in ('json', 'json_pg'):
-                # SeriesJsonPG is a special case: SeriesJsonPG.expression already contains a cast to the
-                # database type 'jsonb', so we actually don't need to do any conversion
+            if source_dtype in ('json', 'json_postgres'):
+                # SeriesJsonPostgres is a special case: SeriesJsonPostgres.expression already contains a cast
+                # to the database type 'jsonb', so we actually don't need to do any conversion
                 return expression
             if source_dtype in ('string'):
                 return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
@@ -218,7 +218,7 @@ class SeriesJson(Series):
         other_dtypes=tuple()
     ) -> 'SeriesBoolean':
         if is_postgres(self.engine):
-            other_dtypes = ('json_pg', 'json', 'string')
+            other_dtypes = ('json_postgres', 'json', 'string')
             fmt_str = f'cast({{}} as jsonb) {comparator} cast({{}} as jsonb)'
         elif is_bigquery(self.engine):
             other_dtypes = ('json', 'string')
@@ -254,13 +254,13 @@ class SeriesJson(Series):
         raise NotImplementedError()
 
 
-class SeriesJsonPG(SeriesJson):
+class SeriesJsonPostgres(SeriesJson):
     """
     A special Series that represents the 'json' database type on Postgres.
 
     .. note::
-        Generally, it is advised to use :class:`JsonSeries` instead. Given a `JsonSeriesPG` object, calling
-        `json_series_pg.astype('json')` will return a `JsonSeries` class representing the same data.
+        Generally, it is advised to use :class:`JsonSeries` instead. Given a `SeriesJsonPostgres` object,
+        calling `json_series_pg.astype('json')` will return a `JsonSeries` class representing the same data.
 
     When `json` data is encountered in a sql table, this dtype is used. On Postgres for all operations the
     data is first cast to jsonb type. Therefore, it is recommended to cast to :class:`JsonSeries` directly.
@@ -269,7 +269,7 @@ class SeriesJsonPG(SeriesJson):
     of that class for more information.
     """
 
-    dtype = 'json_pg'
+    dtype = 'json_postgres'
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
     supported_db_dtype = {
         DBDialect.POSTGRES: 'json',

@@ -12,7 +12,7 @@ import pytest
 # the tests for dtype 'jsonb' as those databases only support 'json'
 
 
-pytestmark = [pytest.mark.parametrize('dtype', ('json', 'json_pg'))]
+pytestmark = [pytest.mark.parametrize('dtype', ('json', 'json_postgres'))]
 
 
 @pytest.fixture(autouse=True, scope='function')
@@ -22,8 +22,8 @@ def skip_jsonb_if_not_postgres(request):
         engine = request.getfixturevalue('engine')
     except pytest.FixtureLookupError:
         engine = request.getfixturevalue('pg_engine')
-    if request.getfixturevalue('dtype') == 'json_pg' and not is_postgres(engine):
-        pytest.skip(msg='json_pg dtype is only supported on Postgres. Skipping for other databases')
+    if request.getfixturevalue('dtype') == 'json_postgres' and not is_postgres(engine):
+        pytest.skip(msg='json_postgres dtype is only supported on Postgres. Skipping for other databases')
 
 
 def test_json_get_value(engine, dtype):
