@@ -11,8 +11,9 @@ from sqlalchemy.engine import Dialect
 from bach import DataFrameOrSeries, DataFrame, ColumnNames, Series, SeriesBoolean
 from bach.dataframe import DtypeNamePair
 
-from bach.expression import Expression, join_expressions, TableColumnReferenceToken, \
-    NonAtomicExpression, ExpressionToken, ColumnReferenceToken
+from bach.expression import (
+    Expression, join_expressions, TableColumnReferenceToken,  ExpressionToken, ColumnReferenceToken,
+)
 from bach.utils import ResultSeries, get_result_series_dtype_mapping
 from sql_models.constants import NotSet, not_set
 from sql_models.model import Materialization, CustomSqlModelBuilder, SqlModel, SqlModelSpec
@@ -26,6 +27,10 @@ class How(Enum):
     outer = 'outer'
     inner = 'inner'
     cross = 'cross'
+
+
+_LEFT_NODE_ALIAS = 'l'
+_RIGHT_NODE_ALIAS = 'r'
 
 
 class MergeOn(NamedTuple):
@@ -271,15 +276,17 @@ def _get_merged_result_series(
     """ Helper of _determine_result_columns. """
     new_column_results: List[ResultSeries] = []
     for suffix, source_series in zip(suffixes, (left_series, right_series)):
-        table_alias = 'l' if suffix == suffixes[0] else 'r'
+        table_alias = _LEFT_NODE_ALIAS if suffix == suffixes[0] else _RIGHT_NODE_ALIAS
         for series_name, series in source_series.items():
             new_name = series_name
             expr = series.expression.resolve_column_references(dialect, table_alias)
 
             if series_name in conflicting_on:
-                if table_alias == 'r':
+                if table_alias == _RIGHT_NODE_ALIAS:
                     continue
-                r_expr = right_series[series_name].expression.resolve_column_references(dialect, 'r')
+                r_expr = right_series[series_name].expression.resolve_column_references(
+                    dialect, _RIGHT_NODE_ALIAS,
+                )
                 expr = Expression.construct(f'COALESCE({{}}, {{}})', expr, r_expr)
             elif series_name in conflicting_names:
                 new_name = series_name + suffix
@@ -463,14 +470,14 @@ def _determine_series_per_source(
             table_name, column_name, expr = sub_expr.remove_table_column_references()
 
             column_name = column_name if sub_expr.has_table_column_references else series_name
-            if table_name == 'l' or not sub_expr.has_table_column_references:
+            if table_name == _LEFT_NODE_ALIAS or not sub_expr.has_table_column_references:
                 left_series[column_name] = series.copy_override(
                     base_node=left_node,
                     index=left_index,
                     name=column_name,
                     expression=expr,
                 )
-            if table_name == 'r' or not sub_expr.has_table_column_references:
+            if table_name == _RIGHT_NODE_ALIAS or not sub_expr.has_table_column_references:
                 right_series[column_name] = series.copy_override(
                     base_node=right_node,
                     index=right_index,
@@ -543,8 +550,12 @@ def _get_merge_on_clause(
     """
     left_x_right_on_merge_expressions = list(itertools.chain.from_iterable(
         [
-            _get_expression(df_series=left, label=l_label).resolve_column_references(dialect, "l"),
-            _get_expression(df_series=right, label=r_label).resolve_column_references(dialect, "r"),
+            _get_expression(df_series=left, label=l_label).resolve_column_references(
+                dialect, _LEFT_NODE_ALIAS,
+            ),
+            _get_expression(df_series=right, label=r_label).resolve_column_references(
+                dialect, _RIGHT_NODE_ALIAS,
+            ),
         ]
         for l_label, r_label in zip(merge_on.left, merge_on.right)
     ))
@@ -585,15 +596,15 @@ def _resolve_merge_expression_references(
                     resolved_nested_tokens.append(nested_token)
                     continue
 
-                ref_name = 'left_node' if nested_token.table_name == 'l' else 'right_node'
+                ref_name = 'left_node' if nested_token.table_name == _LEFT_NODE_ALIAS else 'right_node'
                 ref_node = cond.base_node.references[ref_name]
 
                 if ref_node == left.base_node:
                     df_series = left
-                    table_alias = 'l'
+                    table_alias = _LEFT_NODE_ALIAS
                 else:
                     df_series = right
-                    table_alias = 'r'
+                    table_alias = _RIGHT_NODE_ALIAS
 
                 # nested_token.column_name might not be the same to token.column_name
                 # since series can be renamed
