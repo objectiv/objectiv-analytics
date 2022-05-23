@@ -4,7 +4,6 @@ Copyright 2021 Objectiv B.V.
 import datetime
 from abc import ABC
 from enum import Enum
-from functools import reduce
 from typing import Union, cast, List, Tuple, Optional, Any
 
 import numpy
