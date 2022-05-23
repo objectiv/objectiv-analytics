@@ -28,13 +28,15 @@ class SeriesDict(Series):
     such a Series must then be dictionaries with the exact same field names as the instance-dtype, and the
     specified data types for the fields.
 
-    | Example instance_dtype
-    | BigQuery db_dtype: ``'STRUCT<a INT64, b ARRAY[FLOAT64], c <STRUCT x BOOL, y: INT64>>'``
-    | instance_dtype: ``{'a': 'int64', b: ['float64'], 'c': {'x': 'bool', 'y': 'int64'}``
+    Example -
+    BigQuery db_dtype: ``'STRUCT<a INT64, b ARRAY[FLOAT64], c <STRUCT x BOOL, y: INT64>>'``
+    instance_dtype: ``{'a': 'int64', b: ['float64'], 'c': {'x': 'bool', 'y': 'int64'}``
 
-    .. note::
-        SeriesDict is only supported on BigQuery.
-        On Postgres use SeriesJson for similar functionality.
+
+    **Database support and types**
+
+    * Postgres: not supported. Use :class:`SeriesJson` for similar functionality.
+    * BigQuery: utilizes the 'STRUCT' database type.
     """
     dtype = 'dict'
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
@@ -146,6 +148,14 @@ class SeriesDict(Series):
     def elements(self) -> 'DictAccessor':
         """ Accessor to interact with the elements in the dictionary. """
         return DictAccessor(self)
+
+    def materialize(
+            self,
+            node_name='manual_materialize',
+            limit: Any = None,
+            distinct: bool = False,
+    ):
+        raise Exception(f'{self.__class__.__name__} cannot be materialized.')
 
 
 class DictAccessor:

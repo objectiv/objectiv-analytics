@@ -31,7 +31,7 @@ compound models with little effort. The open model hub is powered by Bach, our p
 ### The Bach modeling library
 
 Bach is a python-based modeling library that enables you to use Pandas-like operations that run on your full 
-dataset in the SQL database. Any data set or model built with Bach can be converted to an SQL statement with 
+dataset in the SQL database. Any dataframe or model built with Bach can be converted to an SQL statement with 
 a single command.
 
 :ref:`Learn more about the Objectiv Bach modeling libary <bach>`

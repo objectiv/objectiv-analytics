@@ -2,5 +2,4 @@ pytest==6.2.5
 mypy==0.910
 pycodestyle==2.7.0
 types-requests
-pytest-aiohttp
 

@@ -329,6 +329,16 @@ class Series(ABC):
         """
         return deepcopy(self._instance_dtype)
 
+    @property
+    def is_materialized(self) -> bool:
+        """
+        Return true if this Series is in a materialized state, i.e. all information about the
+        Series's values is encoded in self.base_node.
+
+        :returns: True if this Series is in a materialized state, False otherwise
+        """
+        return self.to_frame().is_materialized
+
     @classmethod
     def get_class_instance(
         cls,
@@ -361,11 +371,12 @@ class Series(ABC):
     def get_db_dtype(cls, dialect: Dialect) -> Optional[str]:
         """
         Give the static db_dtype of this Series, for the given database dialect.
+
         :raises DatabaseNotSupportedException: If the Series subclass doesn't support the database dialect.
         :return: database type as string, or None if this Series has no database type for which it is the
             standard Series for that database, or if that type is a structural type whose exact type depends
             on the data of the subtypes (e.g. SeriesList will return None on BigQuery, as it can handle all
-                ARRAY<*> subtypes)
+            ARRAY<*> subtypes)
         """
         db_dialect = DBDialect.from_dialect(dialect)
         if db_dialect not in cls.supported_db_dtype:
@@ -462,6 +473,10 @@ class Series(ABC):
 
     @classmethod
     def assert_engine_dialect_supported(cls, dialect_engine: Union[Dialect, Engine]):
+        """
+        INTERNAL: check that the given dialect/engine is in cls.supported_db_dtype.
+        :raises DatabaseNotSupportedException: if dialect/engine is not supported.
+        """
         if isinstance(dialect_engine, Engine):
             db_dialect = DBDialect.from_engine(dialect_engine)
         else:
@@ -771,6 +786,36 @@ class Series(ABC):
             This function queries the database.
         """
         return self.to_pandas().to_numpy()
+
+    def materialize(
+            self,
+            node_name='manual_materialize',
+            limit: Any = None,
+            distinct: bool = False,
+    ) -> 'Series':
+        """
+        Create a copy of this Series with as base_node the current Series's state.
+
+        This effectively adds a node to the underlying SqlModel graph. Generally adding nodes increases
+        the size of the generated SQL query. But this can be useful if the current Series contains
+        expressions that you want to evaluate before further expressions are build on top of them. This might
+        make sense for very large expressions, or for non-deterministic expressions (e.g. see
+        :py:meth:`SeriesUuid.sql_gen_random_uuid`).
+
+        :param node_name: The name of the node that's going to be created
+        :param limit: The limit (slice, int) to apply.
+        :param distinct: Apply distinct statement if ``distinct=True``
+        :returns: Series with the current Series's state as base_node
+
+        .. note::
+            Calling materialize() resets the order of the series. Call :py:meth:`sort_values()` again on
+            the result if order is important.
+
+            Argument inplace should be always False.
+        """
+        result = self.to_frame().materialize(node_name=node_name, limit=limit, distinct=distinct,
+                                             inplace=False)
+        return result.all_series[self.name]
 
     def reset_index(
         self,
