@@ -99,7 +99,13 @@ def test_enrich_marketing_context():
     path_context = path_contexts[0]
 
     path_context['id'] = 'http://localhost:3000?' \
-                         'utm_source=test-source&utm_medium=test-medium&utm_campaign=test-campaign&utm_term=test-term'
+                         'utm_source=test-source&' \
+                         'utm_medium=test-medium&' \
+                         'utm_campaign=test-campaign&' \
+                         'utm_term=test-term&' \
+                         'utm_source_platform=test-source-platform&' \
+                         'utm_creative_format=test-creative-format&' \
+                         'utm_marketing_tactic=test-marketing-tactic'
 
     # call enrichment
     add_marketing_context_to_event(event=event)
@@ -119,17 +125,30 @@ def test_enrich_marketing_context():
     # dictionary representation of context
     marketing_context = {
         '_type': 'MarketingContext',
-        'id': 'utm',
-        'source': 'test-source',
-        'medium': 'test-medium',
         'campaign': 'test-campaign',
+        'content': None,
+        'creative_format': 'test-creative-format',
+        'id': 'utm',
+        'marketing_tactic': 'test-marketing-tactic',
+        'medium': 'test-medium',
+        'source': 'test-source',
+        'source_platform': 'test-source-platform',
         'term': 'test-term',
-        'content': None
     }
 
     # (ordered) json representation of dict
-    marketing_context_json = '{"_type": "MarketingContext", "campaign": "test-campaign", "content": null, "id": ' \
-                             '"utm", "medium": "test-medium", "source": "test-source", "term": "test-term"}'
+    marketing_context_json = '{' \
+                             '"_type": "MarketingContext", ' \
+                             '"campaign": "test-campaign", ' \
+                             '"content": null, ' \
+                             '"creative_format": "test-creative-format", ' \
+                             '"id": "utm", ' \
+                             '"marketing_tactic": "test-marketing-tactic", ' \
+                             '"medium": "test-medium", ' \
+                             '"source": "test-source", ' \
+                             '"source_platform": "test-source-platform", ' \
+                             '"term": "test-term"' \
+                             '}'
     assert(json.dumps(order_dict(marketing_context))) == marketing_context_json
 
     # check serialized jsons match for set and unset optionals

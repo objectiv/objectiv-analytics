@@ -1,7 +1,7 @@
 {
   "name": "@objectiv/schema",
-  "version": "0.0.19-0",
-  "description": "Objectiv TypeScript implementation of the open taxonomy for analytics",
+  "version": "0.0.20-0",
+  "description": "Objectiv TypeScript implementation of the open analytics taxonomy",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
   "keywords": [
@@ -41,6 +41,5 @@
     "prettier": "^2.5.1",
     "shx": "^0.3.4",
     "typescript": "^4.6.2"
-  },
-  "stableVersion": "0.0.18"
+  }
 }

@@ -1,0 +1,6 @@
+docutils==0.17.1
+munch==2.5.0
+pydash==5.1.0
+PyYAML==6.0
+setuptools==61.0.0
+Sphinx==4.5.0

@@ -252,7 +252,10 @@ def add_marketing_context_to_event(event: EventData) -> None:
             'medium': 'utm_medium',
             'campaign': 'utm_campaign',
             'term': 'utm_term',
-            'content': 'utm_content'
+            'content': 'utm_content',
+            'source_platform': 'utm_source_platform',
+            'creative_format': 'utm_creative_format',
+            'marketing_tactic': 'utm_marketing_tactic',
         }
     }
 

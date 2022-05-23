@@ -1,0 +1,26 @@
+version: "3"
+services:
+  objectiv_version_checker:
+    container_name: objectiv_version_checker
+    image: ${OBJECTIV_CONTAINER_URL-objectiv}/version_checker:${OBJECTIV_CONTAINER_TAG-latest}
+    environment:
+      - PORT=${OBJECTIV_VERSION_CHECK_PORT-8001}
+      - OBJECTIV_TRACKER_URL=${OBJECTIV_TRACKER_URL-http://localhost:8081}
+      - OBJECTIV_PYPI_BASE_URL=${OBJECTIV_PYPI_BASE_URL-http://localhost}
+      - VIRTUAL_HOST=${OBJECTIV_VERSION_CHECK_HOST-localhost}
+      - VIRTUAL_PORT=${OBJECTIV_VERSION_CHECK_PORT-8001}
+      - LETSENCRYPT_HOST=${OBJECTIV_VERSION_CHECK_HOST-localhost}
+    expose:
+      - ${OBJECTIV_VERSION_CHECK_PORT-8001}
+    networks:
+      - obj-proxy
+    healthcheck:
+      test: [ "CMD", "printf",  "\"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/${OBJECTIV_VERSION_CHECK_PORT-8001}" ]
+      interval: 30s
+      timeout: 2s
+      retries: 3
+
+# use bridged networking, so we can access services provided from the host
+networks:
+  obj-proxy:
+    driver: bridge

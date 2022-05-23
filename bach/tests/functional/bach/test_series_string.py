@@ -8,7 +8,7 @@ from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, ass
     get_df_with_test_data
 
 
-def test_from_const(engine):
+def test_from_value(engine):
     a = 'a string'
     b = 'a string\'"\'\' "" \\ with quotes'
     c = None
@@ -18,8 +18,8 @@ def test_from_const(engine):
     bt = get_df_with_test_data(engine)[['city']]
     bt['a'] = a
     bt['b'] = b
-    bt['c'] = SeriesString.from_const(base=bt, value=c, name='temp')
-    bt['d'] = SeriesString.from_const(base=bt, value=d, name='temp')
+    bt['c'] = SeriesString.from_value(base=bt, value=c, name='temp')
+    bt['d'] = SeriesString.from_value(base=bt, value=d, name='temp')
     bt['e'] = e
     assert_equals_data(
         bt,

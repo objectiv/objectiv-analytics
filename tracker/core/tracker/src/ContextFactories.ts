@@ -138,6 +138,9 @@ export const makeLinkContext = (props: { id: string; href: string }): LinkContex
  * @param {string} props.campaign - Individual campaign name, slogan, promo code, etc
  * @param {string | null} props.term - [Optional] Search keywords
  * @param {string | null} props.content - [Optional] Used to differentiate similar content, or links within the same ad
+ * @param {string | null} props.source_platform - [Optional] To differentiate similar content, or links within the same ad.
+ * @param {string | null} props.creative_format - [Optional] Identifies the creative used (e.g., skyscraper, banner, etc).
+ * @param {string | null} props.marketing_tactic - [Optional] Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).
  * @returns {MarketingContext} - MarketingContext: a context that captures marketing channel info, so users can do attribution, campaign
  * 	effectiveness and other models
  */
@@ -148,6 +151,9 @@ export const makeMarketingContext = (props: {
   campaign: string;
   term?: string | null;
   content?: string | null;
+  source_platform?: string | null;
+  creative_format?: string | null;
+  marketing_tactic?: string | null;
 }): MarketingContext => ({
   __instance_id: generateUUID(),
   __global_context: true,
@@ -158,6 +164,9 @@ export const makeMarketingContext = (props: {
   campaign: props.campaign,
   term: props.term ?? null,
   content: props.content ?? null,
+  source_platform: props.source_platform ?? null,
+  creative_format: props.creative_format ?? null,
+  marketing_tactic: props.marketing_tactic ?? null,
 });
 
 /** Creates instance of MediaPlayerContext

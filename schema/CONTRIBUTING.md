@@ -1,6 +1,6 @@
-# Open Taxonomy for Analytics - Development
+# Open analytics taxonomy - Development
 
-Here you'll find instructions for development on the Open Taxonomy for Analytics. If you want to contribute (Thank you!), please take a look at the [Contribution Guide](https://www.objectiv.io/docs/home/the-project/contribute) in our Docs. It contains information about our contribution process and where you can fit in.
+Here you'll find instructions for development on the open analytics taxonomy. If you want to contribute (Thank you!), please take a look at the [Contribution Guide](https://www.objectiv.io/docs/home/the-project/contribute) in our Docs. It contains information about our contribution process and where you can fit in.
 
 ## Schema updates
 

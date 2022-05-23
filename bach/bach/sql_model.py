@@ -310,7 +310,7 @@ def get_variable_values_sql(
             Exception(f'Dtype of value {value}, {value_dtype} does not match registered dtype {dtype}')
         placeholder_name = VariableToken.dtype_name_to_placeholder_name(dtype=dtype, name=name)
         series_type = get_series_type_from_dtype(dtype)
-        expr = series_type.supported_value_to_literal(dialect=dialect, value=value)
+        expr = series_type.value_to_literal(dialect=dialect, value=value, dtype=dtype)
         double_escaped_sql = expr.to_sql(dialect)
         sql = double_escaped_sql.format().format()
         result[placeholder_name] = sql
