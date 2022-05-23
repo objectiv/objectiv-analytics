@@ -10,7 +10,7 @@ import { makeTracker } from './makeTracker';
 
 /**
  * Retrieves a specific Tracker's instance from the TrackerRepository or creates one if it doesn't exist yet.
- * Throws if the given Tracker ID exists but its configuration doesn't match the given one.
+ * Logs an error to console if the given Tracker ID exists but its configuration doesn't match the given one.
  */
 export const getOrMakeTracker = (trackerConfig: BrowserTrackerConfig): BrowserTracker => {
   // Get the TrackerRepository
@@ -29,7 +29,9 @@ export const getOrMakeTracker = (trackerConfig: BrowserTrackerConfig): BrowserTr
 
   // We found a Tracker instance but, before returning it, ensure its config matches the given configuration
   if (!compareTrackerConfigs(tracker.trackerConfig, trackerConfig)) {
-    throw new Error(`Tracker \`${trackerId}\` exists but its configuration doesn't match the given one.`);
+    globalThis.objectiv?.TrackerConsole.error(
+      `Tracker \`${trackerId}\` exists but its configuration doesn't match the given one. This means getOrMakeTracker has been called twice with different configs.`
+    );
   }
 
   return tracker;

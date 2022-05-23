@@ -127,14 +127,16 @@ describe('globals', () => {
     expect(TrackerRepository.trackersMap.size).toBe(1);
   });
 
-  it('should throw because a Browser Tracker exists with the same Tracker Id but has a different configuration', () => {
+  it('should TrackerConsole.error because a Browser Tracker exists with the same Tracker Id but has a different configuration', () => {
     const trackerConfig1 = { applicationId: 'app-id', endpoint: 'localhost' };
     const trackerConfig2 = { applicationId: 'app-id', endpoint: 'http://collector' };
     expect(TrackerRepository.trackersMap.size).toBe(0);
     makeTracker(trackerConfig1);
     expect(TrackerRepository.trackersMap.size).toBe(1);
-    expect(() => getOrMakeTracker(trackerConfig2)).toThrow(
-      "Tracker `app-id` exists but its configuration doesn't match the given one."
+    getOrMakeTracker(trackerConfig2);
+    expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
+    expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
+      "Tracker `app-id` exists but its configuration doesn't match the given one. This means getOrMakeTracker has been called twice with different configs."
     );
   });
 });
