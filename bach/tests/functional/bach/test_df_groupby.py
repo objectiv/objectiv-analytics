@@ -29,14 +29,13 @@ def test_group_by_all(engine):
 
     assert_equals_data(
         result_bt,
-        expected_columns=['_index_skating_order_nunique', 'skating_order_nunique', 'city_nunique', 'municipality_nunique', 'inhabitants_nunique', 'founding_nunique'],
+        expected_columns=['skating_order_nunique', 'city_nunique', 'municipality_nunique', 'inhabitants_nunique', 'founding_nunique'],
         order_by='skating_order_nunique',
         expected_data=[
-            [11, 11, 11, 6, 11, 11],
+            [11, 11, 6, 11, 11],
         ]
     )
     assert result_bt.dtypes == {
-        '_index_skating_order_nunique': 'int64',
         'city_nunique': 'int64',
         'founding_nunique': 'int64',
         'inhabitants_nunique': 'int64',
@@ -59,22 +58,21 @@ def test_group_by_single_syntax(engine):
 
         assert_equals_data(
             r,
-            expected_columns=['municipality', '_index_skating_order_count', 'skating_order_count', 'city_count', 'inhabitants_count', 'founding_count'],
+            expected_columns=['municipality', 'skating_order_count', 'city_count', 'inhabitants_count', 'founding_count'],
             order_by=['skating_order_count', 'municipality'],
             expected_data=[
-                ['De Friese Meren', 1, 1, 1, 1, 1],
-                ['Harlingen', 1, 1, 1, 1, 1],
-                ['Leeuwarden', 1, 1, 1, 1, 1],
-                ['Noardeast-Fryslân', 1, 1, 1, 1, 1],
-                ['Waadhoeke', 1, 1, 1, 1, 1],
-                ['Súdwest-Fryslân', 6, 6, 6, 6, 6],
+                ['De Friese Meren', 1, 1, 1, 1],
+                ['Harlingen', 1, 1, 1, 1],
+                ['Leeuwarden', 1, 1, 1, 1],
+                ['Noardeast-Fryslân', 1, 1, 1, 1],
+                ['Waadhoeke', 1, 1, 1, 1],
+                ['Súdwest-Fryslân', 6, 6, 6, 6],
             ]
         )
         assert r.index_dtypes == {
             'municipality': 'string'
         }
         assert r.dtypes == {
-            '_index_skating_order_count': 'int64',
             'city_count': 'int64',
             'founding_count': 'int64',
             'inhabitants_count': 'int64',
@@ -99,20 +97,20 @@ def test_group_by_multiple_syntax(engine):
 
         assert_equals_data(
             r,
-            expected_columns=['municipality', 'city', '_index_skating_order_count', 'skating_order_count', 'inhabitants_count', 'founding_count'],
+            expected_columns=['municipality', 'city', 'skating_order_count', 'inhabitants_count', 'founding_count'],
             order_by=['skating_order_count', 'municipality', 'city'],
             expected_data=[
-                ['De Friese Meren', 'Sleat', 1, 1, 1, 1],
-                ['Harlingen', 'Harns', 1, 1, 1, 1],
-                ['Leeuwarden', 'Ljouwert', 1, 1, 1, 1],
-                ['Noardeast-Fryslân', 'Dokkum', 1, 1, 1, 1],
-                ['Súdwest-Fryslân', 'Boalsert', 1, 1, 1, 1],
-                ['Súdwest-Fryslân', 'Drylts', 1, 1, 1, 1],
-                ['Súdwest-Fryslân', 'Hylpen', 1, 1, 1, 1],
-                ['Súdwest-Fryslân', 'Snits', 1, 1, 1, 1],
-                ['Súdwest-Fryslân', 'Starum', 1, 1, 1, 1],
-                ['Súdwest-Fryslân', 'Warkum', 1, 1, 1, 1],
-                ['Waadhoeke', 'Frjentsjer', 1, 1, 1, 1]
+                ['De Friese Meren', 'Sleat', 1, 1, 1],
+                ['Harlingen', 'Harns', 1, 1, 1],
+                ['Leeuwarden', 'Ljouwert', 1, 1, 1],
+                ['Noardeast-Fryslân', 'Dokkum', 1, 1, 1],
+                ['Súdwest-Fryslân', 'Boalsert', 1, 1, 1],
+                ['Súdwest-Fryslân', 'Drylts', 1, 1, 1],
+                ['Súdwest-Fryslân', 'Hylpen', 1, 1, 1],
+                ['Súdwest-Fryslân', 'Snits', 1, 1, 1],
+                ['Súdwest-Fryslân', 'Starum', 1, 1, 1],
+                ['Súdwest-Fryslân', 'Warkum', 1, 1, 1],
+                ['Waadhoeke', 'Frjentsjer', 1, 1, 1]
             ]
         )
         assert r.index_dtypes == {
@@ -120,7 +118,6 @@ def test_group_by_multiple_syntax(engine):
             'city': 'string'
         }
         assert r.dtypes == {
-            '_index_skating_order_count': 'int64',
             'founding_count': 'int64',
             'inhabitants_count': 'int64',
             'skating_order_count': 'int64'
@@ -141,19 +138,18 @@ def test_group_by_expression(engine):
 
     assert_equals_data(
         result_bt,
-        expected_columns=['city', '_index_skating_order_nunique', 'skating_order_nunique',
+        expected_columns=['city', 'skating_order_nunique',
                           'municipality_nunique', 'inhabitants_nunique', 'founding_nunique'],
         order_by='city',
         expected_data=[
-            ['B', 1, 1, 1, 1, 1], ['D', 2, 2, 2, 2, 2], ['F', 1, 1, 1, 1, 1], ['H', 2, 2, 2, 2, 2],
-            ['L', 1, 1, 1, 1, 1], ['S', 3, 3, 2, 3, 3], ['W', 1, 1, 1, 1, 1]
+            ['B', 1, 1, 1, 1], ['D', 2, 2, 2, 2], ['F', 1, 1, 1, 1], ['H', 2, 2, 2, 2],
+            ['L', 1, 1, 1, 1], ['S', 3, 2, 3, 3], ['W', 1, 1, 1, 1]
         ]
     )
     assert result_bt.index_dtypes == {
         'city': 'string'
     }
     assert result_bt.dtypes == {
-        '_index_skating_order_nunique': 'int64',
         'municipality_nunique': 'int64',
         'founding_nunique': 'int64',
         'inhabitants_nunique': 'int64',
@@ -230,20 +226,18 @@ def test_dataframe_agg_all(engine):
         # no materialization has taken place yet.
         assert result_bt.base_node == bt.base_node
 
-        assert result_bt._index_skating_order_nunique.expression.is_single_value
         assert result_bt.municipality_nunique.expression.is_single_value
         assert result_bt.inhabitants_nunique.expression.is_single_value
 
         assert_equals_data(
             result_bt,
-            expected_columns=['_index_skating_order_nunique', 'municipality_nunique', 'inhabitants_nunique'],
+            expected_columns=['municipality_nunique', 'inhabitants_nunique'],
             expected_data=[
-                [11, 6, 11]
+                [6, 11]
             ]
         )
         assert result_bt.index == {}
         assert result_bt.dtypes == {
-            '_index_skating_order_nunique': 'int64',
             'municipality_nunique': 'int64',
             'inhabitants_nunique': 'int64'
         }
@@ -267,17 +261,16 @@ def test_groupby_dataframe_agg(engine):
         assert_equals_data(
             result_bt,
             order_by=['municipality'],
-            expected_columns=['municipality', '_index_skating_order_nunique', 'inhabitants_nunique'],
+            expected_columns=['municipality', 'inhabitants_nunique'],
             expected_data=[
-                ['De Friese Meren', 1, 1], ['Harlingen', 1, 1], ['Leeuwarden', 1, 1],
-                ['Noardeast-Fryslân', 1, 1], ['Súdwest-Fryslân', 6, 6], ['Waadhoeke', 1, 1]
+                ['De Friese Meren', 1], ['Harlingen', 1], ['Leeuwarden', 1],
+                ['Noardeast-Fryslân', 1], ['Súdwest-Fryslân', 6], ['Waadhoeke', 1]
             ]
         )
         assert result_bt.index_dtypes == {
             'municipality': 'string'
         }
         assert result_bt.dtypes == {
-            '_index_skating_order_nunique': 'int64',
             'inhabitants_nunique': 'int64'
         }
 
@@ -384,7 +377,6 @@ def test_dataframe_agg_numeric_only(engine):
         assert result_bt.inhabitants_sum.value == 187325
         assert result_bt.dtypes == {
             # infers that municipality was dropped because not numeric
-            '_index_skating_order_sum': 'int64',
             'inhabitants_sum': 'int64'
         }
 

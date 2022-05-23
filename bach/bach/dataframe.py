@@ -1583,7 +1583,7 @@ class DataFrame:
         It will not materialize, just prepared for more operations
         """
         new_series = {s.name: s.copy_override(group_by=group_by, index=group_by.index, index_sorting=[])
-                      for n, s in df.all_series.items() if n not in group_by.index.keys()}
+                      for n, s in df.data.items() if n not in group_by.index.keys()}
         return df.copy_override(
             index=group_by.index,
             series=new_series,

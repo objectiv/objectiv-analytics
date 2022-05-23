@@ -67,7 +67,7 @@ def test_materialize_with_non_aggregation_series(inplace: bool, engine):
     btg = bt.groupby('municipality')
     assert btg.group_by is not None
     with pytest.raises(ValueError, match="groupby set, but contains Series that have no aggregation func.*"
-                                         "\\['_index_skating_order', 'founding', 'inhabitants'\\]"):
+                                         "\\['founding', 'inhabitants'\\]"):
         btg.materialize(inplace=inplace)
 
     assert btg.base_node == bt.base_node
@@ -75,7 +75,7 @@ def test_materialize_with_non_aggregation_series(inplace: bool, engine):
     # Add one that's aggregated, should still fail
     btg['founding'] = btg.founding.sum()
     with pytest.raises(ValueError, match="groupby set, but contains Series that have no aggregation func.*"
-                                         "\\['_index_skating_order', 'inhabitants'\\]"):
+                                         "\\['inhabitants'\\]"):
         btg.materialize(inplace=inplace)
     assert btg.base_node == bt.base_node
 
@@ -91,7 +91,6 @@ def test_materialize_with_non_aggregation_series(inplace: bool, engine):
 
     # Fix the last one,
     btg['inhabitants'] = btg.inhabitants.sum()
-    btg['_index_skating_order'] = btg._index_skating_order.sum()
     bt_materialized = btg.copy().materialize(inplace=inplace)
     assert bt_materialized.base_node != btg.base_node
 

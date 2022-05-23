@@ -131,10 +131,10 @@ def test_get_item_mixed_groupby(engine):
     assert_equals_data(
         grouped_all_sum[grouped_sum > 50000],
         order_by='inhabitants_sum',
-        expected_columns=['municipality', '_index_skating_order_sum', 'inhabitants_sum', 'founding_sum'],
+        expected_columns=['municipality', 'inhabitants_sum', 'founding_sum'],
         expected_data=[
-            ['Súdwest-Fryslân', 31, 52965, 7864],
-            ['Leeuwarden', 1, 93485, 1285]
+            ['Súdwest-Fryslân', 52965, 7864],
+            ['Leeuwarden', 93485, 1285]
         ]
     )
 
@@ -142,10 +142,10 @@ def test_get_item_mixed_groupby(engine):
     assert_equals_data(
         grouped_all_sum[bt.founding < 1300],
         order_by='inhabitants_sum',
-        expected_columns=['municipality', '_index_skating_order_sum', 'inhabitants_sum', 'founding_sum'],
+        expected_columns=['municipality', 'inhabitants_sum', 'founding_sum'],
         expected_data=[
-            ['Súdwest-Fryslân', 14, 4885, 3554], ['Noardeast-Fryslân', 11, 12675, 1298],
-            ['Harlingen', 9, 14740, 1234], ['Leeuwarden', 1, 93485, 1285]
+            ['Súdwest-Fryslân', 4885, 3554], ['Noardeast-Fryslân', 12675, 1298],
+            ['Harlingen', 14740, 1234], ['Leeuwarden', 93485, 1285]
         ]
     )
 
@@ -153,9 +153,9 @@ def test_get_item_mixed_groupby(engine):
     assert_equals_data(
         grouped_all_sum[grouped_all_sum.index['municipality'] == 'Harlingen'],
         order_by='inhabitants_sum',
-        expected_columns=['municipality', '_index_skating_order_sum', 'inhabitants_sum', 'founding_sum'],
+        expected_columns=['municipality', 'inhabitants_sum', 'founding_sum'],
         expected_data=[
-            ['Harlingen', 9, 14740, 1234]
+            ['Harlingen', 14740, 1234]
         ]
     )
 
