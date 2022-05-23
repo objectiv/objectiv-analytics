@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import json
-from typing import Optional, Dict, Union, TYPE_CHECKING, List, Tuple
+from typing import Optional, Any, Dict, Union, TYPE_CHECKING, List, Tuple
 
 from sqlalchemy.engine import Dialect
 
@@ -118,6 +118,11 @@ class SeriesJson(Series):
         1                                    None
         2    [{'l': ['m', 'n', 'o']}, {'p': 'q'}]
         Name: jsonb_column, dtype: object
+
+    **Database support and types**
+
+    * Postgres: utilizes the 'jsonb' database type.
+    * BigQuery: json support coming soon
     """
     dtype = 'json'
     # todo can only assign a type to one series type, and object is quite generic
@@ -192,8 +197,16 @@ class SeriesJson(Series):
         """ INTERNAL: Only here to not trigger errors from describe """
         raise NotImplementedError()
 
+    def materialize(
+            self,
+            node_name='manual_materialize',
+            limit: Any = None,
+            distinct: bool = False,
+    ):
+        raise Exception(f'{self.__class__.__name__} cannot be materialized.')
 
-class SeriesJsonPG(SeriesJson):
+
+class SeriesJsonPostgres(SeriesJson):
     """
     A Series that represents the json type.
 
@@ -201,8 +214,12 @@ class SeriesJsonPG(SeriesJson):
     cast to the jsonb type. As a result all methods of the :py:class:`SeriesJsonb` can also be used with this
     `json` type series.
 
+    **Database support and types**
+
+    * Postgres: utilizes the 'json' database type.
+    * BigQuery: support coming soon
     """
-    dtype = 'json_pg'
+    dtype = 'json_postgres'
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
     supported_db_dtype = {
         DBDialect.POSTGRES: 'json',

@@ -168,7 +168,7 @@ def test_is_materialized(engine):
 
 
 def test_is_materialized_json(pg_engine):
-    # Note that we only test the 'json' type here, not the Postgres specific json_pg, as there is a known
+    # Note that we only test the 'json' type here, not the Postgres specific json_postgres, as there is a known
     # problem that is_materialized is always False if such a column is present.
     engine = pg_engine  # TODO: BigQuery
 

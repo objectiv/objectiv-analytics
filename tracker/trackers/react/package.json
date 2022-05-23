@@ -1,7 +1,7 @@
 {
   "name": "@objectiv/tracker-react",
   "version": "0.0.19",
-  "description": "Objectiv React application analytics tracker for the open taxonomy for analytics",
+  "description": "Objectiv React application analytics tracker for the open analytics taxonomy",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
   "keywords": [

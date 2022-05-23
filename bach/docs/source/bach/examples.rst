@@ -62,7 +62,7 @@ The above operations add/remove/rename some columns of the DataFrame. However no
 on the Database, until `df.to_pandas()` is called. The DataFrame operations merely change the symbolic
 representation of the data in the DataFrame and its Series.
 
-The call to `df.to_pandas()` here is merely for demonstration purposes, in situations with bigger datasets it
+The call to `df.to_pandas()` here is merely for demonstration purposes, in situations with bigger data sets it
 should be avoided until the data is needed as it will query the database and transfer all data.
 
 

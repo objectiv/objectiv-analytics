@@ -1,7 +1,7 @@
 {
   "name": "@objectiv/tracker-angular",
   "version": "0.0.19",
-  "description": "Objectiv Angular framework analytics tracker for the open taxonomy for analytics",
+  "description": "Objectiv Angular framework analytics tracker for the open analytics taxonomy",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
   "keywords": [

@@ -6,7 +6,7 @@ from bach.series.series_numeric import \
     SeriesAbstractNumeric, SeriesInt64, SeriesFloat64
 from bach.series.series_boolean import SeriesBoolean
 from bach.series.series_uuid import SeriesUuid
-from bach.series.series_json import SeriesJson, SeriesJsonPG
+from bach.series.series_json import SeriesJson, SeriesJsonPostgres
 from bach.series.series_string import SeriesString
 from bach.series.series_datetime import \
     SeriesAbstractDateTime, SeriesDate, SeriesTime, SeriesTimestamp, SeriesTimedelta

@@ -10,7 +10,7 @@ Generating and publishing the docs for `Bach` involve a few steps:
   pip install -r requirements.txt
   # install bach in edit mode
   pip install -e ../../bach
-  # install objectiv_bach in edit mode
+  # install modelhub in edit mode
   pip install -e ../../modelhub
 ```
 

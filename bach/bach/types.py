@@ -194,12 +194,12 @@ class TypeRegistry:
         from bach.series import \
             SeriesBoolean, SeriesInt64, SeriesFloat64, SeriesString,\
             SeriesTimestamp, SeriesDate, SeriesTime, SeriesTimedelta,\
-            SeriesUuid, SeriesJson, SeriesJsonPG, SeriesNumericInterval, SeriesList, SeriesDict
+            SeriesUuid, SeriesJson, SeriesJsonPostgres, SeriesNumericInterval, SeriesList, SeriesDict
 
         standard_types: List[Type[Series]] = [
             SeriesBoolean, SeriesInt64, SeriesFloat64, SeriesString,
             SeriesTimestamp, SeriesDate, SeriesTime, SeriesTimedelta,
-            SeriesUuid, SeriesJson, SeriesJsonPG, SeriesNumericInterval, SeriesList, SeriesDict
+            SeriesUuid, SeriesJson, SeriesJsonPostgres, SeriesNumericInterval, SeriesList, SeriesDict
         ]
 
         for klass in standard_types:
