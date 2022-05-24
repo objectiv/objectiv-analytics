@@ -29,6 +29,13 @@ def test_column_names(engine):
     # Make sure that after materializing the columns are unchanged.
     bt = bt.materialize()
     assert_equals_data(bt, expected_columns=expected_columns, expected_data=expected_data)
+    df = get_df_with_test_data(engine)[['city']]
+    for col_name in expected_columns[1:]:
+        df[col_name] = bt[col_name]
+        x = bt[col_name]
+        x.to_pandas()
+    assert_equals_data(df, expected_columns=expected_columns, expected_data=expected_data)
+
 
 
 def test_column_names_merge(engine):

@@ -75,6 +75,17 @@ def test_from_pandas_table_injection(pg_engine):
     )
     assert_equals_data(bt, expected_columns=EXPECTED_COLUMNS_INJECTION, expected_data=EXPECTED_DATA_INJECTION)
 
+    expected_index = EXPECTED_COLUMNS_INJECTION[0]
+    for i, column_name in enumerate(COLUMNS_INJECTION):
+        s = bt[column_name]
+        expected_columns = [expected_index, column_name]
+        expected_data = [[row[0], row[i]] for row in TEST_DATA_INJECTION]
+        print(f'-------------------------------')
+        print(f'column name: {column_name}')
+        print(f'expected data: {expected_data}')
+        print(s.to_pandas())
+        assert_equals_data(s, expected_columns=expected_columns, expected_data=expected_data)
+
 
 def test_from_pandas_ephemeral_basic(engine):
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS)
