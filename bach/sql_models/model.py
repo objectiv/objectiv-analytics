@@ -673,7 +673,7 @@ class CustomSqlModelBuilder(SqlModelBuilder):
     Builder that instantiates a SqlModel that can run custom sql and refer custom tables.
     """
 
-    def __init__(self, sql: str, name: str = None):
+    def __init__(self, sql: str, name: str = None, **values):
         """
         :param sql: sql of the model
         :param name: optional override of the generic name (default: 'CustomSqlModel')
@@ -683,7 +683,7 @@ class CustomSqlModelBuilder(SqlModelBuilder):
             self._generic_name = name
         else:
             self._generic_name = 'CustomSqlModel'
-        super().__init__()
+        super().__init__(**values)
 
     @property
     def sql(self):
