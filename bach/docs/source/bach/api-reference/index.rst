@@ -38,12 +38,10 @@ This is the complete API reference of Bach.
     Series/SeriesInt/index
     Series/SeriesJson/index
     Series/SeriesJsonb/index
+    Series/SeriesJsonPostgres/index
     Series/SeriesList/index
     Series/SeriesString/index
     Series/SeriesTime/index
     Series/SeriesTimedelta/index
     Series/SeriesTimestamp/index
     Series/SeriesUuid/index
-    Series/Json/index
-    Series/JsonPG/index
-    Series/String/index
