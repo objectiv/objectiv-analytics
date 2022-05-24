@@ -1186,7 +1186,7 @@ class DataFrame:
             return self.copy_override(
                 base_node=node,
                 group_by=None,
-                index_dtypes={name: series.dtype for name, series in self.index.items()},
+                index_dtypes={name: series.instance_dtype for name, series in self.index.items()},
                 series_dtypes={name: series.instance_dtype for name, series in self.data.items()},
                 single_value=single_value
             )
