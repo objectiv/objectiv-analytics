@@ -588,13 +588,14 @@ class DataFrame:
 
         # use placeholders for columns in order to avoid conflicts when extracting spec references
         column_stmt = ','.join(f'{{col_{col_index}}}' for col_index in range(len(dtypes)))
-        column_place_holders = {
+        column_placeholders = {
             f'col_{col_index}': quote_identifier(engine.dialect, col_name)
             for col_index, col_name in enumerate(dtypes.keys())
         }
+        sql_params.update(column_placeholders)
 
         sql = f'SELECT {column_stmt} FROM {sql_table_name_template}'
-        model_builder = CustomSqlModelBuilder(sql=sql, name='from_table', **column_place_holders)
+        model_builder = CustomSqlModelBuilder(sql=sql, name='from_table')
         sql_model = model_builder(**sql_params)
 
         return cls._from_node(
