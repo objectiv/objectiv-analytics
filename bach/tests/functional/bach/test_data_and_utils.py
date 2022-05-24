@@ -207,8 +207,8 @@ def get_bt_with_railway_data() -> DataFrame:
     return get_bt(TEST_DATA_RAILWAYS, RAILWAYS_COLUMNS, True)
 
 
-def get_df_with_json_data(engine: Engine, dtype='string') -> DataFrame:
-    assert dtype in ('string', 'json', 'jsonb')
+def get_df_with_json_data(engine: Engine, dtype='json') -> DataFrame:
+    assert dtype in ('string', 'json', 'json_postgres')
     df = DataFrame.from_pandas(
         engine=engine,
         df=get_pandas_df(TEST_DATA_JSON, JSON_COLUMNS),
@@ -218,7 +218,7 @@ def get_df_with_json_data(engine: Engine, dtype='string') -> DataFrame:
         df['dict_column'] = df.dict_column.astype(dtype)
         df['list_column'] = df.list_column.astype(dtype)
         df['mixed_column'] = df.mixed_column.astype(dtype)
-    return df
+    return df.materialize()
 
 
 def run_query(engine: sqlalchemy.engine, sql: str) -> ResultProxy:

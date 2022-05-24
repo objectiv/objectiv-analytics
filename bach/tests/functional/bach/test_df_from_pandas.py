@@ -267,9 +267,9 @@ def test_from_pandas_types_cte(pg_engine):
                          'datetime_column': 'timestamp',
                          'string_column': 'string',
                          'date_column': 'date',
-                         'list_column': 'jsonb',
+                         'list_column': 'json',
                          'uuid_column': 'uuid',
-                         'dict_column': 'jsonb',
+                         'dict_column': 'json',
                          'timedelta_column': 'timedelta'}
 
     assert_equals_data(

@@ -10,11 +10,11 @@ import requests
 from bach import DataFrame
 from bach.expression import Expression, quote_string, quote_identifier
 from bach.series import Series
-from bach.series import SeriesJsonb
+from bach.series import SeriesJson
 from bach.types import register_dtype
 
 
-class ObjectivStack(SeriesJsonb.Json):
+class ObjectivStack(SeriesJson.Json):
     def get_from_context_with_type_series(self, type: str, key: str, dtype='string'):
         """
         .. _get_from_context_with_type_series:
@@ -40,7 +40,7 @@ class ObjectivStack(SeriesJsonb.Json):
 
 
 @register_dtype(value_types=[], override_registered_types=True)
-class SeriesGlobalContexts(SeriesJsonb):
+class SeriesGlobalContexts(SeriesJson):
     """
     Objectiv Global Contexts series. This series type contains functionality specific to the Objectiv Global
     Contexts.
@@ -129,7 +129,7 @@ class SeriesGlobalContexts(SeriesJsonb):
 
 
 @register_dtype([], override_registered_types=True)
-class SeriesLocationStack(SeriesJsonb):
+class SeriesLocationStack(SeriesJson):
     """
     Objectiv Location Stack series. This series type contains functionality specific to the Objectiv Location
     Stack.
