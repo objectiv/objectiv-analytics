@@ -1,6 +1,6 @@
 # Objectiv Schema TypeScript
 
-TypeScript implementation of the open taxonomy for analytics for Objectiv trackers.
+TypeScript implementation of the open analytics taxonomy for Objectiv trackers.
 
 ---
 

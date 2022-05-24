@@ -292,7 +292,7 @@ class SeriesConcatOperation(ConcatOperation[Series]):
         """
         objects = self._get_overridden_objects()
         main_series: Series = objects[0]
-        final_result_series = list(self._get_series().values())[0]
+        final_result_series: ResultSeries = list(self._get_series().values())[0]
 
         series_cls = get_series_type_from_dtype(final_result_series.dtype)
         return series_cls(
@@ -302,8 +302,9 @@ class SeriesConcatOperation(ConcatOperation[Series]):
             expression=Expression.column_reference(final_result_series.name),
             index={} if self.ignore_index else main_series.index,
             group_by=None,
-            index_sorting=[] if self.ignore_index else main_series.index_sorting,
             sorted_ascending=None,
+            index_sorting=[] if self.ignore_index else main_series.index_sorting,
+            instance_dtype=series_cls.dtype  # TODO: make this work for structural types too
         )
 
     def _get_model(

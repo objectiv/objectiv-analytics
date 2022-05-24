@@ -4,16 +4,18 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import doctest
+import os
+import sys
+import inspect
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-import doctest
-import os
-import sys
-import inspect
+
+sys.path.append(os.path.abspath("./_ext"))
 
 project = 'Bach'
 copyright = '2021, Objectiv'
@@ -44,13 +46,14 @@ ipython_execlines = [doctest_global_setup]
 extensions = [
     'sphinx.ext.autodoc',  # generate summaries based on docstrings
     'sphinx.ext.autosummary',  # auto generate autodoc directives
-    # 'sphinx.ext.intersphinx',       # generate links to external sphinx projects
-    'sphinx.ext.linkcode',  # generate [source] links to GH
     'sphinx.ext.doctest',  # run examples /tests
+    # 'sphinx.ext.intersphinx',       # generate links to external sphinx projects
     'numpydoc',  # use numpy style docs
-    'sphinx_markdown_builder',
     "IPython.sphinxext.ipython_directive",
     "IPython.sphinxext.ipython_console_highlighting",
+    'sphinx.ext.autosectionlabel',
+    'sphinx_docusaurus_builder',
+    'linkcode',  # generate [source] links to GH
 ]
 #
 # intersphinx_mapping = {
@@ -76,6 +79,8 @@ autoclass_content = 'class'
 
 # TOTALLY breaks toctree generation autodoc_class_signature = 'separated'
 
+# automatically create explicit targets for sections
+autosectionlabel_prefix_document = True
 
 # numpydoc
 numpydoc_attributes_as_param_list = False
@@ -88,42 +93,6 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
-
-# -- Options for HTML output -------------------------------------------------
-
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
-# html_theme = 'alabaster'
-
-
-# -- Options for HTML output ---------------------------------------------
-
-# The theme to use for HTML and HTML Help pages.  Major themes that come with
-# Sphinx are currently 'default' and 'sphinxdoc'.
-html_theme = "pydata_sphinx_theme"
-
-# The style sheet to use for HTML and HTML Help pages. A file of that name
-# must exist either in Sphinx' static/ path, or in one of the custom paths
-# given in html_static_path.
-# html_style = 'statsmodels.css'
-
-# html_sidebars = {'**': 'sidebar-nav-bs.html'}
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-html_theme_options = {
-    "external_links": [],
-    "github_url": "https://github.com/objectiv-analytics/bach/",
-    "twitter_url": "https://twitter.com/objectiv",
-    "google_analytics_id": ""
-}
-
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-# html_static_path = ['_static']
 
 
 # resolve URL to GitHub

@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/transport-debug",
-  "version": "0.0.19-2",
+  "version": "0.0.20-0",
   "description": "A TrackerTransport that logs incoming events to console.debug",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
@@ -62,8 +62,6 @@
     "typescript": "^4.6.2"
   },
   "dependencies": {
-    "@objectiv/schema": "^0.0.19-2",
-    "@objectiv/tracker-core": "~0.0.19-2"
-  },
-  "stableVersion": "0.0.19-1"
+    "@objectiv/tracker-core": "~0.0.20-0"
+  }
 }

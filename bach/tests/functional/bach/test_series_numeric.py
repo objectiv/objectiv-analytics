@@ -112,8 +112,7 @@ def test_aggregations_sum_mincount(engine):
         assert (math.isnan(pd_agg) and bt_agg_value is None) or bt_agg_value == pd_agg
 
 
-def test_aggregations_quantile(pg_engine):
-    engine = pg_engine # TODO: BigQuery
+def test_aggregations_quantile(engine):
     pdf = pd.DataFrame(data={'a': range(5), 'b': [1, 3, 5, 7, 9]})
     bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
 
@@ -128,6 +127,17 @@ def test_aggregations_quantile(pg_engine):
         expected_all_quantiles = pdf[column].quantile(q=quantiles)
         result_all_quantiles = bt[column].quantile(q=quantiles).sort_index()
         pd.testing.assert_series_equal(expected_all_quantiles, result_all_quantiles.to_pandas(), check_names=False)
+
+
+def test_grouped_quantile(engine):
+    pdf = pd.DataFrame(data={'a': range(5), 'b': ['a', 'a', 'a', 'b', 'b']})
+    bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+
+    quantiles = [0.25, 0.3, 0.5, 0.75, 0.86]
+
+    expected = pdf.groupby('b')['a'].quantile(q=quantiles)
+    result = bt.groupby('b')['a'].quantile(q=quantiles).sort_index()
+    pd.testing.assert_series_equal(expected, result.to_pandas(), check_names=False)
 
 
 def test_series_cut() -> None:

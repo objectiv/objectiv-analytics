@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/plugin-react-navigation",
-  "version": "0.0.19-2",
+  "version": "0.0.20-0",
   "description": "Automatically tracked React Navigation 6+ Components, listeners and state for Objectiv React Native Tracker",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
@@ -53,12 +53,12 @@
     "npm-publish:verdaccio": "shx cp ../../verdaccio/.npmrc .npmrc && npm publish --tag=$TAG && shx rm -f .npmrc"
   },
   "dependencies": {
-    "@objectiv/tracker-react-core": "^0.0.19-2",
-    "@objectiv/tracker-react-native": "^0.0.19-2"
+    "@objectiv/tracker-react-core": "^0.0.20-0",
+    "@objectiv/tracker-react-native": "^0.0.20-0"
   },
   "devDependencies": {
-    "@objectiv/developer-tools": "^0.0.19-2",
-    "@objectiv/testing-tools": "^0.0.19-2",
+    "@objectiv/developer-tools": "^0.0.20-0",
+    "@objectiv/testing-tools": "^0.0.20-0",
     "@react-navigation/bottom-tabs": "^6.2.0",
     "@react-navigation/core": "^6.1.1",
     "@react-navigation/native": "^6.0.8",
@@ -78,11 +78,9 @@
     "typescript": "^4.6.2"
   },
   "peerDependencies": {
-    "@objectiv/schema": "^0.0.19-2",
     "@objectiv/tracker-core": "^0.0.15",
     "@react-navigation/native": ">=6",
     "react": ">=16.8",
     "react-native": ">=0.6"
-  },
-  "stableVersion": "0.0.19-1"
+  }
 }

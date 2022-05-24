@@ -1,17 +1,14 @@
-sphinx
-sphinx_markdown_builder
+docutils==0.17.1
+munch==2.5.0
+pydash==5.1.0
+PyYAML==6.0
+setuptools==61.0.0
+Sphinx==4.5.0
 
 ## theme we load/adapt
-pydata_sphinx_theme
 numpydoc
 
 ## needed for rendering ipython codeblocks
 ipython
 
-## needed for TOC
-lxml
-
 ## NOTE, also install the Bach requirements.txt to make this work
-
-
-

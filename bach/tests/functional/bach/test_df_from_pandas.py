@@ -1,15 +1,12 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-from typing import List, Any
-
 import pytest
-from sqlalchemy.engine import Dialect
 
 from bach import DataFrame
 from sql_models.util import is_bigquery, is_postgres
 from tests.functional.bach.test_data_and_utils import TEST_DATA_CITIES, CITIES_COLUMNS, \
-    assert_equals_data
+    assert_equals_data, convert_expected_data_timestamps
 import datetime
 from uuid import UUID
 import pandas as pd
@@ -65,6 +62,7 @@ def test_from_pandas_table(pg_engine):
     assert_equals_data(bt, expected_columns=EXPECTED_COLUMNS, expected_data=EXPECTED_DATA)
 
 
+@pytest.mark.xdist_group(name="from_pd_table")
 def test_from_pandas_table_injection(pg_engine):
     pdf = get_pandas_df(TEST_DATA_INJECTION, COLUMNS_INJECTION)
     bt = DataFrame.from_pandas(
@@ -120,6 +118,7 @@ def test_from_pandas_ephemeral_injection(engine):
         raise Exception(f'Test does not support {engine.dialect}')
 
 
+@pytest.mark.xdist_group(name="from_pd_table")
 def test_from_pandas_non_happy_path(pg_engine):
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS)
     with pytest.raises(TypeError):
@@ -152,6 +151,7 @@ def test_from_pandas_non_happy_path(pg_engine):
         )
 
 
+@pytest.mark.xdist_group(name="from_pd_table")
 @pytest.mark.parametrize("materialization", ['cte', 'table'])
 def test_from_pandas_index(materialization: str, pg_engine):
     # test multilevel index
@@ -196,6 +196,7 @@ def test_from_pandas_index(materialization: str, pg_engine):
         expected_data=[[idx] + x[1:] for idx, x in enumerate(EXPECTED_DATA)])
 
 
+@pytest.mark.xdist_group(name="from_pd_table")
 @pytest.mark.parametrize("materialization", ['cte', 'table'])
 def test_from_pandas_types(materialization: str, pg_engine):
     pdf = pd.DataFrame.from_records(TYPES_DATA, columns=TYPES_COLUMNS)
@@ -333,7 +334,7 @@ def test_from_pandas_columns_w_nulls(engine) -> None:
         [1, None, 1, pd.Timestamp("1940-04-25")],
         [2, 'c', 2, None],
     ]
-    expected_data = _convert_expected_data_timestamps(engine.dialect, expected_data)
+    expected_data = convert_expected_data_timestamps(engine.dialect, expected_data)
     assert_equals_data(
         result,
         expected_columns=['_index_0', 'a', 'b', 'c'],
@@ -353,18 +354,10 @@ def test_from_pandas_columns_w_nulls(engine) -> None:
         [1, None, 1, pd.Timestamp("1940-04-25"), 'None'],
         [2, 'c', 2, None, 'None'],
     ]
-    expected_data = _convert_expected_data_timestamps(engine.dialect, expected_data)
+    expected_data = convert_expected_data_timestamps(engine.dialect, expected_data)
     assert_equals_data(
         result,
         expected_columns=['_index_0', 'a', 'b', 'c', 'd'],
         expected_data=expected_data
     )
 
-
-def _convert_expected_data_timestamps(dialect: Dialect, data: List[List[Any]]) -> List[List[Any]]:
-    """ Set UTC timezone on datetime objects if dialect is BigQuery. """
-    def set_tz(value):
-        if not isinstance(value, (datetime.datetime, datetime.date)) or not is_bigquery(dialect):
-            return value
-        return value.replace(tzinfo=datetime.timezone.utc)
-    return [[set_tz(cell) for cell in row] for row in data]

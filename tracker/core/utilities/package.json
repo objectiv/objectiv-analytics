@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/utilities",
-  "version": "0.0.19-2",
+  "version": "0.0.20-0",
   "private": true,
   "license": "Apache-2.0",
   "description": "Objectiv Core Utilities",
@@ -15,6 +15,5 @@
   "devDependencies": {
     "json5": "^2.2.0",
     "prettier": "^2.5.1"
-  },
-  "stableVersion": "0.0.19-1"
+  }
 }

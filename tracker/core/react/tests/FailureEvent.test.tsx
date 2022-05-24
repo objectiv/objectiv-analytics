@@ -35,8 +35,8 @@ describe('FailureEvent', () => {
     const tracker = new Tracker({ applicationId: 'app-id', transport: spyTransport });
 
     const Component = () => {
-      const trackFailureEvent = useFailureEventTracker({ message: 'ko' });
-      trackFailureEvent();
+      const trackFailureEvent = useFailureEventTracker();
+      trackFailureEvent({ message: 'ko' });
 
       return <>Component triggering FailureEvent</>;
     };
@@ -60,11 +60,10 @@ describe('FailureEvent', () => {
 
     const Component = () => {
       const trackFailureEvent = useFailureEventTracker({
-        message: 'ko',
         tracker: customTracker,
         locationStack: [makeContentContext({ id: 'override' })],
       });
-      trackFailureEvent();
+      trackFailureEvent({ message: 'ko' });
 
       return <>Component triggering FailureEvent</>;
     };

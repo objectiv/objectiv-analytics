@@ -24,7 +24,7 @@ def test_uuid_value_to_expression(engine):
 
     with pytest.raises(ValueError):
         # not a valid uuid format
-        bt['yyyy'] = SeriesUuid.from_const(
+        bt['yyyy'] = SeriesUuid.from_value(
             base=bt, value='0022c7dd.074b.4a44.a7cb.b7716b668264', name='tmp')
 
     expected_data = [

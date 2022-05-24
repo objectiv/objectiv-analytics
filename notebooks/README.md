@@ -18,5 +18,5 @@ Metabase section in the modelhub [README.md](../modelhub/README.md).
 
 ## Notebooks 
 Please see the most complete list of examples at [the model hub example page on Objectiv.io](https://www.
-objectiv.io/docs/modeling/example_notebooks) 
+objectiv.io/docs/modeling/example-notebooks/) 
 or have a look at the files in this directory; most of them have a pretty decent introduction.

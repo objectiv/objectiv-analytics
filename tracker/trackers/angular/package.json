@@ -1,7 +1,7 @@
 {
   "name": "@objectiv/tracker-angular",
-  "version": "0.0.19-2",
-  "description": "Objectiv Angular framework analytics tracker for the open taxonomy for analytics",
+  "version": "0.0.20-0",
+  "description": "Objectiv Angular framework analytics tracker for the open analytics taxonomy",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
   "keywords": [
@@ -38,13 +38,13 @@
   "peerDependencies": {
     "@angular/common": "^9.0.0",
     "@angular/core": "^9.0.0",
-    "@objectiv/tracker-browser": "^0.0.19-2"
+    "@objectiv/tracker-browser": "^0.0.20-0"
   },
   "devDependencies": {
     "@angular/compiler": "~9.1.13",
     "@angular/compiler-cli": "~9.1.13",
     "@angular/core": "~9.1.13",
-    "@objectiv/tracker-browser": "^0.0.19-2",
+    "@objectiv/tracker-browser": "^0.0.20-0",
     "ng-packagr": "^9.0.0",
     "prettier": "^2.5.1",
     "rxjs": "~6.5.4",
@@ -52,6 +52,5 @@
     "tslib": "^1.10.0",
     "typescript": "~3.8.3",
     "zone.js": "~0.10.2"
-  },
-  "stableVersion": "0.0.19-1"
+  }
 }
