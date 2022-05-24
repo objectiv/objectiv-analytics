@@ -11,6 +11,7 @@ import { TrackerEvent, TrackerEventConfig } from './TrackerEvent';
 import { TrackerPluginInterface } from './TrackerPluginInterface';
 import { TrackerPlugins } from './TrackerPlugins';
 import { TrackerQueueInterface } from './TrackerQueueInterface';
+import { TrackerTransportGroup } from './TrackerTransportGroup';
 import { TrackerTransportInterface } from './TrackerTransportInterface';
 
 /**
@@ -171,6 +172,15 @@ export class Tracker implements TrackerInterface {
       });
     } else {
       this.plugins = trackerConfig.plugins;
+    }
+
+    // Enable EventRecorder if DeveloperTools are available. Either group it with the existing transport or set it.
+    if (globalThis.objectiv) {
+      this.transport = !this.transport
+        ? globalThis.objectiv.EventRecorder
+        : new TrackerTransportGroup({
+            transports: [globalThis.objectiv.EventRecorder, this.transport],
+          });
     }
 
     // Change tracker state. If active it will initialize Plugins and start the Queue runner.

@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@objectiv/tracker-react": "^0.0.19-2",
+    "@objectiv/tracker-react": "^0.0.20-1",
+    "@objectiv/transport-debug": "^0.0.20-1",
     "@testing-library/cypress": "^8.0.2",
     "@testing-library/react": "^13.1.1",
     "@testing-library/user-event": "^13.5.0",

@@ -1,4 +1,5 @@
 import { ObjectivProvider, ReactTracker } from "@objectiv/tracker-react";
+import { DebugTransport } from "@objectiv/transport-debug";
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
@@ -9,7 +10,7 @@ require('@objectiv/developer-tools');
 
 const tracker = new ReactTracker({
   applicationId: 'e2e-react-cra',
-  transport: globalThis.objectiv?.EventRecorder
+  transport: new DebugTransport()
 })
 
 const root = ReactDOM.createRoot(

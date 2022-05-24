@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/plugin-http-context",
-  "version": "0.0.20-0",
+  "version": "0.0.20-1",
   "description": "Plugin for Objectiv trackers to automatically generate and attach HttpContext from document and navigator APIs",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
@@ -54,8 +54,8 @@
     "npm-publish:verdaccio": "shx cp ../../verdaccio/.npmrc .npmrc && npm publish --tag=$TAG && shx rm -f .npmrc"
   },
   "devDependencies": {
-    "@objectiv/developer-tools": "^0.0.20-0",
-    "@objectiv/testing-tools": "^0.0.20-0",
+    "@objectiv/developer-tools": "^0.0.20-1",
+    "@objectiv/testing-tools": "^0.0.20-1",
     "@types/jest": "^27.4.1",
     "jest": "^27.5.1",
     "jest-extended": "^2.0.0",
@@ -67,6 +67,6 @@
     "typescript": "^4.6.2"
   },
   "peerDependencies": {
-    "@objectiv/tracker-core": "^0.0.20-0"
+    "@objectiv/tracker-core": "^0.0.20-1"
   }
 }

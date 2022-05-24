@@ -1,5 +1,5 @@
 module.exports = {
-  "__version": "9.6.0",
+  "__version": "9.7.0",
   "should track the expected events": {
     "1": [
       {
@@ -15,7 +15,7 @@ module.exports = {
             "_type": "HttpContext",
             "id": "http_context",
             "referrer": "",
-            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Cypress/9.6.0 Chrome/94.0.4606.81 Electron/15.5.1 Safari/537.36",
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Cypress/9.7.0 Chrome/100.0.4896.75 Electron/18.0.4 Safari/537.36",
             "remote_address": null
           },
           {
@@ -47,7 +47,7 @@ module.exports = {
             "_type": "HttpContext",
             "id": "http_context",
             "referrer": "",
-            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Cypress/9.6.0 Chrome/94.0.4606.81 Electron/15.5.1 Safari/537.36",
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Cypress/9.7.0 Chrome/100.0.4896.75 Electron/18.0.4 Safari/537.36",
             "remote_address": null
           },
           {
@@ -79,7 +79,7 @@ module.exports = {
             "_type": "HttpContext",
             "id": "http_context",
             "referrer": "",
-            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Cypress/9.6.0 Chrome/94.0.4606.81 Electron/15.5.1 Safari/537.36",
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Cypress/9.7.0 Chrome/100.0.4896.75 Electron/18.0.4 Safari/537.36",
             "remote_address": null
           },
           {
@@ -111,7 +111,7 @@ module.exports = {
             "_type": "HttpContext",
             "id": "http_context",
             "referrer": "",
-            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Cypress/9.6.0 Chrome/94.0.4606.81 Electron/15.5.1 Safari/537.36",
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Cypress/9.7.0 Chrome/100.0.4896.75 Electron/18.0.4 Safari/537.36",
             "remote_address": null
           },
           {

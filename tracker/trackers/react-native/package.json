@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/tracker-react-native",
-  "version": "0.0.20-0",
+  "version": "0.0.20-1",
   "description": "Objectiv React Native application analytics tracker the open analytics taxonomy",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
@@ -50,9 +50,9 @@
     "npm-publish:verdaccio": "shx cp ../../verdaccio/.npmrc .npmrc && npm publish --tag=$TAG && shx rm -f .npmrc"
   },
   "devDependencies": {
-    "@objectiv/developer-tools": "^0.0.20-0",
-    "@objectiv/testing-tools": "^0.0.20-0",
-    "@objectiv/transport-debug": "^0.0.20-0",
+    "@objectiv/developer-tools": "^0.0.20-1",
+    "@objectiv/testing-tools": "^0.0.20-1",
+    "@objectiv/transport-debug": "^0.0.20-1",
     "@testing-library/react-native": "^9.0.0",
     "@types/react-native": "^0.67.2",
     "jest": "^27.5.1",
@@ -66,9 +66,9 @@
     "typescript": "^4.6.2"
   },
   "dependencies": {
-    "@objectiv/tracker-core": "~0.0.20-0",
-    "@objectiv/tracker-react-core": "~0.0.20-0",
-    "@objectiv/transport-fetch": "^0.0.20-0",
+    "@objectiv/tracker-core": "~0.0.20-1",
+    "@objectiv/tracker-react-core": "~0.0.20-1",
+    "@objectiv/transport-fetch": "^0.0.20-1",
     "react-native-get-random-values": "^1.7.2"
   },
   "peerDependencies": {
