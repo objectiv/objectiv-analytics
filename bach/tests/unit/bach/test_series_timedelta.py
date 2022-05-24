@@ -10,7 +10,7 @@ from bach.expression import Expression
 
 def test_supported_value_to_literal(dialect):
     def assert_call(value, expected_token_value: str):
-        result = SeriesTimedelta.supported_value_to_literal(dialect, value)
+        result = SeriesTimedelta.supported_value_to_literal(dialect=dialect, value=value, dtype='timedelta')
         assert result == Expression.string_value(expected_token_value)
 
     assert_call(timedelta(seconds=1234),                                'P0DT0H20M34S')
