@@ -37,7 +37,6 @@ This is the complete API reference of Bach.
     Series/SeriesFloat/index
     Series/SeriesInt/index
     Series/SeriesJson/index
-    Series/SeriesJsonb/index
     Series/SeriesJsonPostgres/index
     Series/SeriesList/index
     Series/SeriesString/index
