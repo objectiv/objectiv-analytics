@@ -339,7 +339,7 @@ def test_series_inherit_flag(engine):
     assert not bts.expression.has_aggregate_function
     assert bts_min.expression.has_aggregate_function
 
-    bts_min_materialized = bts_min.to_frame().materialize()['founding']
+    bts_min_materialized = bts_min.materialize()
     assert not bts_min_materialized.expression.has_aggregate_function
 
     assert_equals_data(
