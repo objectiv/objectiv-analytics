@@ -124,7 +124,9 @@ def test_timestamp_arithmetic(pg_engine):
     types_plus_min(pg_engine, data, datetime.datetime(2019, 8, 16, 2, 54, 39, 166000), 'timestamp')
 
 
-def types_plus_min(engine: Engine, data: List[list], base_value: Any, base_type: str):
+def types_plus_min(
+    engine: Engine, data: List[list], base_value: Any, base_type: str, use_to_pandas: bool = False,
+):
     """
     Function to test all + and - operation combinations of data vs base, to make sure
     that all operations supported in python are supported in Bach and vice versa.
@@ -185,6 +187,7 @@ def types_plus_min(engine: Engine, data: List[list], base_value: Any, base_type:
         expected_columns=list(bt.all_series.keys()),
         expected_data=[
             [1, 93485, *expected],
-        ]
+        ],
+        use_to_pandas=use_to_pandas,
     )
     return bt, expected, expected_types

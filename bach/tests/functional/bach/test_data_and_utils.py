@@ -296,11 +296,11 @@ def _get_view_sql_data(df: DataFrame):
 def _get_to_pandas_data(df: DataFrame):
     pdf = df.to_pandas()
     # Convert pdf to the same format as _get_view_sql_data gives
-    column_names = list(pdf.index.names) + list(pdf.columns)
+    column_names = (list(pdf.index.names) if df.index else []) + list(pdf.columns)
     pdf = pdf.reset_index()
     db_values = []
     for value_row in pdf.to_numpy().tolist():
-        db_values.append(value_row)
+        db_values.append(value_row if df.index else value_row[1:])  # don't include default index value
     print(db_values)
     return column_names, db_values
 
