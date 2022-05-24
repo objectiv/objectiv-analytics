@@ -11,10 +11,11 @@ from bach import DataFrame
 from bach.expression import Expression, quote_string, quote_identifier
 from bach.series import Series
 from bach.series import SeriesJson
+from bach.series.series_json import JsonPostgresAccessor
 from bach.types import register_dtype
 
 
-class ObjectivStack(SeriesJson.Json):
+class ObjectivStack(JsonPostgresAccessor):
     def get_from_context_with_type_series(self, type: str, key: str, dtype='string'):
         """
         .. _get_from_context_with_type_series:
