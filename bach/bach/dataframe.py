@@ -2262,7 +2262,7 @@ class DataFrame:
             * function name
             * list of functions and/or function names, e.g. [`SeriesInt64.sum`, 'mean']
             * dict of axis labels -> functions, function names or list of such.
-        :param axis: the aggregation axis. Only ``axis=1``supported at the moment.
+        :param axis: the aggregation axis. Only ``axis=1`` supported at the moment.
         :param numeric_only: whether to aggregate numeric series only, or attempt all.
         :param args: Positional arguments to pass through to the aggregation function
         :param kwargs: Keyword arguments to pass through to the aggregation function
