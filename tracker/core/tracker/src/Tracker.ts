@@ -131,7 +131,7 @@ export class Tracker implements TrackerInterface {
   readonly transport?: TrackerTransportInterface;
   readonly plugins: TrackerPlugins;
 
-  // By default, trackers are active
+  // Trackers are automatically activated, unless differently specified via config, during construction.
   active: boolean = false;
 
   // Contexts interface
