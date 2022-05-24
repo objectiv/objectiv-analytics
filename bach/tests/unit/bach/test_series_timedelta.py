@@ -29,5 +29,6 @@ def test_supported_value_to_literal(dialect):
 
     # Special cases: Not-a-Time will be represented as NULL, and NULL itself
     nat = timedelta64('NaT')
-    assert SeriesTimedelta.supported_value_to_literal(dialect, nat) == Expression.construct('NULL')
-    assert SeriesTimedelta.supported_value_to_literal(dialect, None) == Expression.construct('NULL')
+    dtype = 'timedelta'
+    assert SeriesTimedelta.supported_value_to_literal(dialect, nat, dtype) == Expression.construct('NULL')
+    assert SeriesTimedelta.supported_value_to_literal(dialect, None, dtype) == Expression.construct('NULL')
