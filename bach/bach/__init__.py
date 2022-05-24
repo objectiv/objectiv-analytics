@@ -7,6 +7,8 @@ from bach.dataframe import DataFrame, DataFrameOrSeries, ColumnNames, SortColumn
     get_series_type_from_dtype
 from bach.series import *
 from bach.display_formats import display_sql_as_markdown
+from bach.expression import *
+from bach import from_database
 
 # TODO: check. Do we need to generate docs for this at this point?
 from_table = DataFrame.from_table
