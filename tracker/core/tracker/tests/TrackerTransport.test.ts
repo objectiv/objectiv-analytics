@@ -10,9 +10,9 @@ import {
 } from '@objectiv/testing-tools';
 import {
   ContextsConfig,
+  generateUUID,
   makeTransportSendError,
   Tracker,
-  TrackerConsole,
   TrackerEvent,
   TrackerTransportGroup,
   TrackerTransportRetry,
@@ -22,12 +22,13 @@ import {
 
 const testEventName = 'test-event';
 const testContexts: ContextsConfig = {
-  location_stack: [{ __location_context: true, _type: 'section', id: 'test' }],
-  global_contexts: [{ __global_context: true, _type: 'global', id: 'test' }],
+  location_stack: [{ __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'test' }],
+  global_contexts: [{ __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'test' }],
 };
 const testEvent = new TrackerEvent({ _type: testEventName, ...testContexts });
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackerTransportSwitch', () => {
   beforeEach(() => {

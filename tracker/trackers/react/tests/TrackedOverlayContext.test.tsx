@@ -3,12 +3,13 @@
  */
 
 import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
-import { TrackerConsole } from '@objectiv/tracker-core';
+import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render, screen } from '@testing-library/react';
 import React, { createRef } from 'react';
-import { LocationTree, ObjectivProvider, ReactTracker, TrackedOverlayContext, usePressEventTracker } from '../src';
+import { ObjectivProvider, ReactTracker, TrackedOverlayContext, usePressEventTracker } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 const TrackedButton = () => {
   const trackPressEvent = usePressEventTracker();
@@ -18,7 +19,6 @@ const TrackedButton = () => {
 describe('TrackedOverlayContext', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    LocationTree.clear();
   });
 
   afterEach(() => {
@@ -53,7 +53,7 @@ describe('TrackedOverlayContext', () => {
         _type: 'PressEvent',
         location_stack: expect.arrayContaining([
           expect.objectContaining({
-            _type: 'OverlayContext',
+            _type: LocationContextName.OverlayContext,
             id: 'modal-id',
           }),
         ]),

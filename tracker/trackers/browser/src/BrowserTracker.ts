@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ContextsConfig, Tracker, TrackerConfig } from '@objectiv/tracker-core';
+import { ContextsConfig, Tracker, TrackerConfig, TrackerPlatform } from '@objectiv/tracker-core';
 import { makeBrowserTrackerDefaultPluginsList } from './common/factories/makeBrowserTrackerDefaultPluginsList';
 import { makeBrowserTrackerDefaultQueue } from './common/factories/makeBrowserTrackerDefaultQueue';
 import { makeBrowserTrackerDefaultTransport } from './common/factories/makeBrowserTrackerDefaultTransport';
@@ -48,20 +48,23 @@ export class BrowserTracker extends Tracker {
   readonly trackerConfig: TrackerConfig;
 
   constructor(trackerConfig: BrowserTrackerConfig, ...contextConfigs: ContextsConfig[]) {
-    let config = trackerConfig;
+    let config: TrackerConfig = trackerConfig;
+
+    // Set the platform
+    config.platform = TrackerPlatform.BROWSER;
 
     // Either `transport` or `endpoint` must be provided
-    if (!config.transport && !config.endpoint) {
+    if (!config.transport && !trackerConfig.endpoint) {
       throw new Error('Either `transport` or `endpoint` must be provided');
     }
 
     // `transport` and `endpoint` must not be provided together
-    if (config.transport && config.endpoint) {
+    if (config.transport && trackerConfig.endpoint) {
       throw new Error('Please provider either `transport` or `endpoint`, not both at same time');
     }
 
     // Automatically create a default Transport for the given `endpoint` with a sensible setup
-    if (config.endpoint) {
+    if (trackerConfig.endpoint) {
       config = {
         ...config,
         transport: makeBrowserTrackerDefaultTransport(config),

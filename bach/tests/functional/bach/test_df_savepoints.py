@@ -9,6 +9,7 @@ from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, ass
 from tests.functional.bach.test_savepoints import remove_created_db_objects
 
 
+@pytest.mark.xdist_group(name="db_writers")
 def test_savepoint_materialization():
     df = get_bt_with_test_data()
 

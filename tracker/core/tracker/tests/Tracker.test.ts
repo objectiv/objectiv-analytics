@@ -2,21 +2,22 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { LogTransport, MockConsoleImplementation, UnusableTransport } from '@objectiv/testing-tools';
+import { LogTransport, matchUUID, MockConsoleImplementation, UnusableTransport } from '@objectiv/testing-tools';
 import {
   ContextsConfig,
-  GlobalContextValidationRule,
-  LocationContextValidationRule,
+  generateUUID,
+  GlobalContextName,
+  LocationContextName,
   Tracker,
   TrackerConfig,
-  TrackerConsole,
   TrackerEvent,
   TrackerPluginInterface,
   TrackerQueue,
   TrackerQueueMemoryStore,
 } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('Tracker', () => {
   beforeEach(() => {
@@ -33,23 +34,35 @@ describe('Tracker', () => {
     expect(testTracker.plugins.plugins).toEqual([
       {
         pluginName: 'OpenTaxonomyValidationPlugin',
+        initialized: true,
         validationRules: [
-          new GlobalContextValidationRule({
+          {
+            validationRuleName: 'GlobalContextValidationRule',
             logPrefix: 'OpenTaxonomyValidationPlugin',
-            contextName: 'ApplicationContext',
+            contextName: GlobalContextName.ApplicationContext,
+            platform: 'CORE',
             once: true,
-          }),
-          new LocationContextValidationRule({
+            validate: expect.any(Function),
+          },
+          {
+            validationRuleName: 'LocationContextValidationRule',
             logPrefix: 'OpenTaxonomyValidationPlugin',
-            contextName: 'RootLocationContext',
-            once: true,
+            contextName: LocationContextName.RootLocationContext,
+            platform: 'CORE',
             position: 0,
-          }),
+            once: true,
+            validate: expect.any(Function),
+          },
         ],
       },
       {
         pluginName: 'ApplicationContextPlugin',
-        applicationContext: { __global_context: true, _type: 'ApplicationContext', id: 'app-id' },
+        applicationContext: {
+          __instance_id: matchUUID,
+          __global_context: true,
+          _type: GlobalContextName.ApplicationContext,
+          id: 'app-id',
+        },
       },
     ]);
     expect(testTracker.applicationId).toBe('app-id');
@@ -61,30 +74,45 @@ describe('Tracker', () => {
   it('should instantiate with tracker config', async () => {
     expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
     const testTransport = new LogTransport();
-    const testTracker = new Tracker({ applicationId: 'app-id', transport: testTransport });
+    const testTracker = new Tracker({
+      applicationId: 'app-id',
+      transport: testTransport,
+    });
     await expect(testTracker.waitForQueue()).resolves.toBe(true);
     expect(testTracker).toBeInstanceOf(Tracker);
     expect(testTracker.transport).toStrictEqual(testTransport);
     expect(testTracker.plugins.plugins).toEqual([
       {
         pluginName: 'OpenTaxonomyValidationPlugin',
+        initialized: true,
         validationRules: [
-          new GlobalContextValidationRule({
+          {
+            validationRuleName: 'GlobalContextValidationRule',
             logPrefix: 'OpenTaxonomyValidationPlugin',
-            contextName: 'ApplicationContext',
+            contextName: GlobalContextName.ApplicationContext,
+            platform: 'CORE',
             once: true,
-          }),
-          new LocationContextValidationRule({
+            validate: expect.any(Function),
+          },
+          {
+            validationRuleName: 'LocationContextValidationRule',
             logPrefix: 'OpenTaxonomyValidationPlugin',
-            contextName: 'RootLocationContext',
-            once: true,
+            contextName: LocationContextName.RootLocationContext,
+            platform: 'CORE',
             position: 0,
-          }),
+            once: true,
+            validate: expect.any(Function),
+          },
         ],
       },
       {
         pluginName: 'ApplicationContextPlugin',
-        applicationContext: { __global_context: true, _type: 'ApplicationContext', id: 'app-id' },
+        applicationContext: {
+          __instance_id: matchUUID,
+          __global_context: true,
+          _type: GlobalContextName.ApplicationContext,
+          id: 'app-id',
+        },
       },
     ]);
     expect(testTracker.location_stack).toStrictEqual([]);
@@ -106,18 +134,25 @@ describe('Tracker', () => {
     expect(testTracker.plugins.plugins).toEqual([
       {
         pluginName: 'OpenTaxonomyValidationPlugin',
+        initialized: true,
         validationRules: [
-          new GlobalContextValidationRule({
+          {
+            validationRuleName: 'GlobalContextValidationRule',
             logPrefix: 'OpenTaxonomyValidationPlugin',
-            contextName: 'ApplicationContext',
+            contextName: GlobalContextName.ApplicationContext,
+            platform: 'CORE',
             once: true,
-          }),
-          new LocationContextValidationRule({
+            validate: expect.any(Function),
+          },
+          {
+            validationRuleName: 'LocationContextValidationRule',
             logPrefix: 'OpenTaxonomyValidationPlugin',
-            contextName: 'RootLocationContext',
-            once: true,
+            contextName: LocationContextName.RootLocationContext,
+            platform: 'CORE',
             position: 0,
-          }),
+            once: true,
+            validate: expect.any(Function),
+          },
         ],
       },
     ]);
@@ -130,12 +165,12 @@ describe('Tracker', () => {
     const initialContextsState: TrackerConfig = {
       applicationId: 'app-id',
       location_stack: [
-        { __location_context: true, _type: 'section', id: 'root' },
-        { __location_context: true, _type: 'section', id: 'A' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'root' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'A' },
       ],
       global_contexts: [
-        { __global_context: true, _type: 'global', id: 'A' },
-        { __global_context: true, _type: 'global', id: 'B' },
+        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'A' },
+        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'B' },
       ],
     };
 
@@ -150,7 +185,12 @@ describe('Tracker', () => {
     expect(newTestTracker).toEqual(testTracker);
 
     // Refine Location Stack of the new Tracker with an extra Section
-    newTestTracker.location_stack.push({ __location_context: true, _type: 'section', id: 'X' });
+    newTestTracker.location_stack.push({
+      __instance_id: generateUUID(),
+      __location_context: true,
+      _type: 'section',
+      id: 'X',
+    });
 
     // The old tracker should be unaffected
     expect(testTracker.location_stack).toEqual(initialContextsState.location_stack);
@@ -158,13 +198,13 @@ describe('Tracker', () => {
 
     // While the new Tracker should now have a deeper Location Stack
     expect(newTestTracker.location_stack).toEqual([
-      { __location_context: true, _type: 'section', id: 'root' },
-      { __location_context: true, _type: 'section', id: 'A' },
-      { __location_context: true, _type: 'section', id: 'X' },
+      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'root' },
+      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'A' },
+      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'X' },
     ]);
     expect(newTestTracker.global_contexts).toEqual([
-      { __global_context: true, _type: 'global', id: 'A' },
-      { __global_context: true, _type: 'global', id: 'B' },
+      { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'A' },
+      { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'B' },
     ]);
   });
 
@@ -172,12 +212,12 @@ describe('Tracker', () => {
     const mainTrackerContexts: TrackerConfig = {
       applicationId: 'app-id',
       location_stack: [
-        { __location_context: true, _type: 'section', id: 'root' },
-        { __location_context: true, _type: 'section', id: 'A' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'root' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'A' },
       ],
       global_contexts: [
-        { __global_context: true, _type: 'global', id: 'X' },
-        { __global_context: true, _type: 'global', id: 'Y' },
+        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'X' },
+        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'Y' },
       ],
     };
     const mainTracker = new Tracker(mainTrackerContexts);
@@ -186,11 +226,11 @@ describe('Tracker', () => {
     const sectionTracker = new Tracker(
       mainTracker,
       {
-        location_stack: [{ __location_context: true, _type: 'section', id: 'B' }],
-        global_contexts: [{ __global_context: true, _type: 'global', id: 'Z' }],
+        location_stack: [{ __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'B' }],
+        global_contexts: [{ __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'Z' }],
       },
       {
-        location_stack: [{ __location_context: true, _type: 'section', id: 'C' }],
+        location_stack: [{ __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'C' }],
       },
       // These last two configurations are useless, but we want to make sure nothing breaks with them
       {
@@ -205,27 +245,27 @@ describe('Tracker', () => {
 
     // The new Tracker, instead, should have all of the Contexts of the mainTracker + the extra Config provided
     expect(sectionTracker.location_stack).toEqual([
-      { __location_context: true, _type: 'section', id: 'root' },
-      { __location_context: true, _type: 'section', id: 'A' },
-      { __location_context: true, _type: 'section', id: 'B' },
-      { __location_context: true, _type: 'section', id: 'C' },
+      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'root' },
+      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'A' },
+      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'B' },
+      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'C' },
     ]);
     expect(sectionTracker.global_contexts).toEqual([
-      { __global_context: true, _type: 'global', id: 'X' },
-      { __global_context: true, _type: 'global', id: 'Y' },
-      { __global_context: true, _type: 'global', id: 'Z' },
+      { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'X' },
+      { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'Y' },
+      { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'Z' },
     ]);
   });
 
   describe('trackEvent', () => {
     const eventContexts: ContextsConfig = {
       location_stack: [
-        { __location_context: true, _type: 'section', id: 'B' },
-        { __location_context: true, _type: 'item', id: 'C' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'B' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'item', id: 'C' },
       ],
       global_contexts: [
-        { __global_context: true, _type: 'global', id: 'W' },
-        { __global_context: true, _type: 'global', id: 'X' },
+        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'W' },
+        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'X' },
       ],
     };
     const testEvent = new TrackerEvent(
@@ -241,12 +281,12 @@ describe('Tracker', () => {
         transport: new LogTransport(),
         applicationId: 'app-id',
         location_stack: [
-          { __location_context: true, _type: 'section', id: 'root' },
-          { __location_context: true, _type: 'section', id: 'A' },
+          { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'root' },
+          { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'A' },
         ],
         global_contexts: [
-          { __global_context: true, _type: 'global', id: 'Y' },
-          { __global_context: true, _type: 'global', id: 'Z' },
+          { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'Y' },
+          { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'Z' },
         ],
       };
       const testTracker = new Tracker(trackerContexts);
@@ -258,17 +298,17 @@ describe('Tracker', () => {
       expect(testTracker.location_stack).toStrictEqual(trackerContexts.location_stack);
       expect(testTracker.global_contexts).toStrictEqual(trackerContexts.global_contexts);
       expect(trackedEvent.location_stack).toStrictEqual([
-        { __location_context: true, _type: 'section', id: 'root' },
-        { __location_context: true, _type: 'section', id: 'A' },
-        { __location_context: true, _type: 'section', id: 'B' },
-        { __location_context: true, _type: 'item', id: 'C' },
+        { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'root' },
+        { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'A' },
+        { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'B' },
+        { __instance_id: matchUUID, __location_context: true, _type: 'item', id: 'C' },
       ]);
       expect(trackedEvent.global_contexts).toStrictEqual([
-        { __global_context: true, _type: 'global', id: 'W' },
-        { __global_context: true, _type: 'global', id: 'X' },
-        { __global_context: true, _type: 'global', id: 'Y' },
-        { __global_context: true, _type: 'global', id: 'Z' },
-        { __global_context: true, _type: 'ApplicationContext', id: 'app-id' },
+        { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'W' },
+        { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'X' },
+        { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'Y' },
+        { __instance_id: matchUUID, __global_context: true, _type: 'global', id: 'Z' },
+        { __instance_id: matchUUID, __global_context: true, _type: GlobalContextName.ApplicationContext, id: 'app-id' },
       ]);
     });
 
@@ -291,7 +331,10 @@ describe('Tracker', () => {
         isUsable: () => true,
         enrich: jest.fn(),
       };
-      const testTracker = new Tracker({ applicationId: 'app-id', plugins: [pluginE, pluginF] });
+      const testTracker = new Tracker({
+        applicationId: 'app-id',
+        plugins: [pluginE, pluginF],
+      });
       testTracker.trackEvent(testEvent);
       expect(pluginE.enrich).toHaveBeenCalledWith(expect.objectContaining({ _type: 'test-event' }));
       expect(pluginF.enrich).toHaveBeenCalledWith(expect.objectContaining({ _type: 'test-event' }));
@@ -351,9 +394,9 @@ describe('Tracker', () => {
       const testTracker = new Tracker({
         applicationId: 'app-id',
         transport: testTransport,
-        plugins: [],
         trackApplicationContext: false,
       });
+      testTracker.plugins.plugins = [];
       jest.resetAllMocks();
       testTracker.setActive(false);
       testTracker.setActive(true);
@@ -450,8 +493,8 @@ describe('Tracker', () => {
   describe('TrackerQueue', () => {
     const testEventName = 'test-event';
     const testContexts: ContextsConfig = {
-      location_stack: [{ __location_context: true, _type: 'section', id: 'test' }],
-      global_contexts: [{ __global_context: true, _type: 'global', id: 'test' }],
+      location_stack: [{ __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'test' }],
+      global_contexts: [{ __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'test' }],
     };
     const testEvent1 = new TrackerEvent({ _type: testEventName, ...testContexts });
     const testEvent2 = new TrackerEvent({ _type: testEventName, ...testContexts });
@@ -578,5 +621,51 @@ describe('Tracker', () => {
       expect(trackerQueue.processingEventIds).toHaveLength(0);
       expect(trackerQueue.processFunction).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('Without developer tools', () => {
+  let objectivGlobal = globalThis.objectiv;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    globalThis.objectiv = undefined;
+  });
+
+  afterEach(() => {
+    globalThis.objectiv = objectivGlobal;
+  });
+
+  it('Tracker should instantiate without validation rules and not log to TrackerConsole', async () => {
+    expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
+    const testTransport = new LogTransport();
+    const testQueue = new TrackerQueue();
+    const testTracker = new Tracker({
+      applicationId: 'app-id',
+      transport: testTransport,
+      queue: testQueue,
+    });
+    await expect(testTracker.waitForQueue()).resolves.toBe(true);
+    expect(testTracker).toBeInstanceOf(Tracker);
+    expect(testTracker.transport).toStrictEqual(testTransport);
+    expect(testTracker.plugins.plugins).toEqual([
+      {
+        pluginName: 'OpenTaxonomyValidationPlugin',
+        initialized: true,
+        validationRules: [],
+      },
+      {
+        pluginName: 'ApplicationContextPlugin',
+        applicationContext: {
+          __instance_id: matchUUID,
+          __global_context: true,
+          _type: GlobalContextName.ApplicationContext,
+          id: 'app-id',
+        },
+      },
+    ]);
+    expect(testTracker.location_stack).toStrictEqual([]);
+    expect(testTracker.global_contexts).toStrictEqual([]);
+    expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
   });
 });

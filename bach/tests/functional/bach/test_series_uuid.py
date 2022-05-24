@@ -2,16 +2,19 @@
 Copyright 2021 Objectiv B.V.
 """
 import uuid
+from typing import List, Any
 from unittest.mock import ANY
 
 import pytest
+from sqlalchemy.engine import Engine
 
 from bach import SeriesUuid
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data, run_query
+from sql_models.util import is_postgres, is_bigquery
+from tests.functional.bach.test_data_and_utils import assert_equals_data, run_query, get_df_with_test_data
 
 
-def test_uuid_value_to_expression():
-    bt = get_bt_with_test_data()[['city']]
+def test_uuid_value_to_expression(engine):
+    bt = get_df_with_test_data(engine)[['city']]
     bt['x'] = uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264')
     bt['y'] = '0022c7dd-074b-4a44-a7cb-b7716b668264'
     bt['yy'] = bt.y.astype('uuid')
@@ -21,57 +24,66 @@ def test_uuid_value_to_expression():
 
     with pytest.raises(ValueError):
         # not a valid uuid format
-        bt['yyyy'] = SeriesUuid.from_const(
+        bt['yyyy'] = SeriesUuid.from_value(
             base=bt, value='0022c7dd.074b.4a44.a7cb.b7716b668264', name='tmp')
+
+    expected_data = [
+        [1, 'Ljouwert', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'),
+         '0022c7dd-074b-4a44-a7cb-b7716b668264',
+         uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), True, True, True],
+        [2, 'Snits', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'),
+         '0022c7dd-074b-4a44-a7cb-b7716b668264',
+         uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), True, True, True],
+        [3, 'Drylts', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'),
+         '0022c7dd-074b-4a44-a7cb-b7716b668264',
+         uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), True, True, True],
+    ]
+    expected_data = convert_uuid_expected_data(engine, expected_data)
 
     assert_equals_data(
         bt,
         expected_columns=['_index_skating_order', 'city', 'x', 'y', 'yy', 'z', 'zz', 'zzz'],
-        expected_data=[
-            [1, 'Ljouwert', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'),
-             '0022c7dd-074b-4a44-a7cb-b7716b668264',
-             uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), True, True, True],
-            [2, 'Snits', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'),
-             '0022c7dd-074b-4a44-a7cb-b7716b668264',
-             uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), True, True, True],
-            [3, 'Drylts', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'),
-             '0022c7dd-074b-4a44-a7cb-b7716b668264',
-             uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), True, True, True],
-        ]
+        expected_data=expected_data
     )
 
 
-def test_uuid_from_dtype_to_sql():
-    bt = get_bt_with_test_data()[['city']]
+def test_uuid_from_dtype_to_sql(engine):
+    bt = get_df_with_test_data(engine)[['city']]
     bt['x'] = uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264')
     bt['y'] = '0022c7dd-074b-4a44-a7cb-b7716b668264'
     bt['z'] = 123456
+
+    expected_data = [
+        [1, 'Ljouwert', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), '0022c7dd-074b-4a44-a7cb-b7716b668264', 123456],
+        [2, 'Snits', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), '0022c7dd-074b-4a44-a7cb-b7716b668264', 123456],
+        [3, 'Drylts', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), '0022c7dd-074b-4a44-a7cb-b7716b668264', 123456],
+    ]
+    expected_data = convert_uuid_expected_data(engine, expected_data)
     assert_equals_data(
         bt,
         expected_columns=['_index_skating_order', 'city', 'x', 'y', 'z'],
-        expected_data=[
-            [1, 'Ljouwert', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), '0022c7dd-074b-4a44-a7cb-b7716b668264', 123456],
-            [2, 'Snits', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), '0022c7dd-074b-4a44-a7cb-b7716b668264', 123456],
-            [3, 'Drylts', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), '0022c7dd-074b-4a44-a7cb-b7716b668264', 123456],
-        ]
+        expected_data=expected_data
     )
+
     bt = bt.astype({'x': 'uuid'})
     bt = bt.astype({'y': 'uuid'})
     with pytest.raises(Exception):
         bt = bt.astype({'z': 'uuid'})
+    expected_data = [
+        [1, 'Ljouwert', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), 123456],
+        [2, 'Snits', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), 123456],
+        [3, 'Drylts', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), 123456],
+    ]
+    expected_data = convert_uuid_expected_data(engine, expected_data)
     assert_equals_data(
         bt,
         expected_columns=['_index_skating_order', 'city', 'x', 'y', 'z'],
-        expected_data=[
-            [1, 'Ljouwert', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), 123456],
-            [2, 'Snits', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), 123456],
-            [3, 'Drylts', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), 123456],
-        ]
+        expected_data=expected_data
     )
 
 
-def test_uuid_generate_random_uuid():
-    bt = get_bt_with_test_data()[['city']]
+def test_uuid_generate_random_uuid(engine):
+    bt = get_df_with_test_data(engine)[['city']]
     bt['x'] = SeriesUuid.sql_gen_random_uuid(base=bt)
     assert_equals_data(
         bt,
@@ -86,12 +98,17 @@ def test_uuid_generate_random_uuid():
     sql = bt.view_sql()
     db_rows = run_query(bt.engine, sql)
     uuid_values = [row['x'] for row in db_rows]
-    assert all(isinstance(val, uuid.UUID) for val in uuid_values)
+    if is_postgres(engine):
+        assert all(isinstance(val, uuid.UUID) for val in uuid_values)
+    elif is_bigquery(engine):
+        assert all(isinstance(val, str) for val in uuid_values)
+    else:
+        raise Exception()
     assert len(set(uuid_values)) == 3
 
 
-def test_uuid_compare():
-    bt = get_bt_with_test_data()[['city', 'founding']]
+def test_uuid_compare(engine):
+    bt = get_df_with_test_data(engine)[['city', 'founding']]
     bt['a'] = uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264')
     bt['b'] = uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264')
     bt['c'] = SeriesUuid.sql_gen_random_uuid(bt)
@@ -106,11 +123,16 @@ def test_uuid_compare():
     bt['y'] = bt['b'] != bt['c']
     bt['z'] = bt['c'] != bt['d']  # see comment above
 
-    # non-happy path: compare with a different type, but it's a string so we can only detect failure
-    # on query time. As city will not convert to uuid, this will raise hell
-    with pytest.raises(Exception):
-        dies = bt['b'] == bt['city']
-        dies.head()
+    # non-happy path: Compare with a different type, but it's a string so we can only detect failure
+    # on query time on some database.. As city will not convert to uuid, this will raise hell on databases
+    # with a dedicated uuid type. On databases where we use strings to represents uuids this will not raise
+    # an error but rather the comparison will just fail.
+    cmp_series = bt['b'] == bt['city']
+    if is_postgres(engine):
+        with pytest.raises(Exception):
+            cmp_series.head()
+    elif is_bigquery(engine):
+        cmp_series.head()
 
     # if you really want False, you should
     bt['u'] = bt['b'].astype('string') == bt['city']
@@ -131,10 +153,25 @@ def test_uuid_compare():
         ]
     )
 
-def test_to_pandas():
-    bt = get_bt_with_test_data()
+
+def test_to_pandas(engine):
+    bt = get_df_with_test_data(engine)
     bt['a'] = uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264')
     bt['c'] = SeriesUuid.sql_gen_random_uuid(bt)
-    bt[['a', 'c']].to_pandas()
-    assert bt[['a']].to_numpy()[0] == [uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264')]
-    assert type(bt[['a']].to_numpy()[0][0]) == type(uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'))
+    result_pdf = bt[['a', 'c']].to_pandas()
+    assert result_pdf[['a']].to_numpy()[0] == [uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264')]
+    assert type(result_pdf[['a']].to_numpy()[0][0]) == type(uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'))
+
+
+def convert_uuid_expected_data(engine: Engine, data: List[List[Any]]) -> List[List[Any]]:
+    """
+    Convert any UUID objects in data to string, if we represent uuids with strings in the engine's dialect.
+    """
+    if is_postgres(engine):
+        return data
+    if is_bigquery(engine):
+        result = [
+            [str(cell) if isinstance(cell, uuid.UUID) else cell for cell in row]
+            for row in data
+        ]
+        return result

@@ -21,7 +21,7 @@ const fs = require('fs');
 const JSON5 = require('json5');
 
 const COPYRIGHT = `/*
- * Copyright 2021-${new Date().getFullYear()} Objectiv B.V.
+ * Copyright ${new Date().getFullYear()} Objectiv B.V.
  */
  \n
 `;
@@ -146,7 +146,8 @@ function createFactory(
   // by parent classes.
   const object_discriminator = {};
   if (params.object_type === 'context') {
-    object_discriminator[CONTEXT_DISCRIMINATOR] = { value: `'${params.class_name}'` };
+    const enumName = params.stack_type === 'location_contexts' ? 'LocationContextName' : 'GlobalContextName';
+    object_discriminator[CONTEXT_DISCRIMINATOR] = { value: `${enumName}.${params.class_name}` };
   } else {
     object_discriminator[EVENT_DISCRIMINATOR] = { value: `'${params.class_name}'` };
   }
@@ -203,7 +204,7 @@ function createFactory(
   const return_omit = [];
   Object.keys(merged_properties).forEach((mp) => {
     if (merged_properties[mp]['discriminator']) {
-      discriminators.push(`${mp}: true`);
+      discriminators.push(`${mp}: ${merged_properties[mp]['discriminator']}`);
     } else if (merged_properties[mp]['type']) {
       if (params.object_type === 'event' && ['location_stack', 'global_contexts'].includes(mp)) {
         // because the global_contexts and location_stack arrays are optional
@@ -523,6 +524,17 @@ Object.entries(contexts).forEach(([context_type, context]) => {
       const discriminator = camelToUnderscore(context_type.replace('Abstract', ''));
       properties[DISCRIMINATING_PROPERTY_PREFIX + discriminator] = { discriminator: true };
     }
+
+    // Add __instance_id discriminator to AbstractContext
+    if (context_type === 'AbstractContext') {
+      properties[DISCRIMINATING_PROPERTY_PREFIX.repeat(2) + 'instance_id'] = {
+        discriminator: 'generateUUID()',
+        description: 'A unique identifier to discriminate Context instances across Location Stacks.',
+        type: `string`,
+        value: 'generateUUID()',
+      };
+    }
+
     abstract = true;
     definition_type = 'class';
     stack_type = 'abstracts';
@@ -653,11 +665,16 @@ Object.keys(object_factories).forEach((factory_type) => {
     imports.push('AbstractLocationContext');
     imports.push('AbstractGlobalContext');
   }
-  const import_statement = `import { \n\t${imports.join(',\n\t')}\n} from '@objectiv/schema';\n`;
+  const import_statements = [`import { \n\t${imports.join(',\n\t')}\n} from '@objectiv/schema';`];
+
+  if (factory_type === 'ContextFactories') {
+    import_statements.push(`import { GlobalContextName, LocationContextName } from "./ContextNames";`);
+    import_statements.push(`import { generateUUID } from "./helpers";`);
+  }
 
   const filename = `${core_tracker_package_dir}${factory_type}.ts`;
   fs.writeFileSync(filename, COPYRIGHT);
-  fs.appendFileSync(filename, [...[import_statement], ...Object.values(factories)].join('\n'));
+  fs.appendFileSync(filename, [...import_statements, '\n', ...Object.values(factories)].join('\n'));
   console.log(`Written ${Object.values(factories).length} factories to ${filename}`);
 });
 
@@ -692,6 +709,30 @@ Object.keys(object_declarations).forEach((definition_type) => {
   );
   console.log(`Written ${Object.values(object_declarations[definition_type]).length} definitions to ${filename}`);
 });
+
+// Generate ContextNames.ts enum definitions in Core Tracker
+const filename = `${core_tracker_package_dir}ContextNames.ts`;
+let content = '';
+
+Object.keys(object_declarations).forEach((definition_type) => {
+  // generate context names enum if we are writing core tracker location_contexts or global_contexts definitions
+  if (['location_contexts', 'global_contexts'].includes(definition_type)) {
+    const enumName = definition_type === 'location_contexts' ? 'LocationContextName' : 'GlobalContextName';
+    const contextNames = Object.keys(object_declarations[definition_type]).sort();
+
+    // generate enum
+    content += `export enum ${enumName} { 
+      ${contextNames.map((name) => `${name} = '${name}'`).join(',\n')}
+    }\n\n`;
+  }
+});
+
+// write ContextNames.ts to file, if we have any
+if (content) {
+  fs.writeFileSync(filename, COPYRIGHT);
+  fs.appendFileSync(filename, content);
+  console.log(`Written Context Names Enums definitions to ${filename}`);
+}
 
 // generate index for all declarations
 // this includes all generated types, as well as those in static.d.ts

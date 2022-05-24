@@ -2,24 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { AbstractLocationContext } from '@objectiv/schema';
-import { GlobalContexts, Tracker, TrackEventOptions } from '@objectiv/tracker-core';
+import { GlobalContexts, LocationStack, Tracker, TrackEventOptions } from '@objectiv/tracker-core';
 import { useEffect } from 'react';
-
-/**
- * A uniquely identifiable LocationContext
- */
-export type LocationContext<T extends AbstractLocationContext> = T & {
-  /**
-   * A unique identifier, generated at rendering time, used internally to identify a Location Context uniquely
-   */
-  __location_id: string;
-};
-
-/**
- * An ordered list of uniquely identifiable LocationContexts
- */
-export type LocationStack = LocationContext<AbstractLocationContext>[];
 
 /**
  * A custom generic EffectCallback that receives the monitored `previousState` and `state` values

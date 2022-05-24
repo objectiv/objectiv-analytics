@@ -12,7 +12,7 @@ tests-bigquery:
 # against Postgres
 	mypy --check-untyped-defs bach sql_models
 	pycodestyle bach sql_models
-	pytest --big-query tests/unit tests/functional tests/
+	pytest -n 8 --dist loadgroup --big-query tests/unit tests/functional tests/
 
 
 tests-all:
@@ -21,4 +21,4 @@ tests-all:
 # run against Postgres
 	mypy --check-untyped-defs bach sql_models
 	pycodestyle bach sql_models
-	pytest --all tests/unit tests/functional tests/
+	pytest -n 8 --dist loadgroup --all tests/unit tests/functional tests/

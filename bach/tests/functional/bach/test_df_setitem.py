@@ -2,7 +2,6 @@
 Copyright 2021 Objectiv B.V.
 """
 import datetime
-import math
 from typing import Type, Any, List
 import pytest
 
@@ -11,10 +10,9 @@ import numpy as np
 from bach import SeriesInt64, SeriesString, SeriesFloat64, SeriesDate, SeriesTimestamp, \
     SeriesTime, SeriesTimedelta, Series, \
     SeriesJsonb, SeriesBoolean
-from sql_models.util import is_postgres
-from tests.conftest import get_postgres_engine_dialect
 from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_postgres_type, \
-    assert_equals_data, CITIES_INDEX_AND_COLUMNS, get_bt_with_railway_data, get_df_with_test_data, run_query
+    assert_equals_data, CITIES_INDEX_AND_COLUMNS, get_bt_with_railway_data, get_df_with_test_data, \
+    get_df_with_railway_data
 
 
 def check_set_const(engine, constants: List[Any], expected_series: Type[Series], expected_pg_db_type: str):
@@ -31,6 +29,7 @@ def check_set_const(engine, constants: List[Any], expected_series: Type[Series],
 
     assert_equals_data(
         bt,
+        use_to_pandas=True,
         expected_columns=[
             '_index_skating_order',  # index
             'skating_order', 'city', 'municipality', 'inhabitants', 'founding',  # original columns
@@ -59,7 +58,7 @@ def test_set_const_float(engine):
         -5.1
     ]
     check_set_const(engine, constants, SeriesFloat64, 'double precision')
-    # See also tests.functional.bach.test_series_float.test_from_const(), which tests some interesting
+    # See also tests.functional.bach.test_series_float.test_from_value(), which tests some interesting
     # special cases.
 
 
@@ -87,7 +86,9 @@ def test_set_const_date(engine):
 
 def test_set_const_datetime(engine):
     constants = [
-        datetime.datetime.now()
+        datetime.datetime.now(),
+        datetime.datetime(1999, 1, 15, 13, 37, 1, 23),
+        np.datetime64('2022-01-01 12:34:56.7800'),
     ]
     check_set_const(engine, constants, SeriesTimestamp, 'timestamp without time zone')
 
@@ -99,8 +100,8 @@ def test_set_const_time(engine):
     check_set_const(engine, constants, SeriesTime, 'time without time zone')
 
 
-def test_set_const_timedelta():
-    engine = get_postgres_engine_dialect().engine  # TODO: BigQuery
+def test_set_const_timedelta(pg_engine):
+    engine = pg_engine  # TODO: BigQuery
     constants = [
         np.datetime64('2005-02-25T03:30') - np.datetime64('2005-01-25T03:30'),
         datetime.datetime.now() - datetime.datetime(2015, 4, 6),
@@ -108,8 +109,8 @@ def test_set_const_timedelta():
     check_set_const(engine, constants, SeriesTimedelta, 'interval')
 
 
-def test_set_const_json():
-    engine = get_postgres_engine_dialect().engine  # TODO: BigQuery
+def test_set_const_json(pg_engine):
+    engine = pg_engine  # TODO: BigQuery
     constants = [
         ['a', 'b', 'c'],
         {'a': 'b', 'c': 'd'},
@@ -221,9 +222,9 @@ def test_set_existing():
     assert bt.city == bt['city']
 
 
-def test_set_different_base_node():
+def test_set_different_base_node(engine):
     # set different shape series / different index name
-    bt = get_bt_with_test_data(full_data_set=True)
+    bt = get_df_with_test_data(engine, full_data_set=True)
     bt = bt[bt.skating_order > 7]
     filtered_bt = bt[bt.skating_order < 9]
 
@@ -241,8 +242,8 @@ def test_set_different_base_node():
     )
 
     # set existing column
-    bt = get_bt_with_test_data()
-    mt = get_bt_with_railway_data()
+    bt = get_df_with_test_data(engine)
+    mt = get_df_with_railway_data(engine)
     bt['skating_order'] = mt['station']
     assert_postgres_type(bt['skating_order'], 'text', SeriesString)
     assert_equals_data(
@@ -256,8 +257,8 @@ def test_set_different_base_node():
     )
 
     # set dataframe
-    bt = get_bt_with_test_data()
-    mt = get_bt_with_railway_data()
+    bt = get_df_with_test_data(engine)
+    mt = get_df_with_railway_data(engine)
     bt[['a', 'city']] = mt[['town', 'station']]
     assert_equals_data(
         bt,
@@ -270,9 +271,9 @@ def test_set_different_base_node():
     )
 
 
-def test_set_different_group_by():
-    bt = get_bt_with_test_data(full_data_set=True)
-    mt = get_bt_with_railway_data()
+def test_set_different_group_by(engine):
+    bt = get_df_with_test_data(engine, full_data_set=True)
+    mt = get_df_with_railway_data(engine)
     bt_g = bt.groupby('city')[['inhabitants', 'founding']]
     mt_g = mt.groupby('town').station_id.count()
 
@@ -303,8 +304,8 @@ def test_set_different_group_by():
     )
 
 
-def test_set_existing_referencing_other_column_experience():
-    bt = get_bt_with_test_data()
+def test_set_existing_referencing_other_column_experience(engine):
+    bt = get_df_with_test_data(engine)
     bt['city'] = bt['city'] + ' test'
     assert_postgres_type(bt['city'], 'text', SeriesString)
     assert_equals_data(
@@ -318,7 +319,7 @@ def test_set_existing_referencing_other_column_experience():
     )
     assert bt.city == bt['city']
 
-    bt = get_bt_with_test_data()
+    bt = get_df_with_test_data(engine)
     a = bt['city'] + ' test1'
     b = bt['city'] + ' test2'
     c = bt['skating_order'] + bt['skating_order']
@@ -350,8 +351,8 @@ def test_set_existing_referencing_other_column_experience():
     assert bt.city == bt['city']
 
 
-def test_set_series_expression():
-    bt = get_bt_with_test_data()
+def test_set_series_expression(engine):
+    bt = get_df_with_test_data(engine)
     bt['time_travel'] = bt['founding'] + 1000
     assert_postgres_type(bt['time_travel'], 'bigint', SeriesInt64, )
     assert_equals_data(
@@ -366,8 +367,8 @@ def test_set_series_expression():
     assert bt.time_travel == bt['time_travel']
 
 
-def test_set_series_single_value():
-    bt = get_bt_with_test_data()[['inhabitants']]
+def test_set_series_single_value(engine):
+    bt = get_df_with_test_data(engine)[['inhabitants']]
     original_base_node = bt.base_node
 
     bt['const'] = 3

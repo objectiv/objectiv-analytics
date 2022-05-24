@@ -2,31 +2,52 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { ContextsConfig, makePathContext, Tracker, TrackerConsole, TrackerEvent } from '@objectiv/tracker-core';
+import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import {
+  ContextsConfig,
+  generateUUID,
+  GlobalContextName,
+  makePathContext,
+  Tracker,
+  TrackerEvent,
+} from '@objectiv/tracker-core';
 import { PathContextFromURLPlugin } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+
+const testTracker = new Tracker({
+  applicationId: 'app-id',
+  plugins: [new PathContextFromURLPlugin()],
+  trackApplicationContext: false,
+});
 
 describe('PathContextFromURLPlugin', () => {
   beforeEach(() => {
     jest.restoreAllMocks();
   });
 
-  it('should add the PathContext to the Event when `enrich` is executed by the Tracker', async () => {
-    const testTracker = new Tracker({
-      applicationId: 'app-id',
-      plugins: [new PathContextFromURLPlugin()],
-      trackApplicationContext: false,
+  it('should TrackerConsole.error when calling `validate` before `initialize`', () => {
+    const testPathContextPlugin = new PathContextFromURLPlugin();
+    const validEvent = new TrackerEvent({
+      _type: 'test',
+      global_contexts: [makePathContext({ id: '/test' })],
     });
+    testPathContextPlugin.validate(validEvent);
+    expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
+      '｢objectiv:PathContextFromURLPlugin｣ Cannot validate. Make sure to initialize the plugin first.'
+    );
+  });
+
+  it('should add the PathContext to the Event when `enrich` is executed by the Tracker', async () => {
     const eventContexts: ContextsConfig = {
       location_stack: [
-        { __location_context: true, _type: 'section', id: 'A' },
-        { __location_context: true, _type: 'section', id: 'B' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'A' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'B' },
       ],
       global_contexts: [
-        { __global_context: true, _type: 'GlobalA', id: 'abc' },
-        { __global_context: true, _type: 'GlobalB', id: 'def' },
+        { __instance_id: generateUUID(), __global_context: true, _type: 'GlobalA', id: 'abc' },
+        { __instance_id: generateUUID(), __global_context: true, _type: 'GlobalB', id: 'def' },
       ],
     };
     const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts });
@@ -37,62 +58,81 @@ describe('PathContextFromURLPlugin', () => {
     expect(trackedEvent.global_contexts).toEqual(
       expect.arrayContaining([
         {
+          __instance_id: matchUUID,
           __global_context: true,
-          _type: 'PathContext',
+          _type: GlobalContextName.PathContext,
           id: 'http://localhost/',
         },
       ])
     );
   });
 
-  describe('Validation', () => {
-    it('should succeed', () => {
-      const testPathContextPlugin = new PathContextFromURLPlugin();
-      const validEvent = new TrackerEvent({
-        _type: 'test',
-        global_contexts: [makePathContext({ id: '/test' })],
-      });
+  it('should fail when given TrackerEvent does not have PathContext', () => {
+    const testPathContextPlugin = new PathContextFromURLPlugin();
+    testPathContextPlugin.initialize(testTracker);
+    const eventWithoutPathContext = new TrackerEvent({ _type: 'TestEvent' });
 
-      jest.resetAllMocks();
+    jest.resetAllMocks();
 
-      testPathContextPlugin.validate(validEvent);
+    testPathContextPlugin.validate(eventWithoutPathContext);
 
-      expect(MockConsoleImplementation.groupCollapsed).not.toHaveBeenCalled();
+    expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
+    expect(MockConsoleImplementation.groupCollapsed).toHaveBeenNthCalledWith(
+      1,
+      '%c｢objectiv:PathContextFromURLPlugin｣ Error: PathContext is missing from Global Contexts of TestEvent.\n' +
+        'Taxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/PathContext.',
+      'color:red'
+    );
+  });
+
+  it('should fail when given TrackerEvent has multiple PathContexts', () => {
+    const testPathContextPlugin = new PathContextFromURLPlugin();
+    testPathContextPlugin.initialize(testTracker);
+    const eventWithDuplicatedPathContext = new TrackerEvent({
+      _type: 'TestEvent',
+      global_contexts: [makePathContext({ id: '/test' }), makePathContext({ id: '/test' })],
     });
 
-    it('should fail when given TrackerEvent does not have PathContext', () => {
-      const testPathContextPlugin = new PathContextFromURLPlugin();
-      const eventWithoutPathContext = new TrackerEvent({ _type: 'test' });
+    jest.resetAllMocks();
 
-      jest.resetAllMocks();
+    testPathContextPlugin.validate(eventWithDuplicatedPathContext);
 
-      testPathContextPlugin.validate(eventWithoutPathContext);
+    expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
+    expect(MockConsoleImplementation.groupCollapsed).toHaveBeenNthCalledWith(
+      1,
+      '%c｢objectiv:PathContextFromURLPlugin｣ Error: Only one PathContext should be present in Global Contexts of TestEvent.\n' +
+        'Taxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/PathContext.',
+      'color:red'
+    );
+  });
+});
 
-      expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
-      expect(MockConsoleImplementation.groupCollapsed).toHaveBeenNthCalledWith(
-        1,
-        `%c｢objectiv:PathContextFromURLPlugin:GlobalContextValidationRule｣ Error: PathContext is missing from Global Contexts.`,
-        'color:red'
-      );
+describe('Without developer tools', () => {
+  let objectivGlobal = globalThis.objectiv;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    globalThis.objectiv = undefined;
+  });
+
+  afterEach(() => {
+    globalThis.objectiv = objectivGlobal;
+  });
+
+  it('should return silently when calling `validate` before `initialize`', () => {
+    const testPathContextPlugin = new PathContextFromURLPlugin();
+    const validEvent = new TrackerEvent({
+      _type: 'test',
+      global_contexts: [makePathContext({ id: '/test' })],
     });
+    testPathContextPlugin.validate(validEvent);
+    expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
+  });
 
-    it('should fail when given TrackerEvent has multiple PathContexts', () => {
-      const testPathContextPlugin = new PathContextFromURLPlugin();
-      const eventWithDuplicatedPathContext = new TrackerEvent({
-        _type: 'test',
-        global_contexts: [makePathContext({ id: '/test' }), makePathContext({ id: '/test' })],
-      });
+  it('should not log anything on successful initialization', () => {
+    const testPathContextPlugin = new PathContextFromURLPlugin();
+    testPathContextPlugin.initialize(testTracker);
 
-      jest.resetAllMocks();
-
-      testPathContextPlugin.validate(eventWithDuplicatedPathContext);
-
-      expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
-      expect(MockConsoleImplementation.groupCollapsed).toHaveBeenNthCalledWith(
-        1,
-        `%c｢objectiv:PathContextFromURLPlugin:GlobalContextValidationRule｣ Error: Only one PathContext should be present in Global Contexts.`,
-        'color:red'
-      );
-    });
+    expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
   });
 });

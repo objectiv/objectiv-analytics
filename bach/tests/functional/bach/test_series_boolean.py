@@ -9,7 +9,7 @@ def test_from_const(engine):
     bt['t'] = True
     bt['f'] = False
     assert_equals_data(
-        bt[:1],
+        bt.sort_index()[:1],
         expected_columns=['_index_skating_order', 'city', 't', 'f'],
         expected_data=[
             [1, 'Ljouwert', True, False],
@@ -64,7 +64,7 @@ def test_operations(engine):
     # expected.extend([12, True, False, True, True])
 
     assert_equals_data(
-        bt[:1],
+        bt.sort_index()[:1],
         expected_columns=list(bt.all_series.keys()),
         expected_data=[
             [1, 'Ljouwert', *expected],

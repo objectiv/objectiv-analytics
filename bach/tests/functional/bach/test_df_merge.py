@@ -7,13 +7,18 @@ import pandas as pd
 import pytest
 
 from bach import DataFrame
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, get_bt_with_food_data, \
-    assert_equals_data, get_bt_with_railway_data, get_from_df
+
+from sql_models.util import is_bigquery
+from tests.functional.bach.test_data_and_utils import (
+    get_df_with_test_data, get_df_with_food_data,
+    assert_equals_data, get_df_with_railway_data,
+    get_bt_with_test_data, get_bt_with_railway_data
+)
 
 
-def test_merge_basic():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_merge_basic(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_food_data(engine)[['skating_order', 'food']]
     result = bt.merge(mt)
     assert isinstance(result, DataFrame)
     assert_equals_data(
@@ -32,9 +37,9 @@ def test_merge_basic():
     )
 
 
-def test_merge_basic_on():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_merge_basic_on(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_food_data(engine)[['skating_order', 'food']]
     result = bt.merge(mt, on='skating_order')
     assert isinstance(result, DataFrame)
     assert_equals_data(
@@ -53,9 +58,9 @@ def test_merge_basic_on():
     )
 
 
-def test_merge_basic_on_series():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_food_data()['food']
+def test_merge_basic_on_series(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_food_data(engine)['food']
     result = bt.merge(mt, on='_index_skating_order')
     assert isinstance(result, DataFrame)
     assert_equals_data(
@@ -73,9 +78,9 @@ def test_merge_basic_on_series():
     )
 
 
-def test_merge_basic_left_on_right_on_same_column():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_merge_basic_left_on_right_on_same_column(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_food_data(engine)[['skating_order', 'food']]
     result = bt.merge(mt, left_on='skating_order', right_on='skating_order')
     assert isinstance(result, DataFrame)
     assert_equals_data(
@@ -94,9 +99,9 @@ def test_merge_basic_left_on_right_on_same_column():
     )
 
 
-def test_merge_basic_left_on_right_on_different_column():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_railway_data()[['town', 'station']]
+def test_merge_basic_left_on_right_on_different_column(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_railway_data(engine)[['town', 'station']]
     result = bt.merge(mt, left_on='city', right_on='town')
     assert isinstance(result, DataFrame)
     assert_equals_data(
@@ -120,9 +125,9 @@ def test_merge_basic_left_on_right_on_different_column():
     )
 
 
-def test_merge_basic_on_indexes():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_merge_basic_on_indexes(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_food_data(engine)[['skating_order', 'food']]
 
     expected_columns = [
         '_index_skating_order_x',
@@ -190,9 +195,9 @@ def test_merge_basic_on_indexes():
         result = btr.merge(mtr, left_index=True, right_index=True)
 
 
-def test_merge_suffixes():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_merge_suffixes(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_food_data(engine)[['skating_order', 'food']]
     result = bt.merge(mt, left_on='_index_skating_order', right_on='skating_order', suffixes=('_AA', '_BB'))
     assert isinstance(result, DataFrame)
     assert_equals_data(
@@ -212,9 +217,9 @@ def test_merge_suffixes():
     )
 
 
-def test_merge_mixed_columns():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_railway_data()[['station', 'platforms']]
+def test_merge_mixed_columns(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_railway_data(engine)[['station', 'platforms']]
     # join _index_skating_order on the 'platforms' column
     result = bt.merge(mt, how='inner', left_on='skating_order', right_on='platforms')
     assert isinstance(result, DataFrame)
@@ -241,9 +246,9 @@ def test_merge_mixed_columns():
     )
 
 
-def test_merge_left_join():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_railway_data()[['station', 'platforms']]
+def test_merge_left_join(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_railway_data(engine)[['station', 'platforms']]
     # join _index_skating_order on the 'platforms' column
     result = bt.merge(mt, how='left', left_on='skating_order', right_on='platforms')
     assert isinstance(result, DataFrame)
@@ -270,9 +275,9 @@ def test_merge_left_join():
     )
 
 
-def test_merge_right_join():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_railway_data()[['station', 'platforms']]
+def test_merge_right_join(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_railway_data(engine)[['station', 'platforms']]
     result = bt.merge(mt, how='right', left_on='skating_order', right_on='platforms')
     assert isinstance(result, DataFrame)
     assert_equals_data(
@@ -327,11 +332,28 @@ def test_merge_right_join_shared_on() -> None:
     )
 
 
-def test_merge_outer_join():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_railway_data()[['station', 'platforms']]
+def test_merge_outer_join(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_railway_data(engine)[['station', 'platforms']]
     result = bt.merge(mt, how='outer', left_on='skating_order', right_on='platforms')
     assert isinstance(result, DataFrame)
+
+    expected_data = [
+        [1, 5, 1, 'Ljouwert', 'Camminghaburen', 1],
+        [1, 2, 1, 'Ljouwert', 'Heerenveen', 1],
+        [1, 1, 1, 'Ljouwert', 'IJlst', 1],
+        [2, 3, 2, 'Snits', 'Heerenveen IJsstadion', 2],
+        [2, 6, 2, 'Snits', 'Sneek', 2],
+        [2, 7, 2, 'Snits', 'Sneek Noord', 2],
+        [3, None, 3, 'Drylts', None, None],
+    ]
+
+    # bigquery by default when sorting returns nulls first
+    # todo: support nulls first in sort_values and sort_index
+    if is_bigquery(engine):
+        expected_data = [[None, 4, None, None, 'Leeuwarden', 4]] + expected_data
+    else:
+        expected_data.append([None, 4, None, None, 'Leeuwarden', 4])
     assert_equals_data(
         result,
         expected_columns=[
@@ -344,21 +366,13 @@ def test_merge_outer_join():
         ],
         # in bt there is no row with skating_order == 4, so for the station with 4 platforms we
         # expect to join None values.
-        expected_data=[
-            [1, 1, 1, 'Ljouwert', 'IJlst', 1],
-            [1, 2, 1, 'Ljouwert', 'Heerenveen', 1],
-            [1, 5, 1, 'Ljouwert', 'Camminghaburen', 1],
-            [2, 3, 2, 'Snits', 'Heerenveen IJsstadion', 2],
-            [2, 6, 2, 'Snits', 'Sneek', 2],
-            [2, 7, 2, 'Snits', 'Sneek Noord', 2],
-            [3, None, 3, 'Drylts', None, None],
-            [None, 4, None, None, 'Leeuwarden', 4],
-        ],
+        expected_data=expected_data,
+        order_by=['_index_skating_order', 'station', 'platforms']
     )
 
 
-def test_merge_outer_join_shared_on() -> None:
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
+def test_merge_outer_join_shared_on(engine) -> None:
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['skating_order', 'city']]
     bt2 = bt[bt.city == 'Snits']
 
     result = bt2.merge(bt, how='outer', on=['skating_order', 'city'])
@@ -371,16 +385,17 @@ def test_merge_outer_join_shared_on() -> None:
             'city',
         ],
         expected_data=[
-            [2, 2, 2, 'Snits'],
-            [None, 1, 1, 'Ljouwert'],
             [None, 3, 3, 'Drylts'],
+            [None, 1, 1, 'Ljouwert'],
+            [2, 2, 2, 'Snits'],
         ],
+        order_by=['city'],
     )
 
 
-def test_merge_cross_join():
-    bt = get_bt_with_test_data(full_data_set=False)[['city']]
-    mt = get_bt_with_food_data()[['food']]
+def test_merge_cross_join(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['city']]
+    mt = get_df_with_food_data(engine)[['food']]
     result = bt.merge(mt, how='cross')
     assert isinstance(result, DataFrame)
 
@@ -431,9 +446,9 @@ def test_merge_cross_join():
     )
 
 
-def test_merge_self():
-    bt1 = get_bt_with_test_data(full_data_set=False)[['city']]
-    bt2 = get_bt_with_test_data(full_data_set=False)[['inhabitants']]
+def test_merge_self(engine):
+    bt1 = get_df_with_test_data(engine=engine, full_data_set=False)[['city']]
+    bt2 = get_df_with_test_data(engine=engine, full_data_set=False)[['inhabitants']]
     result = bt1.merge(bt2, on='_index_skating_order')
     assert_equals_data(
         result,
@@ -446,9 +461,9 @@ def test_merge_self():
     )
 
 
-def test_merge_preselection():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city', 'inhabitants']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_merge_preselection(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['skating_order', 'city', 'inhabitants']]
+    mt = get_df_with_food_data(engine)[['skating_order', 'food']]
     result = bt[bt['skating_order'] != 1].merge(mt[['food']], on='_index_skating_order')
     assert_equals_data(
         result,
@@ -460,9 +475,9 @@ def test_merge_preselection():
     )
 
 
-def test_merge_expression_columns():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city', 'inhabitants']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_merge_expression_columns(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['skating_order', 'city', 'inhabitants']]
+    mt = get_df_with_food_data(engine=engine)[['skating_order', 'food']]
     bt['skating_order'] += 2
     mt['skating_order'] += 2
 
@@ -479,9 +494,9 @@ def test_merge_expression_columns():
     )
 
 
-def test_merge_expression_columns_regression():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city', 'inhabitants']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_merge_expression_columns_regression(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['skating_order', 'city', 'inhabitants']]
+    mt = get_df_with_food_data(engine=engine)[['skating_order', 'food']]
     bt['x'] = bt['skating_order'] == 3
     bt['y'] = bt['skating_order'] == 3
     bt['z'] = bt['x'] & bt['y']
@@ -497,8 +512,8 @@ def test_merge_expression_columns_regression():
     )
 
 
-def test_merge_non_materialized():
-    bt = get_bt_with_test_data(full_data_set=False)[['municipality', 'inhabitants']]
+def test_merge_non_materialized(engine):
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['municipality', 'inhabitants']]
     mt1 = bt.groupby('municipality')[['inhabitants']].sum()
     mt2 = bt.groupby('municipality')[['inhabitants']].mean()
 
@@ -519,7 +534,7 @@ def test_merge_non_materialized():
         )
 
 
-def test_merge_on_conditions() -> None:
+def test_merge_on_conditions(engine) -> None:
     pdf1 = pd.DataFrame({
         'A': ['a', 'b', 'c', 'd'],
         'B': [100, 25, 250, 500],
@@ -529,8 +544,8 @@ def test_merge_on_conditions() -> None:
         'B': [20, 5, 10, 20, 100],
     })
 
-    df1 = get_from_df('merge_on_condition1', pdf1)
-    df2 = get_from_df('merge_on_condition2', pdf2)
+    df1 = DataFrame.from_pandas(engine=engine, df=pdf1, convert_objects=True)
+    df2 = DataFrame.from_pandas(engine=engine, df=pdf2, convert_objects=True)
 
     on_condition = [df1['A'] + df2['A'] == 'cg', df1['B'] / df2['B'] > 10]
     result = df1.merge(df2, on=on_condition)
@@ -544,7 +559,7 @@ def test_merge_on_conditions() -> None:
     )
 
 
-def test_merge_on_conditions_w_on_data_columns() -> None:
+def test_merge_on_conditions_w_on_data_columns(engine) -> None:
     pdf1 = pd.DataFrame({
         'A': ['b', 'a', 'c', 'd'],
         'B': [100, 25, 250, 500],
@@ -554,8 +569,8 @@ def test_merge_on_conditions_w_on_data_columns() -> None:
         'B': [20, 5, 50, 20, 100],
     })
 
-    df1 = get_from_df('merge_on_condition1', pdf1)
-    df2 = get_from_df('merge_on_condition2', pdf2)
+    df1 = DataFrame.from_pandas(engine=engine, df=pdf1, convert_objects=True)
+    df2 = DataFrame.from_pandas(engine=engine, df=pdf2, convert_objects=True)
 
     on_condition = df1['B'] / df2['B'] == 5
     result = df1.merge(df2, on=['A', on_condition])
@@ -570,7 +585,7 @@ def test_merge_on_conditions_w_on_data_columns() -> None:
     )
 
 
-def test_merge_on_conditions_renamed_column() -> None:
+def test_merge_on_conditions_renamed_column(engine) -> None:
     pdf1 = pd.DataFrame({
         'A': ['b', 'a', 'c', 'd'],
         'B': [100, 25, 250, 500],
@@ -580,8 +595,8 @@ def test_merge_on_conditions_renamed_column() -> None:
         'B': [20, 5, 50, 20, 100],
     })
 
-    df1 = get_from_df('merge_on_condition1', pdf1)
-    df2 = get_from_df('merge_on_condition2', pdf2)
+    df1 = DataFrame.from_pandas(engine=engine, df=pdf1, convert_objects=True)
+    df2 = DataFrame.from_pandas(engine=engine, df=pdf2, convert_objects=True)
 
     df1 = df1.rename(columns={'B': 'C'})
     on_condition = df1['C'] > df2['B']
@@ -589,7 +604,7 @@ def test_merge_on_conditions_renamed_column() -> None:
     result = df1.merge(df2, on=on_condition)
 
 
-def test_merge_on_conditions_w_index() -> None:
+def test_merge_on_conditions_w_index(engine) -> None:
     pdf1 = pd.DataFrame({
         'A': ['a', 'b', 'c', 'd'],
         'B': [100, 25, 250, 500],
@@ -599,8 +614,8 @@ def test_merge_on_conditions_w_index() -> None:
         'B': [20, 5, 10, 20, 100],
     })
 
-    df1 = get_from_df('merge_on_condition1', pdf1)
-    df2 = get_from_df('merge_on_condition2', pdf2)
+    df1 = DataFrame.from_pandas(engine=engine, df=pdf1, convert_objects=True)
+    df2 = DataFrame.from_pandas(engine=engine, df=pdf2, convert_objects=True)
 
     on_condition = df1['B'] / df2['B'] > 10
     result = df1.merge(df2, on=on_condition, left_index=True, right_index=True)
@@ -615,8 +630,8 @@ def test_merge_on_conditions_w_index() -> None:
     )
 
 
-def test_merge_on_index_x_column() -> None:
-    bt = get_bt_with_test_data(False)[['city', 'inhabitants']]
+def test_merge_on_index_x_column(engine) -> None:
+    bt = get_df_with_test_data(engine=engine, full_data_set=False)[['city', 'inhabitants']]
     expected = {
         'expected_columns': ['_index_skating_order', 'city_x', 'inhabitants', 'city_y'],
         'expected_data': [
@@ -624,6 +639,7 @@ def test_merge_on_index_x_column() -> None:
             [2, 'Snits', 33520, 'Snits'],
             [3, 'Drylts', 3055, 'Drylts'],
         ],
+        'order_by': ['_index_skating_order'],
     }
     result_left_col_x_right_index = bt.reset_index().merge(bt.city, on='_index_skating_order')
     assert_equals_data(result_left_col_x_right_index, **expected)

@@ -2,11 +2,12 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { makePressableContext, TrackerConsole } from '@objectiv/tracker-core';
-import { isTaggedElement, processTagChildrenElement, tagPressable, tagContent, TaggingAttribute } from '../src';
+import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import { makePressableContext } from '@objectiv/tracker-core';
+import { isTaggedElement, processTagChildrenElement, tagContent, TaggingAttribute, tagPressable } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('processChildrenTrackingElement', () => {
   beforeEach(() => {
@@ -86,7 +87,10 @@ describe('processChildrenTrackingElement', () => {
 
     const result = processTagChildrenElement(div);
 
-    const expectedPressableContext = makePressableContext({ id: 'button-id' });
+    const expectedPressableContext = {
+      ...makePressableContext({ id: 'button-id' }),
+      __instance_id: matchUUID,
+    };
 
     expect(result).toHaveLength(1);
     expect(isTaggedElement(result[0])).toBe(true);

@@ -1,6 +1,6 @@
 # Objectiv Browser Tracker 
 
-Objectiv tracker for web applications & websites that embraces the open taxonomy for analytics. Supports core tracking methods and default auto-tracking (ApplicationLoaded) out of the box.
+Objectiv tracker for web applications & websites that embraces the open analytics taxonomy. Supports core tracking methods and default auto-tracking (ApplicationLoaded) out of the box.
 
 ---
 ## Package Installation

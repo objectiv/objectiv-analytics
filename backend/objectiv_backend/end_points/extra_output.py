@@ -12,12 +12,14 @@ from io import BytesIO
 from typing import List
 
 
-import boto3
-from botocore.exceptions import ClientError
-
-from objectiv_backend.common.config import get_collector_config
+from objectiv_backend.common.config import get_collector_config, SnowplowConfig
 from objectiv_backend.common.types import EventDataList
 from objectiv_backend.schema.validate_events import EventError
+from objectiv_backend.snowplow.snowplow_helper import write_data_to_aws_pipeline, write_data_to_gcp_pubsub
+
+if get_collector_config().output.aws:
+    import boto3
+    from botocore.exceptions import ClientError
 
 
 def events_to_json(events: EventDataList) -> str:
@@ -74,11 +76,20 @@ def write_data_to_s3_if_configured(data: str, prefix: str, moment: datetime) -> 
         print(f'Error uploading to s3: {e} ')
 
 
-def write_data_to_snowplow_if_configured(events: EventDataList, channel: str = 'good', event_errors: List[EventError] = None) -> None:
-    config = get_collector_config().output.snowplow
-    if not config:
-        return
+def write_data_to_snowplow_if_configured(events: EventDataList,
+                                         good: bool,
+                                         event_errors: List[EventError] = None) -> None:
+    """
+    Write data to Snowplow pipeline if either GCP or AWS for Snowplow if configures
+    :param events: EventDataList
+    :param prefix: should be either OK or NOK
+    :param event_errors: list of errors, if any
+    :return:
+    """
+    config: SnowplowConfig = get_collector_config().output.snowplow
 
-    # only import if needed, avoids having to install GCP dependencies if it's not used
-    from objectiv_backend.snowplow.snowplow_helper import write_data_to_pubsub
-    write_data_to_pubsub(events=events, config=config, channel=channel, event_errors=event_errors)
+    if config.aws_enabled:
+        write_data_to_aws_pipeline(events=events, config=config, good=good, event_errors=event_errors)
+
+    if config.gcp_enabled:
+        write_data_to_gcp_pubsub(events=events, config=config, good=good, event_errors=event_errors)

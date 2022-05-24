@@ -2,7 +2,7 @@
  * Copyright 2021 Objectiv B.V.
  */
 
-import { getLocationPath, makeIdFromString } from '@objectiv/tracker-core';
+import { makeIdFromString } from '@objectiv/tracker-core';
 import {
   makeTitleFromChildren,
   PressableContextWrapper,
@@ -33,11 +33,14 @@ export const TrackedTouchableHighlight = (props: TrackedTouchableHighlightProps)
   const contextId = id ?? makeIdFromString(title);
 
   // If we couldn't generate an `id`, log the issue and return an untracked Component.
-  const locationPath = getLocationPath(useLocationStack());
+  const locationStack = useLocationStack();
   if (!contextId) {
-    console.error(
-      `｢objectiv｣ Could not generate a valid id for PressableContext @ ${locationPath}. Please provide the \`id\` property manually.`
-    );
+    if (globalThis.objectiv) {
+      const locationPath = globalThis.objectiv.getLocationPath(locationStack);
+      globalThis.objectiv.TrackerConsole.error(
+        `｢objectiv｣ Could not generate a valid id for PressableContext @ ${locationPath}. Please provide the \`id\` property manually.`
+      );
+    }
     return <TouchableHighlight {...trackedTouchableHighlightProps} />;
   }
 

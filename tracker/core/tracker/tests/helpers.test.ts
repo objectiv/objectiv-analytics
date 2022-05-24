@@ -96,8 +96,13 @@ describe('helpers', () => {
       expect(isDevMode()).toBe(false);
     });
 
-    it(`should return true`, () => {
+    it(`should return true (development)`, () => {
       process.env.NODE_ENV = 'development';
+      expect(isDevMode()).toBe(true);
+    });
+
+    it(`should return true (test)`, () => {
+      process.env.NODE_ENV = 'test';
       expect(isDevMode()).toBe(true);
     });
   });

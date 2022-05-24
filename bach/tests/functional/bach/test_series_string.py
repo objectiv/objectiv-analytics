@@ -1,40 +1,41 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+import pandas as pd
+
 from bach import Series, SeriesString, DataFrame
 from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data, \
     get_df_with_test_data
 
 
-def test_from_const(pg_engine):
-    # TODO: BigQuery
+def test_from_value(engine):
     a = 'a string'
     b = 'a string\'"\'\' "" \\ with quotes'
     c = None
     d = '\'\'!@&*(HJD☢%'
+    e = 'test"""test'
 
-    bt = get_df_with_test_data(pg_engine)[['city']]
+    bt = get_df_with_test_data(engine)[['city']]
     bt['a'] = a
     bt['b'] = b
-    bt['c'] = SeriesString.from_const(base=bt, value=c, name='temp')
-    bt['d'] = SeriesString.from_const(base=bt, value=d, name='temp')
+    bt['c'] = SeriesString.from_value(base=bt, value=c, name='temp')
+    bt['d'] = SeriesString.from_value(base=bt, value=d, name='temp')
+    bt['e'] = e
     assert_equals_data(
         bt,
-        expected_columns=['_index_skating_order', 'city', 'a', 'b', 'c', 'd'],
+        expected_columns=['_index_skating_order', 'city', 'a', 'b', 'c', 'd', 'e'],
         expected_data=[
-            [1, 'Ljouwert', a, b, c, d],
-            [2, 'Snits', a, b, c, d],
-            [3, 'Drylts', a, b, c, d]
+            [1, 'Ljouwert', a, b, c, d, e],
+            [2, 'Snits', a, b, c, d, e],
+            [3, 'Drylts', a, b, c, d, e]
         ]
     )
 
 
 def test_string_slice(engine):
-    bt = get_df_with_test_data(engine)
-    # TODO: this test passes on BigQuery, but is very slow
+    bt = get_df_with_test_data(engine)[['city']]
 
-    # Now try some slices
-    for s in [
+    slices = [
         # single values, keep small because we don't want to go out of range
         0, 1, 3, -3, -1,
         # some single value slices
@@ -47,7 +48,14 @@ def test_string_slice(engine):
         slice(1, -8), slice(8, 1), slice(8, -4),
         # Some more with no beginnings or endings
         slice(None, 3), slice(3, None), slice(None, -3), slice(-3, None)
-    ]:
+    ]
+
+    expected_data = {
+        '_index_skating_order': [1, 2, 3],
+        'city': ['Ljouwert', 'Snits', 'Drylts'],
+    }
+    # Now try some slices
+    for idx, s in enumerate(slices):
         print(f'slice: {s}')
         if (isinstance(s, slice)):
             bts1 = bt['city'].str[s.start:s.stop]
@@ -55,17 +63,21 @@ def test_string_slice(engine):
         else:
             bts1 = bt['city'].str[s]
             bts2 = bt['city'].str.slice(s, s+1)
-        for bts in [bts1, bts2]:
-            assert isinstance(bts, Series)
-            assert_equals_data(
-                bts,
-                expected_columns=['_index_skating_order', 'city'],
-                expected_data=[
-                    [1, 'Ljouwert'.__getitem__(s)],
-                    [2, 'Snits'.__getitem__(s)],
-                    [3, 'Drylts'.__getitem__(s)]
-                ]
-            )
+
+        assert isinstance(bts1, Series)
+        assert isinstance(bts2, Series)
+
+        bt[f'city_slice_1_{idx}'] = bts1
+        bt[f'city_slice_2_{idx}'] = bts2
+
+        expected_results = ['Ljouwert'.__getitem__(s), 'Snits'.__getitem__(s), 'Drylts'.__getitem__(s)]
+        expected_data[f'city_slice_1_{idx}'] = expected_results
+        expected_data[f'city_slice_2_{idx}'] = expected_results
+
+    expected = pd.DataFrame(expected_data)
+    expected = expected.set_index('_index_skating_order')
+
+    pd.testing.assert_frame_equal(expected, bt.sort_index().to_pandas())
 
 
 def test_add_string_series(engine):
@@ -83,8 +95,8 @@ def test_add_string_series(engine):
     )
 
 
-def test_get_dummies() -> None:
-    bt = get_bt_with_test_data()
+def test_get_dummies(engine) -> None:
+    bt = get_df_with_test_data(engine)
     result = bt['city'].get_dummies()
     assert isinstance(result, DataFrame)
 

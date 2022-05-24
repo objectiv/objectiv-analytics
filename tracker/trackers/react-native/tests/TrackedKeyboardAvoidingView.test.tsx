@@ -3,12 +3,10 @@
  */
 
 import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
-import { getLocationPath, TrackerConsole } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react-native';
 import React from 'react';
 import { Text } from 'react-native';
 import {
-  LocationTree,
   ReactNativeTracker,
   RootLocationContextWrapper,
   TrackedKeyboardAvoidingView,
@@ -17,7 +15,8 @@ import {
   useLocationStack,
 } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedKeyboardAvoidingView', () => {
   const spyTransport = new SpyTransport();
@@ -35,11 +34,10 @@ describe('TrackedKeyboardAvoidingView', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    LocationTree.clear();
   });
 
   const KeyboardAvoidingViewChild = (props: { title: string }) => {
-    const locationPath = getLocationPath(useLocationStack());
+    const locationPath = globalThis.objectiv?.getLocationPath(useLocationStack());
 
     console.debug(locationPath);
 

@@ -2,11 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { TrackerConsole, TrackerEvent } from '@objectiv/tracker-core';
+import { TrackerEvent } from '@objectiv/tracker-core';
 import { DebugTransport } from '../src/';
-
-TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('DebugTransport', () => {
   const testEvent = new TrackerEvent({
@@ -14,14 +11,15 @@ describe('DebugTransport', () => {
   });
 
   it('should `console.debug` the event', async () => {
-    expect(MockConsoleImplementation.debug).not.toHaveBeenCalled();
+    jest.spyOn(console, 'debug');
+    expect(console.debug).not.toHaveBeenCalled();
     const testTransport = new DebugTransport();
     const testTransportWithConsole = new DebugTransport();
     expect(testTransport.isUsable()).toBe(true);
     expect(testTransportWithConsole.isUsable()).toBe(true);
-    jest.spyOn(MockConsoleImplementation, 'debug');
+    jest.spyOn(console, 'debug');
     await testTransport.handle(testEvent);
     await testTransportWithConsole.handle(testEvent);
-    expect(MockConsoleImplementation.debug).toHaveBeenCalledWith(testEvent);
+    expect(console.debug).toHaveBeenCalledWith(testEvent);
   });
 });

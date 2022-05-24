@@ -4,11 +4,12 @@ import pandas as pd
 import pytest
 
 from bach import Series, DataFrame
-from tests.functional.bach.test_data_and_utils import get_from_df, assert_equals_data
+from sql_models.util import is_bigquery
+from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
 @pytest.fixture()
-def indexing_dfs() -> Tuple[pd.DataFrame, DataFrame]:
+def indexing_dfs(engine) -> Tuple[pd.DataFrame, DataFrame]:
     pdf = pd.DataFrame(
         {
             'A': ['a', 'b', 'c', 'd', 'e'],
@@ -17,7 +18,7 @@ def indexing_dfs() -> Tuple[pd.DataFrame, DataFrame]:
             'D': ['f', 'g', 'h', 'i', 'j'],
         },
     )
-    df = get_from_df('indexing_df', pdf)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     df = df.set_index('A', drop=True)
     pdf = pdf.set_index('A')
 
@@ -75,6 +76,11 @@ def test_basic_indexing_column_based(indexing_dfs: Tuple[pd.DataFrame, DataFrame
 
 def test_index_slicing(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> None:
     pdf, df = indexing_dfs
+
+    if is_bigquery(df.engine):
+        # TODO: BigQuery
+        # indexing with slicing is still not supported for BigQuery
+        return
 
     df = df.sort_index()
     result_slicing = df.loc['b':'d']
@@ -142,7 +148,7 @@ def test_basic_set_item_by_label(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -
     )
 
 
-def test_set_item_by_label_diff_node(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> None:
+def test_set_item_by_label_diff_node(indexing_dfs: Tuple[pd.DataFrame, DataFrame], engine) -> None:
     _, df = indexing_dfs
     extra_pdf = pd.DataFrame(
         {
@@ -151,7 +157,7 @@ def test_set_item_by_label_diff_node(indexing_dfs: Tuple[pd.DataFrame, DataFrame
             'C': [11, 12],
         },
     )
-    extra_df = get_from_df('extra_df', extra_pdf)
+    extra_df = DataFrame.from_pandas(engine, df=extra_pdf, convert_objects=True)
     extra_df = extra_df.set_index('A')
 
     # cannot check against Pandas, since pandas checks index lengths when setting items.
@@ -169,8 +175,12 @@ def test_set_item_by_label_diff_node(indexing_dfs: Tuple[pd.DataFrame, DataFrame
     )
 
 
-def test_set_item_by_slicing(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> None:
+def test_set_item_by_slicing(indexing_dfs: Tuple[pd.DataFrame, DataFrame], engine) -> None:
     pdf, df = indexing_dfs
+    if is_bigquery(df.engine):
+        # TODO: BigQuery
+        # indexing with slicing is still not supported for BigQuery
+        return
     df = df.sort_index()
 
     df.loc['b':'d'] = 1
@@ -198,7 +208,7 @@ def test_set_item_by_slicing(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> No
             'C': [11, 12],
         },
     )
-    extra_df = get_from_df('extra_df', extra_pdf)
+    extra_df = DataFrame.from_pandas(engine, df=extra_pdf, convert_objects=True)
     extra_df = extra_df.set_index('A')
 
     # cannot check against Pandas, since pandas checks index lengths when setting items.
@@ -213,4 +223,25 @@ def test_set_item_by_slicing(indexing_dfs: Tuple[pd.DataFrame, DataFrame]) -> No
             ['d', None, 1, None],
             ['e', 4, 9, 'j'],
         ],
+    )
+
+
+def test_indexing_wo_index(engine) -> None:
+    bt = get_df_with_test_data(engine)[['city']]
+    bt['city_normal'] = 'placeholder'
+    bt = bt.reset_index()
+
+    with pytest.raises(ValueError, match=r'Cannot access rows by label'):
+        bt.loc[0, 'city_normal']
+
+    bt.loc[bt.city == 'Snits', 'city_normal'] = 'Snake'
+    assert_equals_data(
+        bt,
+        expected_columns=['_index_skating_order', 'city', 'city_normal'],
+        expected_data=[
+            [1, 'Ljouwert', 'placeholder'],
+            [2, 'Snits', 'Snake'],
+            [3, 'Drylts', 'placeholder'],
+        ],
+        order_by=['_index_skating_order'],
     )

@@ -1,23 +1,25 @@
-![objectiv_logo_light](https://user-images.githubusercontent.com/82152911/159266790-19e0e3d4-0d10-4c58-9da7-16edde9ec05a.svg#gh-light-mode-only "Objectiv Logo")
-![objectiv_logo_dark](https://user-images.githubusercontent.com/82152911/159266895-39f52604-83c1-438d-96bd-9a6d66e74b08.svg#gh-dark-mode-only "Objectiv Logo")
+<img src="https://user-images.githubusercontent.com/82152911/159266790-19e0e3d4-0d10-4c58-9da7-16edde9ec05a.svg#gh-light-mode-only" alt="objectiv_logo_light" title="Objectiv Logo">
+<img src="https://user-images.githubusercontent.com/82152911/159266895-39f52604-83c1-438d-96bd-9a6d66e74b08.svg#gh-dark-mode-only" alt="objectiv_logo_dark" title="Objectiv Logo">
 
-## Open-source infrastructure for product analytics
+[Objectiv](https://objectiv.io/) is open-source product analytics infrastructure, built around a [generic taxonomy](https://www.objectiv.io/docs/taxonomy).
 
-* Collect model-ready user behavior data and feed it straight into your data warehouse
-* Use pandas-like operations and pre-built models that run on the full SQL dataset
+* Collect rich, validated user behavior data with a generic event structure
+* Feed it directly into your data warehouse without cleaning & transformation
+* Take & run pre-built models off the shelf to speed up data projects
+* Reuse and share any model between teams, products and platforms
+* Use pandas-like operations that run on the full SQL dataset
 * Instantly convert models to SQL to feed all data consumers from a single source of truth
 
-Objectiv is self-hosted, 100% free to use and fully open source.
+Self-hosted, 100% free to use and fully open source.
 
-### Getting Started
+### Demo
 
-Follow our step-by-step [Quickstart Guide](https://objectiv.io/docs/home/quickstart-guide) to set up a fully functional dockerized demo pipeline in under 5 minutes.
+Follow our [Quickstart Guide](https://objectiv.io/docs/home/quickstart-guide) to set up a fully functional dockerized demo in under 5 minutes.
 
 ### Resources
 
 * [Objectiv Docs](https://www.objectiv.io/docs) - Objectiv's official documentation.
 * [Objectiv on Slack](https://objectiv.io/join-slack) - Get help & join the discussion on where to take Objectiv next.
-* [Contribution Guide](https://www.objectiv.io/docs/home/the-project/contribute) - Report bugs, request features and contribution information.
 * [Objectiv.io](https://www.objectiv.io) - Objectiv's official website.
 
 ---
@@ -29,7 +31,7 @@ Follow our step-by-step [Quickstart Guide](https://objectiv.io/docs/home/quickst
 
 ### Open analytics taxonomy
 
-Our proposal for [a common way to collect & structure analytics data](https://www.objectiv.io/docs/taxonomy). Describes classes for common user interactions and their contexts. 
+Enables a [generic way to collect & structure rich analytics events](https://www.objectiv.io/docs/taxonomy). Describes classes for common user interactions and their contexts. 
 
 [![taxonomy](https://user-images.githubusercontent.com/82152911/162000133-1eea0192-c882-4121-a866-8c1a3f8ffee3.svg)](https://www.objectiv.io/docs/taxonomy)
 
@@ -48,17 +50,17 @@ Supports front-end engineers to [implement tracking instrumentation](https://www
  
 ### Open model hub
 
-A [growing collection of pre-built models](https://www.objectiv.io/docs/modeling/example_notebooks) that you run, combine or customize to quickly build in-depth analyses.
+A [growing collection of pre-built models](https://objectiv.io/docs/modeling/open-model-hub/) that you run, combine or customize to quickly build in-depth analyses.
 
 * All models work with any dataset that embraces the open analytics taxonomy
-* Currently covers a handful of common product analytics operations
+* Currently covers common product analytics operations
 * More advanced models coming soon (i.e. impact attribution of product features on conversion)
 
 ### Bach modeling library
 
-Python-based [modeling library](https://www.objectiv.io/docs/modeling/bach) that enables using pandas-like operations on the full SQL dataset.
+Python-based [modeling library](https://www.objectiv.io/docs/modeling/bach/) that enables using pandas-like operations on the full SQL dataset.
 
-* Includes specific operations to easily work with datasets that embrace the open analytics taxonomy
+* Includes specific operations to easily work with data sets that embrace the open analytics taxonomy
 * Pandas-compatible: use popular pandas ML libraries in your models
 * Output your entire model to SQL with a single command
 

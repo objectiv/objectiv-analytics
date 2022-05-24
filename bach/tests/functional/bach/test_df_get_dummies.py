@@ -1,15 +1,16 @@
 import pandas as pd
 import pytest
 
-from tests.functional.bach.test_data_and_utils import get_from_df, assert_equals_data
+from bach import DataFrame
+from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 
-def test_basic_get_dummies() -> None:
+def test_basic_get_dummies(engine) -> None:
     pdf = pd.DataFrame(
         {'A': ['a', 'b', 'a'], 'B': ['b', 'a', 'c'], 'C': [1, 2, 3]},
     )
 
-    df = get_from_df('get_dummies', pdf)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     expected = pd.get_dummies(pdf, dtype='int')
     expected.index.name = '_index_0'
     expected_columns = ['C', 'A_a', 'A_b', 'B_a', 'B_b', 'B_c']
@@ -32,12 +33,12 @@ def test_basic_get_dummies() -> None:
     )
 
 
-def test_get_dummies_dtype() -> None:
+def test_get_dummies_dtype(engine) -> None:
     pdf = pd.DataFrame(
         {'A': ['a', 'b', 'a'], 'B': ['b', 'a', 'c'], 'C': [1, 2, 3]},
     )
 
-    df = get_from_df('get_dummies', pdf)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     expected_columns = ['C', 'A_a', 'A_b', 'B_a', 'B_b', 'B_c']
 
     # comparison with pandas is different, pandas will return empty space instead of 0.
@@ -55,12 +56,12 @@ def test_get_dummies_dtype() -> None:
     )
 
 
-def test_get_dummies_prefix() -> None:
+def test_get_dummies_prefix(engine) -> None:
     pdf = pd.DataFrame(
         {'A': ['a', 'b', 'a'], 'B': ['b', 'a', 'c'], 'C': [1, 2, 3]},
     )
 
-    df = get_from_df('get_dummies', pdf)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     prefix = ['col1', 'col2']
 
     expected = pd.get_dummies(pdf, prefix=prefix, prefix_sep='__', dtype='int')
@@ -87,11 +88,11 @@ def test_get_dummies_prefix() -> None:
     )
 
 
-def test_get_dummies_w_na() -> None:
+def test_get_dummies_w_na(engine) -> None:
     pdf = pd.DataFrame(
         {'A': ['a', None, 'a', None], 'B': ['c', 'd', None, None], 'C': [1, 2, 3, 4]},
     )
-    df = get_from_df('get_dummies', pdf)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     expected = pd.get_dummies(pdf, dtype='int64')
     # bach adds prefix always
     expected = expected.rename(columns={'a': 'A_a', 'c': 'B_c', 'd': 'B_d'})
@@ -118,11 +119,11 @@ def test_get_dummies_w_na() -> None:
     )
 
 
-def test_get_dummies_include_na() -> None:
+def test_get_dummies_include_na(engine) -> None:
     pdf = pd.DataFrame(
         {'A': ['a', None, 'a'], 'B': ['c', 'd', None], 'C': [1, 2, 3]},
     )
-    df = get_from_df('get_dummies', pdf)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     expected = pd.get_dummies(pdf,dummy_na=True, dtype='int64')
     # bach adds prefix always
     expected = expected.rename(columns={'a': 'A_a', 'c': 'B_c', 'd': 'B_d'})
@@ -148,9 +149,9 @@ def test_get_dummies_include_na() -> None:
     )
 
 
-def test_get_dummies_errors() -> None:
+def test_get_dummies_errors(engine) -> None:
     pdf = pd.DataFrame({'A': ['a'], 'B': ['c'], 'C': [1]})
-    df = get_from_df('get_dummies', pdf)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
 
     with pytest.raises(ValueError, match=r'are not valid columns'):
         df.get_dummies(columns=['C'])

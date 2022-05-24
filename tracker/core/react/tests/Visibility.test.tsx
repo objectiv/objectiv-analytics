@@ -2,10 +2,16 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeHiddenEvent, makeVisibleEvent, Tracker } from '@objectiv/tracker-core';
+import {
+  LocationContextName,
+  makeContentContext,
+  makeHiddenEvent,
+  makeVisibleEvent,
+  Tracker,
+} from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
-import { makeContentContext, TrackingContextProvider, trackVisibility, useVisibilityTracker } from '../src';
+import { TrackingContextProvider, trackVisibility, useVisibilityTracker } from '../src';
 
 describe('Visibility', () => {
   beforeEach(() => {
@@ -80,7 +86,7 @@ describe('Visibility', () => {
       1,
       expect.objectContaining(
         makeHiddenEvent({
-          location_stack: [expect.objectContaining({ _type: 'ContentContext', id: 'override' })],
+          location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'override' })],
         })
       ),
       undefined
@@ -151,7 +157,7 @@ describe('Visibility', () => {
       1,
       expect.objectContaining(
         makeVisibleEvent({
-          location_stack: [expect.objectContaining({ _type: 'ContentContext', id: 'override' })],
+          location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'override' })],
         })
       ),
       undefined

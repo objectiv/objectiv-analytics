@@ -1,6 +1,6 @@
 # Objectiv Schema TypeScript
 
-TypeScript implementation of the open taxonomy for analytics for Objectiv trackers.
+TypeScript implementation of the open analytics taxonomy for Objectiv trackers.
 
 ---
 
@@ -13,7 +13,7 @@ yarn add @objectiv/schema --dev
 ### or
 
 ```sh
-npm install @objectiv/schema --dev
+npm install @objectiv/schema --save-dev
 ```
 
 ## Usage

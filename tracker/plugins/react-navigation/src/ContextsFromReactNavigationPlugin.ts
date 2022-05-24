@@ -2,9 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { TrackerConsole, TrackerPluginInterface } from '@objectiv/tracker-core';
+import { makeRootLocationContext, TrackerPluginInterface } from '@objectiv/tracker-core';
 import { ContextsConfig, makePathContext } from '@objectiv/tracker-core';
-import { makeRootLocationContext } from '@objectiv/tracker-react-core';
 import { getPathFromState, NavigationContainerRefWithCurrent } from '@react-navigation/native';
 
 /**
@@ -29,7 +28,7 @@ export class ContextsFromReactNavigationPlugin<ParamList extends ReactNavigation
   constructor(config: ContextsFromReactNavigationPluginConfig<ParamList>) {
     this.navigationContainerRef = config.navigationContainerRef;
 
-    TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
+    globalThis.objectiv?.TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
   }
 
   /**

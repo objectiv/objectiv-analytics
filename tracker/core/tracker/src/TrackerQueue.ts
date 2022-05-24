@@ -3,7 +3,6 @@
  */
 
 import { isNonEmptyArray, NonEmptyArray } from './helpers';
-import { TrackerConsole } from './TrackerConsole';
 import { TrackerEvent } from './TrackerEvent';
 import { TrackerQueueInterface, TrackerQueueProcessFunction } from './TrackerQueueInterface';
 import { TrackerQueueMemoryStore } from './TrackerQueueMemoryStore';
@@ -63,12 +62,14 @@ export class TrackerQueue implements TrackerQueueInterface {
     this.batchDelayMs = config?.batchDelayMs ?? 1000;
     this.concurrency = config?.concurrency ?? 4;
 
-    TrackerConsole.groupCollapsed(`｢objectiv:${this.queueName}｣ Initialized`);
-    TrackerConsole.log(`Store: ${this.store.queueStoreName}`);
-    TrackerConsole.log(`Batch Size: ${this.batchSize}`);
-    TrackerConsole.log(`Batch Delay (ms): ${this.batchDelayMs}`);
-    TrackerConsole.log(`Concurrency: ${this.concurrency}`);
-    TrackerConsole.groupEnd();
+    if (globalThis.objectiv) {
+      globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:${this.queueName}｣ Initialized`);
+      globalThis.objectiv.TrackerConsole.log(`Store: ${this.store.queueStoreName}`);
+      globalThis.objectiv.TrackerConsole.log(`Batch Size: ${this.batchSize}`);
+      globalThis.objectiv.TrackerConsole.log(`Batch Delay (ms): ${this.batchDelayMs}`);
+      globalThis.objectiv.TrackerConsole.log(`Concurrency: ${this.concurrency}`);
+      globalThis.objectiv.TrackerConsole.groupEnd();
+    }
   }
 
   setProcessFunction(processFunction: TrackerQueueProcessFunction) {
@@ -117,10 +118,12 @@ export class TrackerQueue implements TrackerQueueInterface {
         break;
       }
 
-      TrackerConsole.groupCollapsed(`｢objectiv:${this.queueName}｣ Batch read`);
-      TrackerConsole.log(`Events:`);
-      TrackerConsole.log(eventsBatch);
-      TrackerConsole.groupEnd();
+      if (globalThis.objectiv) {
+        globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:${this.queueName}｣ Batch read`);
+        globalThis.objectiv.TrackerConsole.log(`Events:`);
+        globalThis.objectiv.TrackerConsole.log(eventsBatch);
+        globalThis.objectiv.TrackerConsole.groupEnd();
+      }
 
       // Gather Event Ids. Used for both deletion and processingEventIds cleanup.
       const eventsBatchIds = eventsBatch.map((event) => event.id);

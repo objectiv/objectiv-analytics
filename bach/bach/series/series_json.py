@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import json
-from typing import Optional, Dict, Union, TYPE_CHECKING, List, Tuple
+from typing import Optional, Any, Dict, Union, TYPE_CHECKING, List, Tuple
 
 from sqlalchemy.engine import Dialect
 
@@ -10,7 +10,7 @@ from bach.series import Series
 from bach.expression import Expression
 from bach.series.series import WrappedPartition
 from bach.sql_model import BachSqlModel
-from bach.types import DtypeOrAlias
+from bach.types import DtypeOrAlias, StructuredDtype
 from sql_models.constants import DBDialect
 from sql_models.util import quote_string, is_postgres, DatabaseNotSupportedException
 
@@ -118,6 +118,11 @@ class SeriesJsonb(Series):
         1                                    None
         2    [{'l': ['m', 'n', 'o']}, {'p': 'q'}]
         Name: jsonb_column, dtype: object
+
+    **Database support and types**
+
+    * Postgres: utilizes the 'jsonb' database type.
+    * BigQuery: json support coming soon
     """
     dtype = 'jsonb'
     # todo can only assign a type to one series type, and object is quite generic
@@ -269,7 +274,7 @@ class SeriesJsonb(Series):
         def _find_in_json_list(self, key: Union[str, Dict[str, str]]):
             if isinstance(key, (dict, str)):
                 key = json.dumps(key)
-                quoted_key = quote_string(key)
+                quoted_key = quote_string(self._series_object.engine, key)
                 expression_str = f"""(select min(case when ({quoted_key}::jsonb) <@ value
                 then ordinality end) -1 from jsonb_array_elements({{}}) with ordinality)"""
                 return expression_str
@@ -311,6 +316,10 @@ class SeriesJsonb(Series):
         """
         return self.Json(self)
 
+    @property
+    def elements(self):
+        return self.Json(self)
+
     @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         if not is_postgres(dialect):
@@ -318,7 +327,12 @@ class SeriesJsonb(Series):
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
 
     @classmethod
-    def supported_value_to_literal(cls, dialect: Dialect, value: Union[dict, list]) -> Expression:
+    def supported_value_to_literal(
+            cls,
+            dialect: Dialect,
+            value: Union[dict, list],
+            dtype: StructuredDtype
+    ) -> Expression:
         json_value = json.dumps(value)
         return Expression.string_value(json_value)
 
@@ -351,6 +365,14 @@ class SeriesJsonb(Series):
         """ INTERNAL: Only here to not trigger errors from describe """
         raise NotImplementedError()
 
+    def materialize(
+            self,
+            node_name='manual_materialize',
+            limit: Any = None,
+            distinct: bool = False,
+    ):
+        raise Exception(f'{self.__class__.__name__} cannot be materialized.')
+
 
 class SeriesJson(SeriesJsonb):
     """
@@ -360,6 +382,10 @@ class SeriesJson(SeriesJsonb):
     cast to the jsonb type. As a result all methods of the :py:class:`SeriesJsonb` can also be used with this
     `json` type series.
 
+    **Database support and types**
+
+    * Postgres: utilizes the 'json' database type.
+    * BigQuery: support coming soon
     """
     dtype = 'json'
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
@@ -376,7 +402,9 @@ class SeriesJson(SeriesJsonb):
                  expression: Expression,
                  group_by: 'GroupBy',
                  sorted_ascending: Optional[bool],
-                 index_sorting: List[bool]):
+                 index_sorting: List[bool],
+                 instance_dtype: StructuredDtype,
+                 **kwargs):
 
         super().__init__(engine=engine,
                          base_node=base_node,
@@ -385,4 +413,6 @@ class SeriesJson(SeriesJsonb):
                          expression=Expression.construct(f'cast({{}} as jsonb)', expression),
                          group_by=group_by,
                          sorted_ascending=sorted_ascending,
-                         index_sorting=index_sorting)
+                         index_sorting=index_sorting,
+                         instance_dtype=instance_dtype,
+                         **kwargs)

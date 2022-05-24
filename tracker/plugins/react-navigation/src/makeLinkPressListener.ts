@@ -2,8 +2,8 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { TrackerConsole } from '@objectiv/tracker-core';
-import { makeLinkContext, TrackingContext, trackPressEvent } from '@objectiv/tracker-react-core';
+import { makeLinkContext } from '@objectiv/tracker-core';
+import { TrackingContext, trackPressEvent } from '@objectiv/tracker-react-core';
 import { findFocusedRoute, NavigationState } from '@react-navigation/native';
 
 /**
@@ -42,7 +42,7 @@ export const makeLinkPressListener = ({ trackingContext, navigation, id }: makeL
     const linkContextHref = `/${navigationState.routes.find(({ key }) => key === target)?.name}`;
 
     if (!linkContextId) {
-      TrackerConsole.error(
+      globalThis.objectiv?.TrackerConsole.error(
         `｢objectiv:makePressListener｣ Could not retrieve a valid id for LinkContext in ${
           navigationState.type
         } navigator with routes: ${navigationState.routeNames.join(', ')}. Please provide the \`id\` parameter.`

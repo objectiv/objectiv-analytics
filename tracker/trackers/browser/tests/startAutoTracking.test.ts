@@ -2,8 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import '@objectiv/developer-tools';
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateUUID, makeContentContext, TrackerConsole } from '@objectiv/tracker-core';
+import { generateUUID, LocationContextName } from '@objectiv/tracker-core';
 import {
   AutoTrackingState,
   BrowserTracker,
@@ -17,7 +18,8 @@ import {
 } from '../src';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('startAutoTracking', () => {
   beforeEach(() => {
@@ -94,7 +96,7 @@ describe('makeMutationCallback - new nodes', () => {
         _type: 'VisibleEvent',
         id: matchUUID,
         global_contexts: [],
-        location_stack: [makeContentContext({ id: 'div' })],
+        location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'div' })],
       })
     );
     expect(getTracker().trackEvent).toHaveBeenNthCalledWith(
@@ -103,7 +105,7 @@ describe('makeMutationCallback - new nodes', () => {
         _type: 'VisibleEvent',
         id: matchUUID,
         global_contexts: [],
-        location_stack: [makeContentContext({ id: 'div' })],
+        location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'div' })],
       })
     );
   });
@@ -168,7 +170,7 @@ describe('makeMutationCallback - removed nodes', () => {
         _type: 'HiddenEvent',
         id: matchUUID,
         global_contexts: [],
-        location_stack: [makeContentContext({ id: 'div' })],
+        location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'div' })],
       })
     );
   });
@@ -196,6 +198,12 @@ describe('makeMutationCallback - attribute changes', () => {
       attributeName: TaggingAttribute.elementId,
       oldValue,
     };
+
+    jest.spyOn(document, 'querySelector').mockReturnValueOnce(trackedDiv);
+
     mutationCallback([mockedMutationRecord], mutationObserver);
+
+    expect(document.querySelector).toHaveBeenCalledTimes(1);
+    expect(document.querySelector).toHaveBeenNthCalledWith(1, `[${TaggingAttribute.elementId}='old-id']`);
   });
 });

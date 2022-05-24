@@ -6,19 +6,19 @@ Utilities and a very simple dataset for testing Bach DataFrames.
 This file does not contain any test, but having the file's name start with `test_` makes pytest treat it
 as a test file. This makes pytest rewrite the asserts to give clearer errors.
 """
+import datetime
 from decimal import Decimal
 from typing import List, Union, Type, Dict, Any
 
-import pandas
 import sqlalchemy
-from sqlalchemy.engine import ResultProxy, Engine
+from sqlalchemy.engine import ResultProxy, Engine, Dialect
 
 from bach import DataFrame, Series
 from bach.types import get_series_type_from_db_dtype
 from sql_models.constants import DBDialect
 from sql_models.util import is_bigquery, is_postgres
 from tests.conftest import DB_PG_TEST_URL
-
+from tests.unit.bach.util import get_pandas_df
 
 # Three data tables for testing are defined here that can be used in tests
 # 1. cities: 3 rows (or 11 for the full dataset) of data on cities
@@ -27,8 +27,7 @@ from tests.conftest import DB_PG_TEST_URL
 
 # cities is the main table and should be used when sufficient. The other tables can be used in addition
 # for more complex scenarios (e.g. merging)
-from tests.unit.bach.util import get_pandas_df
-
+ROW_LIMIT = 3
 TEST_DATA_CITIES_FULL = [
     [1, 'Ljouwert', 'Leeuwarden', 93485, 1285],
     [2, 'Snits', 'Súdwest-Fryslân', 33520, 1456],
@@ -43,8 +42,15 @@ TEST_DATA_CITIES_FULL = [
     [11, 'Dokkum', 'Noardeast-Fryslân', 12675, 1298],
 ]
 # The TEST_DATA set that we'll use in most tests is limited to 3 rows for convenience.
-TEST_DATA_CITIES = TEST_DATA_CITIES_FULL[:3]
-CITIES_COLUMNS = ['skating_order', 'city', 'municipality', 'inhabitants', 'founding']
+TEST_DATA_CITIES = TEST_DATA_CITIES_FULL[:ROW_LIMIT]
+CITIES_COLUMNS_X_DTYPES = {
+    'skating_order': 'int64',
+    'city': 'string',
+    'municipality': 'string',
+    'inhabitants': 'int64',
+    'founding': 'int64'
+}
+CITIES_COLUMNS = list(CITIES_COLUMNS_X_DTYPES.keys())
 # The default dataframe has skating_order as index, so that column will be prepended before the actual
 # data in the query results.
 CITIES_INDEX_AND_COLUMNS = ['_index_skating_order'] + CITIES_COLUMNS
@@ -54,7 +60,13 @@ TEST_DATA_FOOD = [
     [2, 'Dúmkes', '2021-05-04 23:28:36.388', '2021-05-04'],
     [4, 'Grutte Pier Bier', '2022-05-03 14:13:13.388', '2022-05-03']
 ]
-FOOD_COLUMNS = ['skating_order', 'food', 'moment', 'date']
+FOOD_COLUMNS_X_DTYPES = {
+    'skating_order': 'int64',
+    'food': 'string',
+    'moment': 'timestamp',
+    'date': 'date',
+}
+FOOD_COLUMNS = list(FOOD_COLUMNS_X_DTYPES.keys())
 FOOD_INDEX_AND_COLUMNS = ['_index_skating_order'] + FOOD_COLUMNS
 
 TEST_DATA_RAILWAYS = [
@@ -66,7 +78,13 @@ TEST_DATA_RAILWAYS = [
     [6, 'Snits', 'Sneek', 2],
     [7, 'Snits', 'Sneek Noord', 2],
 ]
-RAILWAYS_COLUMNS = ['station_id', 'town', 'station', 'platforms']
+RAILWAYS_COLUMNS_X_DTYPES = {
+    'station_id': 'int64',
+    'town': 'string',
+    'station': 'string',
+    'platforms': 'int64',
+}
+RAILWAYS_COLUMNS = list(RAILWAYS_COLUMNS_X_DTYPES.keys())
 RAILWAYS_INDEX_AND_COLUMNS = ['_index_station_id'] + RAILWAYS_COLUMNS
 
 TEST_DATA_JSON = [
@@ -100,76 +118,40 @@ TEST_DATA_JSON = [
 JSON_COLUMNS = ['row', 'dict_column', 'list_column', 'mixed_column']
 JSON_INDEX_AND_COLUMNS = ['_row_id'] + JSON_COLUMNS
 
-# We cache all Bach DataFrames, that way we don't have to recreate and query tables each time.
-_TABLE_DATAFRAME_CACHE: Dict[str, 'DataFrame'] = {}
-
 
 def get_bt(
-        table: str,
-        dataset: List[List[Any]],
-        columns: List[str],
-        convert_objects: bool
+    dataset: List[List[Any]],
+    columns: List[str],
+    convert_objects: bool
 ) -> DataFrame:
-    # We'll just use the table as lookup key and ignore the other paramters, if we store different things
-    # in the same table, then tests will be confused anyway
-    lookup_key = table
-    if lookup_key not in _TABLE_DATAFRAME_CACHE:
-        df = get_pandas_df(dataset, columns)
-        _TABLE_DATAFRAME_CACHE[lookup_key] = get_from_df(table, df, convert_objects)
-    # We don't even renew the `engine`, as creating the database connection takes a bit of time too. If
-    # we ever do into trouble because of stale connection or something, then we can change it at that point
-    # in time.
-    # However we do renew the `savepoints`, as that contains state
-    from bach.savepoints import Savepoints
-    return _TABLE_DATAFRAME_CACHE[lookup_key].copy_override(savepoints=Savepoints())
-
-
-def get_from_df(table: str, df: pandas.DataFrame, convert_objects=True) -> DataFrame:
     """
-    Create a database table with the data from the data-frame.
-
-    Will be deprecated! When possible use `DataFrame.from_pandas()` with `materialization='cte'`
+    DEPRECATED: Call directly DataFrame.from_pandas instead
     """
-    engine = sqlalchemy.create_engine(DB_PG_TEST_URL)
-    buh_tuh = DataFrame.from_pandas(
-        engine=engine,
-        df=df,
+    return DataFrame.from_pandas(
+        engine=sqlalchemy.create_engine(DB_PG_TEST_URL),
+        df=get_pandas_df(dataset, columns),
         convert_objects=convert_objects,
-        name=table,
-        materialization='table',
-        if_exists='replace'
     )
-    return buh_tuh
 
 
 def get_df_with_test_data(engine: Engine, full_data_set: bool = False) -> DataFrame:
     if is_postgres(engine):
         if full_data_set:
-            return get_bt('test_table_full', TEST_DATA_CITIES_FULL, CITIES_COLUMNS, True)
-        return get_bt('test_table_partial', TEST_DATA_CITIES, CITIES_COLUMNS, True)
+            return get_bt(TEST_DATA_CITIES_FULL, CITIES_COLUMNS, True)
+        return get_bt(TEST_DATA_CITIES, CITIES_COLUMNS, True)
     if is_bigquery(engine):
-        # todo: move this somewhere
-        all_dtypes = {
-            'skating_order': 'int64',
-            'city': 'string',
-            'municipality': 'string',
-            'inhabitants': 'int64',
-            'founding': 'int64'
-        }
-        df = DataFrame.from_table(
+        df = _get_big_query_data(
             engine=engine,
-            table_name="cities",
-            index=['skating_order'],
-            all_dtypes=all_dtypes
+            table_name='cities',
+            index='skating_order',
+            dtypes=CITIES_COLUMNS_X_DTYPES,
         )
-        # todo: update actual table to match the postgres test data. so we don't need this magic here
-        df = df.reset_index()
-        if not full_data_set:
-            df = df[df.skating_order <= 3]
-        df['_index_skating_order'] = df.skating_order
-        df = df.set_index('_index_skating_order')
-        df = df.materialize()
-        return df
+        if full_data_set:
+            return df
+
+        # skating_orders in (1, 2, 3)
+        skating_orders = list(range(1, ROW_LIMIT + 1))
+        return df.loc[skating_orders]
     raise ValueError(f'engine of type {engine.name} is not supported.')
 
 
@@ -178,25 +160,65 @@ def get_bt_with_test_data(full_data_set: bool = False) -> DataFrame:
     DEPRECATED: Use get_df_with_test_data()
     """
     if full_data_set:
-        return get_bt('test_table_full', TEST_DATA_CITIES_FULL, CITIES_COLUMNS, True)
-    return get_bt('test_table_partial', TEST_DATA_CITIES, CITIES_COLUMNS, True)
+        return get_bt(TEST_DATA_CITIES_FULL, CITIES_COLUMNS, True)
+    return get_bt(TEST_DATA_CITIES, CITIES_COLUMNS, True)
+
+
+def get_df_with_food_data(engine: Engine) -> DataFrame:
+    if is_postgres(engine):
+        return get_bt(TEST_DATA_FOOD, FOOD_COLUMNS, True)
+
+    if is_bigquery(engine):
+        return _get_big_query_data(
+            engine=engine,
+            table_name='foods',
+            index='skating_order',
+            dtypes=FOOD_COLUMNS_X_DTYPES,
+        )
+
+    raise ValueError(f'engine of type {engine.name} is not supported.')
 
 
 def get_bt_with_food_data() -> DataFrame:
-    return get_bt('test_merge_table_1', TEST_DATA_FOOD, FOOD_COLUMNS, True)
+    """
+    DEPRECATED: Use get_df_with_food_data()
+    """
+    return get_bt(TEST_DATA_FOOD, FOOD_COLUMNS, True)
+
+
+def get_df_with_railway_data(engine: Engine) -> DataFrame:
+    if is_postgres(engine):
+        return get_bt(TEST_DATA_RAILWAYS, RAILWAYS_COLUMNS, True)
+
+    if is_bigquery(engine):
+        return _get_big_query_data(
+            engine=engine,
+            table_name='railways',
+            index='station_id',
+            dtypes=RAILWAYS_COLUMNS_X_DTYPES,
+        )
+    raise ValueError(f'engine of type {engine.name} is not supported.')
 
 
 def get_bt_with_railway_data() -> DataFrame:
-    return get_bt('test_merge_table_2', TEST_DATA_RAILWAYS, RAILWAYS_COLUMNS, True)
+    """
+    DEPRECATED: Use get_df_with_railway_data()
+    """
+    return get_bt(TEST_DATA_RAILWAYS, RAILWAYS_COLUMNS, True)
 
 
-def get_bt_with_json_data(as_json=True) -> DataFrame:
-    bt = get_bt('test_json_table', TEST_DATA_JSON, JSON_COLUMNS, True)
-    if as_json:
-        bt['dict_column'] = bt.dict_column.astype('jsonb')
-        bt['list_column'] = bt.list_column.astype('jsonb')
-        bt['mixed_column'] = bt.mixed_column.astype('jsonb')
-    return bt
+def get_df_with_json_data(engine: Engine, dtype='string') -> DataFrame:
+    assert dtype in ('string', 'json', 'jsonb')
+    df = DataFrame.from_pandas(
+        engine=engine,
+        df=get_pandas_df(TEST_DATA_JSON, JSON_COLUMNS),
+        convert_objects=True,
+    )
+    if dtype:
+        df['dict_column'] = df.dict_column.astype(dtype)
+        df['list_column'] = df.list_column.astype(dtype)
+        df['mixed_column'] = df.mixed_column.astype(dtype)
+    return df
 
 
 def run_query(engine: sqlalchemy.engine, sql: str) -> ResultProxy:
@@ -275,16 +297,28 @@ def _get_to_pandas_data(df: DataFrame):
     pdf = df.to_pandas()
     # Convert pdf to the same format as _get_view_sql_data gives
     column_names = list(pdf.index.names) + list(pdf.columns)
-    pdf.reset_index()
+    pdf = pdf.reset_index()
     db_values = []
-    for index_row, value_row in zip(pdf.index.values.tolist(), pdf.values.tolist()):
-        if isinstance(index_row, tuple):
-            index_row = list(index_row)
-        elif not isinstance(index_row, list):
-            index_row = [index_row]
-        db_values.append(index_row + value_row)
+    for value_row in pdf.to_numpy().tolist():
+        db_values.append(value_row)
     print(db_values)
     return column_names, db_values
+
+
+# todo: rename this function to a more generic name since we might need to use it for other engines
+def _get_big_query_data(engine: Engine, table_name: str, index: str, dtypes: Dict[str, str]) -> DataFrame:
+    df = DataFrame.from_table(
+        engine=engine,
+        table_name=table_name,
+        index=[index],
+        all_dtypes=dtypes
+    )
+    # todo: update actual table to match the postgres test data. so we don't need this magic here
+    df = df.reset_index()
+    df[f'_index_{index}'] = df[index]
+    df = df.set_index(f'_index_{index}')
+    df = df.materialize()
+    return df
 
 
 def assert_postgres_type(
@@ -316,3 +350,12 @@ def assert_postgres_type(
         assert db_type == expected_db_type
     series_type = get_series_type_from_db_dtype(DBDialect.POSTGRES, db_type)
     assert series_type == expected_series_type
+
+
+def convert_expected_data_timestamps(dialect: Dialect, data: List[List[Any]]) -> List[List[Any]]:
+    """ Set UTC timezone on datetime objects if dialect is BigQuery. """
+    def set_tz(value):
+        if not isinstance(value, (datetime.datetime, datetime.date)) or not is_bigquery(dialect):
+            return value
+        return value.replace(tzinfo=datetime.timezone.utc)
+    return [[set_tz(cell) for cell in row] for row in data]

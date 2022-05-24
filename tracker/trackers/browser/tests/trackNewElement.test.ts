@@ -2,20 +2,15 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import '@objectiv/developer-tools';
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import {
-  generateUUID,
-  makeContentContext,
-  makeInputContext,
-  makePressableContext,
-  TrackerConsole,
-  TrackerElementLocations,
-} from '@objectiv/tracker-core';
+import { generateUUID, LocationContextName, makeInputContext, makePressableContext } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker, TaggingAttribute } from '../src';
 import { trackNewElement } from '../src/mutationObserver/trackNewElement';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('trackNewElement', () => {
   beforeEach(() => {
@@ -31,6 +26,10 @@ describe('trackNewElement', () => {
     jest.resetAllMocks();
   });
 
+  it('developers tools should have been imported', async () => {
+    expect(globalThis.objectiv).not.toBeUndefined();
+  });
+
   it('should skip the Element if it is not a Tagged Element', async () => {
     const div = document.createElement('div');
     jest.spyOn(div, 'addEventListener');
@@ -43,26 +42,31 @@ describe('trackNewElement', () => {
 
   it('should skip collision checks if the Element is not a Tagged Element', async () => {
     const div = document.createElement('div');
-    div.setAttribute(TaggingAttribute.context, JSON.stringify(makePressableContext({ id: 'test' })));
-    jest.spyOn(TrackerElementLocations, 'add');
+    if (globalThis.objectiv) {
+      jest.spyOn(globalThis.objectiv.LocationTree, 'add');
+    }
+
+    jest.resetAllMocks();
 
     trackNewElement(div, getTracker());
 
-    expect(TrackerElementLocations.add).not.toHaveBeenCalled();
+    expect(globalThis.objectiv?.LocationTree.add).not.toHaveBeenCalled();
   });
 
   it('should skip collision checks if the Element has the `validate` attribute disabling location check', async () => {
     const div = makeTaggedElement('div', 'div', 'div');
-    jest.spyOn(TrackerElementLocations, 'add');
+    if (globalThis.objectiv) {
+      jest.spyOn(globalThis.objectiv.LocationTree, 'add');
+    }
 
     trackNewElement(div, getTracker());
-    expect(TrackerElementLocations.add).toHaveBeenCalledTimes(1);
+    expect(globalThis.objectiv?.LocationTree.add).toHaveBeenCalledTimes(1);
 
     jest.resetAllMocks();
 
     div.setAttribute(TaggingAttribute.validate, JSON.stringify({ locationUniqueness: false }));
     trackNewElement(div, getTracker());
-    expect(TrackerElementLocations.add).not.toHaveBeenCalled();
+    expect(globalThis.objectiv?.LocationTree.add).not.toHaveBeenCalled();
   });
 
   it('should skip the Element if it is already Tracked', async () => {
@@ -107,7 +111,7 @@ describe('trackNewElement', () => {
         _type: 'VisibleEvent',
         id: matchUUID,
         global_contexts: [],
-        location_stack: [makeContentContext({ id: 'test' })],
+        location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'test' })],
       })
     );
   });

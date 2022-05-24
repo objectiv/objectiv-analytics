@@ -3,6 +3,7 @@
  */
 
 import { AbstractLocationContext } from '@objectiv/schema';
+import { LocationContextName } from '@objectiv/tracker-core';
 import { AnyLocationContext } from '../../definitions/LocationContext';
 
 /**
@@ -21,15 +22,5 @@ export const isLocationContext = (locationContext: AbstractLocationContext): loc
     return false;
   }
 
-  return [
-    'ContentContext',
-    'ExpandableContext',
-    'InputContext',
-    'LinkContext',
-    'MediaPlayerContext',
-    'NavigationContext',
-    'OverlayContext',
-    'PressableContext',
-    'RootLocationContext',
-  ].includes(locationContext._type);
+  return Object.keys(LocationContextName).includes(locationContext._type);
 };

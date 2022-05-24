@@ -7,6 +7,7 @@ module.exports = {
   reporters: ['jest-standard-reporter'],
   collectCoverageFrom: ['src/**/*.{ts,tsx}'],
   moduleNameMapper: {
+    '@objectiv/developer-tools': '<rootDir>../../core/developer-tools/src',
     '@objectiv/plugin-(.*)': '<rootDir>/../../plugins/$1/src',
     '@objectiv/queue-(.*)': '<rootDir>/../../queues/$1/src',
     '@objectiv/testing-tools': '<rootDir>../../core/testing-tools/src',

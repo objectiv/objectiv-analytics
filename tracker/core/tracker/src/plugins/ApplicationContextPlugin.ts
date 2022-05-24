@@ -5,14 +5,8 @@
 import { ApplicationContext } from '@objectiv/schema';
 import { ContextsConfig } from '../Context';
 import { makeApplicationContext } from '../ContextFactories';
-import { TrackerConfig, TrackerInterface } from '../Tracker';
-import { TrackerConsole } from '../TrackerConsole';
+import { TrackerInterface } from '../Tracker';
 import { TrackerPluginInterface } from '../TrackerPluginInterface';
-
-/**
- * The ApplicationContextPlugin Config object.
- */
-export type ApplicationContextPluginConfig = Pick<TrackerConfig, 'applicationId'>;
 
 /**
  * The ApplicationContextPlugin adds an ApplicationContext as GlobalContext before events are transported.
@@ -30,12 +24,14 @@ export class ApplicationContextPlugin implements TrackerPluginInterface {
       id: tracker.applicationId,
     });
 
-    TrackerConsole.groupCollapsed(`｢objectiv:${this.pluginName}｣ Initialized`);
-    TrackerConsole.log(`Application ID: ${tracker.applicationId}`);
-    TrackerConsole.group(`Application Context:`);
-    TrackerConsole.log(this.applicationContext);
-    TrackerConsole.groupEnd();
-    TrackerConsole.groupEnd();
+    if (globalThis.objectiv) {
+      globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:${this.pluginName}｣ Initialized`);
+      globalThis.objectiv.TrackerConsole.log(`Application ID: ${tracker.applicationId}`);
+      globalThis.objectiv.TrackerConsole.group(`Application Context:`);
+      globalThis.objectiv.TrackerConsole.log(this.applicationContext);
+      globalThis.objectiv.TrackerConsole.groupEnd();
+      globalThis.objectiv.TrackerConsole.groupEnd();
+    }
   }
 
   /**
@@ -43,7 +39,9 @@ export class ApplicationContextPlugin implements TrackerPluginInterface {
    */
   enrich(contexts: Required<ContextsConfig>): void {
     if (!this.applicationContext) {
-      TrackerConsole.error(`｢objectiv:${this.pluginName}｣ Cannot enrich. Make sure to initialize the plugin first.`);
+      globalThis.objectiv?.TrackerConsole.error(
+        `｢objectiv:${this.pluginName}｣ Cannot enrich. Make sure to initialize the plugin first.`
+      );
       return;
     }
     contexts.global_contexts.push(this.applicationContext);

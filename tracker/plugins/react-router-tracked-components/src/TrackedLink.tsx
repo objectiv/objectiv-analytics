@@ -2,7 +2,6 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { getLocationPath } from '@objectiv/tracker-core';
 import {
   LinkContextWrapper,
   makeAnchorClickHandler,
@@ -24,9 +23,6 @@ export type TrackedLinkProps = LinkProps & ReactRouterTrackingOptionsProp;
 export const TrackedLink = React.forwardRef<HTMLAnchorElement, TrackedLinkProps>((props, ref) => {
   const { objectiv, ...otherProps } = props;
 
-  // Retrieve Location Path for this Component, for debugging purposes.
-  const locationPath = getLocationPath(useLocationStack());
-
   // Use ReactRouter hooks to generate the `href` prop.
   const linkContextHref = useHref(props.to);
 
@@ -34,10 +30,14 @@ export const TrackedLink = React.forwardRef<HTMLAnchorElement, TrackedLinkProps>
   const linkContextId = makeIdFromTrackedAnchorProps(props);
 
   // If we couldn't generate an `id`, log the issue and return a regular Link component.
+  const locationStack = useLocationStack();
   if (!linkContextId) {
-    console.error(
-      `｢objectiv｣ Could not generate id for LinkContext @ ${locationPath}. Either add the \`title\` prop or specify an id manually via the  \`id\` option of the \`objectiv\` prop.`
-    );
+    if (globalThis.objectiv) {
+      const locationPath = globalThis.objectiv.getLocationPath(locationStack);
+      globalThis.objectiv.TrackerConsole.error(
+        `｢objectiv｣ Could not generate id for LinkContext @ ${locationPath}. Either add the \`title\` prop or specify an id manually via the  \`id\` option of the \`objectiv\` prop.`
+      );
+    }
     return <Link {...otherProps} />;
   }
 

@@ -2,10 +2,10 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeInputChangeEvent, Tracker } from '@objectiv/tracker-core';
+import { LocationContextName, makeContentContext, makeInputChangeEvent, Tracker } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
-import { makeContentContext, TrackingContextProvider, trackInputChangeEvent, useInputChangeEventTracker } from '../src';
+import { TrackingContextProvider, trackInputChangeEvent, useInputChangeEventTracker } from '../src';
 
 describe('InputChangeEvent', () => {
   beforeEach(() => {
@@ -79,7 +79,7 @@ describe('InputChangeEvent', () => {
       1,
       expect.objectContaining(
         makeInputChangeEvent({
-          location_stack: [expect.objectContaining({ _type: 'ContentContext', id: 'override' })],
+          location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'override' })],
         })
       ),
       undefined

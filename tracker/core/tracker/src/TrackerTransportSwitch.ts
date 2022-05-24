@@ -3,7 +3,6 @@
  */
 
 import { NonEmptyArray } from './helpers';
-import { TrackerConsole } from './TrackerConsole';
 import { TrackerTransportInterface, TransportableEvent } from './TrackerTransportInterface';
 
 /**
@@ -30,10 +29,16 @@ export class TrackerTransportSwitch implements TrackerTransportInterface {
   constructor(config: TrackerTransportSwitchConfig) {
     this.firstUsableTransport = config.transports.find((trackerTransport) => trackerTransport.isUsable());
 
-    TrackerConsole.groupCollapsed(`｢objectiv:${this.transportName}｣ Initialized`);
-    TrackerConsole.log(`Transports: ${config.transports.map((transport) => transport.transportName).join(', ')}`);
-    TrackerConsole.log(`First usable Transport: ${this.firstUsableTransport?.transportName ?? 'none'}`);
-    TrackerConsole.groupEnd();
+    if (globalThis.objectiv) {
+      globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:${this.transportName}｣ Initialized`);
+      globalThis.objectiv.TrackerConsole.log(
+        `Transports: ${config.transports.map((transport) => transport.transportName).join(', ')}`
+      );
+      globalThis.objectiv.TrackerConsole.log(
+        `First usable Transport: ${this.firstUsableTransport?.transportName ?? 'none'}`
+      );
+      globalThis.objectiv.TrackerConsole.groupEnd();
+    }
   }
 
   /**

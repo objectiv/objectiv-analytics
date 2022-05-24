@@ -2,21 +2,14 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { Tracker } from '@objectiv/tracker-core';
+import { LocationContextName, Tracker } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render } from '@testing-library/react';
 import React from 'react';
-import {
-  RootLocationContextWrapper,
-  ObjectivProvider,
-  trackPressEvent,
-  usePressEventTracker,
-  LocationTree,
-} from '../src';
+import { RootLocationContextWrapper, ObjectivProvider, trackPressEvent, usePressEventTracker } from '../src';
 
 describe('RootLocationContextWrapper', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    LocationTree.clear();
   });
 
   afterEach(() => {
@@ -52,7 +45,7 @@ describe('RootLocationContextWrapper', () => {
         _type: 'PressEvent',
         location_stack: [
           expect.objectContaining({
-            _type: 'RootLocationContext',
+            _type: LocationContextName.RootLocationContext,
             ...rootLocationContextProps,
           }),
         ],
@@ -85,7 +78,7 @@ describe('RootLocationContextWrapper', () => {
         _type: 'PressEvent',
         location_stack: [
           expect.objectContaining({
-            _type: 'RootLocationContext',
+            _type: LocationContextName.RootLocationContext,
             ...rootLocationContextProps,
           }),
         ],

@@ -150,9 +150,8 @@ def test_add_int_series(engine):
     )
 
 
-def test_divide_constant(pg_engine):
-    # TODO: BigQuery
-    bt = get_df_with_test_data(pg_engine)
+def test_divide_constant(engine):
+    bt = get_df_with_test_data(engine)
     bts = bt['inhabitants'] / 1000
     assert isinstance(bts, Series)
     assert_equals_data(

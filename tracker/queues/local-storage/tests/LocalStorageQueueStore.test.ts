@@ -3,10 +3,11 @@
  */
 
 import { localStorageMock, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { TrackerConsole, TrackerEvent } from '@objectiv/tracker-core';
+import { TrackerEvent } from '@objectiv/tracker-core';
 import { LocalStorageQueueStore } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('LocalStorageQueueStore', () => {
   beforeEach(() => {
@@ -98,9 +99,12 @@ describe('LocalStorageQueueStore', () => {
   });
 
   describe('Error handling', () => {
+    const originalSetItemMock = localStorageMock.setItem;
+
     afterEach(() => {
       localStorage.clear();
       jest.clearAllMocks();
+      localStorageMock.setItem = originalSetItemMock;
     });
 
     it('should return empty array if the store is corrupted', async () => {
@@ -163,6 +167,45 @@ describe('LocalStorageQueueStore', () => {
         '%c｢objectiv:LocalStorageQueueStore｣ Failed to write Events to localStorage: Error: nope',
         'font-weight: bold'
       );
+    });
+  });
+
+  describe('Without developer tools', () => {
+    let objectivGlobal = globalThis.objectiv;
+
+    beforeEach(() => {
+      localStorage.clear();
+      jest.clearAllMocks();
+      globalThis.objectiv = undefined;
+    });
+
+    afterEach(() => {
+      globalThis.objectiv = objectivGlobal;
+    });
+
+    it('should not console.error if the store is corrupted', async () => {
+      const trackerId = 'broken';
+      const corruptedValue = '[ooops';
+      const localStorageKey = `objectiv-events-queue-${trackerId}`;
+      localStorage.setItem(localStorageKey, corruptedValue);
+      expect(localStorage.getItem(localStorageKey)).toBe(corruptedValue);
+      const trackerQueueStore = new LocalStorageQueueStore({ trackerId: 'broken' });
+      expect(trackerQueueStore.length).toBe(0);
+      const events = await trackerQueueStore.read();
+      expect(events).toStrictEqual([]);
+      // Once for the length getter, once for the read method
+      expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
+    });
+
+    it('should not console.error if the given Events are invalid', async () => {
+      localStorageMock.setItem = jest.fn().mockImplementation(() => {
+        throw Error('nope');
+      });
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+      const trackerQueueStore = new LocalStorageQueueStore({ trackerId: 'app-id' });
+      expect(trackerQueueStore.length).toBe(0);
+      await trackerQueueStore.write(TrackerEvent1);
+      expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
     });
   });
 });

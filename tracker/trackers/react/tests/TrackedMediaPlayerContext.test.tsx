@@ -3,17 +3,17 @@
  */
 
 import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
-import { TrackerConsole } from '@objectiv/tracker-core';
+import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render, screen } from '@testing-library/react';
 import React, { createRef } from 'react';
-import { LocationTree, ObjectivProvider, ReactTracker, TrackedMediaPlayerContext, usePressEventTracker } from '../src';
+import { ObjectivProvider, ReactTracker, TrackedMediaPlayerContext, usePressEventTracker } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedMediaPlayerContext', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    LocationTree.clear();
   });
 
   afterEach(() => {
@@ -53,7 +53,7 @@ describe('TrackedMediaPlayerContext', () => {
         _type: 'PressEvent',
         location_stack: expect.arrayContaining([
           expect.objectContaining({
-            _type: 'MediaPlayerContext',
+            _type: LocationContextName.MediaPlayerContext,
             id: 'video-id',
           }),
         ]),

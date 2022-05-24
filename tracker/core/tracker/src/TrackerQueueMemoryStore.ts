@@ -3,7 +3,6 @@
  */
 
 import { NonEmptyArray } from './helpers';
-import { TrackerConsole } from './TrackerConsole';
 import { TrackerEvent } from './TrackerEvent';
 import { TrackerQueueStoreInterface } from './TrackerQueueStoreInterface';
 
@@ -17,7 +16,7 @@ export class TrackerQueueMemoryStore implements TrackerQueueStoreInterface {
   events: TrackerEvent[] = [];
 
   constructor() {
-    TrackerConsole.log(`%c｢objectiv:${this.queueStoreName}｣ Initialized`, 'font-weight: bold');
+    globalThis.objectiv?.TrackerConsole.log(`%c｢objectiv:${this.queueStoreName}｣ Initialized`, 'font-weight: bold');
   }
 
   async read(size?: number, filterPredicate?: (event: TrackerEvent) => boolean): Promise<TrackerEvent[]> {

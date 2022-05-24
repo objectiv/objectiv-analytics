@@ -3,17 +3,17 @@
  */
 
 import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
-import { TrackerConsole } from '@objectiv/tracker-core';
+import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render } from '@testing-library/react';
 import React from 'react';
-import { LocationTree, ObjectivProvider, ReactTracker, TrackedAnchor } from '../src';
+import { ObjectivProvider, ReactTracker, TrackedAnchor } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedAnchor', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    LocationTree.clear();
   });
 
   afterEach(() => {
@@ -41,7 +41,7 @@ describe('TrackedAnchor', () => {
         _type: 'PressEvent',
         location_stack: expect.arrayContaining([
           expect.objectContaining({
-            _type: 'LinkContext',
+            _type: LocationContextName.LinkContext,
             id: 'trigger-event',
             href: '/some-url',
           }),

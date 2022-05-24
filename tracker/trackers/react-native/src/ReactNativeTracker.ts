@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ContextsConfig, Tracker, TrackerConfig } from '@objectiv/tracker-core';
+import { ContextsConfig, Tracker, TrackerConfig, TrackerPlatform } from '@objectiv/tracker-core';
 import { makeReactNativeTrackerDefaultPluginsList } from './common/factories/makeReactNativeTrackerDefaultPluginsList';
 import { makeReactNativeTrackerDefaultQueue } from './common/factories/makeReactNativeTrackerDefaultQueue';
 import { makeReactNativeTrackerDefaultTransport } from './common/factories/makeReactNativeTrackerDefaultTransport';
@@ -11,7 +11,7 @@ import { makeReactNativeTrackerDefaultTransport } from './common/factories/makeR
  * React Native Tracker can be configured in an easier way, as opposed to the core tracker.
  * The minimum required parameters are the `applicationId` and either an `endpoint` or a `transport` object.
  */
-export type ReactNativeTrackerConfig = TrackerConfig & {
+export type ReactNativeTrackerConfig = Omit<TrackerConfig, 'platform'> & {
   /**
    * The collector endpoint URL.
    */
@@ -48,20 +48,23 @@ export type ReactNativeTrackerConfig = TrackerConfig & {
  */
 export class ReactNativeTracker extends Tracker {
   constructor(trackerConfig: ReactNativeTrackerConfig, ...contextConfigs: ContextsConfig[]) {
-    let config = trackerConfig;
+    let config: TrackerConfig = trackerConfig;
+
+    // Set the platform
+    config.platform = TrackerPlatform.REACT_NATIVE;
 
     // Either `transport` or `endpoint` must be provided
-    if (!config.transport && !config.endpoint) {
+    if (!config.transport && !trackerConfig.endpoint) {
       throw new Error('Either `transport` or `endpoint` must be provided');
     }
 
     // `transport` and `endpoint` must not be provided together
-    if (config.transport && config.endpoint) {
+    if (config.transport && trackerConfig.endpoint) {
       throw new Error('Please provider either `transport` or `endpoint`, not both at same time');
     }
 
     // Automatically create a default Transport for the given `endpoint` with a sensible setup
-    if (config.endpoint) {
+    if (trackerConfig.endpoint) {
       config = {
         ...config,
         transport: makeReactNativeTrackerDefaultTransport(config),

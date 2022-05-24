@@ -3,9 +3,7 @@
  */
 
 import { AbstractLocationContext } from '@objectiv/schema';
-import { isDevMode } from '@objectiv/tracker-core';
 import React, { ReactNode } from 'react';
-import { LocationTree } from '../common/LocationTree';
 import { LocationProvider } from '../common/providers/LocationProvider';
 import { TrackingContext } from '../common/providers/TrackingContext';
 import { useParentLocationContext } from '../hooks/consumers/useParentLocationContext';
@@ -13,7 +11,6 @@ import { useTracker } from '../hooks/consumers/useTracker';
 import { useOnChange } from '../hooks/useOnChange';
 import { useOnMount } from '../hooks/useOnMount';
 import { useOnUnmount } from '../hooks/useOnUnmount';
-import { LocationContext } from '../types';
 
 /**
  * The props of LocationContextWrapper.
@@ -22,7 +19,7 @@ export type LocationContextWrapperProps = {
   /**
    * A LocationContext instance.
    */
-  locationContext: LocationContext<AbstractLocationContext>;
+  locationContext: AbstractLocationContext;
 
   /**
    * LocationContextWrapper children can also be a function (render props). Provides the combined TrackingContext.
@@ -39,21 +36,21 @@ export const LocationContextWrapper = ({ children, locationContext }: LocationCo
   const parentLocationContext = useParentLocationContext();
 
   useOnMount(() => {
-    if (isDevMode()) {
-      LocationTree.add(locationContext, parentLocationContext);
+    if (globalThis.objectiv) {
+      globalThis.objectiv.LocationTree.add(locationContext, parentLocationContext);
     }
   });
 
   useOnUnmount(() => {
-    if (isDevMode()) {
-      LocationTree.remove(locationContext);
+    if (globalThis.objectiv) {
+      globalThis.objectiv.LocationTree.remove(locationContext);
     }
   });
 
-  useOnChange<LocationContext<AbstractLocationContext>>(locationContext, (previousLocationContext) => {
-    if (isDevMode()) {
-      LocationTree.remove(previousLocationContext);
-      LocationTree.add(locationContext, parentLocationContext);
+  useOnChange<AbstractLocationContext>(locationContext, (previousLocationContext) => {
+    if (globalThis.objectiv) {
+      globalThis.objectiv.LocationTree.remove(previousLocationContext);
+      globalThis.objectiv.LocationTree.add(locationContext, parentLocationContext);
     }
   });
 

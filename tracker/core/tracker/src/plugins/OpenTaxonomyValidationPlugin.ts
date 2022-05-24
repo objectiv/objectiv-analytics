@@ -2,13 +2,12 @@
  * Copyright 2022 Objectiv B.V.
  */
 
+import { GlobalContextName, LocationContextName } from '../ContextNames';
 import { isDevMode } from '../helpers';
-import { TrackerConsole } from '../TrackerConsole';
+import { TrackerInterface } from '../Tracker';
 import { TrackerEvent } from '../TrackerEvent';
 import { TrackerPluginInterface } from '../TrackerPluginInterface';
 import { TrackerValidationRuleInterface } from '../TrackerValidationRuleInterface';
-import { GlobalContextValidationRule } from '../validationRules/GlobalContextValidationRule';
-import { LocationContextValidationRule } from '../validationRules/LocationContextValidationRule';
 
 /**
  * Validates a number of rules related to the Open Taxonomy:
@@ -17,33 +16,46 @@ import { LocationContextValidationRule } from '../validationRules/LocationContex
  */
 export class OpenTaxonomyValidationPlugin implements TrackerPluginInterface {
   readonly pluginName = `OpenTaxonomyValidationPlugin`;
-  readonly validationRules: TrackerValidationRuleInterface[];
+  validationRules: TrackerValidationRuleInterface[] = [];
+  initialized = false;
 
   /**
-   * Initializes console and all Validation Rules.
+   * At initialization, we retrieve TrackerPlatform and initialize all Validation Rules.
    */
-  constructor() {
-    this.validationRules = [
-      new GlobalContextValidationRule({
-        logPrefix: this.pluginName,
-        contextName: 'ApplicationContext',
-        once: true,
-      }),
-      new LocationContextValidationRule({
-        logPrefix: this.pluginName,
-        contextName: 'RootLocationContext',
-        once: true,
-        position: 0,
-      }),
-    ];
+  initialize({ platform }: TrackerInterface) {
+    if (globalThis.objectiv) {
+      this.validationRules = [
+        globalThis.objectiv.makeGlobalContextValidationRule({
+          platform,
+          logPrefix: this.pluginName,
+          contextName: GlobalContextName.ApplicationContext,
+          once: true,
+        }),
+        globalThis.objectiv.makeLocationContextValidationRule({
+          platform,
+          logPrefix: this.pluginName,
+          contextName: LocationContextName.RootLocationContext,
+          once: true,
+          position: 0,
+        }),
+      ];
 
-    TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
+      globalThis.objectiv.TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
+    }
+    this.initialized = true;
   }
 
   /**
    * Performs Open Taxonomy related validation checks
    */
   validate(event: TrackerEvent): void {
+    if (!this.initialized) {
+      globalThis.objectiv?.TrackerConsole.error(
+        `｢objectiv:${this.pluginName}｣ Cannot validate. Make sure to initialize the plugin first.`
+      );
+      return;
+    }
+
     if (this.isUsable()) {
       this.validationRules.forEach((validationRule) => validationRule.validate(event));
     }

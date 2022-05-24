@@ -2,10 +2,10 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeRootLocationContext } from '../common/factories/makeRootLocationContext';
-import { LocationContextWrapper } from './LocationContextWrapper';
-import { ContentContextWrapperProps } from './ContentContextWrapper';
+import { makeRootLocationContext } from '@objectiv/tracker-core';
 import React from 'react';
+import { ContentContextWrapperProps } from './ContentContextWrapper';
+import { LocationContextWrapper } from './LocationContextWrapper';
 
 /**
  * The props of RootLocationContextWrapper. No extra attributes, same as ContentContextWrapper.

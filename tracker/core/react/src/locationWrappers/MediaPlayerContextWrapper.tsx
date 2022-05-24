@@ -2,11 +2,11 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeMediaPlayerContext } from '../common/factories/makeMediaPlayerContext';
+import { makeMediaPlayerContext } from '@objectiv/tracker-core';
+import React from 'react';
+import { ContentContextWrapperProps } from './ContentContextWrapper';
 import { LocationContextWrapper } from './LocationContextWrapper';
 
-import { ContentContextWrapperProps } from './ContentContextWrapper';
-import React from 'react';
 /**
  * The props of MediaPlayerContextWrapper. No extra attributes, same as ContentContextWrapper.
  */

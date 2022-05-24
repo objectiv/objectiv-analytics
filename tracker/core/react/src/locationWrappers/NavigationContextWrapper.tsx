@@ -2,10 +2,10 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeNavigationContext } from '../common/factories/makeNavigationContext';
-import { LocationContextWrapper } from './LocationContextWrapper';
-import { ContentContextWrapperProps } from './ContentContextWrapper';
+import { makeNavigationContext } from '@objectiv/tracker-core';
 import React from 'react';
+import { ContentContextWrapperProps } from './ContentContextWrapper';
+import { LocationContextWrapper } from './LocationContextWrapper';
 
 /**
  * The props of NavigationContextWrapper. No extra attributes, same as ContentContextWrapper.

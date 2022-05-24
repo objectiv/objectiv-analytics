@@ -7,13 +7,13 @@ import pytest
 
 from bach import SeriesDate
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_bt_with_food_data, \
-    assert_postgres_type, get_df_with_test_data
+    assert_postgres_type, get_df_with_test_data, get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
 
 
 @pytest.mark.parametrize("asstring", [True, False])
-def test_date_comparator(asstring: bool):
-    mt = get_bt_with_food_data()[['date']]
+def test_date_comparator(asstring: bool, engine):
+    mt = get_df_with_food_data(engine)[['date']]
 
     # import code has no means to distinguish between date and timestamp
     mt['date'] = mt['date'].astype('date')

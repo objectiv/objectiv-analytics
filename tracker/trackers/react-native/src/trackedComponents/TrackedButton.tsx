@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { getLocationPath, makeIdFromString } from '@objectiv/tracker-core';
+import { makeIdFromString } from '@objectiv/tracker-core';
 import { PressableContextWrapper, trackPressEvent, useLocationStack } from '@objectiv/tracker-react-core';
 import React from 'react';
 import { Button, ButtonProps } from 'react-native';
@@ -27,11 +27,14 @@ export const TrackedButton = (props: TrackedButtonProps) => {
   const contextId = id ?? makeIdFromString(props.title);
 
   // If we couldn't generate an `id`, log the issue and return an untracked Component.
-  const locationPath = getLocationPath(useLocationStack());
+  const locationStack = useLocationStack();
   if (!contextId) {
-    console.error(
-      `｢objectiv｣ Could not generate a valid id for PressableContext @ ${locationPath}. Please provide the \`id\` property manually.`
-    );
+    if (globalThis.objectiv) {
+      const locationPath = globalThis.objectiv.getLocationPath(locationStack);
+      globalThis.objectiv.TrackerConsole.error(
+        `｢objectiv｣ Could not generate a valid id for PressableContext @ ${locationPath}. Please provide the \`id\` property manually.`
+      );
+    }
     return <Button {...buttonProps} />;
   }
 

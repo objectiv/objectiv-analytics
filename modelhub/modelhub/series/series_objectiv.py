@@ -156,7 +156,7 @@ class SeriesLocationStack(SeriesJsonb):
             and a `id` key.
             """
             keys = ['_type', 'id']
-            jsonb_build_object_str = [f"{quote_string(key)}" for key in keys]
+            jsonb_build_object_str = [f"{quote_string(self._series_object.engine, key)}" for key in keys]
             expression_str = f'''(
                 select jsonb_agg((
                     select json_object_agg(items.key, items.value)

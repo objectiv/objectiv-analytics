@@ -5,12 +5,13 @@ import pytest
 
 from bach.dataframe import DtypeNamePair, DefinedVariable, DataFrame
 from sql_models.model import CustomSqlModelBuilder
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data, \
-    get_bt_with_food_data
+from sql_models.util import is_bigquery, is_postgres
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data, \
+    get_df_with_food_data, get_bt_with_test_data
 
 
-def test_variable_happy_path():
-    df = get_bt_with_test_data()[['city', 'founding']]
+def test_variable_happy_path(engine):
+    df = get_df_with_test_data(engine)[['city', 'founding']]
     assert_equals_data(
         df,
         expected_columns=['_index_skating_order', 'city', 'founding'],
@@ -77,11 +78,11 @@ def test_variable_happy_path():
     )
 
 
-def test_set_variable_double_types():
+def test_set_variable_double_types(engine):
     # It's possible to have two variables with the same name but different type.
     # This seems counter-intuitive, but removes a lot of the potential edge cases and problems around merging
     # DataFrames and Series with the same variable names.
-    df = get_bt_with_test_data()[['city']]
+    df = get_df_with_test_data(engine)[['city']]
     df, int_variable = df.create_variable('variable', 1000)
     df, str_variable = df.create_variable('variable', 'test')
     assert df.variables == {
@@ -113,9 +114,9 @@ def test_set_variable_double_types():
         df.set_variable('variable', '1234', dtype='int64')
 
 
-def test_variable_missing():
+def test_variable_missing(engine):
     # test case where a variable is used in the series, but has no value assigned.
-    df = get_bt_with_test_data()[['city', 'founding']]
+    df = get_df_with_test_data(engine)[['city', 'founding']]
     df, int_variable = df.create_variable('int_variable', 1000)
     assert df.variables == {DtypeNamePair(dtype='int64', name='int_variable'): 1000}
     df['x'] = int_variable
@@ -137,9 +138,9 @@ def test_variable_missing():
     df_without_variable.to_pandas()
 
 
-def test_merge_happy_path():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_merge_happy_path(engine):
+    bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_food_data(engine)[['skating_order', 'food']]
 
     bt, shared = bt.create_variable(name='shared', value=' first')
     bt, variable1 = bt.create_variable(name='variable1', value=' city')
@@ -176,9 +177,9 @@ def test_merge_happy_path():
     )
 
 
-def test_merge_variable_different_types():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'inhabitants']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_merge_variable_different_types(engine):
+    bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'inhabitants']]
+    mt = get_df_with_food_data(engine)[['skating_order', 'food']]
     bt, bt_variable = bt.create_variable(name='shared', value=12345)
     bt['inhabitants'] = bt['inhabitants'] + bt_variable
     mt, mt_variable = mt.create_variable(name='shared', value=' string value')
@@ -196,8 +197,8 @@ def test_merge_variable_different_types():
     )
 
 
-def test_get_all_variable_usage():
-    df1 = get_bt_with_test_data(full_data_set=False)[['skating_order', 'inhabitants']]
+def test_get_all_variable_usage(engine):
+    df1 = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'inhabitants']]
     assert df1.get_all_variable_usage() == []
 
     df1, first = df1.create_variable(name='first', value=1234)
@@ -220,17 +221,28 @@ def test_get_all_variable_usage():
 
     df1.materialize(inplace=True)
     # materialize will change the ref_paths, and migrate the 'second' variable to the base_node
+    str_old_value = 'test'
+
+    if is_postgres(engine):
+        str_old_value = f"'{str_old_value}'"
+    elif is_bigquery(engine):
+        str_old_value = f'"""{str_old_value}"""'
+
     assert df1.get_all_variable_usage() == [
-        DefinedVariable(name='second', dtype='string', value='test', ref_path=(), old_value="'test'"),
+        DefinedVariable(name='second', dtype='string', value='test', ref_path=(), old_value=str_old_value),
         DefinedVariable(name='first', dtype='int64', value=1234, ref_path=('prev',), old_value='1234')
     ]
+
+    if is_bigquery(df1.engine):
+        # DataFrame.from_model is not supported for big query
+        return
 
     sql_model = CustomSqlModelBuilder(sql='select * from {{model}}')(model=df1.base_node)
     df2 = DataFrame.from_model(engine=df1.engine, model=sql_model, index=list(df1.index.keys()))
     # df2 a base_node that has one SqlModel after the df1.base_node.
     # df2 has the same variables in the base_node as df1, but it doesn't actually have the values defined.
     assert df2.get_all_variable_usage() == [
-        DefinedVariable(name='second', dtype='string', value=None, ref_path=('model',), old_value="'test'"),
+        DefinedVariable(name='second', dtype='string', value=None, ref_path=('model',), old_value=str_old_value),
         DefinedVariable(name='first', dtype='int64', value=None, ref_path=('model', 'prev'), old_value='1234')
     ]
 

@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { TrackVisibilityOptions } from '@objectiv/tracker-browser';
+import { TrackVisibilityOptions } from '../../definitions/TrackVisibilityOptions';
 import { isTrackVisibilityAttribute } from '../guards/isTrackVisibilityAttribute';
 import { parseJson } from './parseJson';
 

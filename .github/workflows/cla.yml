@@ -1,0 +1,36 @@
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened,closed,synchronize]
+
+permissions:
+  # to post and edit PR comments
+  pull-requests: write
+  # to rerun checks and read committer's details
+  actions: write
+  contents: write
+
+jobs:
+  CLAssistant:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "CLA Assistant"
+        if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request_target'
+        uses: cla-assistant/github-action@v2.1.3-beta
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PERSONAL_ACCESS_TOKEN : ${{ secrets.CLA_ACCESS_TOKEN }}
+        with:
+          remote-organization-name: 'objectiv'
+          remote-repository-name: 'cla'
+          path-to-signatures: 'signatures/cla_signatures.json'
+          path-to-document: 'https://objectiv.io/cla/'
+          branch: 'main'
+          allowlist: dependabot,jansenbob,hendrik-obj,ivarpruijn,KathiaBarahona,borft,afroald,sdirosa,thijs-obj,jansentom,vard-obj,vincenthoogsteder
+          lock-pullrequest-aftermerge: true
+          signed-commit-message: '$contributorName has signed the CLA in #$pullRequestNo'
+          custom-allsigned-prcomment: 'All contributors have signed the CLA.'
+          create-file-commit-message: 'Creating file for storing CLA signatures'
+          custom-notsigned-prcomment: '<br/>Thank you for your contribution, we really appreciate it. Like many open-source projects, we ask that $you sign our [Contributor License Agreement (CLA)](https://testing.objectiv.io/cla/) before we can accept your contribution. Save this URL or store it as a PDF for later reference.<br /><br />You can sign the CLA by just posting the comment below in this PR.<br/>'
+          custom-pr-sign-comment: 'I have read the CLA Document and I hereby sign the CLA'

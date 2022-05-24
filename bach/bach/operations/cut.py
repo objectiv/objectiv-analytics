@@ -214,6 +214,7 @@ class CutOperation:
             group_by=None,
             sorted_ascending=None,
             index_sorting=[],
+            instance_dtype=SeriesInt64.dtype
         )
         range_df = buckets.to_frame().reset_index(drop=True).drop_duplicates(ignore_index=True)
 

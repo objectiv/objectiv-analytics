@@ -1,12 +1,12 @@
 import numpy as np
 import pytest
 
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data, \
-    get_bt_with_railway_data
+from tests.functional.bach.test_data_and_utils import assert_equals_data, \
+get_df_with_railway_data, get_df_with_test_data
 
 
-def test_value_counts_basic():
-    bt = get_bt_with_test_data()[['municipality']]
+def test_value_counts_basic(engine):
+    bt = get_df_with_test_data(engine)[['municipality']]
     result = bt.value_counts()
 
     np.testing.assert_equal(
@@ -39,8 +39,8 @@ def test_value_counts_basic():
     )
 
 
-def test_value_counts_w_subset():
-    bt = get_bt_with_railway_data()
+def test_value_counts_w_subset(engine):
+    bt = get_df_with_railway_data(engine)
     result = bt.value_counts(subset=['town', 'platforms'])
     np.testing.assert_equal(
         bt.to_pandas().value_counts(subset=['town', 'platforms']).to_numpy(),
@@ -79,8 +79,8 @@ def test_value_counts_w_subset():
     )
 
 
-def test_value_counts_w_groupby() -> None:
-    bt = get_bt_with_railway_data()[['town', 'platforms', 'station_id']].reset_index(drop=True)
+def test_value_counts_w_groupby(engine) -> None:
+    bt = get_df_with_railway_data(engine)[['town', 'platforms', 'station_id']].reset_index(drop=True)
     result = bt.groupby(['town', 'platforms']).value_counts()
     assert_equals_data(
         result.to_frame().sort_index(),
@@ -112,6 +112,6 @@ def test_value_counts_w_groupby() -> None:
     )
 
 
-def test_subset_error() -> None:
+def test_subset_error(engine) -> None:
     with pytest.raises(ValueError, match='subset contains invalid series.'):
-        get_bt_with_railway_data().value_counts(subset=['random'])
+        get_df_with_railway_data(engine).value_counts(subset=['random'])

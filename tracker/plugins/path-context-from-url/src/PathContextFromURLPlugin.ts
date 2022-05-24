@@ -4,10 +4,10 @@
 
 import {
   ContextsConfig,
-  GlobalContextValidationRule,
+  GlobalContextName,
   makePathContext,
-  TrackerConsole,
   TrackerEvent,
+  TrackerInterface,
   TrackerPluginInterface,
   TrackerValidationRuleInterface,
 } from '@objectiv/tracker-core';
@@ -22,21 +22,27 @@ import {
  */
 export class PathContextFromURLPlugin implements TrackerPluginInterface {
   readonly pluginName = `PathContextFromURLPlugin`;
-  readonly validationRules: TrackerValidationRuleInterface[];
+  validationRules: TrackerValidationRuleInterface[] = [];
+  initialized: boolean = false;
 
   /**
-   * The constructor is merely responsible for initializing validation rules.
+   * Initializes validation rules.
    */
-  constructor() {
-    this.validationRules = [
-      new GlobalContextValidationRule({
-        logPrefix: this.pluginName,
-        contextName: 'PathContext',
-        once: true,
-      }),
-    ];
+  initialize({ platform }: TrackerInterface): void {
+    if (globalThis.objectiv) {
+      this.validationRules = [
+        globalThis.objectiv.makeGlobalContextValidationRule({
+          platform,
+          logPrefix: this.pluginName,
+          contextName: GlobalContextName.PathContext,
+          once: true,
+        }),
+      ];
+    }
 
-    TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
+    this.initialized = true;
+
+    globalThis.objectiv?.TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
   }
 
   /**
@@ -54,6 +60,12 @@ export class PathContextFromURLPlugin implements TrackerPluginInterface {
    */
   validate(event: TrackerEvent): void {
     if (this.isUsable()) {
+      if (!this.initialized) {
+        globalThis.objectiv?.TrackerConsole.error(
+          `｢objectiv:${this.pluginName}｣ Cannot validate. Make sure to initialize the plugin first.`
+        );
+        return;
+      }
       this.validationRules.forEach((validationRule) => validationRule.validate(event));
     }
   }

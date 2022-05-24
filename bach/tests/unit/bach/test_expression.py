@@ -70,11 +70,21 @@ def test_column_reference(dialect):
 def test_string(dialect):
     expr = Expression.string_value('a string')
     assert expr == Expression([StringValueToken('a string')])
-    assert expr.to_sql(dialect) == "'a string'"
-    assert expr.to_sql(dialect, 'tab') == "'a string'"
+
+    if is_bigquery(dialect):
+        assert expr.to_sql(dialect) == '"""a string"""'
+        assert expr.to_sql(dialect, 'tab') == '"""a string"""'
+    else:
+        assert expr.to_sql(dialect) == "'a string'"
+        assert expr.to_sql(dialect, 'tab') == "'a string'"
+
     expr = Expression.string_value('a string \' with quotes\'\' in it')
     assert expr == Expression([StringValueToken('a string \' with quotes\'\' in it')])
-    assert expr.to_sql(dialect, ) == "'a string '' with quotes'''' in it'"
+
+    if is_bigquery(dialect):
+        assert expr.to_sql(dialect) == '"""a string \' with quotes\'\' in it"""'
+    else:
+        assert expr.to_sql(dialect) == "'a string '' with quotes'''' in it'"
 
 
 def test_combined(dialect):

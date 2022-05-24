@@ -2,15 +2,42 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { ContextsConfig, makeHttpContext, Tracker, TrackerConsole, TrackerEvent } from '@objectiv/tracker-core';
+import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import {
+  ContextsConfig,
+  generateUUID,
+  GlobalContextName,
+  makeHttpContext,
+  Tracker,
+  TrackerEvent,
+} from '@objectiv/tracker-core';
 import { HttpContextPlugin } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('HttpContextPlugin', () => {
   beforeEach(() => {
     jest.restoreAllMocks();
+  });
+
+  it('should TrackerConsole.error when calling `validate` before `initialize`', () => {
+    const testHttpContextPlugin = new HttpContextPlugin();
+    const validEvent = new TrackerEvent({
+      _type: 'test',
+      global_contexts: [
+        makeHttpContext({
+          id: '/test',
+          user_agent: 'test',
+          referrer: 'test',
+          remote_address: 'test',
+        }),
+      ],
+    });
+    testHttpContextPlugin.validate(validEvent);
+    expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
+      '｢objectiv:HttpContextPlugin｣ Cannot validate. Make sure to initialize the plugin first.'
+    );
   });
 
   it('should add the HttpContext to the Event when `initialize` is executed by the Tracker', async () => {
@@ -26,12 +53,12 @@ describe('HttpContextPlugin', () => {
     });
     const eventContexts: ContextsConfig = {
       location_stack: [
-        { __location_context: true, _type: 'section', id: 'A' },
-        { __location_context: true, _type: 'section', id: 'B' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'A' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'B' },
       ],
       global_contexts: [
-        { __global_context: true, _type: 'GlobalA', id: 'abc' },
-        { __global_context: true, _type: 'GlobalB', id: 'def' },
+        { __instance_id: generateUUID(), __global_context: true, _type: 'GlobalA', id: 'abc' },
+        { __instance_id: generateUUID(), __global_context: true, _type: 'GlobalB', id: 'def' },
       ],
     };
     const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts });
@@ -42,8 +69,9 @@ describe('HttpContextPlugin', () => {
     expect(trackedEvent.global_contexts).toEqual(
       expect.arrayContaining([
         {
+          __instance_id: matchUUID,
           __global_context: true,
-          _type: 'HttpContext',
+          _type: GlobalContextName.HttpContext,
           id: 'http_context',
           referrer: 'MOCK_REFERRER',
           remote_address: null,
@@ -75,8 +103,9 @@ describe('HttpContextPlugin', () => {
     expect(trackedEvent.global_contexts).toEqual(
       expect.arrayContaining([
         {
+          __instance_id: matchUUID,
           __global_context: true,
-          _type: 'HttpContext',
+          _type: GlobalContextName.HttpContext,
           id: 'http_context',
           referrer: '',
           remote_address: null,
@@ -89,8 +118,25 @@ describe('HttpContextPlugin', () => {
     Object.defineProperty(navigator, 'userAgent', { value: originalUserAgent });
   });
 
-  describe('Validation', () => {
-    it('should succeed', () => {
+  describe('Without developer tools', () => {
+    let objectivGlobal = globalThis.objectiv;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      globalThis.objectiv = undefined;
+    });
+
+    afterEach(() => {
+      globalThis.objectiv = objectivGlobal;
+    });
+
+    const testTracker = new Tracker({
+      applicationId: 'app-id',
+      plugins: [new HttpContextPlugin()],
+      trackApplicationContext: false,
+    });
+
+    it('should return silently  when calling `validate` before `initialize`', () => {
       const testHttpContextPlugin = new HttpContextPlugin();
       const validEvent = new TrackerEvent({
         _type: 'test',
@@ -103,34 +149,15 @@ describe('HttpContextPlugin', () => {
           }),
         ],
       });
-
-      jest.resetAllMocks();
-
       testHttpContextPlugin.validate(validEvent);
-
-      expect(MockConsoleImplementation.groupCollapsed).not.toHaveBeenCalled();
+      expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
     });
 
-    it('should fail when given TrackerEvent does not have HttpContext', () => {
+    it('should not validate', () => {
       const testHttpContextPlugin = new HttpContextPlugin();
-      const eventWithoutHttpContext = new TrackerEvent({ _type: 'test' });
-
-      jest.resetAllMocks();
-
-      testHttpContextPlugin.validate(eventWithoutHttpContext);
-
-      expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
-      expect(MockConsoleImplementation.groupCollapsed).toHaveBeenNthCalledWith(
-        1,
-        `%c｢objectiv:HttpContextPlugin:GlobalContextValidationRule｣ Error: HttpContext is missing from Global Contexts.`,
-        'color:red'
-      );
-    });
-
-    it('should fail when given TrackerEvent has multiple HttpContexts', () => {
-      const testHttpContextPlugin = new HttpContextPlugin();
+      testHttpContextPlugin.initialize(testTracker);
       const eventWithDuplicatedHttpContext = new TrackerEvent({
-        _type: 'test',
+        _type: 'TestEvent',
         global_contexts: [
           makeHttpContext({
             id: '/test',
@@ -151,12 +178,7 @@ describe('HttpContextPlugin', () => {
 
       testHttpContextPlugin.validate(eventWithDuplicatedHttpContext);
 
-      expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
-      expect(MockConsoleImplementation.groupCollapsed).toHaveBeenNthCalledWith(
-        1,
-        `%c｢objectiv:HttpContextPlugin:GlobalContextValidationRule｣ Error: Only one HttpContext should be present in Global Contexts.`,
-        'color:red'
-      );
+      expect(MockConsoleImplementation.groupCollapsed).not.toHaveBeenCalled();
     });
   });
 });

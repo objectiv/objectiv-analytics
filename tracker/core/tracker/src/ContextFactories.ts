@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2022 Objectiv B.V.
+ * Copyright 2022 Objectiv B.V.
  */
 
 import {
@@ -19,6 +19,8 @@ import {
   RootLocationContext,
   SessionContext,
 } from '@objectiv/schema';
+import { GlobalContextName, LocationContextName } from './ContextNames';
+import { generateUUID } from './helpers';
 
 /** Creates instance of ApplicationContext
  * @param {Object} props - factory properties
@@ -27,8 +29,9 @@ import {
  * @returns {ApplicationContext} - ApplicationContext: A GlobalContext describing in which app the event happens, like a website or iOS app.
  */
 export const makeApplicationContext = (props: { id: string }): ApplicationContext => ({
+  __instance_id: generateUUID(),
   __global_context: true,
-  _type: 'ApplicationContext',
+  _type: GlobalContextName.ApplicationContext,
   id: props.id,
 });
 
@@ -39,8 +42,9 @@ export const makeApplicationContext = (props: { id: string }): ApplicationContex
  * @returns {ContentContext} - ContentContext: A Location Context that describes a logical section of the UI that contains other Location Contexts. Enabling Data Science to analyze this section specifically.
  */
 export const makeContentContext = (props: { id: string }): ContentContext => ({
+  __instance_id: generateUUID(),
   __location_context: true,
-  _type: 'ContentContext',
+  _type: LocationContextName.ContentContext,
   id: props.id,
 });
 
@@ -52,8 +56,9 @@ export const makeContentContext = (props: { id: string }): ContentContext => ({
  * @returns {CookieIdContext} - CookieIdContext: Global context with information needed to reconstruct a user session.
  */
 export const makeCookieIdContext = (props: { id: string; cookie_id: string }): CookieIdContext => ({
+  __instance_id: generateUUID(),
   __global_context: true,
-  _type: 'CookieIdContext',
+  _type: GlobalContextName.CookieIdContext,
   id: props.id,
   cookie_id: props.cookie_id,
 });
@@ -65,8 +70,9 @@ export const makeCookieIdContext = (props: { id: string; cookie_id: string }): C
  * @returns {ExpandableContext} - ExpandableContext: A Location Context that describes a section of the UI that can expand & collapse.
  */
 export const makeExpandableContext = (props: { id: string }): ExpandableContext => ({
+  __instance_id: generateUUID(),
   __location_context: true,
-  _type: 'ExpandableContext',
+  _type: LocationContextName.ExpandableContext,
   id: props.id,
 });
 
@@ -85,8 +91,9 @@ export const makeHttpContext = (props: {
   user_agent: string;
   remote_address?: string | null;
 }): HttpContext => ({
+  __instance_id: generateUUID(),
   __global_context: true,
-  _type: 'HttpContext',
+  _type: GlobalContextName.HttpContext,
   id: props.id,
   referrer: props.referrer,
   user_agent: props.user_agent,
@@ -100,8 +107,9 @@ export const makeHttpContext = (props: {
  * @returns {InputContext} - InputContext: A Location Context that describes an element that accepts user input, i.e. a form field.
  */
 export const makeInputContext = (props: { id: string }): InputContext => ({
+  __instance_id: generateUUID(),
   __location_context: true,
-  _type: 'InputContext',
+  _type: LocationContextName.InputContext,
   id: props.id,
 });
 
@@ -113,9 +121,10 @@ export const makeInputContext = (props: { id: string }): InputContext => ({
  * @returns {LinkContext} - LinkContext: A PressableContext that contains an href.
  */
 export const makeLinkContext = (props: { id: string; href: string }): LinkContext => ({
+  __instance_id: generateUUID(),
   __location_context: true,
   __pressable_context: true,
-  _type: 'LinkContext',
+  _type: LocationContextName.LinkContext,
   id: props.id,
   href: props.href,
 });
@@ -129,6 +138,9 @@ export const makeLinkContext = (props: { id: string; href: string }): LinkContex
  * @param {string} props.campaign - Individual campaign name, slogan, promo code, etc
  * @param {string | null} props.term - [Optional] Search keywords
  * @param {string | null} props.content - [Optional] Used to differentiate similar content, or links within the same ad
+ * @param {string | null} props.source_platform - [Optional] To differentiate similar content, or links within the same ad.
+ * @param {string | null} props.creative_format - [Optional] Identifies the creative used (e.g., skyscraper, banner, etc).
+ * @param {string | null} props.marketing_tactic - [Optional] Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).
  * @returns {MarketingContext} - MarketingContext: a context that captures marketing channel info, so users can do attribution, campaign
  * 	effectiveness and other models
  */
@@ -139,15 +151,22 @@ export const makeMarketingContext = (props: {
   campaign: string;
   term?: string | null;
   content?: string | null;
+  source_platform?: string | null;
+  creative_format?: string | null;
+  marketing_tactic?: string | null;
 }): MarketingContext => ({
+  __instance_id: generateUUID(),
   __global_context: true,
-  _type: 'MarketingContext',
+  _type: GlobalContextName.MarketingContext,
   id: props.id,
   source: props.source,
   medium: props.medium,
   campaign: props.campaign,
   term: props.term ?? null,
   content: props.content ?? null,
+  source_platform: props.source_platform ?? null,
+  creative_format: props.creative_format ?? null,
+  marketing_tactic: props.marketing_tactic ?? null,
 });
 
 /** Creates instance of MediaPlayerContext
@@ -157,8 +176,9 @@ export const makeMarketingContext = (props: {
  * @returns {MediaPlayerContext} - MediaPlayerContext: A Location Context that describes a section of the UI containing a media player.
  */
 export const makeMediaPlayerContext = (props: { id: string }): MediaPlayerContext => ({
+  __instance_id: generateUUID(),
   __location_context: true,
-  _type: 'MediaPlayerContext',
+  _type: LocationContextName.MediaPlayerContext,
   id: props.id,
 });
 
@@ -169,8 +189,9 @@ export const makeMediaPlayerContext = (props: { id: string }): MediaPlayerContex
  * @returns {NavigationContext} - NavigationContext: A Location Context that describes a section of the UI containing navigational elements, for example a menu.
  */
 export const makeNavigationContext = (props: { id: string }): NavigationContext => ({
+  __instance_id: generateUUID(),
   __location_context: true,
-  _type: 'NavigationContext',
+  _type: LocationContextName.NavigationContext,
   id: props.id,
 });
 
@@ -182,8 +203,9 @@ export const makeNavigationContext = (props: { id: string }): NavigationContext 
  * 	.
  */
 export const makeOverlayContext = (props: { id: string }): OverlayContext => ({
+  __instance_id: generateUUID(),
   __location_context: true,
-  _type: 'OverlayContext',
+  _type: LocationContextName.OverlayContext,
   id: props.id,
 });
 
@@ -194,8 +216,9 @@ export const makeOverlayContext = (props: { id: string }): OverlayContext => ({
  * @returns {PathContext} - PathContext: A GlobalContext describing the path where the user is when an event is sent.
  */
 export const makePathContext = (props: { id: string }): PathContext => ({
+  __instance_id: generateUUID(),
   __global_context: true,
-  _type: 'PathContext',
+  _type: GlobalContextName.PathContext,
   id: props.id,
 });
 
@@ -207,9 +230,10 @@ export const makePathContext = (props: { id: string }): PathContext => ({
  * 	that the user can press and will trigger an Interactive Event.
  */
 export const makePressableContext = (props: { id: string }): PressableContext => ({
+  __instance_id: generateUUID(),
   __location_context: true,
   __pressable_context: true,
-  _type: 'PressableContext',
+  _type: LocationContextName.PressableContext,
   id: props.id,
 });
 
@@ -220,8 +244,9 @@ export const makePressableContext = (props: { id: string }): PressableContext =>
  * @returns {RootLocationContext} - RootLocationContext: A Location Context that uniquely represents the top-level UI location of the user.
  */
 export const makeRootLocationContext = (props: { id: string }): RootLocationContext => ({
+  __instance_id: generateUUID(),
   __location_context: true,
-  _type: 'RootLocationContext',
+  _type: LocationContextName.RootLocationContext,
   id: props.id,
 });
 
@@ -233,8 +258,9 @@ export const makeRootLocationContext = (props: { id: string }): RootLocationCont
  * @returns {SessionContext} - SessionContext: A GlobalContext describing meta information about the current session.
  */
 export const makeSessionContext = (props: { id: string; hit_number: number }): SessionContext => ({
+  __instance_id: generateUUID(),
   __global_context: true,
-  _type: 'SessionContext',
+  _type: GlobalContextName.SessionContext,
   id: props.id,
   hit_number: props.hit_number,
 });

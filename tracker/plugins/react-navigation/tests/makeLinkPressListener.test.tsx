@@ -3,7 +3,7 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { TrackerConsole } from '@objectiv/tracker-core';
+import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import {
   NavigationContextWrapper,
   ObjectivProvider,
@@ -17,7 +17,8 @@ import React from 'react';
 import { Text } from 'react-native';
 import { makeLinkPressListener } from '../src/makeLinkPressListener';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('makePressListener', () => {
   beforeEach(() => {
@@ -42,19 +43,21 @@ describe('makePressListener', () => {
                 <Tab.Screen
                   options={{ tabBarTestID: 'TabA ' }}
                   name="ScreenA"
-                  component={() => <Text>Screen A</Text>}
                   listeners={({ navigation }) => ({
                     tabPress: makeLinkPressListener({ trackingContext, navigation }),
                   })}
-                />
+                >
+                  {() => <Text>Screen A</Text>}
+                </Tab.Screen>
                 <Tab.Screen
                   options={{ tabBarTestID: 'TabB ' }}
                   name="ScreenB"
-                  component={() => <Text>Screen B</Text>}
                   listeners={({ navigation }) => ({
                     tabPress: makeLinkPressListener({ trackingContext, navigation }),
                   })}
-                />
+                >
+                  {() => <Text>Screen B</Text>}
+                </Tab.Screen>
               </Tab.Navigator>
             )}
           </NavigationContextWrapper>
@@ -70,17 +73,17 @@ describe('makePressListener', () => {
       1,
       expect.objectContaining({
         _type: 'ApplicationLoadedEvent',
-        global_contexts: [expect.objectContaining({ _type: 'ApplicationContext', id: 'app-id' })],
+        global_contexts: [expect.objectContaining({ _type: GlobalContextName.ApplicationContext, id: 'app-id' })],
       })
     );
     expect(spyTransport.handle).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
         _type: 'PressEvent',
-        global_contexts: [expect.objectContaining({ _type: 'ApplicationContext', id: 'app-id' })],
+        global_contexts: [expect.objectContaining({ _type: GlobalContextName.ApplicationContext, id: 'app-id' })],
         location_stack: [
-          expect.objectContaining({ _type: 'NavigationContext', id: 'bottom-tabs' }),
-          expect.objectContaining({ _type: 'LinkContext', id: 'ScreenA', href: '/ScreenB' }),
+          expect.objectContaining({ _type: LocationContextName.NavigationContext, id: 'bottom-tabs' }),
+          expect.objectContaining({ _type: LocationContextName.LinkContext, id: 'ScreenA', href: '/ScreenB' }),
         ],
       })
     );
@@ -88,10 +91,10 @@ describe('makePressListener', () => {
       3,
       expect.objectContaining({
         _type: 'PressEvent',
-        global_contexts: [expect.objectContaining({ _type: 'ApplicationContext', id: 'app-id' })],
+        global_contexts: [expect.objectContaining({ _type: GlobalContextName.ApplicationContext, id: 'app-id' })],
         location_stack: [
-          expect.objectContaining({ _type: 'NavigationContext', id: 'bottom-tabs' }),
-          expect.objectContaining({ _type: 'LinkContext', id: 'ScreenB', href: '/ScreenA' }),
+          expect.objectContaining({ _type: LocationContextName.NavigationContext, id: 'bottom-tabs' }),
+          expect.objectContaining({ _type: LocationContextName.LinkContext, id: 'ScreenB', href: '/ScreenA' }),
         ],
       })
     );

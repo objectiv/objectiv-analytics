@@ -38,6 +38,7 @@ def test_add_savepoint_double():
         sps.add_savepoint('second', df, Materialization.QUERY)
 
 
+@pytest.mark.xdist_group(name="db_writers")
 def test_write_to_db_queries_only():
     df = get_bt_with_test_data()
     engine = df.engine
@@ -66,6 +67,7 @@ def test_write_to_db_queries_only():
     )
 
 
+@pytest.mark.xdist_group(name="db_writers")
 def test_write_to_db_create_objects():
     dialect = PGDialect()  # TODO: BigQuery
     df = get_bt_with_test_data()

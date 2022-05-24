@@ -13,7 +13,8 @@ from tests.functional.bach.test_data_and_utils import get_df_with_test_data, ass
 # For more information https://matplotlib.org/3.5.0/api/testing_api.html#module-matplotlib.testing
 
 @check_figures_equal(extensions=['png', 'pdf'])
-def test_plot_hist_basic(engine, fig_test, fig_ref) -> None:
+def test_plot_hist_basic(pg_engine, fig_test, fig_ref) -> None:
+    engine = pg_engine  # TODO: BigQuery
     bt = get_df_with_test_data(engine, full_data_set=False)
     pbt = bt.to_pandas()
 
@@ -59,7 +60,8 @@ def test_plot_hist_basic(engine, fig_test, fig_ref) -> None:
 
 
 @check_figures_equal(extensions=['png', 'pdf'])
-def test_plot_hist_bins(engine, fig_test, fig_ref) -> None:
+def test_plot_hist_bins(pg_engine, fig_test, fig_ref) -> None:
+    engine = pg_engine  # TODO: BigQuery
     bt = get_df_with_test_data(engine, full_data_set=True)[['inhabitants']]
     pbt = bt.to_pandas()
     bins = 5

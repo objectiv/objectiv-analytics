@@ -2,11 +2,12 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { ContextsConfig, Tracker, TrackerConsole, TrackerEvent } from '@objectiv/tracker-core';
+import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import { ContextsConfig, generateUUID, LocationContextName, Tracker, TrackerEvent } from '@objectiv/tracker-core';
 import { RootLocationContextFromURLPlugin } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('RootLocationContextFromURLPlugin', () => {
   beforeEach(() => {
@@ -21,12 +22,12 @@ describe('RootLocationContextFromURLPlugin', () => {
     });
     const eventContexts: ContextsConfig = {
       location_stack: [
-        { __location_context: true, _type: 'section', id: 'A' },
-        { __location_context: true, _type: 'section', id: 'B' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'A' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'B' },
       ],
       global_contexts: [
-        { __global_context: true, _type: 'GlobalA', id: 'abc' },
-        { __global_context: true, _type: 'GlobalB', id: 'def' },
+        { __instance_id: generateUUID(), __global_context: true, _type: 'GlobalA', id: 'abc' },
+        { __instance_id: generateUUID(), __global_context: true, _type: 'GlobalB', id: 'def' },
       ],
     };
     const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts });
@@ -34,8 +35,9 @@ describe('RootLocationContextFromURLPlugin', () => {
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(3);
     expect(trackedEvent.location_stack[0]).toEqual({
+      __instance_id: matchUUID,
       __location_context: true,
-      _type: 'RootLocationContext',
+      _type: LocationContextName.RootLocationContext,
       id: 'home',
     });
     expect(trackedEvent.global_contexts).toHaveLength(2);
@@ -59,8 +61,9 @@ describe('RootLocationContextFromURLPlugin', () => {
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(1);
     expect(trackedEvent.location_stack[0]).toEqual({
+      __instance_id: matchUUID,
       __location_context: true,
-      _type: 'RootLocationContext',
+      _type: LocationContextName.RootLocationContext,
       id: 'home',
     });
   });
@@ -83,8 +86,9 @@ describe('RootLocationContextFromURLPlugin', () => {
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(1);
     expect(trackedEvent.location_stack[0]).toEqual({
+      __instance_id: matchUUID,
       __location_context: true,
-      _type: 'RootLocationContext',
+      _type: LocationContextName.RootLocationContext,
       id: 'home',
     });
   });
@@ -107,8 +111,9 @@ describe('RootLocationContextFromURLPlugin', () => {
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(1);
     expect(trackedEvent.location_stack[0]).toEqual({
+      __instance_id: matchUUID,
       __location_context: true,
-      _type: 'RootLocationContext',
+      _type: LocationContextName.RootLocationContext,
       id: 'dashboard',
     });
   });
@@ -159,9 +164,44 @@ describe('RootLocationContextFromURLPlugin', () => {
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(1);
     expect(trackedEvent.location_stack[0]).toEqual({
+      __instance_id: matchUUID,
       __location_context: true,
-      _type: 'RootLocationContext',
+      _type: LocationContextName.RootLocationContext,
       id: 'welcome',
+    });
+  });
+
+  describe('Without developer tools', () => {
+    let objectivGlobal = globalThis.objectiv;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      globalThis.objectiv = undefined;
+    });
+
+    afterEach(() => {
+      globalThis.objectiv = objectivGlobal;
+    });
+
+    it('should not console.error', async () => {
+      Object.defineProperty(window, 'location', {
+        value: {
+          // Can't really happen, but just to test this case
+          pathname: null,
+        },
+        writable: true,
+      });
+
+      const testTracker = new Tracker({
+        applicationId: 'app-id',
+        plugins: [new RootLocationContextFromURLPlugin()],
+        trackApplicationContext: false,
+      });
+      const testEvent = new TrackerEvent({ _type: 'test-event' });
+      expect(testEvent.location_stack).toHaveLength(0);
+      const trackedEvent = await testTracker.trackEvent(testEvent);
+      expect(trackedEvent.location_stack).toHaveLength(0);
+      expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
     });
   });
 });

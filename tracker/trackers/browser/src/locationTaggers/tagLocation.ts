@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { generateUUID, getObjectKeys } from '@objectiv/tracker-core';
+import { generateUUID, getObjectKeys, LocationContextName } from '@objectiv/tracker-core';
 import { isPressableContext } from '../common/guards/isPressableContext';
 import { isShowableContext } from '../common/guards/isShowableContext';
 import { isTagLocationParameters } from '../common/guards/isTagLocationParameters';
@@ -40,7 +40,7 @@ export const tagLocation = (parameters: TagLocationParameters): TagLocationRetur
 
     // Determine Context type
     const isPressable = isPressableContext(instance);
-    const isInput = instance._type === 'InputContext';
+    const isInput = instance._type === LocationContextName.InputContext;
     const isShowable = isShowableContext(instance);
 
     // Process options. Gather default attribute values

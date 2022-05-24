@@ -5,8 +5,8 @@
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
   generateUUID,
+  LocationContextName,
   makePressEvent,
-  TrackerConsole,
   TrackerQueue,
   TrackerQueueMemoryStore,
 } from '@objectiv/tracker-core';
@@ -14,7 +14,8 @@ import { BrowserTracker, getTracker, getTrackerRepository, makeTracker, trackPre
 import { makeClickEventHandler } from '../src/mutationObserver/makeClickEventHandler';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('makeClickEventHandler', () => {
   beforeEach(() => {
@@ -92,7 +93,7 @@ describe('makeClickEventHandler', () => {
       1,
       expect.objectContaining(
         makePressEvent({
-          location_stack: [expect.objectContaining({ _type: 'PressableContext', id: 'button' })],
+          location_stack: [expect.objectContaining({ _type: LocationContextName.PressableContext, id: 'button' })],
         })
       )
     );

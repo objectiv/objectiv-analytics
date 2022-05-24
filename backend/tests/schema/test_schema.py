@@ -180,7 +180,10 @@ def test_add_context_with_optionals_set():
         'medium': 'test-medium',
         'source': 'test-source',
         'term': 'test-term',
-        'content': 'test-content'
+        'content': 'test-content',
+        'source_platform': 'test-source-platform',
+        'creative_format': 'test-creative-format',
+        'marketing_tactic': 'test-marketing-tactic'
     }
     # create the context without setting optionals
     marketing_context = make_context(**context_vars)
@@ -193,3 +196,9 @@ def test_add_context_with_optionals_set():
     assert marketing_context['term'] == context_vars['term']
     assert 'content' in marketing_context
     assert marketing_context['content'] == context_vars['content']
+    assert 'source_platform' in marketing_context
+    assert marketing_context['source_platform'] == context_vars['source_platform']
+    assert 'creative_format' in marketing_context
+    assert marketing_context['creative_format'] == context_vars['creative_format']
+    assert 'marketing_tactic' in marketing_context
+    assert marketing_context['marketing_tactic'] == context_vars['marketing_tactic']

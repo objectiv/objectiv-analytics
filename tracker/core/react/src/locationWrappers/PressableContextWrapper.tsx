@@ -2,10 +2,10 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makePressableContext } from '../common/factories/makePressableContext';
-import { LocationContextWrapper } from './LocationContextWrapper';
-import { ContentContextWrapperProps } from './ContentContextWrapper';
+import { makePressableContext } from '@objectiv/tracker-core';
 import React from 'react';
+import { ContentContextWrapperProps } from './ContentContextWrapper';
+import { LocationContextWrapper } from './LocationContextWrapper';
 
 /**
  * The props of PressableContextWrapper. No extra attributes, same as ContentContextWrapper.

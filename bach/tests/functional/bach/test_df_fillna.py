@@ -6,7 +6,8 @@ import pandas as pd
 import pytest
 from datetime import datetime
 
-from tests.functional.bach.test_data_and_utils import get_from_df, assert_equals_data
+from bach import DataFrame
+from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 DATA = [
     [None, None, None, None, None, 'a',   datetime(2022, 1, 1)],
@@ -20,10 +21,10 @@ DATA = [
 ]
 
 
-def test_basic_fillna() -> None:
+def test_basic_fillna(engine) -> None:
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
     pdf = pdf[list("ABCDE")]
-    df = get_from_df('test_df_fillna', pdf)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     df = df.astype('int64')
 
     result = df.fillna(value=0)
@@ -49,9 +50,10 @@ def test_basic_fillna() -> None:
     )
 
 
-def test_fillna_w_methods() -> None:
+def test_fillna_w_methods(pg_engine) -> None:
+    engine = pg_engine  # TODO: BigQuery
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
-    df = get_from_df('test_df_fillna', pdf)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
 
     result_ffill = df.fillna(
         method='ffill', sort_by=['A', 'B', 'C'], ascending=[False, True, False],
@@ -91,9 +93,11 @@ def test_fillna_w_methods() -> None:
     )
 
 
-def test_fillna_w_methods_w_sorted_df() -> None:
+def test_fillna_w_methods_w_sorted_df(pg_engine) -> None:
+    engine = pg_engine  # TODO: BigQuery
+
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
-    df = get_from_df('test_df_fillna', pdf).sort_index()
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).sort_index()
 
     result_ffill = df.fillna(method='ffill')
     assert_equals_data(
@@ -128,9 +132,9 @@ def test_fillna_w_methods_w_sorted_df() -> None:
     )
 
 
-def test_fillna_errors():
+def test_fillna_errors(engine):
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
-    df = get_from_df('test_df_fillna', pdf)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     with pytest.raises(ValueError, match=r'cannot specify both "method" and "value".'):
         df.fillna(value=0, method='ffill')
 

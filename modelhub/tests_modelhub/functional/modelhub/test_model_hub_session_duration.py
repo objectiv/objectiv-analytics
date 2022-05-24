@@ -60,6 +60,15 @@ def test_overriding_time_aggregation_in():
             ['2021-12', datetime.timedelta(microseconds=3000)]]
     )
 
+    bts = modelhub.aggregate.session_duration(df, groupby=modelhub.time_agg(df, 'YYYY-MM'), method='sum')
+
+    assert_equals_data(
+        bts,
+        expected_columns=['time_aggregation', 'session_duration'],
+        expected_data=[['2021-11', datetime.timedelta(microseconds=5000)],
+            ['2021-12', datetime.timedelta(microseconds=3000)]]
+    )
+
 def test_groupby():
     # group by other columns
     df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')

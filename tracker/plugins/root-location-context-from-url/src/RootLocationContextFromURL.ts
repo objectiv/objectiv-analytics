@@ -1,9 +1,4 @@
-import {
-  ContextsConfig,
-  makeRootLocationContext,
-  TrackerConsole,
-  TrackerPluginInterface,
-} from '@objectiv/tracker-core';
+import { ContextsConfig, makeRootLocationContext, TrackerPluginInterface } from '@objectiv/tracker-core';
 import { makeRootLocationId } from './makeRootLocationId';
 
 /**
@@ -27,7 +22,7 @@ export class RootLocationContextFromURLPlugin implements TrackerPluginInterface 
   constructor(config?: RootLocationContextFromURLPluginConfig) {
     this.idFactoryFunction = config?.idFactoryFunction ?? makeRootLocationId;
 
-    TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
+    globalThis.objectiv?.TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
   }
 
   /**
@@ -39,7 +34,7 @@ export class RootLocationContextFromURLPlugin implements TrackerPluginInterface 
     if (rootLocationContextId) {
       contexts.location_stack.unshift(makeRootLocationContext({ id: rootLocationContextId }));
     } else {
-      TrackerConsole.error(
+      globalThis.objectiv?.TrackerConsole.error(
         `%c｢objectiv:${this.pluginName}｣ Could not generate a RootLocationContext from "${location.pathname}"`,
         'font-weight: bold'
       );

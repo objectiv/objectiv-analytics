@@ -3,12 +3,10 @@
  */
 
 import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
-import { getLocationPath, TrackerConsole } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react-native';
 import React from 'react';
 import { Text } from 'react-native';
 import {
-  LocationTree,
   ReactNativeTracker,
   RootLocationContextWrapper,
   TrackedFlatList,
@@ -17,7 +15,8 @@ import {
   useLocationStack,
 } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedFlatList', () => {
   const spyTransport = new SpyTransport();
@@ -54,11 +53,10 @@ describe('TrackedFlatList', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    LocationTree.clear();
   });
 
   const ListItem = (props: ListItemType) => {
-    const locationPath = getLocationPath(useLocationStack());
+    const locationPath = globalThis.objectiv?.getLocationPath(useLocationStack());
 
     console.debug(locationPath);
 

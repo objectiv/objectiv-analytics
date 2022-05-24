@@ -5,23 +5,22 @@
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
   generateUUID,
-  makeFailureEvent,
+  LocationContextName,
   makeApplicationLoadedEvent,
-  makePressableContext,
-  makePressEvent,
-  makeSuccessEvent,
+  makeContentContext,
+  makeFailureEvent,
+  makeHiddenEvent,
   makeInputChangeEvent,
   makeInteractiveEvent,
-  makeContentContext,
-  makeHiddenEvent,
-  makeVisibleEvent,
   makeMediaEvent,
   makeMediaLoadEvent,
   makeMediaPauseEvent,
   makeMediaStartEvent,
   makeMediaStopEvent,
   makeNonInteractiveEvent,
-  TrackerConsole,
+  makePressEvent,
+  makeSuccessEvent,
+  makeVisibleEvent,
 } from '@objectiv/tracker-core';
 import {
   BrowserTracker,
@@ -29,26 +28,27 @@ import {
   getTrackerRepository,
   makeTracker,
   TaggingAttribute,
-  trackFailureEvent,
   trackApplicationLoadedEvent,
-  trackPressEvent,
-  trackSuccessEvent,
   trackEvent,
+  trackFailureEvent,
+  trackHiddenEvent,
   trackInputChangeEvent,
   trackInteractiveEvent,
-  trackHiddenEvent,
-  trackVisibleEvent,
   trackMediaEvent,
   trackMediaLoadEvent,
   trackMediaPauseEvent,
   trackMediaStartEvent,
   trackMediaStopEvent,
   trackNonInteractiveEvent,
+  trackPressEvent,
+  trackSuccessEvent,
   trackVisibility,
+  trackVisibleEvent,
 } from '../src';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('trackEvent', () => {
   const testElement = document.createElement('div');
@@ -109,10 +109,10 @@ describe('trackEvent', () => {
         id: matchUUID,
         global_contexts: [],
         location_stack: [
-          makeContentContext({ id: 'main' }),
-          makeContentContext({ id: 'parent' }),
-          makeContentContext({ id: 'child' }),
-          makePressableContext({ id: 'button' }),
+          expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'main' }),
+          expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'parent' }),
+          expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'child' }),
+          expect.objectContaining({ _type: LocationContextName.PressableContext, id: 'button' }),
         ],
       })
     );
@@ -126,7 +126,7 @@ describe('trackEvent', () => {
         _type: 'PressEvent',
         id: matchUUID,
         global_contexts: [],
-        location_stack: [makeContentContext({ id: 'custom' })],
+        location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'custom' })],
       })
     );
 
@@ -139,7 +139,7 @@ describe('trackEvent', () => {
         _type: 'PressEvent',
         id: matchUUID,
         global_contexts: [],
-        location_stack: [makeContentContext({ id: 'custom' })],
+        location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'custom' })],
       })
     );
   });
@@ -194,10 +194,10 @@ describe('trackEvent', () => {
       expect.objectContaining({
         ...makePressEvent(),
         location_stack: expect.arrayContaining([
-          expect.objectContaining({ _type: 'ContentContext', id: 'top' }),
-          expect.objectContaining({ _type: 'ContentContext', id: 'mid' }),
-          expect.objectContaining({ _type: 'ContentContext', id: 'div' }),
-          expect.objectContaining({ _type: 'ContentContext', id: 'test' }),
+          expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'top' }),
+          expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'mid' }),
+          expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'div' }),
+          expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'test' }),
         ]),
       })
     );
@@ -228,9 +228,9 @@ describe('trackEvent', () => {
       expect.objectContaining({
         ...makePressEvent(),
         location_stack: expect.arrayContaining([
-          expect.objectContaining({ _type: 'ContentContext', id: 'top' }),
-          expect.objectContaining({ _type: 'ContentContext', id: 'mid' }),
-          expect.objectContaining({ _type: 'ContentContext', id: 'div' }),
+          expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'top' }),
+          expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'mid' }),
+          expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'div' }),
         ]),
       })
     );
@@ -410,7 +410,7 @@ describe('trackEvent', () => {
       parameters
     );
 
-    trackEvent({ ...parameters, onError: TrackerConsole.error });
+    trackEvent({ ...parameters, onError: MockConsoleImplementation.error });
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(4);
     expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
       4,

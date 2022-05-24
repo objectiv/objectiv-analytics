@@ -1,6 +1,7 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+import re
 import string
 from typing import Set, Union, Optional
 
@@ -41,9 +42,10 @@ def quote_identifier(dialect: Dialect, name: str) -> str:
     """
     Add quotes around an identifier (e.g. a table or column name), and escape special characters in the name.
 
-    By default this assumes Postgres identifier notation format, but this can be overridden by specifying a
-    SqlAlchemy Dialect.
-
+    Note that the result of this function is not always a valid column name and/or table name. e.g. The
+    following string can be quoted by this function to give a valid BigQuery identifier: '`te`st`'. However,
+    that name is only valid as a table name, not as a column name as there are additional rules on what
+    makes a valid column name.
 
     Examples
     >>> from sqlalchemy.dialects.postgresql.base import PGDialect
@@ -64,27 +66,38 @@ def quote_identifier(dialect: Dialect, name: str) -> str:
         return f'"{replaced_chars}"'
 
     if is_bigquery(dialect):
-        # todo: check whether this is efficient and correct
-        result = dialect.preparer(dialect).quote_identifier(value=name)
-        return result
+        # Spec: https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#quoted_identifiers
+        # For additional rules on column and table names (not enforced by this function!) See
+        # https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#column_names
+        # https://cloud.google.com/bigquery/docs/schemas#column_names
+        # https://cloud.google.com/bigquery/docs/tables#table_naming
+        replaced_chars = name.replace('\\', '\\\\')
+        replaced_chars = replaced_chars.replace('`', '\\`')
+        return f'`{replaced_chars}`'
     raise DatabaseNotSupportedException(dialect)
 
 
-def quote_string(value: str) -> str:
+def quote_string(dialect_engine: Union[Dialect, Engine], value: str) -> str:
     """
-    Add single quotes around the value and escape any quotes in the value.
-
-    This is in accordance with the Postgres string notation format, no guarantees for other databses.
-    See https://www.postgresql.org/docs/14/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS
+    Quote and escape string value for the given database dialect.
 
     Examples:
-    >>> quote_string("test")
+    >>> from sqlalchemy.dialects.postgresql.base import PGDialect
+    >>> quote_string(PGDialect(), "test")
     "'test'"
-    >>> quote_string("te'st")
+    >>> quote_string(PGDialect(), "te'st")
     "'te''st'"
-    >>> quote_string("'te''st'")
+    >>> quote_string(PGDialect(), "'te''st'")
     "'''te''''st'''"
     """
+
+    if is_bigquery(dialect_engine):
+        # Triple-quoted string, double-quotes are escaped in order to avoid conflicts
+        # See https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#string_and_bytes_literals
+        replaced_chars = value.replace('\\', r'\\')
+        replaced_chars = replaced_chars.replace('"', r'\"')
+        return f'"""{replaced_chars}"""'
+
     replaced_chars = value.replace("'", "''")
     return f"'{replaced_chars}'"
 

@@ -2,10 +2,10 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeMediaLoadEvent, Tracker } from '@objectiv/tracker-core';
+import { LocationContextName, makeContentContext, makeMediaLoadEvent, Tracker } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
-import { makeContentContext, TrackingContextProvider, trackMediaLoadEvent, useMediaLoadEventTracker } from '../src';
+import { TrackingContextProvider, trackMediaLoadEvent, useMediaLoadEventTracker } from '../src';
 
 describe('trackMediaLoad', () => {
   beforeEach(() => {
@@ -79,7 +79,7 @@ describe('trackMediaLoad', () => {
       1,
       expect.objectContaining(
         makeMediaLoadEvent({
-          location_stack: [expect.objectContaining({ _type: 'ContentContext', id: 'override' })],
+          location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'override' })],
         })
       ),
       undefined

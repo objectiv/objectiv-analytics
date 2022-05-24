@@ -6,9 +6,10 @@ from typing import cast
 
 from sqlalchemy.engine import Dialect
 
-from bach.series import Series, const_to_series
+from bach.series import Series
 from bach.expression import Expression
 from bach.series.series import WrappedPartition
+from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres
 
@@ -31,12 +32,17 @@ class SeriesBoolean(Series, ABC):
 
     Boolean Series can be created from int and string values. Not all conversions errors will be caught on
     conversion time. Some will lead to database errors later.
+
+    **Database support and types**
+
+    * Postgres: utilizes the 'boolean' database type.
+    * BigQuery: utilizes the 'BOOL' database type.
     """
     dtype = 'bool'
     dtype_aliases = ('boolean', '?', bool)
     supported_db_dtype = {
         DBDialect.POSTGRES: 'boolean',
-        DBDialect.BIGQUERY: 'boolean',
+        DBDialect.BIGQUERY: 'BOOL',
     }
     supported_value_types = (bool, )
 
@@ -49,7 +55,12 @@ class SeriesBoolean(Series, ABC):
         return literal
 
     @classmethod
-    def supported_value_to_literal(cls, dialect: Dialect, value: bool) -> Expression:
+    def supported_value_to_literal(
+        cls,
+        dialect: Dialect,
+        value: bool,
+        dtype: StructuredDtype
+    ) -> Expression:
         return Expression.raw(str(value))
 
     @classmethod
@@ -98,7 +109,8 @@ class SeriesBoolean(Series, ABC):
 
     def min(self, partition: WrappedPartition = None, skipna: bool = True):
         """
-        Returns the minimum value in the partition.
+        Returns the minimum value in the partition, i.e. value will be True iif all values in the
+        partition are True.
 
         :param partition: The partition or window to apply
         :param skipna: only ``skipna=True`` supported. This means NULL values are ignored.
@@ -108,7 +120,8 @@ class SeriesBoolean(Series, ABC):
 
     def max(self, partition: WrappedPartition = None, skipna: bool = True):
         """
-        Returns the maximum value in the partition.
+        Returns the maximum value in the partition, i.e. value will be False iif all values in the
+        partition are False.
 
         :param partition: The partition or window to apply
         :param skipna: only ``skipna=True`` supported. This means NULL values are ignored.

@@ -2,9 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { isDevMode } from '@objectiv/tracker-core';
 import React, { ReactNode } from 'react';
-import { LocationTree } from '../LocationTree';
 import { TrackerProviderContext } from './TrackerProviderContext';
 
 /**
@@ -27,8 +25,8 @@ export type TrackerProviderProps = TrackerProviderContext & {
  * @see ObjectivProvider
  */
 export const TrackerProvider = ({ children, tracker }: TrackerProviderProps) => {
-  if (isDevMode()) {
-    LocationTree.initialize(tracker);
+  if (globalThis.objectiv) {
+    globalThis.objectiv.LocationTree.clear();
   }
 
   return (

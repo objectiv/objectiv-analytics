@@ -9,7 +9,7 @@ import { TrackerConfig } from '@objectiv/tracker-core';
  * Internally it will automatically configure the Transport layer for the given `endpoint` with sensible defaults.
  * It also accepts a number of options to configure automatic tracking behavior:
  */
-export type BrowserTrackerConfig = TrackerConfig & {
+export type BrowserTrackerConfig = Omit<TrackerConfig, 'platform'> & {
   /**
    * The collector endpoint URL.
    */

@@ -2,10 +2,10 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { getLocationPath, TrackerConsole, TrackerElementLocations } from '@objectiv/tracker-core';
 import { BrowserTracker } from '../BrowserTracker';
-import { getElementLocationStack } from '../common/getElementLocationStack';
+import { findParentTaggedElements } from '../common/findParentTaggedElements';
 import { isTaggedElement } from '../common/guards/isTaggedElement';
+import { parseLocationContext } from '../common/parsers/parseLocationContext';
 import { parseTrackClicks } from '../common/parsers/parseTrackClicks';
 import { parseValidate } from '../common/parsers/parseValidate';
 import { trackerErrorHandler } from '../common/trackerErrorHandler';
@@ -31,36 +31,23 @@ export const trackNewElement = (element: Element, tracker: BrowserTracker) => {
       element.setAttribute(TaggingAttribute.tracked, 'true');
 
       // Gather Element id and Validate attributes to determine whether we can and if we should validate the Location
-      const elementId = element.getAttribute(TaggingAttribute.elementId);
       const validate = parseValidate(element.getAttribute(TaggingAttribute.validate));
 
-      // Add this element to TrackerState - this will also check if its Location is unique
-      if (elementId && validate.locationUniqueness) {
-        const locationStack = getElementLocationStack({ element, tracker });
-        const locationPath = getLocationPath(locationStack);
-        const locationAddResult = TrackerElementLocations.add({ elementId, locationPath });
+      // Add this element to LocationTree - this will also check if its Location is unique
+      if (globalThis.objectiv && validate.locationUniqueness) {
+        const elementLocationContextAttribute = element.getAttribute(TaggingAttribute.context);
+        const elementLocationContext = parseLocationContext(elementLocationContextAttribute);
 
-        // If location was not unique, log the issue
-        if (locationAddResult !== true) {
-          const { existingElementId, collidingElementId } = locationAddResult;
-          const existingElement = document.querySelector(`[${TaggingAttribute.elementId}='${existingElementId}']`);
-          const collidingElement = document.querySelector(`[${TaggingAttribute.elementId}='${collidingElementId}']`);
-          // Sanity check, in case elements have been removed while we were performing this check
-          if (existingElement && collidingElement) {
-            TrackerConsole.group(`｢objectiv:trackNewElement｣ Location collision detected: ${locationPath}`);
-            TrackerConsole.error(`Existing Element:`, existingElement);
-            TrackerConsole.error(`Colliding Element:`, collidingElement);
-            TrackerConsole.groupEnd();
-          } else {
-            // Cleanup elements that are gone
-            if (!existingElement) {
-              TrackerElementLocations.delete(existingElementId);
-            }
-            if (!collidingElement) {
-              TrackerElementLocations.delete(collidingElementId);
-            }
+        let parentLocationContext = null;
+        const parent = findParentTaggedElements(element).splice(1).reverse().pop() ?? null;
+        if (parent) {
+          const parentLocationContextAttribute = parent.getAttribute(TaggingAttribute.context);
+          if (parentLocationContextAttribute) {
+            parentLocationContext = parseLocationContext(parentLocationContextAttribute);
           }
         }
+
+        globalThis.objectiv.LocationTree.add(elementLocationContext, parentLocationContext);
       }
 
       // Visibility: visible tracking

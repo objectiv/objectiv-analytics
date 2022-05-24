@@ -2,19 +2,21 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
+import '@objectiv/developer-tools';
+import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
-  GlobalContextValidationRule,
-  LocationContextValidationRule,
+  GlobalContextName,
+  LocationContextName,
   makeApplicationLoadedEvent,
   Tracker,
-  TrackerConsole,
+  TrackerPlatform,
 } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
 import { ObjectivProvider, useTrackingContext } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('ObjectivProvider', () => {
   beforeEach(() => {
@@ -32,6 +34,7 @@ describe('ObjectivProvider', () => {
   const expectedState = {
     locationStack: [],
     tracker: {
+      platform: TrackerPlatform.CORE,
       active: true,
       applicationId: 'app-id',
       global_contexts: [],
@@ -40,22 +43,34 @@ describe('ObjectivProvider', () => {
         plugins: [
           {
             pluginName: 'OpenTaxonomyValidationPlugin',
+            initialized: true,
             validationRules: [
-              new GlobalContextValidationRule({
+              {
+                validationRuleName: 'GlobalContextValidationRule',
                 logPrefix: 'OpenTaxonomyValidationPlugin',
-                contextName: 'ApplicationContext',
+                contextName: GlobalContextName.ApplicationContext,
+                platform: 'CORE',
                 once: true,
-              }),
-              new LocationContextValidationRule({
+                validate: expect.any(Function),
+              },
+              {
+                validationRuleName: 'LocationContextValidationRule',
                 logPrefix: 'OpenTaxonomyValidationPlugin',
-                contextName: 'RootLocationContext',
-                once: true,
+                contextName: LocationContextName.RootLocationContext,
+                platform: 'CORE',
                 position: 0,
-              }),
+                once: true,
+                validate: expect.any(Function),
+              },
             ],
           },
           {
-            applicationContext: { __global_context: true, _type: 'ApplicationContext', id: 'app-id' },
+            applicationContext: {
+              __instance_id: matchUUID,
+              __global_context: true,
+              _type: GlobalContextName.ApplicationContext,
+              id: 'app-id',
+            },
             pluginName: 'ApplicationContextPlugin',
           },
         ],
@@ -65,6 +80,10 @@ describe('ObjectivProvider', () => {
       transport: undefined,
     },
   };
+
+  it('developers tools should have been imported', async () => {
+    expect(globalThis.objectiv).not.toBeUndefined();
+  });
 
   it('should support children components', () => {
     const Component = () => {

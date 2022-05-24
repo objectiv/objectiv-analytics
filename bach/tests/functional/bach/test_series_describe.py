@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from bach import Series
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data, get_from_df
+from bach import Series, DataFrame
+from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data
 
 
 def test_categorical_describe() -> None:
@@ -38,12 +38,13 @@ def test_numerical_describe() -> None:
     pd.testing.assert_series_equal(expected, result.to_pandas())
 
 
-def test_describe_datetime() -> None:
+def test_describe_datetime(pg_engine) -> None:
+    engine = pg_engine  # TODO: BigQuery
     p_series = pd.Series(
         data=[np.datetime64("2000-01-01"), np.datetime64("2010-01-01"), np.datetime64("2010-01-01")],
         name='dt',
     )
-    df = get_from_df(table='describe_table', df=p_series.to_frame())
+    df = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True)
 
     result = df.dt.describe()
 

@@ -2,13 +2,14 @@ import pytest
 
 from bach import DataFrame
 from bach.merge import revert_merge
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, get_bt_with_food_data, \
-    get_bt_with_railway_data
+from tests.functional.bach.test_data_and_utils import (
+    get_df_with_test_data, get_df_with_railway_data, get_df_with_food_data,
+)
 
 
-def test_revert_merge_basic():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_revert_merge_basic(engine):
+    bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_food_data(engine)[['skating_order', 'food']]
     merged = bt.merge(mt)
 
     result_bt, result_mt = revert_merge(merged)
@@ -17,9 +18,9 @@ def test_revert_merge_basic():
         _compare_source_with_replicate(expected, result)
 
 
-def test_revert_merge_basic_on():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_revert_merge_basic_on(engine):
+    bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_food_data(engine)[['skating_order', 'food']]
     merged = bt.merge(mt, on='skating_order')
 
     result_bt, result_mt = revert_merge(merged)
@@ -28,9 +29,9 @@ def test_revert_merge_basic_on():
         _compare_source_with_replicate(expected, result)
 
 
-def test_revert_merge_basic_left_on_right_on_same_column():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_revert_merge_basic_left_on_right_on_same_column(engine):
+    bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_food_data(engine)[['skating_order', 'food']]
     merged = bt.merge(mt, left_on='skating_order', right_on='skating_order')
 
     result_bt, result_mt = revert_merge(merged)
@@ -38,9 +39,9 @@ def test_revert_merge_basic_left_on_right_on_same_column():
         _compare_source_with_replicate(expected, result)
 
 
-def test_revert_merge_basic_left_on_right_on_different_column():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_railway_data()[['town', 'station']]
+def test_revert_merge_basic_left_on_right_on_different_column(engine):
+    bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_railway_data(engine)[['town', 'station']]
     merged = bt.merge(mt, left_on='city', right_on='town')
 
     result_bt, result_mt = revert_merge(merged)
@@ -48,9 +49,9 @@ def test_revert_merge_basic_left_on_right_on_different_column():
         _compare_source_with_replicate(expected, result)
 
 
-def test_revert_merge_basic_on_indexes():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_revert_merge_basic_on_indexes(engine):
+    bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_food_data(engine)[['skating_order', 'food']]
 
     merged_1 = bt.merge(mt, left_index=True, right_on='skating_order')
     result_bt1, result_mt1 = revert_merge(merged_1)
@@ -66,18 +67,18 @@ def test_revert_merge_basic_on_indexes():
         _compare_source_with_replicate(expected, result)
 
 
-def test_revert_merge_suffixes():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_revert_merge_suffixes(engine):
+    bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_food_data(engine)[['skating_order', 'food']]
     merged = bt.merge(mt, left_on='_index_skating_order', right_on='skating_order', suffixes=('_AA', '_BB'))
     result_bt, result_mt = revert_merge(merged)
     for expected, result in zip([bt, mt], [result_bt, result_mt]):
         _compare_source_with_replicate(expected, result)
 
 
-def test_revert_merge_mixed_columns():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    mt = get_bt_with_railway_data()[['station', 'platforms']]
+def test_revert_merge_mixed_columns(engine):
+    bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city']]
+    mt = get_df_with_railway_data(engine)[['station', 'platforms']]
     # join _index_skating_order on the 'platforms' column
     merged = bt.merge(mt, how='inner', left_on='skating_order', right_on='platforms')
     result_bt, result_mt = revert_merge(merged)
@@ -85,18 +86,18 @@ def test_revert_merge_mixed_columns():
         _compare_source_with_replicate(expected, result)
 
 
-def test_revert_merge_self():
-    bt1 = get_bt_with_test_data(full_data_set=False)[['city']]
-    bt2 = get_bt_with_test_data(full_data_set=False)[['inhabitants']]
+def test_revert_merge_self(engine):
+    bt1 = get_df_with_test_data(engine, full_data_set=False)[['city']]
+    bt2 = get_df_with_test_data(engine, full_data_set=False)[['inhabitants']]
     merged = bt1.merge(bt2, on='_index_skating_order')
     result_bt1, result_bt2 = revert_merge(merged)
     for expected, result in zip([bt1, bt2], [result_bt1, result_bt2]):
         _compare_source_with_replicate(expected, result)
 
 
-def test_revert_merge_preselection():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city', 'inhabitants']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_revert_merge_preselection(engine):
+    bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city', 'inhabitants']]
+    mt = get_df_with_food_data(engine)[['skating_order', 'food']]
 
     preselected_bt = bt[bt['skating_order'] != 1]
     preselected_mt = mt[['food']]
@@ -110,9 +111,9 @@ def test_revert_merge_preselection():
         _compare_source_with_replicate(expected, result)
 
 
-def test_revert_merge_expression_columns():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city', 'inhabitants']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_revert_merge_expression_columns(engine):
+    bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city', 'inhabitants']]
+    mt = get_df_with_food_data(engine)[['skating_order', 'food']]
     bt['skating_order'] += 2
     bt['inhabitants'] = bt['inhabitants'] * 100 + bt['skating_order']
     mt['skating_order'] += 4
@@ -123,9 +124,9 @@ def test_revert_merge_expression_columns():
         _compare_source_with_replicate(expected, result)
 
 
-def test_revert_merge_w_constant():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city', 'inhabitants']]
-    mt = get_bt_with_food_data()[['skating_order', 'food']]
+def test_revert_merge_w_constant(engine):
+    bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city', 'inhabitants']]
+    mt = get_df_with_food_data(engine)[['skating_order', 'food']]
     bt['constant'] = 1
 
     merged = bt.merge(mt, on=['skating_order'])
@@ -136,9 +137,9 @@ def test_revert_merge_w_constant():
     _compare_source_with_replicate(mt, result_mt[['skating_order', 'food']])
 
 
-def test_revert_merge_grouped():
-    bt1 = get_bt_with_test_data(full_data_set=False)[['city']]
-    bt2 = get_bt_with_test_data(full_data_set=False)[['inhabitants']]
+def test_revert_merge_grouped(engine):
+    bt1 = get_df_with_test_data(engine, full_data_set=False)[['city']]
+    bt2 = get_df_with_test_data(engine, full_data_set=False)[['inhabitants']]
     merged = bt1.merge(bt2, on='_index_skating_order')
     merged = merged.groupby('city').sum()
 

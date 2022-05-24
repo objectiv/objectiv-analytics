@@ -3,11 +3,10 @@
  */
 
 import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
-import { TrackerConsole } from '@objectiv/tracker-core';
+import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render, screen, waitFor } from '@testing-library/react';
 import React, { createRef } from 'react';
 import {
-  LocationTree,
   ObjectivProvider,
   ReactTracker,
   TrackedDiv,
@@ -15,12 +14,12 @@ import {
   TrackedRootLocationContext,
 } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedPressableContext', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    LocationTree.clear();
   });
 
   afterEach(() => {
@@ -56,7 +55,7 @@ describe('TrackedPressableContext', () => {
         _type: 'PressEvent',
         location_stack: expect.arrayContaining([
           expect.objectContaining({
-            _type: 'PressableContext',
+            _type: LocationContextName.PressableContext,
             id: 'pressable-id',
           }),
         ]),

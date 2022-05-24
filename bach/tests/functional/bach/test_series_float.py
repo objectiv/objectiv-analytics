@@ -10,7 +10,7 @@ from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, ass
 from tests.functional.bach.test_series_numeric import helper_test_simple_arithmetic
 
 
-def test_from_const(engine):
+def test_from_value(engine):
     a = 123.45
     b = -123.45
     c = -0.0
@@ -26,7 +26,7 @@ def test_from_const(engine):
     bt['d'] = d
     bt['e'] = e
     bt['f'] = f
-    bt['g'] = SeriesFloat64.from_const(base=bt, value=g, name='tmp')
+    bt['g'] = SeriesFloat64.from_value(base=bt, value=g, name='tmp')
     # check column d separately as `nan == nan` always evaluates to False
     db_values = assert_equals_data(
         bt,

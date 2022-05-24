@@ -111,15 +111,19 @@ class Aggregate:
     def session_duration(self,
                          data: bach.DataFrame,
                          groupby: GroupByType = not_set,
-                         exclude_bounces: bool = True) -> bach.SeriesInt64:
+                         exclude_bounces: bool = True,
+                         method: 'str' = 'mean') -> bach.SeriesInt64:
         """
-        Calculate the average duration of sessions.
+        Calculate the duration of sessions.
+
+        With default `method`, it calculates the mean of the session duration over the `groupby`.
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param groupby: sets the column(s) to group by.
 
             - if not_set it defaults to using :py:attr:`ModelHub.time_agg`.
             - if None it aggregates over all data.
+        :param method: 'mean' or 'sum'
         :returns: series with results.
         """
 
@@ -143,7 +147,13 @@ class Aggregate:
         if exclude_bounces:
             session_duration = session_duration[(session_duration['session_duration'] > '0')]
 
-        return session_duration.groupby(session_duration.index_columns[:-1]).session_duration.mean()
+        if method not in ['sum', 'mean']:
+            raise ValueError("only 'sum and 'mean' are supported for `method`")
+
+        grouped_data = session_duration.groupby(session_duration.index_columns[:-1]).session_duration
+        if method == 'sum':
+            return grouped_data.sum()
+        return grouped_data.mean()
 
     def frequency(self, data: bach.DataFrame) -> bach.SeriesInt64:
         """

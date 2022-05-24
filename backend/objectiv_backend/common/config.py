@@ -53,9 +53,12 @@ _SP_SCHEMA_OBJECTIV_TAXONOMY = 'iglu:io.objectiv/taxonomy/jsonschema/1-0-0'
 _SP_SCHEMA_PAYLOAD_DATA = 'iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-4'
 _SP_SCHEMA_SCHEMA_VIOLATIONS = 'iglu:com.snowplowanalytics.snowplow.badrows/schema_violations/jsonschema/2-0-0'
 
-_SP_GCP_PROJECT = os.environ.get('SP_GCP_PROJECT', None)
+_SP_GCP_PROJECT = os.environ.get('SP_GCP_PROJECT', '')
 _SP_GCP_PUBSUB_TOPIC_RAW = os.environ.get('SP_GCP_PUBSUB_TOPIC_RAW', '')
 _SP_GCP_PUBSUB_TOPIC_BAD = os.environ.get('SP_GCP_PUBSUB_TOPIC_BAD', '')
+
+_SP_AWS_MESSAGE_TOPIC_RAW = os.environ.get('SP_AWS_MESSAGE_TOPIC_RAW', '')
+_SP_AWS_MESSAGE_TOPIC_BAD = os.environ.get('SP_AWS_MESSAGE_TOPIC_BAD', '')
 
 # Cookie settings
 _OBJ_COOKIE = 'obj_user_id'
@@ -89,9 +92,15 @@ class PostgresConfig(NamedTuple):
 
 
 class SnowplowConfig(NamedTuple):
+    gcp_enabled: bool
     gcp_project: str
     gcp_pubsub_topic_raw: str
     gcp_pubsub_topic_bad: str
+
+    aws_enabled: bool
+    aws_message_topic_raw: str
+    aws_message_topic_bad: str
+    aws_message_raw_type: str
 
     schema_collector_payload: str
     schema_contexts: str
@@ -104,7 +113,7 @@ class OutputConfig(NamedTuple):
     postgres: Optional[PostgresConfig]
     aws: Optional[AwsOutputConfig]
     file_system: Optional[FileSystemOutputConfig]
-    snowplow: Optional[SnowplowConfig]
+    snowplow: SnowplowConfig
 
 
 class CookieConfig(NamedTuple):
@@ -165,21 +174,38 @@ def get_config_postgres() -> Optional[PostgresConfig]:
     )
 
 
-def get_config_output_snowplow() -> Optional[SnowplowConfig]:
-    if _SP_GCP_PROJECT is None:
-        return None
+def get_config_output_snowplow() -> SnowplowConfig:
+    if _SP_AWS_MESSAGE_TOPIC_RAW.startswith('https://sqs.'):
+        aws_message_raw_type = 'sqs'
+    else:
+        aws_message_raw_type = 'kinesis'
 
-    print('Snowplow config enabled')
-    return SnowplowConfig(
+    config = SnowplowConfig(
+        gcp_enabled=(_SP_GCP_PROJECT != ''),
+        gcp_project=_SP_GCP_PROJECT,
+        gcp_pubsub_topic_raw=_SP_GCP_PUBSUB_TOPIC_RAW,
+        gcp_pubsub_topic_bad=_SP_GCP_PUBSUB_TOPIC_BAD,
+
+        aws_enabled=(_SP_AWS_MESSAGE_TOPIC_RAW != ''),
+        aws_message_topic_raw=_SP_AWS_MESSAGE_TOPIC_RAW,
+        aws_message_topic_bad=_SP_AWS_MESSAGE_TOPIC_BAD,
+        aws_message_raw_type=aws_message_raw_type,
+
         schema_collector_payload=_SP_SCHEMA_COLLECTOR_PAYLOAD,
         schema_contexts=_SP_SCHEMA_CONTEXTS,
         schema_objectiv_taxonomy=_SP_SCHEMA_OBJECTIV_TAXONOMY,
         schema_payload_data=_SP_SCHEMA_PAYLOAD_DATA,
-        schema_schema_violations=_SP_SCHEMA_SCHEMA_VIOLATIONS,
-        gcp_project=_SP_GCP_PROJECT,
-        gcp_pubsub_topic_raw=_SP_GCP_PUBSUB_TOPIC_RAW,
-        gcp_pubsub_topic_bad=_SP_GCP_PUBSUB_TOPIC_BAD
+        schema_schema_violations=_SP_SCHEMA_SCHEMA_VIOLATIONS
     )
+    if config.gcp_enabled:
+        print(f'Enabled snowplow: GCP pipeline (raw:{config.gcp_pubsub_topic_raw} '
+              f'/ bad:{config.gcp_pubsub_topic_bad})')
+
+    if config.aws_enabled:
+        print(f'Enabled Snowplow: AWS pipeline (raw({config.aws_message_raw_type}):{config.aws_message_topic_raw} '
+              f'/ bad:{config.aws_message_topic_bad})')
+
+    return config
 
 
 def get_config_output() -> OutputConfig:

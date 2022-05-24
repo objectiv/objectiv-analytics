@@ -2,8 +2,16 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { matchUUID } from '@objectiv/testing-tools';
 import MockDate from 'mockdate';
-import { ContextsConfig, makeApplicationContext, makeMediaLoadEvent, makeOverlayContext, TrackerEvent } from '../src';
+import {
+  ContextsConfig,
+  generateUUID,
+  makeApplicationContext,
+  makeMediaLoadEvent,
+  makeOverlayContext,
+  TrackerEvent,
+} from '../src';
 
 const mockedMs = 1434319925275;
 
@@ -19,8 +27,8 @@ afterEach(() => {
 describe('TrackerEvent', () => {
   const testEventName = 'test-event';
   const testContexts: ContextsConfig = {
-    location_stack: [{ __location_context: true, _type: 'section', id: 'test' }],
-    global_contexts: [{ __global_context: true, _type: 'global', id: 'test' }],
+    location_stack: [{ __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'test' }],
+    global_contexts: [{ __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'test' }],
   };
 
   it('should instantiate with the given properties as one Config', () => {
@@ -58,20 +66,20 @@ describe('TrackerEvent', () => {
   it('should allow compositions with multiple configs or instances and produce a valid location_stack', () => {
     const eventContexts: ContextsConfig = {
       location_stack: [
-        { __location_context: true, _type: 'section', id: 'D' },
-        { __location_context: true, _type: 'item', id: 'X' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'D' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'item', id: 'X' },
       ],
     };
     const sectionContexts1: ContextsConfig = {
       location_stack: [
-        { __location_context: true, _type: 'section', id: 'root' },
-        { __location_context: true, _type: 'section', id: 'A' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'root' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'A' },
       ],
     };
     const sectionContexts2: ContextsConfig = {
       location_stack: [
-        { __location_context: true, _type: 'section', id: 'B' },
-        { __location_context: true, _type: 'section', id: 'C' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'B' },
+        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'C' },
       ],
     };
     const composedEvent = new TrackerEvent(
@@ -80,12 +88,12 @@ describe('TrackerEvent', () => {
       sectionContexts2
     );
     expect(composedEvent.location_stack).toEqual([
-      { __location_context: true, _type: 'section', id: 'root' },
-      { __location_context: true, _type: 'section', id: 'A' },
-      { __location_context: true, _type: 'section', id: 'B' },
-      { __location_context: true, _type: 'section', id: 'C' },
-      { __location_context: true, _type: 'section', id: 'D' },
-      { __location_context: true, _type: 'item', id: 'X' },
+      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'root' },
+      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'A' },
+      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'B' },
+      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'C' },
+      { __instance_id: matchUUID, __location_context: true, _type: 'section', id: 'D' },
+      { __instance_id: matchUUID, __location_context: true, _type: 'item', id: 'X' },
     ]);
   });
 

@@ -13,17 +13,19 @@ def test_basic_unstack() -> None:
     bt = bt.sort_values(by='municipality')
 
     result = bt.unstack()
+    new_cols = [
+        'Leeuwarden__skating_order',
+        'Leeuwarden__inhabitants',
+        'Leeuwarden__founding',
+        'Súdwest-Fryslân__skating_order',
+        'Súdwest-Fryslân__inhabitants',
+        'Súdwest-Fryslân__founding',
+    ]
+    assert set(result.data_columns) == set(new_cols)
+    result = result[new_cols]
     assert_equals_data(
         result.sort_index(),
-        expected_columns=[
-            'city',
-            'Leeuwarden__skating_order',
-            'Leeuwarden__inhabitants',
-            'Leeuwarden__founding',
-            'Súdwest-Fryslân__skating_order',
-            'Súdwest-Fryslân__inhabitants',
-            'Súdwest-Fryslân__founding',
-        ],
+        expected_columns=['city'] + new_cols,
         expected_data=[
             ['Drylts', None, None, None, 3., 3055., 1268.],
             ['Ljouwert', 1., 93485., 1285., None, None, None],

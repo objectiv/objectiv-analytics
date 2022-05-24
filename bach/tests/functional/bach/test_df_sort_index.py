@@ -1,7 +1,7 @@
 import pytest
 
 from tests.functional.bach.test_data_and_utils import assert_equals_data, \
-    get_bt_with_railway_data, get_df_with_test_data
+    get_bt_with_railway_data, get_df_with_test_data, get_df_with_railway_data
 
 
 def test_sort_index_basic(engine):
@@ -20,8 +20,8 @@ def test_sort_index_basic(engine):
     )
 
 
-def test_sort_index_w_level():
-    btr = get_bt_with_railway_data()
+def test_sort_index_w_level(engine):
+    btr = get_df_with_railway_data(engine)
     btr = btr.set_index(['town', 'platforms', 'station_id'], drop=True)
 
     with pytest.raises(ValueError, match=r'dataframe has only 3 levels'):

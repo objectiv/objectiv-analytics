@@ -6,8 +6,9 @@ import datetime
 import numpy as np
 import pandas as pd
 
+from bach import DataFrame
 from tests.functional.bach.test_data_and_utils import get_bt_with_food_data, assert_equals_data, \
-    get_bt_with_test_data, get_from_df
+    get_bt_with_test_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
 
 
@@ -41,7 +42,7 @@ def test_timedelta_arithmetic2():
     assert [s.dtype for s in list(bt.all_series.values())[2:]] == expected_types
 
     assert_equals_data(
-        bt[:1],
+        bt.sort_index()[:1],
         expected_columns=list(bt.all_series.keys()),
         expected_data=[
             [1, 93485, *expected],
@@ -92,7 +93,7 @@ def test_to_pandas():
     assert bt[['td']].to_numpy()[0] == [27744277000000000]
 
 
-def test_timedelta_operations():
+def test_timedelta_operations(pg_engine):
     pdf = pd.DataFrame(
         data={
             'start_date': [
@@ -103,7 +104,7 @@ def test_timedelta_operations():
             ]
         }
     )
-    df = get_from_df('test_datetime_df', pdf)
+    df = DataFrame.from_pandas(engine=pg_engine, df=pdf, convert_objects=True)
 
     pdf['diff'] = pdf['end_date'] - pdf['start_date']
     df['diff'] = df['end_date'] - df['start_date']
@@ -113,7 +114,7 @@ def test_timedelta_operations():
     np.testing.assert_equal(expected.to_numpy(), result.sort_index().to_numpy())
 
 
-def test_timedelta_dt_properties() -> None:
+def test_timedelta_dt_properties(pg_engine) -> None:
     pdf = pd.DataFrame(
         data={
             'start_date': [
@@ -128,7 +129,7 @@ def test_timedelta_dt_properties() -> None:
             ]
         }
     )
-    df = get_from_df('test_datetime_df', pdf)
+    df = DataFrame.from_pandas(engine=pg_engine, df=pdf, convert_objects=True)
 
     pdf['diff'] = pdf['end_date'] - pdf['start_date']
     df['diff'] = df['end_date'] - df['start_date']
@@ -161,7 +162,7 @@ def test_timedelta_dt_properties() -> None:
     )
 
 
-def test_timedelta_dt_components() -> None:
+def test_timedelta_dt_components(pg_engine) -> None:
     pdf = pd.DataFrame(
         data={
             'start_date': [
@@ -174,7 +175,7 @@ def test_timedelta_dt_components() -> None:
             ]
         }
     )
-    df = get_from_df('test_datetime_df', pdf)
+    df = DataFrame.from_pandas(engine=pg_engine, df=pdf, convert_objects=True)
 
     pdf['diff'] = pdf['end_date'] - pdf['start_date']
     df['diff'] = df['end_date'] - df['start_date']

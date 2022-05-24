@@ -3,11 +3,12 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { makeTransportSendError, TrackerConsole, TrackerEvent } from '@objectiv/tracker-core';
+import { makeTransportSendError, TrackerEvent } from '@objectiv/tracker-core';
 import xhrMock from 'xhr-mock';
 import { XHRTransport } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 beforeEach(() => {
   jest.spyOn(console, 'error').mockImplementation(() => {});

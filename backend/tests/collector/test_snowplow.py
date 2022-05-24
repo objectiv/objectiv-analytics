@@ -3,7 +3,7 @@ import jsonschema
 import base64
 from objectiv_backend.snowplow.schema.ttypes import CollectorPayload
 from objectiv_backend.snowplow.snowplow_helper import make_snowplow_custom_context, \
-    objectiv_event_to_snowplow, objectiv_event_to_snowplow_payload, snowplow_schema_violation
+    objectiv_event_to_snowplow, objectiv_event_to_snowplow_payload, snowplow_schema_violation_json
 from tests.schema.test_schema import CLICK_EVENT_JSON, make_event_from_dict
 from objectiv_backend.common.config import SnowplowConfig
 from objectiv_backend.schema.validate_events import EventError, ErrorInfo
@@ -15,9 +15,16 @@ config = SnowplowConfig(
     schema_objectiv_taxonomy='test-schema-objectiv-taxonomy',
     schema_collector_payload='',
     schema_schema_violations='https://raw.githubusercontent.com/snowplow/iglu-central/master/schemas/com.snowplowanalytics.snowplow.badrows/schema_violations/jsonschema/2-0-0',
+
+    gcp_enabled=False,
     gcp_project='',
     gcp_pubsub_topic_raw='',
-    gcp_pubsub_topic_bad=''
+    gcp_pubsub_topic_bad='',
+
+    aws_enabled=False,
+    aws_message_topic_raw='',
+    aws_message_topic_bad='',
+    aws_message_raw_type=''
 )
 
 event_list = json.loads(CLICK_EVENT_JSON)
@@ -35,7 +42,7 @@ def test_objectiv_event_to_snowplow():
 
 def test_make_snowplow_custom_context():
     sp_event = objectiv_event_to_snowplow(event=event, config=config)
-    encoded_context = make_snowplow_custom_context(snowplow_event=sp_event, config=config)
+    encoded_context = make_snowplow_custom_context(self_describing_event=sp_event, config=config)
 
     json_context = base64.b64decode(encoded_context)
     context = json.loads(json_context)
@@ -80,7 +87,7 @@ def test_snowplow_failed_event():
         ])
 
     payload = objectiv_event_to_snowplow_payload(event=event, config=config)
-    violation = snowplow_schema_violation(payload=payload, config=config, event_error=event_error)
+    violation = snowplow_schema_violation_json(payload=payload, config=config, event_error=event_error)
 
     # local copy of https://raw.githubusercontent.com/snowplow/iglu-central/master/schemas/com.snowplowanalytics.snowplow.badrows/schema_violations/jsonschema/2-0-0
     with open('tests/collector/schema_violations.json') as fp:

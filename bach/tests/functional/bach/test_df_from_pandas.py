@@ -6,7 +6,7 @@ import pytest
 from bach import DataFrame
 from sql_models.util import is_bigquery, is_postgres
 from tests.functional.bach.test_data_and_utils import TEST_DATA_CITIES, CITIES_COLUMNS, \
-    assert_equals_data
+    assert_equals_data, convert_expected_data_timestamps
 import datetime
 from uuid import UUID
 import pandas as pd
@@ -62,6 +62,7 @@ def test_from_pandas_table(pg_engine):
     assert_equals_data(bt, expected_columns=EXPECTED_COLUMNS, expected_data=EXPECTED_DATA)
 
 
+@pytest.mark.xdist_group(name="from_pd_table")
 def test_from_pandas_table_injection(pg_engine):
     pdf = get_pandas_df(TEST_DATA_INJECTION, COLUMNS_INJECTION)
     bt = DataFrame.from_pandas(
@@ -117,6 +118,7 @@ def test_from_pandas_ephemeral_injection(engine):
         raise Exception(f'Test does not support {engine.dialect}')
 
 
+@pytest.mark.xdist_group(name="from_pd_table")
 def test_from_pandas_non_happy_path(pg_engine):
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS)
     with pytest.raises(TypeError):
@@ -149,6 +151,7 @@ def test_from_pandas_non_happy_path(pg_engine):
         )
 
 
+@pytest.mark.xdist_group(name="from_pd_table")
 @pytest.mark.parametrize("materialization", ['cte', 'table'])
 def test_from_pandas_index(materialization: str, pg_engine):
     # test multilevel index
@@ -193,6 +196,7 @@ def test_from_pandas_index(materialization: str, pg_engine):
         expected_data=[[idx] + x[1:] for idx, x in enumerate(EXPECTED_DATA)])
 
 
+@pytest.mark.xdist_group(name="from_pd_table")
 @pytest.mark.parametrize("materialization", ['cte', 'table'])
 def test_from_pandas_types(materialization: str, pg_engine):
     pdf = pd.DataFrame.from_records(TYPES_DATA, columns=TYPES_COLUMNS)
@@ -300,3 +304,60 @@ def test_from_pandas_types_cte(pg_engine):
             convert_objects=True,
             materialization='cte'
         )
+
+
+def test_from_pandas_columns_w_nulls(engine) -> None:
+    pdf = pd.DataFrame(
+        {
+            "a": ['a', None, 'c'],
+            "b": [np.nan, 1, 2],
+            "c": [pd.NaT, pd.Timestamp("1940-04-25"), pd.NaT],
+            "d": [None, None, None],
+        }
+    )
+    with pytest.raises(ValueError, match=r'has no non-nullable values'):
+        DataFrame.from_pandas(
+            engine=engine,
+            df=pdf,
+            convert_objects=True,
+            materialization='cte'
+        )
+
+    result = DataFrame.from_pandas(
+        engine=engine,
+        df=pdf[['a', 'b', 'c']],
+        convert_objects=True,
+        materialization='cte'
+    )
+    expected_data = [
+        [0, 'a', None, None],
+        [1, None, 1, pd.Timestamp("1940-04-25")],
+        [2, 'c', 2, None],
+    ]
+    expected_data = convert_expected_data_timestamps(engine.dialect, expected_data)
+    assert_equals_data(
+        result,
+        expected_columns=['_index_0', 'a', 'b', 'c'],
+        expected_data=expected_data
+    )
+
+    pdf['d'] = pdf['d'].astype(str)
+    result = DataFrame.from_pandas(
+        engine=engine,
+        df=pdf,
+        convert_objects=True,
+        materialization='cte'
+    )
+
+    expected_data = [
+        [0, 'a', None, None, 'None'],
+        [1, None, 1, pd.Timestamp("1940-04-25"), 'None'],
+        [2, 'c', 2, None, 'None'],
+    ]
+    expected_data = convert_expected_data_timestamps(engine.dialect, expected_data)
+    assert_equals_data(
+        result,
+        expected_columns=['_index_0', 'a', 'b', 'c', 'd'],
+        expected_data=expected_data
+    )
+

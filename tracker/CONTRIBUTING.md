@@ -21,6 +21,7 @@ This is a complete list of the currently available packages.
 
 | Name                                             | Type      | Path                                     | Links                                                                |
 |--------------------------------------------------|-----------|------------------------------------------|----------------------------------------------------------------------|
+| @objectiv/developer-tools                        | core      | /core/developer-tools                    | [README](/tracker/core/developer-tools/README.md)                    |
 | @objectiv/schema                                 | core      | /core/schema                             | [README](/tracker/core/schema/README.md)                             |
 | @objectiv/tracker-core                           | core      | /core/tracker                            | [README](/tracker/core/tracker/README.md)                            |
 | @objectiv/tracker-react-core                     | core      | /core/react                              | [README](/tracker/core/react/README.md)                              |
@@ -158,7 +159,7 @@ Install dependencies for all packages and links local packages to each other.
 Runs prettier for all packages in write mode.
 
 ### `yarn prettify:generated`
-Runs prettier for `core/schema/src/*`, `core/tracker/src/ContextFactories.ts` and `core/tracker/src/EventFactories.ts` in write mode.
+Runs prettier for `core/schema/src/*`, `core/tracker/src/ContextFactories.ts`, `core/tracker/src/ContextNames.ts` and `core/tracker/src/EventFactories.ts` in write mode.
 
 ### `yarn tsc`
 Runs the TypeScript compiler for all typed packages.
@@ -183,24 +184,27 @@ Coverage output will be produced in a `/coverage` folder under each package.
 Builds all packages.
 Build output will be produced in a `/dist` folder under each package.
 
-### `yarn publish`
+### `TAG=<latest|next> yarn publish`
 Publishes all public packages to NPM.
 > **Note**:  
 > To publish a single package the command name is `npm-publish` to avoid conflicting with the default command 
 > 
-> Example: `yarn workspace @objectiv/tracker-core npm-publish`
+> Example: `TAG=next yarn workspace @objectiv/tracker-core npm-publish`
 
-### `yarn publish:verdaccio`
+### `TAG=<latest|next> yarn publish:verdaccio`
 Publishes all public packages to a Local Verdaccio instance.
 > **Note**:  
 > To publish a single package the command name is `npm-publish:verdaccio` to avoid conflicting with the default command
 >
-> Example: `yarn workspace @objectiv/tracker-core npm-publish:verdaccio`
+> Example: `TAG=next yarn workspace @objectiv/tracker-core npm-publish:verdaccio`
 
 ### `yarn utils:generate`
 Runs the generator utility. This will generate:
 - The @objectiv/schema package TypeScript definitions from the OSF
 - The Context and Event factories in @objectiv/tracker-core package from the @objectiv/schema 
+- The ContextErrorMessages in @objectiv/developer-tools package 
+- Yarn prettify for all generated files
+- TypeScript for all generated files
 
 ## Versioning  commands
  - [Release Workflow Documentation](https://yarnpkg.com/features/release-workflow)
@@ -219,6 +223,15 @@ Executes the release strategy and bumps versions accordingly
 
 ### `yarn version:patch`
 Patches all packages right away, without using version release strategies
+
+### `yarn version:minor`
+Bumps the minor of all packages right away, without using version release strategies
+
+### `yarn version:major`
+Bumps the major of all packages right away, without using version release strategies
+
+### `yarn version:prerelease`
+Patches all packages and either adds or increment the prerelease postfix right away, without using version release strategies
 
 ## Troubleshooting
 

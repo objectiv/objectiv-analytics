@@ -3,7 +3,9 @@ Copyright 2021 Objectiv B.V.
 """
 from datetime import date, datetime, time
 
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_bt_with_json_data,\
+import pytest
+
+from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_json_data, \
     CITIES_INDEX_AND_COLUMNS, get_df_with_test_data
 
 
@@ -135,6 +137,7 @@ def test_astype_to_timestamp(engine):
     bt = bt.astype('timestamp')
     assert_equals_data(
         bt,
+        use_to_pandas=True,
         expected_columns=['_index_skating_order', 'd', 's'],
         expected_data=[
             [1, datetime(2022, 3, 31, 0, 0), datetime(2022, 2, 15, 13, 37)],
@@ -160,12 +163,14 @@ def test_astype_to_time(engine):
         ]
     )
 
-
-def test_astype_to_json():
-    bt = get_bt_with_json_data(as_json=False)
-    bt_json_dict = bt.dict_column.astype('jsonb')
-    bt_json_list = bt.list_column.astype('jsonb')
-    bt_json_mixed = bt.mixed_column.astype('jsonb')
+@pytest.mark.parametrize('dtype', ('json', 'jsonb'))
+def test_astype_to_json(pg_engine, dtype):
+    # TODO: BigQuery
+    bt = get_df_with_json_data(engine=pg_engine, dtype='string')
+    assert bt.dict_column.dtype == 'string'
+    bt_json_dict = bt.dict_column.astype(dtype)
+    bt_json_list = bt.list_column.astype(dtype)
+    bt_json_mixed = bt.mixed_column.astype(dtype)
     assert_equals_data(
         bt_json_dict,
         expected_columns=['_index_row', 'dict_column'],

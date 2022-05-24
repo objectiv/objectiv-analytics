@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from bach import DataFrame, SeriesBoolean
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_from_df, get_df_with_test_data
+from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
 def test_basic(engine):
@@ -111,7 +111,7 @@ def test_boolean_indexing_same_node(engine):
     )
 
 
-def test_round():
+def test_round(engine):
     pdf = pd.DataFrame(
         data={
             'a': [1.9, 3.0, 4.123, 6.425124, 2.00000000001, 2.1, np.nan, 7.],
@@ -120,7 +120,7 @@ def test_round():
             'd': [1, 2, 3, 4, 5, 6, 7, 8],
         },
     )
-    bt = get_from_df('test_round', pdf)
+    bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
 
     for i in 0, 3, 5, 9:
         result = bt.round(i).sort_values(by=['c']).to_pandas()
@@ -132,7 +132,8 @@ def test_round():
         pd.testing.assert_frame_equal(expected2, result2, check_names=False)
 
 
-def test_quantile() -> None:
+def test_quantile(pg_engine) -> None:
+    engine = pg_engine  # TODO: BigQuery
     pdf = pd.DataFrame(
         data={
             'a': [1, 2, 3, 4, 5, 6, np.nan, 7.],
@@ -140,7 +141,7 @@ def test_quantile() -> None:
             'c': ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
         },
     )
-    bt = get_from_df('test_quantile', pdf)
+    bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     quantiles = [[0.2, 0.4], 0.5, [0.25, 0.3, 0.5, 0.75, 0.86]]
 
     for q in quantiles:
@@ -152,14 +153,14 @@ def test_quantile() -> None:
         np.testing.assert_almost_equal(expected, result_values, decimal=4)
 
 
-def test_quantile_no_numeric_columns() -> None:
+def test_quantile_no_numeric_columns(engine) -> None:
     pdf = pd.DataFrame(
         data={
             'a': ['a', 'b', 'c', 'd'],
             'c': ['e', 'f', 'g', 'h'],
         },
     )
-    bt = get_from_df('test_quantile', pdf)
+    bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     bt = bt.reset_index(drop=True)
 
     with pytest.raises(ValueError, match=r'DataFrame has no series supporting'):

@@ -2,10 +2,10 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeVisibleEvent, Tracker } from '@objectiv/tracker-core';
+import { LocationContextName, makeContentContext, makeVisibleEvent, Tracker } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
-import { makeContentContext, TrackingContextProvider, trackVisibleEvent, useVisibleEventTracker } from '../src';
+import { TrackingContextProvider, trackVisibleEvent, useVisibleEventTracker } from '../src';
 
 describe('VisibleEvent', () => {
   it('should track a VisibleEvent', () => {
@@ -71,7 +71,7 @@ describe('VisibleEvent', () => {
       1,
       expect.objectContaining(
         makeVisibleEvent({
-          location_stack: [expect.objectContaining({ _type: 'ContentContext', id: 'override' })],
+          location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'override' })],
         })
       ),
       undefined

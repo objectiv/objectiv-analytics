@@ -3,7 +3,7 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { makeContentContext, TrackerConsole } from '@objectiv/tracker-core';
+import { makeContentContext } from '@objectiv/tracker-core';
 import {
   ChildrenTaggingQueries,
   parseJson,
@@ -23,7 +23,8 @@ import {
   ValidateAttribute,
 } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('parsersAndStringifiers', () => {
   beforeEach(() => {

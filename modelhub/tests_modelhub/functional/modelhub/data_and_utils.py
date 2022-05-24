@@ -51,7 +51,7 @@ TEST_DATA_OBJECTIV = '''
 
 
 def get_bt_with_json_data_real() -> DataFrame:
-    bt = get_bt('test_json_table_real', TEST_DATA_JSON_REAL, JSON_COLUMNS_REAL, True)
+    bt = get_bt(TEST_DATA_JSON_REAL, JSON_COLUMNS_REAL, True)
     bt['global_contexts'] = bt.global_contexts.astype('jsonb')
     bt['location_stack'] = bt.location_stack.astype('jsonb')
     return bt

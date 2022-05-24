@@ -1,3 +1,5 @@
 autopep8
 pytest==6.2.4
 mypy==0.812
+boto3-stubs
+

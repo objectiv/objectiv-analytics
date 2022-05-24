@@ -3,9 +3,8 @@
  */
 
 import {
-  GlobalContextValidationRule,
+  GlobalContextName,
   makeHttpContext,
-  TrackerConsole,
   TrackerEvent,
   TrackerInterface,
   TrackerPluginInterface,
@@ -18,33 +17,35 @@ import {
  */
 export class HttpContextPlugin implements TrackerPluginInterface {
   readonly pluginName = `HttpContextPlugin`;
-  readonly validationRules: TrackerValidationRuleInterface[];
+  validationRules: TrackerValidationRuleInterface[] = [];
+  initialized: boolean = false;
 
   /**
-   * The constructor is responsible for initializing validation rules.
+   * Generates an HttpContext and initializes validation rules.
    */
-  constructor() {
-    this.validationRules = [
-      new GlobalContextValidationRule({
-        logPrefix: this.pluginName,
-        contextName: 'HttpContext',
-        once: true,
-      }),
-    ];
+  initialize({ global_contexts, platform }: TrackerInterface): void {
+    if (globalThis.objectiv) {
+      this.validationRules = [
+        globalThis.objectiv.makeGlobalContextValidationRule({
+          platform,
+          logPrefix: this.pluginName,
+          contextName: GlobalContextName.HttpContext,
+          once: true,
+        }),
+      ];
+    }
 
-    TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
-  }
-
-  /**
-   * Generate an HttpContext.
-   */
-  initialize(tracker: TrackerInterface): void {
     const httpContext = makeHttpContext({
       id: 'http_context',
       referrer: document.referrer ?? '',
-      user_agent: navigator.userAgent ?? ''
+      user_agent: navigator.userAgent ?? '',
     });
-    tracker.global_contexts.push(httpContext);
+
+    global_contexts.push(httpContext);
+
+    this.initialized = true;
+
+    globalThis.objectiv?.TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
   }
 
   /**
@@ -52,6 +53,12 @@ export class HttpContextPlugin implements TrackerPluginInterface {
    */
   validate(event: TrackerEvent): void {
     if (this.isUsable()) {
+      if (!this.initialized) {
+        globalThis.objectiv?.TrackerConsole.error(
+          `｢objectiv:${this.pluginName}｣ Cannot validate. Make sure to initialize the plugin first.`
+        );
+        return;
+      }
       this.validationRules.forEach((validationRule) => validationRule.validate(event));
     }
   }

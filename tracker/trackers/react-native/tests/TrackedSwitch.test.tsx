@@ -3,11 +3,10 @@
  */
 
 import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
-import { TrackerConsole } from '@objectiv/tracker-core';
+import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import {
-  LocationTree,
   ReactNativeTracker,
   RootLocationContextWrapper,
   TrackedSwitch,
@@ -15,13 +14,13 @@ import {
   TrackingContextProvider,
 } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedSwitch', () => {
   const spyTransport = new SpyTransport();
   jest.spyOn(spyTransport, 'handle');
   const tracker = new ReactNativeTracker({ applicationId: 'app-id', transport: spyTransport });
-  jest.spyOn(console, 'error').mockImplementation(jest.fn);
 
   const TestTrackedSwitch = (props: TrackedSwitchProps & { testID?: string }) => (
     <TrackingContextProvider tracker={tracker}>
@@ -33,7 +32,6 @@ describe('TrackedSwitch', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    LocationTree.clear();
   });
 
   it('should track InputChangeEvent on press with a InputContext in the LocationStack', () => {
@@ -49,13 +47,13 @@ describe('TrackedSwitch', () => {
         _type: 'InputChangeEvent',
         location_stack: expect.arrayContaining([
           expect.objectContaining({
-            _type: 'InputContext',
+            _type: LocationContextName.InputContext,
             id: 'test-switch',
           }),
         ]),
       })
     );
-    expect(console.error).not.toHaveBeenCalled();
+    expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
   });
 
   it('should execute onValueChange handler if specified', () => {

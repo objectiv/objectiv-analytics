@@ -1,4 +1,5 @@
 pytest==6.2.5
+pytest-xdist==2.5.0
 mypy==0.910
 pycodestyle==2.7.0
 ipython==7.31.1

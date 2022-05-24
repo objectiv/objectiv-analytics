@@ -4,7 +4,7 @@
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
-  TrackerConsole,
+  GlobalContextName,
   TrackerEvent,
   TrackerQueue,
   TrackerQueueMemoryStore,
@@ -16,7 +16,8 @@ import fetchMock from 'jest-fetch-mock';
 import { clear, mockUserAgent } from 'jest-useragent-mock';
 import { BrowserTracker } from '../src/';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('BrowserTracker', () => {
   beforeEach(() => {
@@ -166,15 +167,15 @@ describe('BrowserTracker', () => {
       expect(trackedEvent.global_contexts).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            _type: 'HttpContext',
+            _type: GlobalContextName.HttpContext,
             id: 'http_context',
           }),
           expect.objectContaining({
-            _type: 'ApplicationContext',
+            _type: GlobalContextName.ApplicationContext,
             id: 'app-id',
           }),
           expect.objectContaining({
-            _type: 'PathContext',
+            _type: GlobalContextName.PathContext,
             id: 'http://localhost/',
           }),
         ])

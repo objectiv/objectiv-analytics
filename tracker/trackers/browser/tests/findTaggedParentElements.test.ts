@@ -3,15 +3,10 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import {
-  findParentTaggedElements,
-  isParentTaggedElement,
-  isTaggedElement,
-  TaggingAttribute,
-  TrackerConsole,
-} from '../src';
+import { findParentTaggedElements, isParentTaggedElement, isTaggedElement, TaggingAttribute } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('findTaggedParentElements', () => {
   afterEach(() => {
@@ -138,5 +133,46 @@ describe('findTaggedParentElements', () => {
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
       `findParentTaggedElements: missing or invalid Parent Element 'top'`
     );
+  });
+
+  describe('Without developer tools', () => {
+    let objectivGlobal = globalThis.objectiv;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      globalThis.objectiv = undefined;
+    });
+
+    afterEach(() => {
+      globalThis.objectiv = objectivGlobal;
+    });
+
+    it('should not TrackerConsole.error if parentElementId is not a Tagged Element', () => {
+      const div = document.createElement('div');
+      div.setAttribute(TaggingAttribute.context, 'div');
+      div.setAttribute(TaggingAttribute.parentElementId, 'top');
+
+      const midSection = document.createElement('section');
+      midSection.setAttribute(TaggingAttribute.context, 'mid');
+
+      const untrackedSection = document.createElement('div');
+
+      const topSection = document.createElement('body');
+
+      expect(isParentTaggedElement(div)).toBe(true);
+      expect(isTaggedElement(midSection)).toBe(true);
+      expect(isTaggedElement(untrackedSection)).toBe(false);
+      expect(isTaggedElement(topSection)).toBe(false);
+
+      midSection.appendChild(div);
+      untrackedSection.appendChild(midSection);
+      topSection.appendChild(untrackedSection);
+      document.body.appendChild(topSection);
+
+      const trackedParentElements = findParentTaggedElements(div);
+      expect(trackedParentElements).toHaveLength(1);
+      expect(trackedParentElements).toStrictEqual([div]);
+      expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
+    });
   });
 });

@@ -3,17 +3,17 @@
  */
 
 import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
-import { TrackerConsole } from '@objectiv/tracker-core';
+import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render } from '@testing-library/react';
 import React from 'react';
-import { LocationTree, ObjectivProvider, ReactTracker, TrackedMain, usePressEventTracker } from '../src';
+import { ObjectivProvider, ReactTracker, TrackedMain, usePressEventTracker } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedMain', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    LocationTree.clear();
   });
 
   afterEach(() => {
@@ -48,7 +48,7 @@ describe('TrackedMain', () => {
         _type: 'PressEvent',
         location_stack: expect.arrayContaining([
           expect.objectContaining({
-            _type: 'ContentContext',
+            _type: LocationContextName.ContentContext,
             id: 'main',
           }),
         ]),
@@ -84,7 +84,7 @@ describe('TrackedMain', () => {
         _type: 'PressEvent',
         location_stack: expect.arrayContaining([
           expect.objectContaining({
-            _type: 'ContentContext',
+            _type: LocationContextName.ContentContext,
             id: 'hero-element',
           }),
         ]),
