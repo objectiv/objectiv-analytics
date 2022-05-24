@@ -529,7 +529,7 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         return self._arithmetic_operation(other, 'div', '({}) / ({})', other_dtypes=('int64', 'float64'))
 
     @property
-    def dt(self) -> DateTimeOperation:
+    def dt(self) -> TimedeltaOperation:
         """
         Get access to date operations.
 
@@ -579,7 +579,6 @@ class SeriesTimedelta(SeriesAbstractDateTime):
                 .copy_override_type(SeriesTimedelta)
             )
 
-        assert isinstance(self.dt, TimedeltaOperation)  # help mypy
         # calculate quantiles based on total microseconds
         # using total seconds might lose precision,
         # since TIMESTAMP_SECONDS accepts only integers, therefore
@@ -594,7 +593,7 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         result = result.copy_override(
             expression=Expression.construct(
                 f"TIMESTAMP_MICROS({{}}) - CAST('1970-01-01' AS TIMESTAMP)",
-                result.astype(int),
+                result.astype('int64'),
             ),
             name=self.name,
         )
