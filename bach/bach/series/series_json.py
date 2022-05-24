@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import json
-from typing import Dict, Union, TYPE_CHECKING, Tuple, cast, Optional, List
+from typing import Dict, Union, TYPE_CHECKING, Tuple, cast, Optional, List, Any
 
 from sqlalchemy.engine import Dialect
 
@@ -193,7 +193,7 @@ class SeriesJson(Series):
                 # SeriesJsonPostgres is a special case: SeriesJsonPostgres.expression already contains a cast
                 # to the database type 'jsonb', so we actually don't need to do any conversion
                 return expression
-            if source_dtype in ('string'):
+            if source_dtype == 'string':
                 return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
             raise ValueError(f'cannot convert {source_dtype} to json')
         if is_bigquery(dialect):
@@ -203,13 +203,21 @@ class SeriesJson(Series):
         raise DatabaseNotSupportedException(dialect)
 
     def to_pandas_info(self) -> Optional['ToPandasInfo']:
-        if is_postgres(self.engine):
-            return ToPandasInfo('object', None)
         if is_bigquery(self.engine):
             # All data is stored as string, so if we actually want the objects, we need to load the string
             # as json.
-            return ToPandasInfo('object', lambda x: json.loads(x) if x is not None else None)
+            return ToPandasInfo('object', self._json_loads)
         return None
+
+    @staticmethod
+    def _json_loads(data: Optional[str]) -> Optional[Any]:
+        """ Helper of to_pandas_info """
+        if data is None:
+            return None
+        try:
+            return json.loads(data)
+        except ValueError as exc:
+            raise ValueError(f'invalid json content in result: {data}') from exc
 
     def _comparator_operation(
         self,
@@ -299,6 +307,20 @@ class SeriesJsonPostgres(SeriesJson):
                          instance_dtype=instance_dtype,
                          **kwargs)
 
+    def materialize(
+            self,
+            node_name='manual_materialize',
+            limit: Any = None,
+            distinct: bool = False,
+    ):
+        """
+        Instance of this Series cannot be materialized, as the base expression is not just the column name
+        but a cast to 'jsonb'.
+
+        Use class:`SeriesJson` instead, which can be materialized.
+        """
+        raise Exception(f'{self.__class__.__name__} cannot be materialized.')
+
 
 class JsonBigQueryAccessor:
     """
@@ -352,6 +374,7 @@ class JsonBigQueryAccessor:
 
         if not as_str:
             return self._series_object.copy_override(expression=expression)
+        from bach.series import SeriesString
         return self._series_object.copy_override(expression=expression).copy_override_type(SeriesString)
 
 
