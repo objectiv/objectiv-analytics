@@ -82,7 +82,7 @@ created series contains aggregated data, and it is not allowed to aggregate that
 .. code-block:: python
 
     session_duration = modelhub.aggregate.session_duration(df, groupby='session_id', exclude_bounces=False)
-    session_duration.to_frame().materialize()['session_duration'].quantile(q=[0.25, 0.50, 0.75]).head()
+    session_duration.materialize().quantile(q=[0.25, 0.50, 0.75]).head()
 
 Top used features
 -----------------
@@ -105,7 +105,7 @@ From this prepared dataset, we show the users for the home page first.
 .. code-block:: python
 
     most_interactions = modelhub.agg.unique_users(interactive_events, groupby=['application','root_location','feature_nice_name', 'event_type'])
-    most_interactions = most_interactions.to_frame().reset_index()
+    most_interactions = most_interactions.reset_index()
 
     home_users = most_interactions[(most_interactions.application == 'objectiv-website') &
                                    (most_interactions.root_location == 'home')]

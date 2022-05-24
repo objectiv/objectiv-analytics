@@ -43,7 +43,7 @@ class Map:
         series = first_session == data.session_id
 
         new_series = series.copy_override(name='is_first_session',
-                                          index=data.index).to_frame().materialize().is_first_session
+                                          index=data.index).materialize()
 
         return new_series
 
@@ -80,7 +80,7 @@ class Map:
         series = is_first_session_time_aggregation == is_first_session
 
         new_series = series.copy_override(name='is_new_user',
-                                          index=data.index).to_frame().materialize().is_new_user
+                                          index=data.index).materialize()
 
         return new_series
 
@@ -130,7 +130,7 @@ class Map:
         data = data.drop(columns=['__conversions'])
 
         new_series = converted.copy_override(name='converted',
-                                             index=data.index).to_frame().materialize().converted
+                                             index=data.index).materialize()
 
         return new_series
 

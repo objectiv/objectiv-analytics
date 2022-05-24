@@ -572,9 +572,11 @@ class DataFrame:
                 bq_project_id=bq_project_id
             )
 
-        # For postgres we just generate:    'SELECT * FROM "table_name"'
-        # For BQ we might need to generate: 'SELECT * FROM `project_id`.`data_set`.`table_name`'
-
+        # For postgres we just generate:
+        # 'SELECT "column_1", ... , "column_N" FROM "table_name"'
+        # For BQ we might need to generate:
+        # 'SELECT `column_1`, ... , `column_N`  FROM `project_id`.`data_set`.`table_name`'
+        #  columns in select statement are based on keys from dtypes
         sql_table_name_template = '{table_name}'
         sql_params = {'table_name': quote_identifier(engine.dialect, table_name)}
         if bq_dataset:
@@ -584,7 +586,15 @@ class DataFrame:
             sql_table_name_template = f'{{bq_project_id}}.{sql_table_name_template}'
             sql_params['bq_project_id'] = quote_identifier(engine.dialect, bq_project_id)
 
-        sql = f'SELECT * FROM {sql_table_name_template}'
+        # use placeholders for columns in order to avoid conflicts when extracting spec references
+        column_stmt = ','.join(f'{{col_{col_index}}}' for col_index in range(len(dtypes)))
+        column_placeholders = {
+            f'col_{col_index}': quote_identifier(engine.dialect, col_name)
+            for col_index, col_name in enumerate(dtypes.keys())
+        }
+        sql_params.update(column_placeholders)
+
+        sql = f'SELECT {column_stmt} FROM {sql_table_name_template}'
         model_builder = CustomSqlModelBuilder(sql=sql, name='from_table')
         sql_model = model_builder(**sql_params)
 
@@ -1583,7 +1593,7 @@ class DataFrame:
         It will not materialize, just prepared for more operations
         """
         new_series = {s.name: s.copy_override(group_by=group_by, index=group_by.index, index_sorting=[])
-                      for n, s in df.all_series.items() if n not in group_by.index.keys()}
+                      for n, s in df.data.items() if n not in group_by.index.keys()}
         return df.copy_override(
             index=group_by.index,
             series=new_series,
@@ -2138,7 +2148,9 @@ class DataFrame:
 
         :param right: DataFrame or Series to join on self
         :param how: supported values: {‘left’, ‘right’, ‘outer’, ‘inner’, ‘cross’}
-        :param on: optional, column(s) to join left and right on.
+        :param on: optional, column(s) or condition(s) to join left and right on.
+            If *on* is based on a condition (``SeriesBoolean``), the condition MUST make reference to both
+            nodes involved in the merge.
         :param left_on: optional, column(s) from the left df to join on
         :param right_on: optional, column(s) from the right df/series to join on
         :param left_index: If true uses the index of the left df as columns to join on
@@ -2260,8 +2272,7 @@ class DataFrame:
             * function name
             * list of functions and/or function names, e.g. [`SeriesInt64.sum`, 'mean']
             * dict of axis labels -> functions, function names or list of such.
-        :param axis: the aggregation axis. If ``axis=1`` the index is aggregated as well. Only ``axis=1``
-            supported at the moment.
+        :param axis: the aggregation axis. Only ``axis=1`` supported at the moment.
         :param numeric_only: whether to aggregate numeric series only, or attempt all.
         :param args: Positional arguments to pass through to the aggregation function
         :param kwargs: Keyword arguments to pass through to the aggregation function

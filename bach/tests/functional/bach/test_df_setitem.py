@@ -99,8 +99,7 @@ def test_set_const_time(engine):
     check_set_const(engine, constants, SeriesTime, 'time without time zone')
 
 
-def test_set_const_timedelta(pg_engine):
-    engine = pg_engine  # TODO: BigQuery
+def test_set_const_timedelta(engine):
     constants = [
         np.datetime64('2005-02-25T03:30') - np.datetime64('2005-01-25T03:30'),
         datetime.datetime.now() - datetime.datetime(2015, 4, 6),
