@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "objectiv-snowplow-test-2",
+  "private_key_id": "8284f0c752ac6e2c977f906be8b9ddf00bb5e0b9",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDH1gs574zTYIlQ\nFiCo6lohBI9TzUUGXtWYl0wK2joiUYQfBz4rthBO+Ar3wOf8wY0dNAknk33cqQ+K\ncrEni/sIVl8h/KKRr/GRSEwzGfdtrifLqNeX57ER+tlnrXXbqL8IGBnTlZIBBbrw\ndB4hIcN3k29SCcwJTiCWlY+BsUptVxNtcLTW9INzdx/tTKs+TJPPIbX8uhQI3Jk3\nmWlG402A4D4KKUCeZanVr5552tUu2/mj0eNT7oiyp3eHTuzphjPyIAUoZDF96OsR\ngSdPJaD7DuYh/Aqlce+bUk6OZuCdO0diY6Hs24Y4VyrDqqpEGuvnSgNkszv3Wov5\n3vyWEzufAgMBAAECggEAChr6victF2lVa3pBYSYmTaIisomtHzMMTE2Zix9ZYW/l\nPwGjDrUDvE9fYQNdZKyclRv5biNpJQ+PJiCocO5rhBK3qwsD/sFt27tstjuh0mcq\nqWond0DzqHJneQ5oAqYhyhtLfwwcWIN9XkVFwSyPnmXgJliX4hnHaX+bRK/+KmsH\niKoCx9Ix4kXj2x0R6MuBqGxnfS8bz6czxMW+wf+E7oi5WkPkv71cuqW5MdVAqP6S\nCGbEh7zYFwD4TuqJwBWNiHLzGYQo5teSk+/xMXLIfX2BmZ+F/9F0RsrfkXvsG2ZY\njPJaRod5PnDfD3s97w/ao9TijzksYoiDo1jpfgzJwQKBgQD7uWoyJMbVuXcFcoWJ\n+UvfP9LNlkOuQNl251d68PJmF8QLfXcEsYmCF+UT7pRreb8w+o3kbFOtExKL2UvQ\n42wFnI4zQHYrbYPQhkjm4jypf24eBYxVlrL8L04LMaRf1H7l6eiJQzzGexApT4Rp\nATcdNC9ny0slEAYofEBlbC6GQQKBgQDLOwBJ7vMUY3rAfuyH0tsFUWAj7zXzrUjB\nAFaLqKBpX1OXZQrdXb75ZqN1lzSzdUI+8yC+/b7aLtJQiGXLH2hgIG8CX2DBXonm\n6Xsq0g6wyC/BqqDhUPD7ut95WkfqMSEc7GFLaBypXDOWBCyCugrU8TMoPWeIXJLA\nVdWGSdQJ3wKBgQDMzp0S001b0xx9uCHiko0ixUD0uI+0lVraHXvVsXjni+qcFqbh\nkLl6uYpO30yu7U2bwh/0fBbQuLXcRx4ihQb8wdYI6Se8Scx3uupRwDzvA5lKn+UA\nNi7GdI6hGPDOb4wX8GqcU7J9It+RXPs0nCKFhlITtxoau6DnC8ExRAXOgQKBgDaq\n51f7891PKSzwt3WNzaavjhn8ddnXihOIoL8um//cSaMW5gZH+mAiMOQnyWBgsXI3\nel6F6TnNkHtjRWaPS0dYUiQkPeWmJZg8xAnvuU3qe5Yv7NjPKhO83/JHy8J+drbO\nCxn6poMULzgyZTrBCrrfKvCvG9N9e2hLboWSBHynAoGAGDlwDyItzjwRekx3nnJ8\nnfzknlMM2MW7hI+1ORJNPlh3pOmZBmhKq5kL5n4gewkQNlofHrA+a0TEnJExQMtt\nG2zDqoPoqSeXvMMCmLxJu2ETU0HBTzJ+yQ3YzmRTA4n0KCJHDb2Bzfv6jZcXx6cn\nCHEuNbCoHnzQYyl2Z88O6TQ=\n-----END PRIVATE KEY-----\n",
+  "client_email": "bach-big-query-testing@objectiv-snowplow-test-2.iam.gserviceaccount.com",
+  "client_id": "114152203940027113543",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/bach-big-query-testing%40objectiv-snowplow-test-2.iam.gserviceaccount.com"
+}
