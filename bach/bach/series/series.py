@@ -329,6 +329,16 @@ class Series(ABC):
         """
         return deepcopy(self._instance_dtype)
 
+    @property
+    def is_materialized(self) -> bool:
+        """
+        Return true if this Series is in a materialized state, i.e. all information about the
+        Series's values is encoded in self.base_node.
+
+        :returns: True if this Series is in a materialized state, False otherwise
+        """
+        return self.to_frame().is_materialized
+
     @classmethod
     def get_class_instance(
         cls,
@@ -777,6 +787,36 @@ class Series(ABC):
         """
         return self.to_pandas().to_numpy()
 
+    def materialize(
+            self,
+            node_name='manual_materialize',
+            limit: Any = None,
+            distinct: bool = False,
+    ) -> 'Series':
+        """
+        Create a copy of this Series with as base_node the current Series's state.
+
+        This effectively adds a node to the underlying SqlModel graph. Generally adding nodes increases
+        the size of the generated SQL query. But this can be useful if the current Series contains
+        expressions that you want to evaluate before further expressions are build on top of them. This might
+        make sense for very large expressions, or for non-deterministic expressions (e.g. see
+        :py:meth:`SeriesUuid.sql_gen_random_uuid`).
+
+        :param node_name: The name of the node that's going to be created
+        :param limit: The limit (slice, int) to apply.
+        :param distinct: Apply distinct statement if ``distinct=True``
+        :returns: Series with the current Series's state as base_node
+
+        .. note::
+            Calling materialize() resets the order of the series. Call :py:meth:`sort_values()` again on
+            the result if order is important.
+
+            Argument inplace should be always False.
+        """
+        result = self.to_frame().materialize(node_name=node_name, limit=limit, distinct=distinct,
+                                             inplace=False)
+        return result.all_series[self.name]
+
     def reset_index(
         self,
         level: Optional[Union[str, Sequence[str]]] = None,
@@ -1166,8 +1206,12 @@ class Series(ABC):
         raise NotImplementedError()
 
     # Comparator operations
-    def _comparator_operation(self, other: 'Series', comparator: str,
-                              other_dtypes: Tuple[str, ...] = ()) -> 'SeriesBoolean':
+    def _comparator_operation(
+        self,
+        other: Union['Series', AllSupportedLiteralTypes],
+        comparator: str,
+        other_dtypes: Tuple[str, ...] = ()
+    ) -> 'SeriesBoolean':
         if len(other_dtypes) == 0:
             raise TypeError(f'comparator {comparator} not supported for '
                             f'{self.__class__} and {other.__class__}')

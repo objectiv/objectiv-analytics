@@ -164,8 +164,7 @@ class Aggregate:
         """
 
         self._mh._check_data_is_objectiv_data(data)
-
-        total_sessions_user = data.groupby(['user_id']).aggregate({'session_id': 'nunique'})
+        total_sessions_user = data.groupby(['user_id']).aggregate({'session_id': 'nunique'}).reset_index()
         frequency = total_sessions_user.groupby(['session_id_nunique']).aggregate({'user_id': 'nunique'})
 
         return frequency.user_id_nunique

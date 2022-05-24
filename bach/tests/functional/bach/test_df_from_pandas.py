@@ -63,17 +63,31 @@ def test_from_pandas_table(pg_engine):
 
 
 @pytest.mark.xdist_group(name="from_pd_table")
-def test_from_pandas_table_injection(pg_engine):
+def test_from_pandas_table_injection(engine):
     pdf = get_pandas_df(TEST_DATA_INJECTION, COLUMNS_INJECTION)
-    bt = DataFrame.from_pandas(
-        engine=pg_engine,
-        df=pdf,
-        convert_objects=True,
-        name='test_from_pd_{table}_"injection"',
-        materialization='table',
-        if_exists='replace'
-    )
-    assert_equals_data(bt, expected_columns=EXPECTED_COLUMNS_INJECTION, expected_data=EXPECTED_DATA_INJECTION)
+    if is_postgres(engine):
+        bt = DataFrame.from_pandas(
+            engine=engine,
+            df=pdf,
+            convert_objects=True,
+            name='test_from_pd_{table}_"injection"',
+            materialization='table',
+            if_exists='replace',
+        )
+        assert_equals_data(bt, expected_columns=EXPECTED_COLUMNS_INJECTION, expected_data=EXPECTED_DATA_INJECTION)
+
+    elif is_bigquery(engine):
+        with pytest.raises(ValueError, match=r'Invalid column names'):
+            DataFrame.from_pandas(
+                engine=engine,
+                df=pdf,
+                convert_objects=True,
+                name='test_from_pd_{table}_"injection"',
+                materialization='table',
+                if_exists='replace',
+            )
+    else:
+        raise Exception()
 
 
 def test_from_pandas_ephemeral_basic(engine):
@@ -267,9 +281,9 @@ def test_from_pandas_types_cte(pg_engine):
                          'datetime_column': 'timestamp',
                          'string_column': 'string',
                          'date_column': 'date',
-                         'list_column': 'jsonb',
+                         'list_column': 'json',
                          'uuid_column': 'uuid',
-                         'dict_column': 'jsonb',
+                         'dict_column': 'json',
                          'timedelta_column': 'timedelta'}
 
     assert_equals_data(

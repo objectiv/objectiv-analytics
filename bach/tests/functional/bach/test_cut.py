@@ -3,6 +3,8 @@ import pandas as pd
 
 from bach import Series, DataFrame
 from bach.operations.cut import CutOperation, QCutOperation
+from sql_models.util import quote_identifier, is_bigquery
+from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 PD_TESTING_SETTINGS = {
     'check_dtype': False,
@@ -17,18 +19,17 @@ def compare_boundaries(expected: pd.Series, result: Series) -> None:
             assert res is None or np.isnan(res)
             continue
 
-        np.testing.assert_almost_equal(exp.left, float(res.lower), decimal=2)
-        np.testing.assert_almost_equal(exp.right, float(res.upper), decimal=2)
+        np.testing.assert_almost_equal(exp.left, float(res.left), decimal=2)
+        np.testing.assert_almost_equal(exp.right, float(res.right), decimal=2)
 
         if exp.closed_left:
-            assert res.lower_inc
+            assert res.closed_left
 
         if exp.closed_right:
-            assert res.upper_inc
+            assert res.closed_right
 
 
-def test_cut_operation_pandas(pg_engine) -> None:
-    engine = pg_engine  # TODO: BigQuery
+def test_cut_operation_pandas(engine) -> None:
     p_series = pd.Series(range(100), name='a')
     series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
 
@@ -41,8 +42,7 @@ def test_cut_operation_pandas(pg_engine) -> None:
     compare_boundaries(expected_wo_right, result_wo_right)
 
 
-def test_cut_operation_bach(pg_engine) -> None:
-    engine = pg_engine  # TODO: BigQuery
+def test_cut_operation_bach(engine) -> None:
     p_series = pd.Series(range(100), name='a')
     series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
 
@@ -82,8 +82,7 @@ def test_cut_operation_bach(pg_engine) -> None:
     compare_boundaries(expected_wo_right, result_wo_right)
 
 
-def test_cut_operation_boundary(pg_engine) -> None:
-    engine = pg_engine  # TODO: BigQuery
+def test_cut_operation_boundary(engine) -> None:
     bins = 3
     p_series = pd.Series(data=[1, 2, 3, 4], name='a')
     series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
@@ -93,8 +92,7 @@ def test_cut_operation_boundary(pg_engine) -> None:
     compare_boundaries(expected, result)
 
 
-def test_cut_w_ignore_index(pg_engine) -> None:
-    engine = pg_engine  # TODO: BigQuery
+def test_cut_w_ignore_index(engine) -> None:
     bins = 3
     p_series = pd.Series(data=[1, 2, 3, 4], name='a')
     series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
@@ -106,29 +104,39 @@ def test_cut_w_ignore_index(pg_engine) -> None:
     assert ['a'] == list(result_w_ignore.index.keys())
 
 
-def test_cut_w_include_empty_bins(pg_engine) -> None:
-    engine = pg_engine  # TODO: BigQuery
+def test_cut_w_include_empty_bins(engine) -> None:
     bins = 3
     p_series = pd.Series(data=[1, 1, 2, 3, 6, 7, 8], name='a')
     series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
 
     result = CutOperation(
         series=series, bins=bins, include_empty_bins=True,
-    )()
-    result = result.drop_duplicates().sort_values()
-    expected = pd.Series(
-        data=[
-            pd.Interval(0.993, 3.333),
-            pd.Interval(3.333, 5.667),
-            pd.Interval(5.667, 8),
-        ],
-        index=[1., np.nan, 7.],
-    )
+    )().sort_index()
+
+    empty_interval = pd.Interval(3.333, 5.667)
+    expected_data = [
+        pd.Interval(0.993, 3.333),
+        pd.Interval(0.993, 3.333),
+        pd.Interval(0.993, 3.333),
+        pd.Interval(0.993, 3.333),
+        pd.Interval(5.667, 8),
+        pd.Interval(5.667, 8),
+        pd.Interval(5.667, 8),
+    ]
+    expected_index = [1., 1., 2., 3., 6., 7., 8.]
+
+    if is_bigquery(engine):
+        # TODO: Remove this, None value should be last after sorting
+        expected_data = [empty_interval] + expected_data
+        expected_index = [np.nan] + expected_index
+    else:
+        expected_data.append(empty_interval)
+        expected_index.append(np.nan)
+    expected = pd.Series(data=expected_data, index=expected_index)
     compare_boundaries(expected, result)
 
 
-def test_cut_operation_calculate_bucket_properties(pg_engine) -> None:
-    engine = pg_engine  # TODO: BigQuery
+def test_cut_operation_calculate_bucket_properties(engine) -> None:
     final_properties = ['a_min', 'a_max', 'bin_adjustment', 'step']
     bins = 2
     # min != max
@@ -180,8 +188,7 @@ def test_cut_operation_calculate_bucket_properties(pg_engine) -> None:
     pd.testing.assert_frame_equal(expected_zero[final_properties], result_zero.to_pandas(), **PD_TESTING_SETTINGS)
 
 
-def test_cut_calculate_pandas_adjustments(pg_engine) -> None:
-    engine = pg_engine  # TODO: BigQuery
+def test_cut_calculate_pandas_adjustments(engine) -> None:
     pdf = pd.DataFrame(data={'min': [1], 'max': [100]})
     df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     to_adjust = df['min']
@@ -190,17 +197,18 @@ def test_cut_calculate_pandas_adjustments(pg_engine) -> None:
     assert isinstance(result, Series)
 
     result_case_sql = result.expression.to_sql(df.engine.dialect)
+    max_identifier = quote_identifier(engine, 'max')
+    min_idenfifier = quote_identifier(engine, 'min')
     expected_case_sql = (
-        'case when "max" = "min" then\n'
-        'case when "min" != 0 then 0.001 * abs("min") else 0.001 end\n'
+        f'case when {max_identifier} = {min_idenfifier} then\n'
+        f'case when {min_idenfifier} != 0 then 0.001 * abs({min_idenfifier}) else 0.001 end\n'
         'else 0 end'
     )
 
     assert expected_case_sql == result_case_sql
 
 
-def test_cut_calculate_bucket_ranges(pg_engine) -> None:
-    engine = pg_engine  # TODO: BigQuery
+def test_cut_calculate_bucket_ranges(engine) -> None:
     bins = 3
     p_series = pd.Series(data=[1, 1, 2, 3, 4, 5, 6, 7, 8], name='a')
     series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
@@ -208,14 +216,21 @@ def test_cut_calculate_bucket_ranges(pg_engine) -> None:
     cut_operation = CutOperation(series=series, bins=bins)
     bucket_properties_df = cut_operation._calculate_bucket_properties()
     result = cut_operation._calculate_bucket_ranges(bucket_properties_df)
-    compare_boundaries(
-        pd.Series([pd.Interval(0.993, 3.333), pd.Interval(3.333, 5.667), pd.Interval(5.667, 8)]),
-        result.sort_values(),
+    assert_equals_data(
+        result,
+        order_by=['lower_bound'],
+        expected_columns=['bucket', 'lower_bound', 'upper_bound', 'bounds'],
+        expected_data=[
+            [1, 0.993, 3.333, '(]'],
+            [2, 3.333, 5.667, '(]'],
+            [3, 5.667, 8, '(]'],
+        ],
+        round_decimals=True,
+        decimal=3,
     )
 
 
-def test_qcut_operation(pg_engine) -> None:
-    engine = pg_engine  # TODO: BigQuery
+def test_qcut_operation(engine) -> None:
     p_series = pd.Series(range(100), name='a')
     series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
 
@@ -228,8 +243,7 @@ def test_qcut_operation(pg_engine) -> None:
     compare_boundaries(expected_q_num, result_q_num)
 
 
-def test_qcut_operation_one_quantile(pg_engine) -> None:
-    engine = pg_engine  # TODO: BigQuery
+def test_qcut_operation_one_quantile(engine) -> None:
     p_series = pd.Series(range(10), name='a')
     series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
     expected = pd.qcut(p_series, q=0)
@@ -241,18 +255,26 @@ def test_qcut_operation_one_quantile(pg_engine) -> None:
     compare_boundaries(expected2, result2)
 
 
-def test_get_quantile_ranges(pg_engine) -> None:
-    engine = pg_engine  # TODO: BigQuery
+def test_get_quantile_ranges(engine) -> None:
     p_series = pd.Series(data=[1, 1, 2, 3, 4, 5, 6, 7, 8], name='a')
     series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
 
     qcut_operation = QCutOperation(series=series, q=[0.25, 0.5])
     result = qcut_operation._get_quantile_ranges()
-    compare_boundaries(pd.Series([pd.Interval(2, 4), None]), result.sort_values())
+    assert_equals_data(
+        result,
+        order_by=['lower_bound'],
+        expected_columns=['lower_bound', 'upper_bound', 'bounds'],
+        expected_data=[
+            [1.999, 4., '(]'],
+            [4., None, '(]'],
+        ],
+        round_decimals=True,
+        decimal=3,
+    )
 
 
-def test_qcut_w_duplicated_quantiles(pg_engine) -> None:
-    engine = pg_engine  # TODO: BigQuery
+def test_qcut_w_duplicated_quantiles(engine) -> None:
     p_series = pd.Series(data=[0, 1, 2, 2, 2, 2, 2], name='a')
     series = DataFrame.from_pandas(engine=engine, df=p_series.to_frame(), convert_objects=True).a
 

@@ -8,8 +8,7 @@ import pytest
 import numpy as np
 
 from bach import SeriesInt64, SeriesString, SeriesFloat64, SeriesDate, SeriesTimestamp, \
-    SeriesTime, SeriesTimedelta, Series, \
-    SeriesJsonb, SeriesBoolean
+    SeriesTime, SeriesTimedelta, Series, SeriesJson, SeriesBoolean
 from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_postgres_type, \
     assert_equals_data, CITIES_INDEX_AND_COLUMNS, get_bt_with_railway_data, get_df_with_test_data, \
     get_df_with_railway_data
@@ -100,8 +99,7 @@ def test_set_const_time(engine):
     check_set_const(engine, constants, SeriesTime, 'time without time zone')
 
 
-def test_set_const_timedelta(pg_engine):
-    engine = pg_engine  # TODO: BigQuery
+def test_set_const_timedelta(engine):
     constants = [
         np.datetime64('2005-02-25T03:30') - np.datetime64('2005-01-25T03:30'),
         datetime.datetime.now() - datetime.datetime(2015, 4, 6),
@@ -115,7 +113,7 @@ def test_set_const_json(pg_engine):
         ['a', 'b', 'c'],
         {'a': 'b', 'c': 'd'},
     ]
-    check_set_const(engine, constants, SeriesJsonb, 'jsonb')
+    check_set_const(engine, constants, SeriesJson, expected_pg_db_type='jsonb')
 
 
 def test_set_const_int_from_series():

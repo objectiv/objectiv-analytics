@@ -44,3 +44,6 @@ This is the complete API reference of Bach.
     Series/SeriesTimedelta/index
     Series/SeriesTimestamp/index
     Series/SeriesUuid/index
+    Series/Json/index
+    Series/JsonPG/index
+    Series/String/index
