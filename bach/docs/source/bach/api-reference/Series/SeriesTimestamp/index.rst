@@ -7,7 +7,6 @@ Timestamp
 =========
 
 .. autoclass:: SeriesTimestamp
-    :noindex:
 
 
 Methods

@@ -7,7 +7,6 @@ Int64
 =====
 
 .. autoclass:: SeriesInt64
-    :noindex:
 
 
 Methods

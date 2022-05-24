@@ -7,7 +7,6 @@ Dict
 ====
 
 .. autoclass:: SeriesDict
-    :noindex:
 
 
 Methods

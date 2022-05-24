@@ -7,7 +7,6 @@ Time
 ====
 
 .. autoclass:: SeriesTime
-    :noindex:
 
 
 Methods

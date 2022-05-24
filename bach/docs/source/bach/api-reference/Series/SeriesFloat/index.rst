@@ -7,7 +7,6 @@ Float64
 =======
 
 .. autoclass:: SeriesFloat64
-    :noindex:
 
 
 Methods

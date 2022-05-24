@@ -7,7 +7,6 @@ Date
 ====
 
 .. autoclass:: SeriesDate
-    :noindex:
 
 
 Methods

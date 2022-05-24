@@ -7,7 +7,6 @@ Timedelta
 =========
 
 .. autoclass:: SeriesTimedelta
-    :noindex:
 
 
 Methods

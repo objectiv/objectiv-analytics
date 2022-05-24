@@ -7,7 +7,6 @@ List
 ====
 
 .. autoclass:: SeriesList
-    :noindex:
 
 
 Methods

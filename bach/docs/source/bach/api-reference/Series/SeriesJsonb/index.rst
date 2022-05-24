@@ -7,7 +7,6 @@ Jsonb
 =====
 
 .. autoclass:: SeriesJsonb
-    :noindex:
 
 
 Methods

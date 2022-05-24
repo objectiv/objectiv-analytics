@@ -7,7 +7,6 @@ Uuid
 ====
 
 .. autoclass:: SeriesUuid
-    :noindex:
 
 
 Methods
