@@ -1584,7 +1584,7 @@ class DataFrame:
         It will not materialize, just prepared for more operations
         """
         new_series = {s.name: s.copy_override(group_by=group_by, index=group_by.index, index_sorting=[])
-                      for n, s in df.all_series.items() if n not in group_by.index.keys()}
+                      for n, s in df.data.items() if n not in group_by.index.keys()}
         return df.copy_override(
             index=group_by.index,
             series=new_series,
@@ -2139,7 +2139,9 @@ class DataFrame:
 
         :param right: DataFrame or Series to join on self
         :param how: supported values: {‘left’, ‘right’, ‘outer’, ‘inner’, ‘cross’}
-        :param on: optional, column(s) to join left and right on.
+        :param on: optional, column(s) or condition(s) to join left and right on.
+            If *on* is based on a condition (``SeriesBoolean``), the condition MUST make reference to both
+            nodes involved in the merge.
         :param left_on: optional, column(s) from the left df to join on
         :param right_on: optional, column(s) from the right df/series to join on
         :param left_index: If true uses the index of the left df as columns to join on
@@ -2261,8 +2263,7 @@ class DataFrame:
             * function name
             * list of functions and/or function names, e.g. [`SeriesInt64.sum`, 'mean']
             * dict of axis labels -> functions, function names or list of such.
-        :param axis: the aggregation axis. If ``axis=1`` the index is aggregated as well. Only ``axis=1``
-            supported at the moment.
+        :param axis: the aggregation axis. Only ``axis=1`` supported at the moment.
         :param numeric_only: whether to aggregate numeric series only, or attempt all.
         :param args: Positional arguments to pass through to the aggregation function
         :param kwargs: Keyword arguments to pass through to the aggregation function

@@ -26,7 +26,7 @@ model on without any cleaning or transformation.
 The open model hub consists of pre-built models and operations that you can combine to build advanced 
 compound models with little effort. The open model hub is powered by Bach, our python-based modeling library.
 
-:ref:`Learn more about the open model hub <open_model_hub>`
+:doc:`Learn more about the open model hub <open-model-hub/index>`
 
 ### The Bach modeling library
 
@@ -34,14 +34,14 @@ Bach is a python-based modeling library that enables you to use Pandas-like oper
 dataset in the SQL database. Any dataframe or model built with Bach can be converted to an SQL statement with 
 a single command.
 
-:ref:`Learn more about the Objectiv Bach modeling libary <bach>`
+:doc:`Learn more about the Objectiv Bach modeling libary <bach/index>`
 
 ### Example notebooks
 
 To see how all components work together, there are several example notebooks that show how you can analyze 
 and model data using the open analytics taxonomy, the open model hub, and the Bach modeling library.
 
-:ref:`See the example notebooks <example_notebooks>`
+:doc:`See the example notebooks <example-notebooks/index>`
 
 
 .. toctree::

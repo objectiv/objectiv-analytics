@@ -62,7 +62,7 @@ Now, we can look at the distribution of time spent. We used the Bach quantile op
     # how is this time spent distributed?
     session_duration = modelhub.aggregate.session_duration(df, groupby='session_id')
     # materialization is needed because the expression of the created series contains aggregated data, and it is not allowed to aggregate that.
-    session_duration = session_duration.to_frame().materialize().session_duration
+    session_duration = session_duration.materialize()
 
     # show quantiles
     session_duration.quantile(q=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]).head(10)
@@ -134,7 +134,7 @@ Now, we have assigned intent to each user and can for example look at the total 
 .. code-block:: python
 
     # total number of users per intent bucket
-    user_intent_buckets.groupby('bucket').agg({'user_id': 'nunique'}).head()
+    user_intent_buckets.reset_index().groupby('bucket').agg({'user_id': 'nunique'}).head()
 
 What's next?
 ------------

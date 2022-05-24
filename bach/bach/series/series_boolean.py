@@ -109,7 +109,7 @@ class SeriesBoolean(Series, ABC):
 
     def min(self, partition: WrappedPartition = None, skipna: bool = True):
         """
-        Returns the minimum value in the partition, i.e. value will be True iif all values in the
+        Returns the minimum value in the partition, i.e. value will be True iff all values in the
         partition are True.
 
         :param partition: The partition or window to apply
@@ -120,7 +120,7 @@ class SeriesBoolean(Series, ABC):
 
     def max(self, partition: WrappedPartition = None, skipna: bool = True):
         """
-        Returns the maximum value in the partition, i.e. value will be False iif all values in the
+        Returns the maximum value in the partition, i.e. value will be False iff all values in the
         partition are False.
 
         :param partition: The partition or window to apply
