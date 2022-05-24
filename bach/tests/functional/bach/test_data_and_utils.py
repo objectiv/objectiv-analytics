@@ -207,13 +207,18 @@ def get_bt_with_railway_data() -> DataFrame:
     return get_bt(TEST_DATA_RAILWAYS, RAILWAYS_COLUMNS, True)
 
 
-def get_bt_with_json_data(as_json=True) -> DataFrame:
-    bt = get_bt(TEST_DATA_JSON, JSON_COLUMNS, True)
-    if as_json:
-        bt['dict_column'] = bt.dict_column.astype('jsonb')
-        bt['list_column'] = bt.list_column.astype('jsonb')
-        bt['mixed_column'] = bt.mixed_column.astype('jsonb')
-    return bt
+def get_df_with_json_data(engine: Engine, dtype='json') -> DataFrame:
+    assert dtype in ('string', 'json', 'json_postgres')
+    df = DataFrame.from_pandas(
+        engine=engine,
+        df=get_pandas_df(TEST_DATA_JSON, JSON_COLUMNS),
+        convert_objects=True,
+    )
+    if dtype:
+        df['dict_column'] = df.dict_column.astype(dtype)
+        df['list_column'] = df.list_column.astype(dtype)
+        df['mixed_column'] = df.mixed_column.astype(dtype)
+    return df.materialize()
 
 
 def run_query(engine: sqlalchemy.engine, sql: str) -> ResultProxy:
@@ -291,11 +296,11 @@ def _get_view_sql_data(df: DataFrame):
 def _get_to_pandas_data(df: DataFrame):
     pdf = df.to_pandas()
     # Convert pdf to the same format as _get_view_sql_data gives
-    column_names = list(pdf.index.names) + list(pdf.columns)
+    column_names = (list(pdf.index.names) if df.index else []) + list(pdf.columns)
     pdf = pdf.reset_index()
     db_values = []
     for value_row in pdf.to_numpy().tolist():
-        db_values.append(value_row)
+        db_values.append(value_row if df.index else value_row[1:])  # don't include default index value
     print(db_values)
     return column_names, db_values
 

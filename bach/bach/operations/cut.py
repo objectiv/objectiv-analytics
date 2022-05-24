@@ -4,7 +4,7 @@ Copyright 2022 Objectiv B.V.
 from enum import Enum
 from typing import cast, List, Union
 from bach import (
-    SeriesAbstractNumeric, SeriesFloat64, Series, DataFrame,
+    SeriesAbstractNumeric, Series, DataFrame,
     SeriesBoolean, SeriesString, SeriesNumericInterval,
 )
 from bach.expression import Expression
@@ -99,7 +99,7 @@ class CutOperation:
 
         if self.method == CutMethod.BACH:
             mask |= (
-                (fake_merge[self.series.name] == fake_merge['lower_bound' if self. right else 'upper_bound'])
+                (fake_merge[self.series.name] == fake_merge['lower_bound' if self.right else 'upper_bound'])
                 & (fake_merge['bucket'] == (1 if self.right else self.bins))
             )
 

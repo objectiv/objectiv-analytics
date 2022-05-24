@@ -1,8 +1,10 @@
 # Objectiv Tracker
 
-Objectiv’s Tracker enables you to track user behaviour for web applications, websites and other JavaScript-based applications. It embraces the open taxonomy for analytics to ensure the collected data is clean, well-structured and ready for modeling.
+Objectiv’s Tracker enables you to track user behaviour for web applications, websites and other JavaScript-based applications. It embraces the [open analytics taxonomy](https://objectiv.io/docs/taxonomy/) to ensure the collected data is clean, well-structured and ready for modeling.
 
 Platform-specific tracker packages are available for popular frameworks such as React and Angular. Trackers can be extended with plugins, which are independent packages that can be configured in any Tracker instance to add or mutate contextual information.
+
+Visit [Objectiv Docs](https://objectiv.io/docs/tracking/) to learn more
 
 ## Installing Objectiv's Tracker
 
@@ -31,5 +33,3 @@ If you want to contribute to Objectiv or use it as a base for custom development
 
 ## License
 This repository is part of the source code for Objectiv, which is released under the Apache 2.0 License. Please refer to [LICENSE.md](../LICENSE.md) for details.
-
-Unless otherwise noted, all files © 2021-2022 Objectiv B.V.

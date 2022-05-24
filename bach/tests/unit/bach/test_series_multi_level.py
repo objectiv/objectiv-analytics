@@ -28,7 +28,8 @@ def test_series_numeric_interval_get_instance(dialect) -> None:
         'index': {},
         'index_sorting': None,
         'sorted_ascending': None,
-        'name': 'interval'
+        'name': 'interval',
+        'instance_dtype': None
     }
     with pytest.raises(ValueError, match=r'base node must include all referenced'):
         SeriesNumericInterval.get_class_instance(**params)
@@ -44,9 +45,10 @@ def test_series_numeric_interval_get_instance(dialect) -> None:
         expression=Expression.construct(''),
         group_by=None,
         index={},
-        index_sorting=None,
+        index_sorting=[],
         sorted_ascending=None,
         name='interval',
+        instance_dtype='numeric_interval'
     )
 
     assert isinstance(numeric_interval.lower, SeriesFloat64)

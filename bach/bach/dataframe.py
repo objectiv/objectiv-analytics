@@ -15,9 +15,9 @@ from sqlalchemy.engine import Engine
 from bach.expression import Expression, SingleValueExpression, VariableToken, AggregateFunctionExpression
 from bach.from_database import get_dtypes_from_table, get_dtypes_from_model
 from bach.sql_model import BachSqlModel, CurrentNodeSqlModel, get_variable_values_sql
-from bach.types import get_series_type_from_dtype, AllSupportedLiteralTypes
+from bach.types import get_series_type_from_dtype, AllSupportedLiteralTypes, StructuredDtype
 from bach.utils import escape_parameter_characters
-from sql_models.constants import NotSet, not_set, DBDialect
+from sql_models.constants import NotSet, not_set
 from sql_models.graph_operations import update_placeholders_in_graph, get_all_placeholders
 from sql_models.model import SqlModel, Materialization, CustomSqlModelBuilder, RefPath
 
@@ -333,8 +333,8 @@ class DataFrame:
         a DataFrame will change it to be not materialized. Calling :py:meth:`materialize` on a
         non-materialized DataFrame will return a new DataFrame that is materialized.
 
-        TODO: a known problem is that DataFrames with 'json' columns are never in a materialized state, and
-         cannot be materialized with materialize()
+        TODO: a known problem is that DataFrames with 'json_postgres' columns are never in a materialized
+         state, and cannot be materialized with materialize()
 
         :returns: True if this DataFrame is in a materialized state, False otherwise
         """
@@ -532,7 +532,7 @@ class DataFrame:
             engine: Engine,
             table_name: str,
             index: List[str],
-            all_dtypes: Optional[Dict[str, str]] = None,
+            all_dtypes: Optional[Mapping[str, StructuredDtype]] = None,
             *,
             bq_dataset: Optional[str] = None,
             bq_project_id: Optional[str] = None
@@ -601,7 +601,7 @@ class DataFrame:
             engine: Engine,
             model: SqlModel,
             index: List[str],
-            all_dtypes: Optional[Dict[str, str]] = None
+            all_dtypes: Optional[Mapping[str, StructuredDtype]] = None
     ) -> 'DataFrame':
         """
         Instantiate a new DataFrame based on the result of the query defined in `model`.
@@ -639,7 +639,7 @@ class DataFrame:
             engine,
             model: SqlModel,
             index: List[str],
-            all_dtypes: Dict[str, str]
+            all_dtypes: Mapping[str, StructuredDtype]
     ) -> 'DataFrame':
         """
         INTERNAL: Instantiate a new DataFrame based on the result of the query defined in `model`.
@@ -753,8 +753,8 @@ class DataFrame:
         cls,
         engine,
         base_node: BachSqlModel,
-        index_dtypes: Dict[str, str],
-        dtypes: Dict[str, str],
+        index_dtypes: Mapping[str, StructuredDtype],
+        dtypes: Mapping[str, StructuredDtype],
         group_by: Optional['GroupBy'],
         order_by: List[SortColumn],
         savepoints: 'Savepoints',
@@ -774,23 +774,25 @@ class DataFrame:
             'index_sorting': [],
         }
         index: Dict[str, Series] = {
-            key: get_series_type_from_dtype(value).get_class_instance(
+            name: get_series_type_from_dtype(dtype).get_class_instance(
                 index={},  # Empty index for index series
-                name=key,
-                expression=Expression.column_reference(key),
+                name=name,
+                expression=Expression.column_reference(name),
+                instance_dtype=dtype,
                 **base_params
             )
-            for key, value in index_dtypes.items()
+            for name, dtype in index_dtypes.items()
         }
 
         series: Dict[str, Series] = {
-            key: get_series_type_from_dtype(value).get_class_instance(
+            name: get_series_type_from_dtype(dtype).get_class_instance(
                 index=index,
-                name=key,
-                expression=Expression.column_reference(key),
-                **base_params,
+                name=name,
+                expression=Expression.column_reference(name),
+                instance_dtype=dtype,
+                **base_params
             )
-            for key, value in dtypes.items()
+            for name, dtype in dtypes.items()
         }
 
         return cls(
@@ -813,8 +815,8 @@ class DataFrame:
         group_by: Optional[Union['GroupBy', NotSet]] = not_set,
         order_by: Optional[List[SortColumn]] = None,
         variables: Optional[Dict[DtypeNamePair, Hashable]] = None,
-        index_dtypes: Optional[Mapping[str, str]] = None,
-        series_dtypes: Optional[Mapping[str, str]] = None,
+        index_dtypes: Optional[Mapping[str, StructuredDtype]] = None,
+        series_dtypes: Optional[Mapping[str, StructuredDtype]] = None,
         single_value: bool = False,
         savepoints: Optional['Savepoints'] = None,
         **kwargs
@@ -852,48 +854,56 @@ class DataFrame:
 
         if index_dtypes:
             new_index: Dict[str, Series] = {}
-            for key, value in index_dtypes.items():
-                index_type = get_series_type_from_dtype(value)
-                new_index[key] = index_type(
-                    engine=args['engine'], base_node=args['base_node'],
+            for name, dtype in index_dtypes.items():
+                index_type = get_series_type_from_dtype(dtype)
+                new_index[name] = index_type(
+                    engine=args['engine'],
+                    base_node=args['base_node'],
                     index={},  # Empty index for index series
-                    name=key, expression=expression_class.column_reference(key),
+                    name=name,
+                    expression=expression_class.column_reference(name),
                     group_by=args['group_by'],
                     sorted_ascending=None,
-                    index_sorting=[]
+                    index_sorting=[],
+                    instance_dtype=dtype
                 )
             args['index'] = new_index
 
         if series_dtypes:
             from bach.series import SeriesAbstractMultiLevel
             new_series: Dict[str, Series] = {}
-            for key, value in series_dtypes.items():
-                series_type = get_series_type_from_dtype(value)
-                extra_params = copy(args)
+            for name, dtype in series_dtypes.items():
+                series_type = get_series_type_from_dtype(dtype)
+                extra_params = {}
 
                 if issubclass(series_type, SeriesAbstractMultiLevel):
-                    if key not in self._data:
+                    if name not in self._data:
                         raise Exception(
                             f'cannot instantiate {series_type.__name__} class without level information.'
                         )
-                    multi_level_series = cast(SeriesAbstractMultiLevel, self.all_series[key])
+                    multi_level_series = cast(SeriesAbstractMultiLevel, self.all_series[name])
                     extra_params.update(
                         {
                             lvl_name: lvl.copy_override(
-                                expression=expression_class.column_reference(f'_{key}_{lvl_name}')
+                                expression=expression_class.column_reference(f'_{name}_{lvl_name}')
                             )
                             for lvl_name, lvl in multi_level_series.levels.items()
                         }
                     )
 
-                new_series[key] = series_type.get_class_instance(
-                    name=key,
-                    expression=expression_class.column_reference(key),
+                new_series[name] = series_type.get_class_instance(
+                    engine=args['engine'],
+                    base_node=args['base_node'],
+                    index=args['index'],  # Empty index for index series
+                    name=name,
+                    expression=expression_class.column_reference(name),
+                    group_by=args['group_by'],
                     sorted_ascending=None,
                     index_sorting=[],
+                    instance_dtype=dtype,
                     **extra_params
                 )
-                args['series'] = new_series
+            args['series'] = new_series
 
         return self.__class__(**args, **kwargs)
 
@@ -977,7 +987,7 @@ class DataFrame:
         make sense for very large expressions, or for non-deterministic expressions (e.g. see
         :py:meth:`SeriesUuid.sql_gen_random_uuid`).
 
-        TODO: a known problem is that DataFrames with 'json' columns cannot be fully materialized.
+        TODO: a known problem is that DataFrames with 'json_postgres' columns cannot be fully materialized.
 
         :param node_name: The name of the node that's going to be created
         :param inplace: Perform operation on self if ``inplace=True``, or create a copy.
@@ -989,8 +999,8 @@ class DataFrame:
             Calling materialize() resets the order of the dataframe. Call :py:meth:`sort_values()` again on
             the result if order is important.
         """
-        index_dtypes = {k: v.dtype for k, v in self._index.items()}
-        series_dtypes = {k: v.dtype for k, v in self._data.items()}
+        index_dtypes = {k: v.instance_dtype for k, v in self.index.items()}
+        series_dtypes = {k: v.instance_dtype for k, v in self.data.items()}
         node = self.get_current_node(name=node_name, limit=limit, distinct=distinct)
 
         df = self.get_instance(
@@ -1573,7 +1583,7 @@ class DataFrame:
         It will not materialize, just prepared for more operations
         """
         new_series = {s.name: s.copy_override(group_by=group_by, index=group_by.index, index_sorting=[])
-                      for n, s in df.all_series.items() if n not in group_by.index.keys()}
+                      for n, s in df.data.items() if n not in group_by.index.keys()}
         return df.copy_override(
             index=group_by.index,
             series=new_series,
@@ -1908,13 +1918,11 @@ class DataFrame:
         .. note::
             This function queries the database.
         """
-        db_dialect = DBDialect.from_engine(self.engine)
-
         sql = self.view_sql(limit=limit)
 
         series_name_to_dtype = {}
         for series in self.all_series.values():
-            pandas_info = series.to_pandas_info.get(db_dialect)
+            pandas_info = series.to_pandas_info()
             if pandas_info is not None:
                 series_name_to_dtype[series.name] = pandas_info.dtype
 
@@ -1926,7 +1934,7 @@ class DataFrame:
         # Post-process any columns if needed. e.g. in BigQuery we represent UUIDs as text, so we convert
         # the strings that the query gives us into UUID objects
         for name, series in self.all_series.items():
-            to_pandas_info = series.to_pandas_info.get(db_dialect)
+            to_pandas_info = series.to_pandas_info()
             if to_pandas_info is not None and to_pandas_info.function is not None:
                 pandas_df[name] = pandas_df[name].apply(to_pandas_info.function)
 
@@ -2130,7 +2138,9 @@ class DataFrame:
 
         :param right: DataFrame or Series to join on self
         :param how: supported values: {‘left’, ‘right’, ‘outer’, ‘inner’, ‘cross’}
-        :param on: optional, column(s) to join left and right on.
+        :param on: optional, column(s) or condition(s) to join left and right on.
+            If *on* is based on a condition (``SeriesBoolean``), the condition MUST make reference to both
+            nodes involved in the merge.
         :param left_on: optional, column(s) from the left df to join on
         :param right_on: optional, column(s) from the right df/series to join on
         :param left_index: If true uses the index of the left df as columns to join on
@@ -2252,8 +2262,7 @@ class DataFrame:
             * function name
             * list of functions and/or function names, e.g. [`SeriesInt64.sum`, 'mean']
             * dict of axis labels -> functions, function names or list of such.
-        :param axis: the aggregation axis. If ``axis=1`` the index is aggregated as well. Only ``axis=1``
-            supported at the moment.
+        :param axis: the aggregation axis. Only ``axis=1`` supported at the moment.
         :param numeric_only: whether to aggregate numeric series only, or attempt all.
         :param args: Positional arguments to pass through to the aggregation function
         :param kwargs: Keyword arguments to pass through to the aggregation function
@@ -2904,8 +2913,10 @@ class DataFrame:
 
         :param axis: only ``axis=0`` is supported. This means rows that contain missing values are dropped.
         :param how: determines when a row is removed. Supported values:
-           - 'any': rows with at least one missing value are removed
-           - 'all': rows with all missing values are removed
+
+            - 'any': rows with at least one missing value are removed
+            - 'all': rows with all missing values are removed
+
         :param thresh: determines the least amount of non-missing values a row needs to have
             in order to be kept
         :param subset: series label or sequence of labels to be considered for missing values.
@@ -2971,8 +2982,10 @@ class DataFrame:
         :param value: A literal/series to fill all NULL values on each series
             or a dictionary specifying which literal/series to use for each series.
         :param method: Method to use for filling NULL values on all DataFrame series. Supported values:
-           - "ffill"/"pad": Fill missing values by propagating the last non-nullable value in the series.
-           - "bfill"/"backfill": Fill missing values with the next non-nullable value in the series.
+
+            - "ffill"/"pad": Fill missing values by propagating the last non-nullable value in the series.
+            - "bfill"/"backfill": Fill missing values with the next non-nullable value in the series.
+
         :param axis: only ``axis=0`` is supported.
         :param sort_by: series label or sequence of labels used to sort values.
             Sorting of values is needed since result might be non-deterministic, as rows with NULLs might

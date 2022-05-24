@@ -18,7 +18,7 @@ from sqlalchemy.engine import Engine, Dialect
 from bach.expression import Expression, MultiLevelExpression
 from bach.series.series import ToPandasInfo
 from bach.sql_model import BachSqlModel
-from bach.types import AllSupportedLiteralTypes, get_series_type_from_dtype
+from bach.types import AllSupportedLiteralTypes, get_series_type_from_dtype, StructuredDtype
 from sql_models.constants import DBDialect, NotSet, not_set
 from sql_models.util import DatabaseNotSupportedException, is_postgres, is_bigquery
 
@@ -58,6 +58,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
         group_by: Optional[Union['GroupBy', NotSet]] = not_set,
         sorted_ascending: Optional[Union[bool, NotSet]] = not_set,
         index_sorting: Optional[List[bool]] = None,
+        instance_dtype: Optional[StructuredDtype] = None,
         **kwargs,
     ) -> T:
         """
@@ -76,7 +77,8 @@ class SeriesAbstractMultiLevel(Series, ABC):
             group_by=group_by,
             sorted_ascending=sorted_ascending,
             index_sorting=index_sorting,
-            **extra_params,
+            instance_dtype=instance_dtype,
+            **extra_params
         ))
 
     @classmethod
@@ -88,9 +90,10 @@ class SeriesAbstractMultiLevel(Series, ABC):
         name: str,
         expression: Expression,
         group_by: Optional['GroupBy'],
-        sorted_ascending: Optional[bool] = None,
-        index_sorting: List[bool] = None,
-        **kwargs,
+        sorted_ascending: Optional[bool],
+        index_sorting: List[bool],
+        instance_dtype: StructuredDtype,
+        **kwargs
     ):
         """
         INTERNAL: Create an instance of this class.
@@ -142,6 +145,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
             sub_levels[level_name] = get_series_type_from_dtype(dtype).get_class_instance(
                 name=f'_{name}_{level_name}',
                 expression=expr,
+                instance_dtype=dtype,
                 **base_params
             )
 
@@ -154,7 +158,8 @@ class SeriesAbstractMultiLevel(Series, ABC):
             group_by=group_by,
             sorted_ascending=sorted_ascending,
             index_sorting=[] if index_sorting is None else index_sorting,
-            **sub_levels,
+            instance_dtype=instance_dtype,
+            **sub_levels
         )
 
     @property
@@ -198,6 +203,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
         base: DataFrameOrSeries,
         value: Any,
         name: str,
+        dtype: Optional[StructuredDtype] = None
     ) -> 'Series':
         """
         Create an instance of this class, that represents a column with the given value.
@@ -207,6 +213,8 @@ class SeriesAbstractMultiLevel(Series, ABC):
         :param value:   None or a mapping between each level and constant. All levels must be present.
         :param name:    The name that it will be known by (only for representation)
         """
+        if dtype is None:
+            dtype = cls.dtype
         if (
             value is not None
             and (
@@ -237,7 +245,8 @@ class SeriesAbstractMultiLevel(Series, ABC):
             group_by=None,
             sorted_ascending=None,
             index_sorting=[],
-            **levels,
+            instance_dtype=dtype,
+            **levels
         )
 
         return result
@@ -251,7 +260,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
         raise NotImplementedError()
 
     @classmethod
-    def supported_value_to_literal(cls, dialect: Dialect, value: Any) -> Expression:
+    def supported_value_to_literal(cls, dialect: Dialect, value: Any, dtype: StructuredDtype) -> Expression:
         raise NotImplementedError()
 
     def astype(self, dtype: Union[str, Type]) -> 'Series':
@@ -342,6 +351,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
                 level_name: appended_df[f'_{self.name}_{level_name}'] for level_name in self.levels.keys()
             },
             name=self.name,
+            dtype=self.dtype
         )
 
     def flatten(self) -> 'DataFrame':
@@ -390,41 +400,6 @@ class SeriesAbstractMultiLevel(Series, ABC):
         )
 
 
-def _parse_numeric_interval_value(dialect: DBDialect, value) -> Optional[pandas.Interval]:
-    """
-    Helper function that converts SeriesNumericInterval final values into a pandas.Interval object.
-    """
-    if value is None:
-        return value
-
-    # expects a NUMRANGE db type
-    if dialect == DBDialect.POSTGRES:
-        if value.lower_inc and value.upper_inc:
-            closed = 'both'
-        elif value.lower_inc:
-            closed = 'left'
-        else:
-            closed = 'right'
-        return pandas.Interval(float(value.lower), float(value.upper), closed=closed)
-
-    # expects a dict with interval information
-    elif dialect == DBDialect.BIGQUERY:
-        expected_keys = ['lower', 'upper', 'bounds']
-        if not isinstance(value, dict) or not all(k in value for k in expected_keys):
-            raise ValueError(f'{value} has not the expected structure.')
-
-        if value['bounds'] == '[]':
-            closed = 'both'
-        elif value['bounds'] == '[)':
-            closed = 'left'
-        else:
-            closed = 'right'
-        return pandas.Interval(float(value['lower']), float(value['upper']), closed=closed)
-
-    else:
-        raise DatabaseNotSupportedException(dialect)
-
-
 class SeriesNumericInterval(SeriesAbstractMultiLevel):
     """
     Multi-Level Series representing a structure for numeric intervals. This is due that not all supported
@@ -451,15 +426,6 @@ class SeriesNumericInterval(SeriesAbstractMultiLevel):
     }
 
     supported_value_types = (pandas.Interval, dict)
-
-    to_pandas_info = {
-        DBDialect.POSTGRES: ToPandasInfo(
-            dtype='object', function=lambda value: _parse_numeric_interval_value(DBDialect.POSTGRES, value),
-        ),
-        DBDialect.BIGQUERY: ToPandasInfo(
-            dtype='object', function=lambda value: _parse_numeric_interval_value(DBDialect.BIGQUERY, value),
-        ),
-    }
 
     def __init__(
         self,
@@ -497,6 +463,13 @@ class SeriesNumericInterval(SeriesAbstractMultiLevel):
             'bounds': (SeriesString.dtype, ),
         }
 
+    def to_pandas_info(self) -> Optional[ToPandasInfo]:
+        if is_postgres(self.engine):
+            return ToPandasInfo(dtype='object', function=self._parse_numeric_interval_value_postgres)
+        if is_bigquery(self.engine):
+            return ToPandasInfo(dtype='object', function=self._parse_numeric_interval_value_bigquery)
+        return None
+
     def get_column_expression(self, table_alias: str = None) -> Expression:
         # construct final column based on levels
         if is_postgres(self.engine):
@@ -519,3 +492,40 @@ class SeriesNumericInterval(SeriesAbstractMultiLevel):
             self.bounds,
         )
         return Expression.construct_expr_as_name(expr, self.name)
+
+    @staticmethod
+    def _parse_numeric_interval_value_postgres(value) -> Optional[pandas.Interval]:
+        """
+        Helper function that converts Postgres NUMRANGE values into a pandas.Interval object.
+        """
+        if value is None:
+            return value
+
+        if value.lower_inc and value.upper_inc:
+            closed = 'both'
+        elif value.lower_inc:
+            closed = 'left'
+        else:
+            closed = 'right'
+        return pandas.Interval(float(value.lower), float(value.upper), closed=closed)
+
+    @staticmethod
+    def _parse_numeric_interval_value_bigquery(value) -> Optional[pandas.Interval]:
+        """
+        Helper function that converts BigQuery STRUCT values into a pandas.Interval object.
+        """
+        if value is None:
+            return value
+
+        # expects a dict with interval information
+        expected_keys = ['lower', 'upper', 'bounds']
+        if not isinstance(value, dict) or not all(k in value for k in expected_keys):
+            raise ValueError(f'{value} has not the expected structure.')
+
+        if value['bounds'] == '[]':
+            closed = 'both'
+        elif value['bounds'] == '[)':
+            closed = 'left'
+        else:
+            closed = 'right'
+        return pandas.Interval(float(value['lower']), float(value['upper']), closed=closed)

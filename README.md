@@ -50,7 +50,7 @@ Supports front-end engineers to [implement tracking instrumentation](https://www
  
 ### Open model hub
 
-A [growing collection of pre-built models](https://www.objectiv.io/docs/modeling/example_notebooks) that you run, combine or customize to quickly build in-depth analyses.
+A [growing collection of pre-built models](https://objectiv.io/docs/modeling/open-model-hub/) that you run, combine or customize to quickly build in-depth analyses.
 
 * All models work with any dataset that embraces the open analytics taxonomy
 * Currently covers common product analytics operations
@@ -58,9 +58,9 @@ A [growing collection of pre-built models](https://www.objectiv.io/docs/modeling
 
 ### Bach modeling library
 
-Python-based [modeling library](https://www.objectiv.io/docs/modeling/bach) that enables using pandas-like operations on the full SQL dataset.
+Python-based [modeling library](https://www.objectiv.io/docs/modeling/bach/) that enables using pandas-like operations on the full SQL dataset.
 
-* Includes specific operations to easily work with datasets that embrace the open analytics taxonomy
+* Includes specific operations to easily work with data sets that embrace the open analytics taxonomy
 * Pandas-compatible: use popular pandas ML libraries in your models
 * Output your entire model to SQL with a single command
 
@@ -76,7 +76,4 @@ For more information, visit [objectiv.io](https://www.objectiv.io) or [Objectiv 
 
 ---
 
-This repository is part of the source code for Objectiv, which is released under the Apache 2.0 License. Please refer to [LICENSE.md](LICENSE.md) for details. Unless otherwise noted, all files © 2021 Objectiv B.V.
-
-
-
+This repository is part of the source code for Objectiv, which is released under the Apache 2.0 License. Please refer to [LICENSE.md](LICENSE.md) for details.

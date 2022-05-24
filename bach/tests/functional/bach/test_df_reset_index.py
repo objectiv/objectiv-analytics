@@ -19,7 +19,7 @@ def test_reset_index_to_empty(engine):
     # drop
     dbt = bt.reset_index(drop=True)
     assert list(dbt.index.keys()) == []
-    assert '_index_skating_order' not in bt.data
+    assert '_index_skating_order' not in dbt.data
 
     for r in [bt, rbt, dbt]:
         for s in r.index.values():
@@ -161,11 +161,11 @@ def test_reset_index_materialize(engine):
         assert_equals_data(
             r,
             expected_columns=[
-                'municipality', '_index_skating_order_sum', 'inhabitants_sum'
+                'municipality', 'inhabitants_sum'
             ],
             expected_data=[
-                ['Leeuwarden', 1, 93485],
-                ['Súdwest-Fryslân', 5, 36575],
+                ['Leeuwarden', 93485],
+                ['Súdwest-Fryslân', 36575],
             ],
-            order_by=['_index_skating_order_sum'],
+            order_by=['municipality'],
         )

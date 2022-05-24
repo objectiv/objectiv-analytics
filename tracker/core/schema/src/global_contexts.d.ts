@@ -119,4 +119,19 @@ export interface MarketingContext extends AbstractGlobalContext {
    * [Optional] Used to differentiate similar content, or links within the same ad
    */
   content: string | null;
+
+  /**
+   * [Optional] To differentiate similar content, or links within the same ad.
+   */
+  source_platform: string | null;
+
+  /**
+   * [Optional] Identifies the creative used (e.g., skyscraper, banner, etc).
+   */
+  creative_format: string | null;
+
+  /**
+   * [Optional] Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).
+   */
+  marketing_tactic: string | null;
 }

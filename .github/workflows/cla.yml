@@ -4,6 +4,13 @@ on:
   pull_request_target:
     types: [opened,closed,synchronize]
 
+permissions:
+  # to post and edit PR comments
+  pull-requests: write
+  # to rerun checks and read committer's details
+  actions: write
+  contents: write
+
 jobs:
   CLAssistant:
     runs-on: ubuntu-latest
@@ -20,7 +27,7 @@ jobs:
           path-to-signatures: 'signatures/cla_signatures.json'
           path-to-document: 'https://objectiv.io/cla/'
           branch: 'main'
-          allowlist: dependabot,jansenbob,hendrik-obj,ivarpruijn,KathiaBarahona,borft,afroald,sdirosa,thijs-obj,jansentom,vpapikya,vincenthoogsteder
+          allowlist: dependabot,jansenbob,hendrik-obj,ivarpruijn,KathiaBarahona,borft,afroald,sdirosa,thijs-obj,jansentom,vard-obj,vincenthoogsteder
           lock-pullrequest-aftermerge: true
           signed-commit-message: '$contributorName has signed the CLA in #$pullRequestNo'
           custom-allsigned-prcomment: 'All contributors have signed the CLA.'

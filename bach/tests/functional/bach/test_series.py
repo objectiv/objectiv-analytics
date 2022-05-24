@@ -39,13 +39,6 @@ def test_series__getitem__(engine):
     with pytest.raises(IndexError):
         non_existing_value_ref.value
 
-    # selection on index of non-materialized groupby
-    l2 = l1.groupby('_index_skating_order_min').city_min.nunique()
-    assert l2[9].value == 1
-    non_existing_value_ref = l2[5]
-    with pytest.raises(IndexError):
-        non_existing_value_ref.value
-
 
 def test_positional_slicing():
     bt = get_bt_with_test_data(full_data_set=True)['inhabitants'].sort_values()
@@ -346,7 +339,7 @@ def test_series_inherit_flag(engine):
     assert not bts.expression.has_aggregate_function
     assert bts_min.expression.has_aggregate_function
 
-    bts_min_materialized = bts_min.to_frame().materialize()['founding']
+    bts_min_materialized = bts_min.materialize()
     assert not bts_min_materialized.expression.has_aggregate_function
 
     assert_equals_data(

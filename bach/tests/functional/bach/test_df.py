@@ -149,7 +149,7 @@ def test_quantile(pg_engine) -> None:
 
         # pandas returns a series when calculating just 1 quantile
         result_values = result.to_numpy() if isinstance(q, list) else result.to_numpy()[0]
-        expected = pdf.reset_index(drop=False).quantile(q)
+        expected = pdf.reset_index(drop=True).quantile(q)
         np.testing.assert_almost_equal(expected, result_values, decimal=4)
 
 

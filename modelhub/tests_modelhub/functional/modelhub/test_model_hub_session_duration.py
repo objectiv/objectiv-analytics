@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 
-# Any import from from modelhub initializes all the types, do not remove
+# Any import from modelhub initializes all the types, do not remove
 from modelhub import __version__
 import pytest
 from tests_modelhub.functional.modelhub.data_and_utils import get_objectiv_dataframe_test

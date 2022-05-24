@@ -10,35 +10,31 @@ from bach import DataFrameOrSeries
 from bach.series import Series, value_to_series
 from bach.expression import Expression
 from bach.series.series import WrappedPartition, ToPandasInfo
+from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery
 
 
 class SeriesUuid(Series):
     """
-    A Series that represents the UUID type and its specific operations.
+    A Series that represents the UUID type and has UUID specific operations.
 
-    Depending on the database this Series is backed by different databse types:
+    **Database support and types**
 
-    * On Postgres this utilizes the native 'uuid' database type.
-    * On BigQuery this utilizes the generic 'STRING' database type.
-
+    * Postgres: utilizes the native 'uuid' database type.
+    * BigQuery: utilizes the generic 'STRING' database type.
     """
     dtype = 'uuid'
     dtype_aliases = ()
     supported_db_dtype = {
         DBDialect.POSTGRES: 'uuid',
-        # No entry here for BIGQUERY, because BigQuery doesn't have a uuid type.
-        # We do support the UUID Series, but they store data as STRING data-type, which by default is handled
-        # by SeriesString
+        # None here for BIGQUERY, because BigQuery doesn't have a uuid type.
+        # We do support the UUID Series, but on BQ we store data as STRING data-type, which by default is
+        # handled by SeriesString
+        DBDialect.BIGQUERY: None
     }
 
     supported_value_types = (UUID, str)
-
-    to_pandas_info = {
-        DBDialect.POSTGRES: None,
-        DBDialect.BIGQUERY: ToPandasInfo('object', UUID)
-    }
 
     @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
@@ -49,7 +45,12 @@ class SeriesUuid(Series):
         raise DatabaseNotSupportedException(dialect)
 
     @classmethod
-    def supported_value_to_literal(cls, dialect: Dialect, value: Union[UUID, str]) -> Expression:
+    def supported_value_to_literal(
+        cls,
+        dialect: Dialect,
+        value: Union[UUID, str],
+        dtype: StructuredDtype
+    ) -> Expression:
         if isinstance(value, str):
             # Check that the string value is a valid UUID by converting it to a UUID
             value = UUID(value)
@@ -107,8 +108,16 @@ class SeriesUuid(Series):
             index=base.engine,
             name='__tmp',
             expression=Expression.construct(expr_str),
-            group_by=None
+            group_by=None,
+            sorted_ascending=None,
+            index_sorting=[],
+            instance_dtype=cls.dtype
         )
+
+    def to_pandas_info(self) -> Optional[ToPandasInfo]:
+        if is_bigquery(self.engine):
+            return ToPandasInfo('object', UUID)
+        return None
 
     def _comparator_operation(self, other, comparator, other_dtypes=('uuid', 'string')):
         from bach import SeriesBoolean

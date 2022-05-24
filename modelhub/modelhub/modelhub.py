@@ -80,7 +80,7 @@ class ModelHub():
             'global_contexts': 'objectiv_global_context',
             'location_stack': 'objectiv_location_stack',
             'event_type': 'string',
-            'stack_event_types': 'jsonb',
+            'stack_event_types': 'json',
             'session_id': 'int64',
             'session_hit_number': 'int64'
         }
@@ -136,7 +136,7 @@ class ModelHub():
                             'day': 'date',
                             'moment': 'timestamp',
                             'cookie_id': 'uuid',
-                            'value': 'json'}
+                            'value': 'json_postgres'}
         if dtypes != expected_columns:
             raise KeyError(f'Expected columns not in table {table_name}. Found: {dtypes}')
 
@@ -150,10 +150,10 @@ class ModelHub():
             'day': 'date',
             'moment': 'timestamp',
             'user_id': 'uuid',
-            'global_contexts': 'jsonb',
-            'location_stack': 'jsonb',
+            'global_contexts': 'json',
+            'location_stack': 'json',
             'event_type': 'string',
-            'stack_event_types': 'jsonb',
+            'stack_event_types': 'json',
             'session_id': 'int64',
             'session_hit_number': 'int64'
         }

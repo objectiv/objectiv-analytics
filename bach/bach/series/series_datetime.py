@@ -4,29 +4,43 @@ Copyright 2021 Objectiv B.V.
 import datetime
 from abc import ABC
 from enum import Enum
-from typing import Union, cast, List, Tuple, Optional
+from typing import Union, cast, List, Tuple, Optional, Any
 
 import numpy
+import pandas
 from sqlalchemy.engine import Dialect
 
 from bach import DataFrame
 from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64
 from bach.expression import Expression
 from bach.series.series import WrappedPartition, ToPandasInfo
-from bach.types import DtypeOrAlias
+from bach.types import DtypeOrAlias, StructuredDtype
 from sql_models.constants import DBDialect
-from sql_models.util import DatabaseNotSupportedException, is_postgres
-
-_SECONDS_IN_DAY = 24 * 60 * 60
+from sql_models.util import is_postgres, is_bigquery
 
 
-class DatePartFormats(Enum):
-    DAYS = 'DD'
-    HOURS = 'HH24'
-    MINUTES = 'MI'
-    SECONDS = 'SS'
-    MILLISECONDS = 'MS'
-    MICROSECONDS = 'US'
+class DatePart(str, Enum):
+    DAY = 'days'
+    HOUR = 'hours'
+    MINUTE = 'minutes'
+    SECOND = 'seconds'
+    MILLISECOND = 'milliseconds'
+    MICROSECOND = 'microseconds'
+
+
+# conversions for date parts to seconds
+# when adjusting intervals, 30-day time periods are represented as months
+# BigQuery seems to follow Postgres threshold
+# https://www.postgresql.org/docs/current/functions-datetime.html#:~:text=justify_days%20(%20interval%20)%20%E2%86%92%20interval,mon%205%20days
+# For example 395 days is equal to 1 year, 1 month and 5 days.
+_TOTAL_SECONDS_PER_DATE_PART = {
+    DatePart.DAY:  24 * 60 * 60,
+    DatePart.HOUR: 60 * 60,
+    DatePart.MINUTE: 60,
+    DatePart.SECOND: 1,
+    DatePart.MILLISECOND: 1e-3,
+    DatePart.MICROSECOND: 1e-6,
+}
 
 
 class DateTimeOperation:
@@ -55,31 +69,82 @@ class DateTimeOperation:
 
 
 class TimedeltaOperation(DateTimeOperation):
+    def _get_conversion_df(self) -> 'DataFrame':
+        """
+        generates a dataframe containing the amounts of seconds a supported date part has.
+        """
+        from bach import DataFrame
+        conversion_df = pandas.DataFrame(
+            data=[
+                {
+                    self._format_converted_series_name(dp): ts
+                    for dp, ts in _TOTAL_SECONDS_PER_DATE_PART.items()
+                },
+            ]
+        )
+        convert_df = DataFrame.from_pandas(df=conversion_df, engine=self._series.engine, convert_objects=True)
+        return convert_df.reset_index(drop=True)
+
+    @staticmethod
+    def _format_converted_series_name(date_part: DatePart) -> str:
+        return f'_SECONDS_IN_{date_part.name}'
+
     @property
     def components(self) -> DataFrame:
         """
         :returns: a DataFrame containing all date parts from the timedelta.
-
-        .. note::
-            The dataframe contains only the displayed values of the timedelta.
         """
-        component_series = {}
-        for date_part in DatePartFormats:
-            component_name = date_part.name.lower()
-            component_series[component_name] = (
-                self.sql_format(date_part.value).astype('int64').copy_override(name=component_name)
-            )
-        return self._series.to_frame().copy_override(series=component_series)
+        df = self.total_seconds.to_frame()
+        df = df.merge(self._get_conversion_df(), how='cross')
+
+        # justifies total seconds into the units of each date component
+        # after adjustment, it converts it back into seconds
+        for date_part in DatePart:
+            converted_series_name = self._format_converted_series_name(DatePart(date_part))
+            df[f'ts_{date_part}'] = df['total_seconds'] // df[converted_series_name]
+            df[f'ts_{date_part}'] *= df[converted_series_name]
+
+        # materialize to avoid complex subquery
+        df = df.materialize(node_name='justified_date_components')
+
+        components_series_names = []
+        prev_ts = ''
+
+        # extract actual date component from justified seconds
+        # by getting the difference between current and previous components
+        # this helps on normalizing negative time deltas and have only negative values
+        # in days.
+        for date_part in DatePart:
+            converted_series_name = self._format_converted_series_name(DatePart(date_part))
+
+            component_name = f'{date_part}'
+            current_ts = f'ts_{date_part}'
+
+            if not prev_ts:
+                df[component_name] = df[current_ts] / df[converted_series_name]
+            else:
+                df[component_name] = (df[current_ts] - df[prev_ts]) / df[converted_series_name]
+
+            df[component_name] = cast(SeriesFloat64, df[component_name]).round(decimals=0)
+
+            components_series_names.append(component_name)
+            prev_ts = current_ts
+
+        return df[components_series_names].astype('int64')
 
     @property
     def days(self) -> SeriesInt64:
         """
         converts total seconds into days and returns only the integral part of the result
         """
-        day_series = self.total_seconds // _SECONDS_IN_DAY
+        day_series = self.total_seconds // _TOTAL_SECONDS_PER_DATE_PART[DatePart.DAY]
 
         day_series = day_series.astype('int64')
-        return cast(SeriesInt64, day_series.copy_override(name='days'))
+        return (
+            day_series
+            .copy_override_type(SeriesInt64)
+            .copy_override(name='days')
+        )
 
     @property
     def seconds(self) -> SeriesInt64:
@@ -87,32 +152,55 @@ class TimedeltaOperation(DateTimeOperation):
         removes days from total seconds (self.total_seconds % _SECONDS_IN_DAY)
         and returns only the integral part of the result
         """
-        seconds_series = (self.total_seconds % _SECONDS_IN_DAY) // 1
+        seconds_series = (self.total_seconds % _TOTAL_SECONDS_PER_DATE_PART[DatePart.DAY]) // 1
 
         seconds_series = seconds_series.astype('int64')
-        return cast(SeriesInt64, seconds_series.copy_override(name='seconds'))
+        return (
+            seconds_series
+            .copy_override_type(SeriesInt64)
+            .copy_override(name='seconds')
+        )
 
     @property
     def microseconds(self) -> SeriesInt64:
         """
         considers only the fractional part of the total seconds and converts it into microseconds
         """
-        microseconds_series = (self.total_seconds % 1) * 10 ** 6
-        microseconds_series //= 1
+        microseconds_series = (
+            (self.total_seconds % 1) / _TOTAL_SECONDS_PER_DATE_PART[DatePart.MICROSECOND]
+        )
 
         microseconds_series = microseconds_series.astype('int64')
-        return cast(SeriesInt64, microseconds_series.copy_override(name='microseconds'))
+        return (
+            microseconds_series
+            .copy_override_type(SeriesInt64)
+            .copy_override(name='microseconds')
+        )
 
     @property
     def total_seconds(self) -> SeriesFloat64:
         """
         returns the total amount of seconds in the interval
         """
-        # extract(epoch from source) returns the total number of seconds in the interval
-        expression = Expression.construct(f'extract(epoch from {{}})', self._series)
-        return self._series\
-            .copy_override_type(SeriesFloat64)\
+
+        if not is_bigquery(self._series.engine):
+            # extract(epoch from source) returns the total number of seconds in the interval
+            expression = Expression.construct(f'extract(epoch from {{}})', self._series)
+        else:
+            # bq cannot extract epoch from interval
+            expression = Expression.construct(
+                (
+                    f"UNIX_MICROS(CAST('1970-01-01' AS TIMESTAMP) + {{}}) "
+                    f"* {_TOTAL_SECONDS_PER_DATE_PART[DatePart.MICROSECOND]}"
+                ),
+                self._series,
+            )
+
+        return (
+            self._series
+            .copy_override_type(SeriesFloat64)
             .copy_override(name='total_seconds', expression=expression)
+        )
 
 
 class SeriesAbstractDateTime(Series, ABC):
@@ -169,10 +257,10 @@ class SeriesTimestamp(SeriesAbstractDateTime):
     These timestamps have a microsecond precision at best, in contrast to numpy's datetime64 which supports
     up to attoseconds precision.
 
-    Depending on the database this Series is backed by different database types:
+    **Database support and types**
 
-    * On Postgres this utilizes the native 'timestamp without time zone' database type.
-    * On BigQuery this utilizes the generic 'TIMESTAMP' database type.
+    * Postgres: utilizes the 'timestamp without time zone' database type.
+    * BigQuery: utilizes the 'TIMESTAMP' database type.
     """
     dtype = 'timestamp'
     dtype_aliases = ('datetime64', 'datetime64[ns]', numpy.datetime64)
@@ -182,20 +270,16 @@ class SeriesTimestamp(SeriesAbstractDateTime):
     }
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.date, str)
 
-    to_pandas_info = {
-        DBDialect.POSTGRES: ToPandasInfo('datetime64[ns]', None),
-        DBDialect.BIGQUERY: ToPandasInfo('datetime64[ns, UTC]', dt_strip_timezone)
-    }
-
     @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
 
     @classmethod
     def supported_value_to_literal(
-            cls,
-            dialect: Dialect,
-            value: Union[datetime.datetime, numpy.datetime64, datetime.date, str, None]
+        cls,
+        dialect: Dialect,
+        value: Union[datetime.datetime, numpy.datetime64, datetime.date, str, None],
+        dtype: StructuredDtype
     ) -> Expression:
         if value is None:
             return Expression.raw('NULL')
@@ -238,6 +322,13 @@ class SeriesTimestamp(SeriesAbstractDateTime):
                 raise ValueError(f'cannot convert {source_dtype} to timestamp')
             return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
+    def to_pandas_info(self) -> Optional['ToPandasInfo']:
+        if is_postgres(self.engine):
+            return ToPandasInfo('datetime64[ns]', None)
+        if is_bigquery(self.engine):
+            return ToPandasInfo('datetime64[ns, UTC]', dt_strip_timezone)
+        return None
+
     def __add__(self, other) -> 'Series':
         return self._arithmetic_operation(other, 'add', '({}) + ({})', other_dtypes=tuple(['timedelta']))
 
@@ -255,8 +346,10 @@ class SeriesDate(SeriesAbstractDateTime):
     """
     A Series that represents the date type and its specific operations
 
-    Types in PG that we want to support: https://www.postgresql.org/docs/9.1/datatype-datetime.html
-        date
+    **Database support and types**
+
+    * Postgres: utilizes the 'date' database type.
+    * BigQuery: utilizes the 'DATE' database type.
     """
     dtype = 'date'
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
@@ -271,7 +364,12 @@ class SeriesDate(SeriesAbstractDateTime):
         return Expression.construct(f'cast({{}} as date)', literal)
 
     @classmethod
-    def supported_value_to_literal(cls, dialect: Dialect, value: Union[str, datetime.date]) -> Expression:
+    def supported_value_to_literal(
+        cls,
+        dialect: Dialect,
+        value: Union[str, datetime.date],
+        dtype: StructuredDtype
+    ) -> Expression:
         if isinstance(value, datetime.date):
             value = str(value)
         # TODO: check here already that the string has the correct format
@@ -318,8 +416,11 @@ class SeriesTime(SeriesAbstractDateTime):
     """
     A Series that represents the date time and its specific operations
 
-    Types in PG that we want to support: https://www.postgresql.org/docs/9.1/datatype-datetime.html
-        time without time zone
+
+    **Database support and types**
+
+    * Postgres: utilizes the 'time without time zone' database type.
+    * BigQuery: utilizes the 'TIME' database type.
     """
     dtype = 'time'
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
@@ -334,7 +435,12 @@ class SeriesTime(SeriesAbstractDateTime):
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
 
     @classmethod
-    def supported_value_to_literal(cls, dialect: Dialect, value: Union[str, datetime.time]) -> Expression:
+    def supported_value_to_literal(
+        cls,
+        dialect: Dialect,
+        value: Union[str, datetime.time],
+        dtype: StructuredDtype
+    ) -> Expression:
         value = str(value)
         # TODO: check here already that the string has the correct format
         return Expression.string_value(value)
@@ -354,30 +460,57 @@ class SeriesTime(SeriesAbstractDateTime):
 class SeriesTimedelta(SeriesAbstractDateTime):
     """
     A Series that represents the timedelta type and its specific operations
+
+    **Database support and types**
+
+    * Postgres: utilizes the 'interval' database type.
+    * BigQuery: support coming soon
     """
 
     dtype = 'timedelta'
     dtype_aliases = ('interval',)
     supported_db_dtype = {
-        DBDialect.POSTGRES: 'interval'
+        DBDialect.POSTGRES: 'interval',
+        DBDialect.BIGQUERY: 'INTERVAL',
     }
     supported_value_types = (datetime.timedelta, numpy.timedelta64, str)
 
     @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        if not is_postgres(dialect):
-            raise DatabaseNotSupportedException(dialect)
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
 
     @classmethod
     def supported_value_to_literal(
-            cls,
-            dialect: Dialect,
-            value: Union[str, numpy.timedelta64, datetime.timedelta]
+        cls,
+        dialect: Dialect,
+        value: Union[str, numpy.timedelta64, datetime.timedelta],
+        dtype: StructuredDtype
     ) -> Expression:
-        value = str(value)
-        # TODO: check here already that the string has the correct format
-        return Expression.string_value(value)
+        # pandas.Timedelta checks already that the string has the correct format
+        value_td = pandas.Timedelta(value)
+
+        if value_td is pandas.NaT:
+            return Expression.construct('NULL')
+
+        # interval values in iso format are allowed in SQL (both BQ and PG)
+        # https://www.postgresql.org/docs/8.4/datatype-datetime.html#:~:text=interval%20values%20can%20also%20be%20written%20as%20iso%208601%20time%20intervals%2C
+        return Expression.string_value(value_td.isoformat())
+
+    def to_pandas_info(self) -> Optional[ToPandasInfo]:
+        if is_bigquery(self.engine):
+            return ToPandasInfo(dtype='object', function=self._parse_interval_bigquery)
+        return None
+
+    def _parse_interval_bigquery(self, value: Optional[Any]) -> Optional[pandas.Timedelta]:
+        if value is None:
+            return None
+
+        # BigQuery returns a MonthDayNano object
+        # we need to normalize months to days (1 month == 30 day period)
+        return pandas.Timedelta(
+            days=value.days + value.months * 30,
+            nanoseconds=value.nanoseconds,
+        )
 
     @classmethod
     def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
@@ -418,11 +551,11 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         return self._arithmetic_operation(other, 'div', '({}) / ({})', other_dtypes=('int64', 'float64'))
 
     @property
-    def dt(self) -> DateTimeOperation:
+    def dt(self) -> TimedeltaOperation:
         """
         Get access to date operations.
 
-        .. autoclass:: bach.series.series_datetime.DateTimeOperation
+        .. autoclass:: bach.series.series_datetime.TimedeltaOperation
             :members:
 
         """
@@ -461,5 +594,29 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         quantiles as index values.
         """
         from bach.quantile import calculate_quantiles
-        result = calculate_quantiles(series=self.copy(), partition=partition, q=q)
-        return cast('SeriesTimedelta', result)
+
+        if not is_bigquery(self.engine):
+            return (
+                calculate_quantiles(series=self.copy(), partition=partition, q=q)
+                .copy_override_type(SeriesTimedelta)
+            )
+
+        # calculate quantiles based on total microseconds
+        # using total seconds might lose precision,
+        # since TIMESTAMP_SECONDS accepts only integers, therefore
+        # microseconds will be lost due to rounding
+        total_microseconds_series = (
+            self.dt.total_seconds / _TOTAL_SECONDS_PER_DATE_PART[DatePart.MICROSECOND]
+        )
+        total_microseconds_series = total_microseconds_series.copy_override_type(SeriesFloat64)
+        result = calculate_quantiles(series=total_microseconds_series, partition=partition, q=q)
+
+        # result must be a timedelta
+        result = result.copy_override(
+            expression=Expression.construct(
+                f"TIMESTAMP_MICROS({{}}) - CAST('1970-01-01' AS TIMESTAMP)",
+                result.astype('int64'),
+            ),
+            name=self.name,
+        )
+        return result.copy_override_type(SeriesTimedelta)

@@ -14,12 +14,16 @@ OBJ_PACKAGE_VERSION = $(shell cat objectiv_backend/VERSION)
 PACKAGE_NAME = dist/objectiv_backend-$(OBJ_PACKAGE_VERSION)-py3-none-any.whl
 
 # tag of the container image we'll build
-TAG ?= latest
+TAG ?= $(shell date +%Y%m%d)
 
 all: docker-image python-package
 
-docker-image: base_schema
+docker-image-local: base_schema
 	docker build -t objectiv/backend:$(TAG) -f docker/Dockerfile .
+
+docker-image:
+	docker buildx build --pull --rm --no-cache --output type=image,push=true \
+		--platform=linux/arm64,linux/amd64 --tag objectiv/backend:${TAG} -f docker/Dockerfile .
 
 python-package: $(PACKAGE_NAME)
 

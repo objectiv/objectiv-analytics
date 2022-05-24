@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import json
-from typing import Optional, Dict, Union, TYPE_CHECKING, List, Tuple
+from typing import Optional, Any, Dict, Union, TYPE_CHECKING, List, Tuple
 
 from sqlalchemy.engine import Dialect
 
@@ -10,7 +10,7 @@ from bach.series import Series
 from bach.expression import Expression
 from bach.series.series import WrappedPartition
 from bach.sql_model import BachSqlModel
-from bach.types import DtypeOrAlias
+from bach.types import DtypeOrAlias, StructuredDtype
 from sql_models.constants import DBDialect
 from sql_models.util import quote_string, is_postgres, DatabaseNotSupportedException
 
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from bach.partitioning import GroupBy
 
 
-class SeriesJsonb(Series):
+class SeriesJson(Series):
     """
     A Series that represents the postgres jsonb type and its specific operations.
 
@@ -118,8 +118,13 @@ class SeriesJsonb(Series):
         1                                    None
         2    [{'l': ['m', 'n', 'o']}, {'p': 'q'}]
         Name: jsonb_column, dtype: object
+
+    **Database support and types**
+
+    * Postgres: utilizes the 'jsonb' database type.
+    * BigQuery: json support coming soon
     """
-    dtype = 'jsonb'
+    dtype = 'json'
     # todo can only assign a type to one series type, and object is quite generic
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
     supported_db_dtype = {
@@ -132,85 +137,12 @@ class SeriesJsonb(Series):
         """
         class with accessor methods to json(b) type data columns.
         """
-        def __init__(self, series_object: 'SeriesJsonb'):
+        def __init__(self, series_object: 'SeriesJson'):
             self._series_object = series_object
 
         def __getitem__(self, key: Union[str, int, slice]):
             """
             Slice this jsonb database object in pythonic ways:
-
-            :param key: A very mixed key to slice on, please see below.
-
-            .. testsetup:: jsonb__getitem__
-                :skipif: engine is None
-
-                data = [
-                    '["a","b","c"]', '["d","e","f","g"]', '[{"h":"i","j":"k"},{"l":["m","n","o"]},{"p":"q"}]',
-                ]
-                pdf = pd.DataFrame(data=data, columns=['jsonb_column'])
-                df = DataFrame.from_pandas(engine, pdf, convert_objects=True)
-                df['jsonb_column'] = df.jsonb_column.astype('jsonb')
-
-            .. doctest:: jsonb__getitem__
-                :skipif: engine is None
-
-                >>> # slice and show with .head()
-                >>> df.jsonb_column.json[:2].head()
-                _index_0
-                0                                            [a, b]
-                1                                            [d, e]
-                2    [{'h': 'i', 'j': 'k'}, {'l': ['m', 'n', 'o']}]
-                Name: jsonb_column, dtype: object
-
-            .. doctest:: jsonb__getitem__
-                :skipif: engine is None
-
-                >>> # selecting one position returns the single entry:
-                >>> df.jsonb_column.json[1].head()
-                _index_0
-                0                         b
-                1                         e
-                2    {'l': ['m', 'n', 'o']}
-                Name: jsonb_column, dtype: object
-
-            .. doctest:: jsonb__getitem__
-                :skipif: engine is None
-
-                >>> # selecting from objects is done by entering a key:
-                >>> df.jsonb_column.json[1].json['l'].head()
-                _index_0
-                0         None
-                1         None
-                2    [m, n, o]
-                Name: jsonb_column, dtype: object
-
-            Or select based on the objects *in* an array.
-            With this method, a dict is passed in the `.json[]` selector. The value of the first match with
-            the dict to the objects in a json array is returned for the `.json[]` selector. A match is when
-            all key/value pairs of the dict are found in an object. This can be used for selecting a subset
-            of a json array with objects.
-
-            .. doctest:: jsonb__getitem__
-                :skipif: engine is None
-
-                >>> # selecting from arrays by searching objects in the array.
-                >>> df.jsonb_column.json[:{"j":"k"}].head()
-                _index_0
-                0                      None
-                1                      None
-                2    [{'h': 'i', 'j': 'k'}]
-                Name: jsonb_column, dtype: object
-
-            .. doctest:: jsonb__getitem__
-                :skipif: engine is None
-
-                >>> # or:
-                >>> df.jsonb_column.json[{"l":["m","n","o"]}:].head()
-                _index_0
-                0                                    None
-                1                                    None
-                2    [{'l': ['m', 'n', 'o']}, {'p': 'q'}]
-                Name: jsonb_column, dtype: object
             """
             if isinstance(key, int):
                 return self._series_object\
@@ -311,6 +243,10 @@ class SeriesJsonb(Series):
         """
         return self.Json(self)
 
+    @property
+    def elements(self):
+        return self.Json(self)
+
     @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         if not is_postgres(dialect):
@@ -318,7 +254,12 @@ class SeriesJsonb(Series):
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
 
     @classmethod
-    def supported_value_to_literal(cls, dialect: Dialect, value: Union[dict, list]) -> Expression:
+    def supported_value_to_literal(
+            cls,
+            dialect: Dialect,
+            value: Union[dict, list],
+            dtype: StructuredDtype
+    ) -> Expression:
         json_value = json.dumps(value)
         return Expression.string_value(json_value)
 
@@ -351,8 +292,16 @@ class SeriesJsonb(Series):
         """ INTERNAL: Only here to not trigger errors from describe """
         raise NotImplementedError()
 
+    def materialize(
+            self,
+            node_name='manual_materialize',
+            limit: Any = None,
+            distinct: bool = False,
+    ):
+        raise Exception(f'{self.__class__.__name__} cannot be materialized.')
 
-class SeriesJson(SeriesJsonb):
+
+class SeriesJsonPostgres(SeriesJson):
     """
     A Series that represents the json type.
 
@@ -360,13 +309,17 @@ class SeriesJson(SeriesJsonb):
     cast to the jsonb type. As a result all methods of the :py:class:`SeriesJsonb` can also be used with this
     `json` type series.
 
+    **Database support and types**
+
+    * Postgres: utilizes the 'json' database type.
+    * BigQuery: support coming soon
     """
-    dtype = 'json'
+    dtype = 'json_postgres'
     dtype_aliases: Tuple[DtypeOrAlias, ...] = tuple()
     supported_db_dtype = {
         DBDialect.POSTGRES: 'json',
     }
-    return_dtype = 'jsonb'
+    return_dtype = 'json'
 
     def __init__(self,
                  engine,
@@ -376,7 +329,9 @@ class SeriesJson(SeriesJsonb):
                  expression: Expression,
                  group_by: 'GroupBy',
                  sorted_ascending: Optional[bool],
-                 index_sorting: List[bool]):
+                 index_sorting: List[bool],
+                 instance_dtype: StructuredDtype,
+                 **kwargs):
 
         super().__init__(engine=engine,
                          base_node=base_node,
@@ -385,4 +340,6 @@ class SeriesJson(SeriesJsonb):
                          expression=Expression.construct(f'cast({{}} as jsonb)', expression),
                          group_by=group_by,
                          sorted_ascending=sorted_ascending,
-                         index_sorting=index_sorting)
+                         index_sorting=index_sorting,
+                         instance_dtype=instance_dtype,
+                         **kwargs)

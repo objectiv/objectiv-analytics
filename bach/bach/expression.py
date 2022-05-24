@@ -467,7 +467,7 @@ class MultiLevelExpression(Expression):
         )
 
 
-def join_expressions(expressions: List[Expression], join_str: str = ', ') -> Expression:
+def join_expressions(expressions: Sequence[Expression], join_str: str = ', ') -> Expression:
     """
     Construct an expression consisting of the given list of expressions joined by the join_str.
     """
