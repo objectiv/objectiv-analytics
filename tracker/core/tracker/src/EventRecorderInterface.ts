@@ -15,6 +15,11 @@ export type RecordedEvent = Omit<AbstractEvent, 'time'>;
  */
 export type EventRecorderConfig = {
   /**
+   * When set to false it will cause EventRecorder to become unusable. Trackers will not automatically record events.
+   */
+  enabled?: boolean;
+
+  /**
    * Determines how many TrackerEvents will be recorded before rotating the oldest ones. Default to 1000.
    */
   maxEvents?: number;
@@ -31,12 +36,17 @@ export type EventRecorderConfig = {
 export type EventRecorderInterface = TrackerTransportInterface &
   Required<EventRecorderConfig> & {
     /**
-     * Whether EventRecorder si recording or not.
+     * When set to false it will cause EventRecorder to become unusable. Trackers will not automatically record events.
+     */
+    enabled: boolean;
+
+    /**
+     * Whether EventRecorder is recording or not.
      */
     recording: boolean;
 
     /**
-     * Whether EventRecorder si recording or not.
+     * Holds the list of recorded events.
      */
     events: RecordedEvent[];
 

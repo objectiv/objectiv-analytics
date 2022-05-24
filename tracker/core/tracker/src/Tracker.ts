@@ -174,8 +174,8 @@ export class Tracker implements TrackerInterface {
       this.plugins = trackerConfig.plugins;
     }
 
-    // Enable EventRecorder if DeveloperTools are available. Either group it with the existing transport or set it.
-    if (globalThis.objectiv) {
+    // Inject EventRecorder as Transport, if available. Either group it with the existing transport or set it.
+    if (globalThis.objectiv?.EventRecorder.enabled) {
       this.transport = !this.transport
         ? globalThis.objectiv.EventRecorder
         : new TrackerTransportGroup({

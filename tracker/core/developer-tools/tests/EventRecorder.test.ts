@@ -17,6 +17,24 @@ describe('EventRecorder', () => {
     expect(EventRecorder.recording).toBe(true);
   });
 
+  it('should not be usable and not auto-recording', async () => {
+    EventRecorder.configure({ enabled: false });
+    expect(EventRecorder.isUsable()).toBe(false);
+    expect(EventRecorder.autoStart).toBe(true);
+    expect(EventRecorder.recording).toBe(false);
+  });
+
+  it('should become usable and start recording', async () => {
+    EventRecorder.configure({ enabled: false });
+    expect(EventRecorder.isUsable()).toBe(false);
+    expect(EventRecorder.autoStart).toBe(true);
+    expect(EventRecorder.recording).toBe(false);
+    EventRecorder.configure({ enabled: true });
+    expect(EventRecorder.isUsable()).toBe(true);
+    expect(EventRecorder.autoStart).toBe(true);
+    expect(EventRecorder.recording).toBe(true);
+  });
+
   it('should allow configuring maxEvents', async () => {
     EventRecorder.configure({ maxEvents: 10 });
 

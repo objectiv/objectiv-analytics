@@ -15,6 +15,7 @@ import {
 /**
  * Some default values for the global instance of EventRecorder. Can be changed by calling EventRecorder.configure.
  */
+const DEFAULT_ENABLED = true;
 const DEFAULT_MAX_EVENTS = 1000;
 const DEFAULT_AUTO_START = true;
 
@@ -25,9 +26,10 @@ const DEFAULT_AUTO_START = true;
  */
 export const EventRecorder = new (class implements EventRecorderInterface {
   readonly transportName = 'EventRecorder';
+  enabled: boolean = true;
   maxEvents: number = DEFAULT_MAX_EVENTS;
   autoStart: boolean = DEFAULT_AUTO_START;
-  recording: boolean = this.autoStart;
+  recording: boolean = this.enabled && this.autoStart;
   events: RecordedEvent[] = [];
   eventsCountByType: { [type: string]: number } = {};
 
@@ -35,9 +37,10 @@ export const EventRecorder = new (class implements EventRecorderInterface {
    * Reconfigures EventRecorder `maxEvents` and/or `autoStart`.
    */
   configure(eventRecorderConfig?: EventRecorderConfig) {
+    this.enabled = eventRecorderConfig?.enabled ?? DEFAULT_ENABLED;
     this.maxEvents = eventRecorderConfig?.maxEvents ?? DEFAULT_MAX_EVENTS;
     this.autoStart = eventRecorderConfig?.autoStart ?? DEFAULT_AUTO_START;
-    this.recording = this.autoStart;
+    this.recording = this.enabled && this.autoStart;
   }
 
   /**
@@ -52,7 +55,7 @@ export const EventRecorder = new (class implements EventRecorderInterface {
    * Starts recording events.
    */
   start() {
-    if (!this.recording) {
+    if (!this.recording && this.enabled) {
       this.recording = true;
     }
   }
@@ -61,7 +64,7 @@ export const EventRecorder = new (class implements EventRecorderInterface {
    * Stops recording events.
    */
   stop() {
-    if (this.recording) {
+    if (this.recording && this.enabled) {
       this.recording = false;
     }
   }
@@ -100,9 +103,9 @@ export const EventRecorder = new (class implements EventRecorderInterface {
   }
 
   /**
-   * EventRecorder is always usable as a Transport
+   * EventRecorder is usable as a Transport if it's enabled.
    */
   isUsable(): boolean {
-    return true;
+    return this.enabled;
   }
 })();
