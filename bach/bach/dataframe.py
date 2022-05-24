@@ -2052,7 +2052,7 @@ class DataFrame:
         group_by_clause = None
 
         column_exprs = []
-        column_names = []
+        column_names: List[str] = []
 
         non_group_by_series = self.all_series
         if self.group_by:
@@ -2074,9 +2074,9 @@ class DataFrame:
 
             if group_by_column_expr:
                 group_by_clause = Expression.construct('group by {}', group_by_column_expr)
-                column_exprs = self.group_by.get_index_column_expressions(construct_multi_levels)
-                column_names = list(self.group_by.index.keys())
-
+                expr_mapping = self.group_by.get_index_column_expressions(construct_multi_levels)
+                column_exprs = list(expr_mapping.values())
+                column_names = list(expr_mapping.keys())
                 non_group_by_series = self.data
 
         for s in non_group_by_series.values():

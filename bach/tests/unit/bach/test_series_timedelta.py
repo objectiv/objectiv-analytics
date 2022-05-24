@@ -10,7 +10,7 @@ from bach.expression import Expression
 
 def test_supported_value_to_literal(dialect):
     def assert_call(value, expected_token_value: str):
-        result = SeriesTimedelta.supported_value_to_literal(dialect, value)
+        result = SeriesTimedelta.supported_value_to_literal(dialect, value, dtype=SeriesTimedelta.dtype)
         assert result == Expression.string_value(expected_token_value)
 
     assert_call(timedelta(seconds=1234),                                'P0DT0H20M34S')
@@ -29,5 +29,6 @@ def test_supported_value_to_literal(dialect):
 
     # Special cases: Not-a-Time will be represented as NULL, and NULL itself
     nat = timedelta64('NaT')
-    assert SeriesTimedelta.supported_value_to_literal(dialect, nat) == Expression.construct('NULL')
-    assert SeriesTimedelta.supported_value_to_literal(dialect, None) == Expression.construct('NULL')
+    dtype = SeriesTimedelta.dtype
+    assert SeriesTimedelta.supported_value_to_literal(dialect, nat, dtype=dtype) == Expression.construct('NULL')
+    assert SeriesTimedelta.supported_value_to_literal(dialect, None, dtype=dtype) == Expression.construct('NULL')
