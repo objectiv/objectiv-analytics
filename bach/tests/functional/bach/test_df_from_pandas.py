@@ -63,12 +63,13 @@ def test_from_pandas_table(pg_engine):
 
 
 @pytest.mark.xdist_group(name="from_pd_table")
-def test_from_pandas_table_injection(pg_engine):
+def test_from_pandas_table_injection(engine):
     pdf = get_pandas_df(TEST_DATA_INJECTION, COLUMNS_INJECTION)
 
-    with pytest.raises(ValueError, match="unexpected '{' in field name"):
+    # TODO: generate same value error for all engines
+    with pytest.raises(ValueError):
         DataFrame.from_pandas(
-            engine=pg_engine,
+            engine=engine,
             df=pdf,
             convert_objects=True,
             name='test_from_pd_{table}_"injection"',

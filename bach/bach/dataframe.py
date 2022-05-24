@@ -572,9 +572,11 @@ class DataFrame:
                 bq_project_id=bq_project_id
             )
 
-        # For postgres we just generate:    'SELECT * FROM "table_name"'
-        # For BQ we might need to generate: 'SELECT * FROM `project_id`.`data_set`.`table_name`'
-
+        # For postgres we just generate:
+        # 'SELECT "column_1", ... , "column_N" FROM "table_name"'
+        # For BQ we might need to generate:
+        # 'SELECT `column_1`, ... , `column_N`  FROM `project_id`.`data_set`.`table_name`'
+        #  columns in select statement are based on keys from dtypes
         sql_table_name_template = '{table_name}'
         sql_params = {'table_name': quote_identifier(engine.dialect, table_name)}
         if bq_dataset:
