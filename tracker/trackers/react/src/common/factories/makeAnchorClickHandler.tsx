@@ -5,11 +5,15 @@
 import { TrackingContext, trackPressEvent } from '@objectiv/tracker-react-core';
 import React from 'react';
 
-// This symbol is used to mark an event as handled in case we re-dispatch it. This allows us to skip
-// handling the re-dispatched event and causing an infinite loop.
+/**
+ * This symbol is used to mark an event as handled in case we re-dispatch it. This allows us to skip handling the
+ * re-dispatched event and causing an infinite loop.
+ */
 const EVENT_REDISPATCHED_PROPERTY = Symbol('OBJECTIV_EVENT_REDISPATCHED');
 
-// Update the type definition of MouseEvent to allow it to get the redispatched property.
+/**
+ * Update the type definition of MouseEvent to allow it to get the redispatched property.
+ */
 declare global {
   interface MouseEvent {
     [EVENT_REDISPATCHED_PROPERTY]: boolean;
