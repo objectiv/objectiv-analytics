@@ -70,11 +70,11 @@ jobs:
       - name: Unit tests postgres
         run: |
           cd bach
-          pytest -n 4 --dist loadgroup --postgres tests/unit tests/ -W error::DeprecationWarning
+          pytest -n 4 --dist loadgroup --postgres tests/unit
       - name: Functional tests postgres
         run: |
           cd bach
-          pytest -n 4 --dist loadgroup --postgres tests/functional tests/ -W error::DeprecationWarning
+          pytest -n 4 --dist loadgroup --postgres tests/functional
       - name: Install BQ dependencies
         run: |
           cd bach
@@ -86,8 +86,8 @@ jobs:
       - name: Unit tests ALL
         run: |
           cd bach
-          pytest -n 4 --dist loadgroup --all tests/unit tests/ -W error::DeprecationWarning
+          pytest -n 4 --dist loadgroup --all tests/unit
       - name: Functional tests ALL
         run: |
           cd bach
-          pytest -n 4 --dist loadgroup --all tests/functional tests/ -W error::DeprecationWarning
+          pytest -n 4 --dist loadgroup --all tests/functional
