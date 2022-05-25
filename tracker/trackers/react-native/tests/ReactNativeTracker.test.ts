@@ -11,6 +11,7 @@ import { ReactNativeTracker } from '../src/';
 
 require('@objectiv/developer-tools');
 globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv?.EventRecorder.configure({ enabled: false });
 
 describe('ReactNativeTracker', () => {
   beforeEach(() => {

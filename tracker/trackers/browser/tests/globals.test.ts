@@ -139,4 +139,27 @@ describe('globals', () => {
       "Tracker `app-id` exists but its configuration doesn't match the given one. This means getOrMakeTracker has been called twice with different configs."
     );
   });
+
+  describe('Without developer tools', () => {
+    let objectivGlobal = globalThis.objectiv;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      globalThis.objectiv = undefined;
+    });
+
+    afterEach(() => {
+      globalThis.objectiv = objectivGlobal;
+    });
+
+    it('should not TrackerConsole.error because a Browser Tracker exists with the same Tracker Id but has a different configuration', () => {
+      const trackerConfig1 = { applicationId: 'app-id', endpoint: 'localhost' };
+      const trackerConfig2 = { applicationId: 'app-id', endpoint: 'http://collector' };
+      expect(TrackerRepository.trackersMap.size).toBe(0);
+      makeTracker(trackerConfig1);
+      expect(TrackerRepository.trackersMap.size).toBe(1);
+      getOrMakeTracker(trackerConfig2);
+      expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
+    });
+  });
 });
