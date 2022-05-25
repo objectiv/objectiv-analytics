@@ -142,7 +142,7 @@ def test_json_getitem_slice(engine, dtype):
         use_to_pandas=True,
         expected_columns=['_index_row', 'list_column'],
         expected_data=[
-            [0, []],
+            [0, None],
             [1, ["b", "c"]],
             [2, [{"_type": "c", "id": "d"}]],
             [3, [{"_type": "SectionContext", "id": "home"}, {"_type": "SectionContext", "id": "top-10"}]]
@@ -177,9 +177,9 @@ def test_json_getitem_slice(engine, dtype):
             use_to_pandas=True,
             expected_columns=['_index_row', 'mixed_column'],
             expected_data=[
-                [0, []],
+                [0, None],
                 [1, ["b", "c"]],
-                [2, []],
+                [2, None],
                 [3, [{"_type": "SectionContext", "id": "home"}, {"_type": "SectionContext", "id": "top-10"}]]
             ]
         )
@@ -196,9 +196,9 @@ def test_json_getitem_query(pg_engine, dtype):
         bts,
         expected_columns=['_index_row', 'list_column'],
         expected_data=[
-            [0, []],
-            [1, []],
-            [2, []],
+            [0, None],
+            [1, None],
+            [2, None],
             [3, [{"_type": "SectionContext", "id": "home"}, {"_type": "SectionContext", "id": "top-10"},
                  {"_type": "ItemContext", "id": "5o7Wv5Q5ZE"}]]
         ]
@@ -208,10 +208,10 @@ def test_json_getitem_query(pg_engine, dtype):
         bts,
         expected_columns=['_index_row', 'list_column'],
         expected_data=[
-            [0, []],
-            [1, []],
+            [0, None],
+            [1, None],
             [2, [{"_type": "c", "id": "d"}]],
-            [3, []]
+            [3, None]
         ]
     )
     bts = bt.list_column.json[{'_type': 'a'}: {'id': 'd'}]
@@ -219,10 +219,10 @@ def test_json_getitem_query(pg_engine, dtype):
         bts,
         expected_columns=['_index_row', 'list_column'],
         expected_data=[
-            [0, []],
-            [1, []],
+            [0, None],
+            [1, None],
             [2, [{"_type": "a", "id": "b"}, {"_type": "c", "id": "d"}]],
-            [3, []]
+            [3, None]
         ]
     )
 

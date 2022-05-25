@@ -373,8 +373,10 @@ class JsonBigQueryAccessor:
             "'[' || ARRAY_TO_STRING(ARRAY({}), ', ') || ']'",
             values_expression
         )
+        # For backwards compatability, we turn empty arrays into NULL
+        null_if_empty = Expression.construct("NULLIF({}, '[]')", json_str_expression)
         return self._series_object\
-            .copy_override(expression=json_str_expression)
+            .copy_override(expression=null_if_empty)
 
     def _get_slice_partial_expr(self, value: Optional[int], start: bool) -> Expression:
         """
@@ -519,12 +521,11 @@ class JsonPostgresAccessor:
             from jsonb_array_elements({{}}) with ordinality x
             where ordinality - 1 {where})"""
             expression_references += 1
-            non_null_expression = f"coalesce({combined_expression}, '[]'::jsonb)"
             return self._series_object\
                 .copy_override_dtype(dtype=self._return_dtype)\
                 .copy_override(
                     expression=Expression.construct(
-                        non_null_expression,
+                        combined_expression,
                         *([self._series_object] * expression_references)
                     )
                 )
