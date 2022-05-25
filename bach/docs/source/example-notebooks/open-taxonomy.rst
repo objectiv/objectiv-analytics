@@ -75,7 +75,7 @@ The location stack and global contexts are stored as json type data. Within the 
 **Slicing the json data**
 With the `.json[]` syntax you can slice the array using integers. Instead of integers, dictionaries can also be passed to 'query' the json array. If the passed dictionary matches a context object in the stack, all objects of the stack starting (or ending, depending on the slice) at that object will be returned.
 
-In case a json array does not contain the object, `None` is returned. More info at the :doc:`API reference <../bach/api-reference/Series/Jsonb/index>`.
+In case a json array does not contain the object, `None` is returned. More info at the :doc:`API reference <../bach/api-reference/Series/Json/index>`.
 
 .. _location_stack:
 
@@ -92,10 +92,12 @@ the column. The methods are:
 .. currentmodule:: modelhub.series.series_objectiv.SeriesLocationStack
 
 * The property accessors:
-    * :ref:`.ls.navigation_features <ls_navigation_features>`
-    * :ref:`.ls.feature_stack <ls_feature_stack>`
-    * :ref:`.ls.nice_name <ls_nice_name>` 
-* all :ref:`methods <json_accessor>` for the json(b) type can also be accessed using `.ls`
+
+  * :ref:`.ls.navigation_features <ls_navigation_features>`
+  * :ref:`.ls.feature_stack <ls_feature_stack>`
+  * :ref:`.ls.nice_name <ls_nice_name>` 
+
+* All methods of :doc:`SeriesJson <../bach/api-reference/Series/Json/index>` for the json type can also be accessed using `.ls`
 
 For example,
 
@@ -121,10 +123,12 @@ The `global_contexts` column in the DataFrame contain all information that is re
 
 * :doc:`.gc.get_from_context_with_type_series(type, key) <../open-model-hub/api-reference/SeriesGlobalContexts/modelhub.SeriesGlobalContexts.objectiv>`.
 * The property accessors:
-    * :ref:`.gc.cookie_id <gc_cookie_id>`
-    * :ref:`.gc.user_agent <gc_user_agent>`
-    * :ref:`.gc.application <gc_application>`
-* all :ref:`methods <json_accessor>` for the json(b) type can also be accessed using `.gc`
+
+  * :ref:`.gc.cookie_id <gc_cookie_id>`
+  * :ref:`.gc.user_agent <gc_user_agent>`
+  * :ref:`.gc.application <gc_application>`
+
+* All methods of :doc:`SeriesJson <../bach/api-reference/Series/Json/index>` for the json type can also be accessed using `.gc`
 
 The full `reference of global contexts is here
 <https://objectiv.io/docs/taxonomy/global-contexts>`_. An

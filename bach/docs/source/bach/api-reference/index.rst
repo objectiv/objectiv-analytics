@@ -31,8 +31,16 @@ This is the complete API reference of Bach.
     DataFrame/index
     Series/index
     Series/AbstractNumeric/index
-    Series/AbstractDateTime/index
     Series/Boolean/index
+    Series/Date/index
+    Series/Dict/index
+    Series/Float/index
+    Series/Int/index
     Series/Json/index
-    Series/JsonPG/index
+    Series/JsonPostgres/index
+    Series/List/index
     Series/String/index
+    Series/Time/index
+    Series/Timedelta/index
+    Series/Timestamp/index
+    Series/Uuid/index
