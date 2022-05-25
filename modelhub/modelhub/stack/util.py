@@ -12,7 +12,7 @@ class ObjectivSupportedColumns(Enum):
     GLOBAL_CONTEXTS = 'global_contexts'
     LOCATION_STACK = 'location_stack'
     EVENT_TYPE = 'event_type'
-    STACK_EVENT_TYPES = 'stack_event_type'
+    STACK_EVENT_TYPES = 'stack_event_types'
     SESSION_ID = 'session_id'
     SESSION_HIT_NUMBER = 'session_hit_number'
 
@@ -48,7 +48,7 @@ class ObjectivSupportedColumns(Enum):
         return cls._INDEX_SERIES.value
 
     @classmethod
-    def get_all_columns(cls) -> Tuple[str]:
+    def get_all_columns(cls) -> Tuple[str, ...]:
         return cls.get_index_columns() + cls.get_data_columns()
 
 
@@ -67,8 +67,11 @@ _OBJECTIV_SUPPORTED_COLUMNS_X_SERIES_CLS = {
 }
 
 
-def get_supported_dtypes_per_objectiv_column() -> Dict[ObjectivSupportedColumns, str]:
-    return {col.value: series_cls.dtype for col, series_cls in _OBJECTIV_SUPPORTED_COLUMNS_X_SERIES_CLS.items()}
+def get_supported_dtypes_per_objectiv_column() -> Dict[str, str]:
+    return {
+        col.value: series_cls.dtype
+        for col, series_cls in _OBJECTIV_SUPPORTED_COLUMNS_X_SERIES_CLS.items()
+    }
 
 
 def check_objectiv_dataframe(
@@ -77,10 +80,10 @@ def check_objectiv_dataframe(
     check_index: bool = False,
     check_dtypes: bool = False,
 ) -> None:
-    columns_to_check = columns_to_check or ObjectivSupportedColumns.get_all_columns()
+    columns = columns_to_check if columns_to_check else ObjectivSupportedColumns.get_all_columns()
     supported_dtypes = get_supported_dtypes_per_objectiv_column()
 
-    for col in columns_to_check:
+    for col in columns:
         supported_col = ObjectivSupportedColumns(col)
         if supported_col.value not in df.all_series:
             raise ValueError(f'{supported_col.value} is not present in DataFrame.')

@@ -9,8 +9,6 @@ from sqlalchemy.engine import Engine
 
 
 class BaseDataPipeline:
-    required_columns_x_dtypes = {}
-
     def __init__(self, engine: Engine, table_name: str):
         self._engine = engine
         self._table_name = table_name
@@ -29,8 +27,7 @@ class BaseDataPipeline:
     def _get_pipeline_result(self, **kwargs) -> bach.DataFrame:
         raise NotImplementedError()
 
-    def _validate_data_columns(self, current_columns: List[str]) -> None:
-        expected_columns = list(self.required_columns_x_dtypes.keys())
+    def _validate_data_columns(self, expected_columns: List[str], current_columns: List[str]) -> None:
         missing_columns = set(expected_columns) - set(current_columns)
         if missing_columns:
             raise KeyError(

@@ -20,20 +20,23 @@ class _BaseCalculatedSessionSeries(Enum):
 
 
 class SessionizedDataPipeline(BaseDataPipeline):
-    # requested context_df MUST have at least this columns
-    required_columns_x_dtypes = {
-        ObjectivSupportedColumns.EVENT_ID.value: bach.SeriesUuid.dtype,
-        ObjectivSupportedColumns.USER_ID.value: bach.SeriesUuid.dtype,
-        ObjectivSupportedColumns.MOMENT.value: bach.SeriesTimestamp.dtype,
-    }
-
     def _get_pipeline_result(self, session_gap_seconds=180, **kwargs) -> bach.DataFrame:
         context_df = get_extracted_contexts_df(
             engine=self._engine, table_name=self._table_name, set_index=False, **kwargs,
         )
-        self._validate_data_columns(current_columns=context_df.data_columns)
+        self._validate_data_columns(
+            # context dataframe MUST have this columns
+            expected_columns=[
+                ObjectivSupportedColumns.EVENT_ID.value,
+                ObjectivSupportedColumns.USER_ID.value,
+                ObjectivSupportedColumns.MOMENT.value,
+            ],
+            current_columns=context_df.data_columns,
+        )
 
-        sessionized_df = self._calculate_base_session_series(context_df, session_gap_seconds=session_gap_seconds)
+        sessionized_df = self._calculate_base_session_series(
+            context_df, session_gap_seconds=session_gap_seconds,
+        )
 
         # adds required objectiv session series
         sessionized_df = self._calculate_objectiv_session_series(sessionized_df)
@@ -116,11 +119,14 @@ class SessionizedDataPipeline(BaseDataPipeline):
         moment_series = df[ObjectivSupportedColumns.MOMENT.value]
 
         # create lag series with correct expression
-        # this way we avoid materializing when doing an arithmetic operation with window function result
-        lag_moment = moment_series.copy_override(expression=moment_series.window_lag(window=window).expression)
+        # this way we avoid materializing when
+        # doing an arithmetic operation with window function result
+        lag_moment = moment_series.copy_override(
+            expression=moment_series.window_lag(window=window).expression,
+        )
         lag_moment = lag_moment.copy_override_type(bach.SeriesTimestamp)
 
-        total_duration_session = moment_series - lag_moment
+        total_duration_session = (moment_series - lag_moment).copy_override_type(bach.SeriesTimedelta)
 
         result_series_name = _BaseCalculatedSessionSeries.IS_START_OF_SESSION.value
         df_cp = df.copy()
@@ -148,7 +154,9 @@ class SessionizedDataPipeline(BaseDataPipeline):
 
         result_series_name = _BaseCalculatedSessionSeries.SESSION_START_ID.value
         df_cp = df.copy()
-        df_cp[result_series_name] = bach.SeriesInt64.from_value(base=df_cp, value=None, name=result_series_name)
+        df_cp[result_series_name] = bach.SeriesInt64.from_value(
+            base=df_cp, value=None, name=result_series_name,
+        )
         df_cp.loc[start_session_series, result_series_name] = session_start_id
         return df_cp[result_series_name]
 
@@ -176,4 +184,3 @@ def get_sessionized_data(engine: Engine, table_name: str, set_index: bool = True
         result = result.set_index(keys=indexes)
 
     return result
-

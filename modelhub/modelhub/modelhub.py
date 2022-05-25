@@ -78,7 +78,7 @@ class ModelHub:
 
     @staticmethod
     def _get_db_engine(db_url: Optional[str], bq_credentials_path: Optional[str] = None) -> Engine:
-        if re.match(r'^bigquery://.+', db_url):
+        if db_url and re.match(r'^bigquery://.+', db_url):
             if not bq_credentials_path:
                 raise ValueError('BigQuery credentials path is required for engine creation.')
 

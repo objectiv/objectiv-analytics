@@ -5,10 +5,12 @@ import operator
 from functools import reduce
 
 import bach
-from typing import  Optional
+from typing import Optional, Any, Mapping, Dict
 
-from sql_models.model import CustomSqlModelBuilder
-from sql_models.util import quote_identifier, is_bigquery
+from bach.types import StructuredDtype
+from mypy.build import NamedTuple
+from sql_models.constants import DBDialect
+from sql_models.util import is_bigquery, is_postgres
 from sqlalchemy.engine import Engine
 
 from modelhub.stack.util import (
@@ -17,75 +19,146 @@ from modelhub.stack.util import (
 from modelhub.stack.base_pipeline import BaseDataPipeline
 
 
+class TaxonomyColumnDefinition(NamedTuple):
+    name: str
+    dtype: Any
+
+
+_DEFAULT_TAXONOMY_DTYPE_PER_FIELD = {
+    '_type': bach.SeriesString.dtype,
+    '_types': bach.SeriesJson.dtype,
+    'global_contexts': bach.SeriesJson.dtype,
+    'location_stack': bach.SeriesJson.dtype,
+    'time': bach.SeriesInt64.dtype,
+}
+
+# current Postgres definition, rename this if other engines use other structure
+_PG_TAXONOMY_COLUMN = TaxonomyColumnDefinition(name='value', dtype=bach.SeriesJson.dtype)
+
+_BQ_TAXONOMY_COLUMN = TaxonomyColumnDefinition(
+    name='contexts_io_objectiv_taxonomy_1_0_0',  # change only when version is updated
+    dtype=[
+        {
+            **_DEFAULT_TAXONOMY_DTYPE_PER_FIELD,
+            'cookie_id': bach.SeriesUuid.dtype,
+            'event_id': bach.SeriesUuid.dtype,
+        },
+    ],
+)
+
+
+def _get_taxonomy_column_definition(engine: Engine) -> TaxonomyColumnDefinition:
+    if is_postgres(engine):
+        return _PG_TAXONOMY_COLUMN
+
+    if is_bigquery(engine):
+        return _BQ_TAXONOMY_COLUMN
+
+    raise Exception('define taxonomy definition for engine')
+
+
 class ExtractedContextsPipeline(BaseDataPipeline):
-    TAXONOMY_COLUMN = 'value'
-
-    # Expected structure of taxonomy JSON
-    TAXONOMY_STRUCTURE_DTYPE = {
-        '_type': bach.SeriesString.dtype,
-        '_types': bach.SeriesJson.dtype,
-        'global_contexts': bach.SeriesJson.dtype,
-        'location_stack': bach.SeriesJson.dtype,
-    }
-
     DATE_FILTER_COLUMN = ObjectivSupportedColumns.DAY.value
 
-    # default structure that will be considered for all engines, define otherwise in child class
-    required_columns_x_dtypes = {
-        'event_id': bach.SeriesUuid.dtype,
-        'day': bach.SeriesDate.dtype,
-        'moment': bach.SeriesTimestamp.dtype,
-        'cookie_id': bach.SeriesUuid.dtype,
-        TAXONOMY_COLUMN: bach.SeriesJson.dtype,
-    }
-
-    # mapping for column and supported columns by objectiv
-    context_column_aliases = {
-        'cookie_id': ObjectivSupportedColumns.USER_ID,
-        '_type': ObjectivSupportedColumns.EVENT_TYPE,
-        '_types': ObjectivSupportedColumns.STACK_EVENT_TYPES,
+    required_context_columns_per_dialect: Dict[DBDialect, Dict[str, StructuredDtype]] = {
+        DBDialect.POSTGRES: {
+            'event_id': bach.SeriesUuid.dtype,
+            'day': bach.SeriesDate.dtype,
+            'moment': bach.SeriesTimestamp.dtype,
+            'cookie_id': bach.SeriesUuid.dtype,
+        },
+        DBDialect.BIGQUERY: {},
     }
 
     def __init__(self, engine: Engine, table_name: str):
         super().__init__(engine, table_name)
+        self._taxonomy_column = _get_taxonomy_column_definition(engine)
 
         # check if table has all required columns for pipeline
         dtypes = bach.from_database.get_dtypes_from_table(
             engine=self._engine,
             table_name=self._table_name,
         )
-        self._validate_data_columns(current_columns=list(dtypes.keys()))
+        self._validate_data_columns(
+            expected_columns=list(self._get_base_dtypes().keys()),
+            current_columns=list(dtypes.keys()),
+        )
 
     def _get_pipeline_result(self, **kwargs) -> bach.DataFrame:
-        context_df = bach.DataFrame.from_table(
-            table_name=self._table_name,
-            engine=self._engine,
-            index=[],
-            all_dtypes=self.required_columns_x_dtypes,
-        )
-        context_df = self._apply_date_filter(context_df=context_df, **kwargs)
-        context_df = self._process_base_data(context_df)
-        context_df = self._apply_aliases(context_df)
+        context_df = self._get_initial_data()
+        context_df = self._process_taxonomy_data(context_df)
+        context_df = self._apply_extra_processing(context_df)
         context_df = self._convert_dtypes(context_df)
+        context_df = self._apply_date_filter(context_df=context_df, **kwargs)
 
         final_columns = list(ObjectivSupportedColumns.get_extracted_context_columns())
         context_df = context_df[final_columns]
 
         return context_df.materialize(node_name='context_data')
 
-    def _process_base_data(self, df: bach.DataFrame) -> bach.DataFrame:
-        df_cp = df.copy()
+    def _get_base_dtypes(self) -> Mapping[str, StructuredDtype]:
+        db_dialect = DBDialect.from_engine(self._engine)
+        return {
+            self._taxonomy_column.name: self._taxonomy_column.dtype,
+            **self.required_context_columns_per_dialect[db_dialect],
+        }
 
-        # extract columns from taxonomy json
-        taxonomy_series = df[self.TAXONOMY_COLUMN].copy_override_type(bach.SeriesJson)
-        for key, dtype in self.TAXONOMY_STRUCTURE_DTYPE.items():
-            taxonomy_col = taxonomy_series.json.get_value(key, as_str=True)
-            taxonomy_col = taxonomy_col.copy_override(name=key)
+    def _get_initial_data(self) -> bach.DataFrame:
+        return bach.DataFrame.from_table(
+            table_name=self._table_name,
+            engine=self._engine,
+            index=[],
+            all_dtypes=self._get_base_dtypes(),
+        )
+
+    def _process_taxonomy_data(self, df: bach.DataFrame) -> bach.DataFrame:
+        df_cp = df.copy()
+        taxonomy_series = df_cp[self._taxonomy_column.name]
+        dtypes = _DEFAULT_TAXONOMY_DTYPE_PER_FIELD
+
+        if is_bigquery(df.engine):
+            # taxonomy column is a list, we just need to get the first value (LIST IS ALWAYS A SINGLE EVENT)
+            taxonomy_series = taxonomy_series.elements[0]
+            dtypes = self._taxonomy_column.dtype[0]
+
+        for key, dtype in dtypes.items():
+            # parsing element to string and then to dtype will avoid
+            # conflicts between casting compatibility
+            if isinstance(taxonomy_series, bach.SeriesJson):
+                taxonomy_col = taxonomy_series.json.get_value(key, as_str=True)
+            else:
+                taxonomy_col = taxonomy_series.elements[key].astype('string')
+
+            taxonomy_col = taxonomy_col.astype(dtype).copy_override(name=key)
             df_cp[key] = taxonomy_col
+
+        # rename series to objectiv supported
+        df_cp = df_cp.rename(
+            columns={
+                'cookie_id': ObjectivSupportedColumns.USER_ID.value,
+                '_type': ObjectivSupportedColumns.EVENT_TYPE.value,
+                '_types': ObjectivSupportedColumns.STACK_EVENT_TYPES.value,
+            },
+        )
+
+        return df_cp.materialize(node_name='extracted_taxonomy')
+
+    def _apply_extra_processing(self, df: bach.DataFrame) -> bach.DataFrame:
+        df_cp = df.copy()
+        if not is_bigquery(self._engine):
+            return df_cp
+
+        # extra processing needed for moment and day columns
+        df_cp['moment'] = df_cp['time'].copy_override(
+            expression=bach.Expression.construct(f'TIMESTAMP_MILLIS({{}})', df_cp['time']),
+        )
+        df_cp['moment'] = df_cp['moment'].copy_override_type(bach.SeriesTimestamp)
+        df_cp['day'] = df_cp['moment'].astype('date')
 
         return df_cp
 
-    def _convert_dtypes(self, df: bach.DataFrame) -> bach.DataFrame:
+    @staticmethod
+    def _convert_dtypes(df: bach.DataFrame) -> bach.DataFrame:
         df_cp = df.copy()
         objectiv_dtypes = get_supported_dtypes_per_objectiv_column()
         for col in ObjectivSupportedColumns.get_extracted_context_columns():
@@ -124,107 +197,11 @@ class ExtractedContextsPipeline(BaseDataPipeline):
 
         return context_df_cp[reduce(operator.and_, date_filters)]
 
-    def _apply_aliases(self, context_df: bach.DataFrame) -> bach.DataFrame:
-        columns_to_rename = {
-            col_name: alias.value
-            for col_name, alias in self.context_column_aliases.items()
-            if col_name in context_df.data
-        }
-        if not columns_to_rename:
-            return context_df
-
-        return context_df.rename(columns=columns_to_rename)
-
-
-class BigQueryExtractedContextsPipeline(ExtractedContextsPipeline):
-    # change when version is updated
-    TAXONOMY_COLUMN = 'contexts_io_objectiv_taxonomy_1_0_0'
-    # Expected structure of taxonomy JSON
-    TAXONOMY_STRUCTURE_DTYPE = {
-        **ExtractedContextsPipeline.TAXONOMY_STRUCTURE_DTYPE,
-        'cookie_id': bach.SeriesUuid.dtype,
-        'event_id': bach.SeriesUuid.dtype,
-        'time': bach.SeriesTimestamp.dtype,
-    }
-
-    DATE_FILTER_COLUMN = 'load_tstamp'
-
-    # constant used for referring to unnested taxonomy column
-    UNNESTED_TAXONOMY_COLUMN = 'taxonomy'
-
-    required_columns_x_dtypes = {
-        DATE_FILTER_COLUMN: bach.SeriesDate.dtype,
-        TAXONOMY_COLUMN: [TAXONOMY_STRUCTURE_DTYPE],  # expect list of taxonomy per registry
-    }
-
-    # mapping for column and supported columns by objectiv
-    context_column_aliases = {
-        **ExtractedContextsPipeline.context_column_aliases,
-        DATE_FILTER_COLUMN: ObjectivSupportedColumns.DAY,
-        'time': ObjectivSupportedColumns.MOMENT,
-    }
-
-    def _process_base_data(self, context_df: bach.DataFrame) -> bach.DataFrame:
-        dialect = self._engine.dialect
-
-        # TODO: Replace this when bach supports UNNEST for SeriesList
-        context_dtypes = self.required_columns_x_dtypes
-        taxonomy_columns_dtypes = context_dtypes[self.TAXONOMY_COLUMN][0]
-        other_columns_dtypes = {
-            col: dtype for col, dtype in context_dtypes.items() if col != self.TAXONOMY_COLUMN
-        }
-
-        all_dtypes = {**taxonomy_columns_dtypes, **other_columns_dtypes}
-
-        column_exprs = []
-        for col in all_dtypes.keys():
-            if col not in taxonomy_columns_dtypes:
-                expr = bach.expression.Expression.column_reference(col)
-            else:
-                # reference to the unnested column and add alias
-                table_ref = bach.expression.Expression.table_column_reference(
-                    table_name=self.UNNESTED_TAXONOMY_COLUMN, field_name=col,
-                )
-                expr = bach.expression.Expression.construct_expr_as_name(expr=table_ref, name=col)
-
-            column_exprs.append(expr)
-
-        column_stmt = bach.expression.join_expressions(column_exprs).to_sql(dialect)
-
-        sql = (
-            f'SELECT {column_stmt} '
-            f'from {{{{context_node}}}} '
-            f'cross join unnest({quote_identifier(dialect, self.TAXONOMY_COLUMN)}) '
-            f'as {quote_identifier(dialect, self.UNNESTED_TAXONOMY_COLUMN)}'
-
-        )
-
-        model_builder = CustomSqlModelBuilder(sql=sql, name='unnested_taxonomy')
-        df = bach.DataFrame.from_model(
-            engine=self._engine,
-            model=model_builder(context_node=context_df.base_node),
-            index=[],
-            all_dtypes={
-                **taxonomy_columns_dtypes,
-                **other_columns_dtypes,
-            },
-        )
-
-        # time column contains integer values, we need to convert it into a timestamp
-        df['time'] = df['time'].copy_override(
-            expression=bach.expression.Expression.construct(f'TIMESTAMP_MILLIS({{}})', df['time']),
-        )
-        return df
-
 
 def get_extracted_contexts_df(
     engine: Engine, table_name: str, set_index=True, **kwargs
 ) -> bach.DataFrame:
-    if is_bigquery(engine):
-        pipeline = BigQueryExtractedContextsPipeline(engine=engine, table_name=table_name)
-    else:
-        pipeline = ExtractedContextsPipeline(engine=engine, table_name=table_name)
-
+    pipeline = ExtractedContextsPipeline(engine=engine, table_name=table_name)
     result = pipeline(**kwargs)
     if set_index:
         indexes = list(ObjectivSupportedColumns.get_index_columns())
