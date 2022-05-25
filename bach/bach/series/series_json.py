@@ -211,7 +211,7 @@ class SeriesJsonPostgres(SeriesJson):
     A Series that represents the json type.
 
     When `json` data is encountered in a sql table, this dtype is used. In the underlying sql, the data is
-    cast to the jsonb type. As a result all methods of the :py:class:`SeriesJsonb` can also be used with this
+    cast to the jsonb type. As a result all methods of the :py:class:`SeriesJson` can also be used with this
     `json` type series.
 
     **Database support and types**
