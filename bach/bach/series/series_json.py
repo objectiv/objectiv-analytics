@@ -336,25 +336,104 @@ class JsonBigQueryAccessor:
         """
         # TODO: leverage instance_dtype information here, if we have that
         if isinstance(key, int):
-            if key >= 0:
-                expression = Expression.construct(f'''JSON_QUERY({{}}, '$[{key}]')''', self._series_object)
-                return self._series_object.copy_override(expression=expression)
-            # case key <= 0
-            # BigQuery doesn't (yet) natively support this, so we emulate this.
-            expr_len = Expression.construct('ARRAY_LENGTH(JSON_EXTRACT_ARRAY({}))', self._series_object)
-            expr_offset = Expression.construct(f'OFFSET({{}} {key})', expr_len)
-            expression = Expression.construct('JSON_EXTRACT_ARRAY({})[{}]', self._series_object, expr_offset)
-            return self._series_object.copy_override(expression=expression)
+            return self.get_array_item(key)
 
         elif isinstance(key, str):
-            return self.get_value(key)
+            return self.get_dict_item(key)
 
         elif isinstance(key, slice):
-            if key.step:
-                raise NotImplementedError('slice steps not supported')
-            raise NotImplementedError()  # TODO
+            return self.get_array_slice(key)
 
         raise TypeError('Key should either be a string, integer, or slice.')
+
+    def get_array_slice(self, key: slice) -> 'SeriesJson':
+        """
+        Get items from toplevel array.
+
+        This assumes the top-level item in the json is an array. Will result in an exception (later on) if
+        that's not the case!
+
+        :param key: array-slice.
+        :returns: series with the selected values.
+        """
+        if key.step:
+            raise NotImplementedError('slice steps not supported')
+
+        start_expression = self._get_slice_partial_expr(value=key.start, start=True)
+        stop_expression = self._get_slice_partial_expr(value=key.stop, start=False)
+
+        values_expression = Expression.construct(
+            "select val "
+            "from unnest(JSON_EXTRACT_ARRAY({}, '$')) val with offset as pos "
+            "where pos >= {} and pos < {} "
+            "order by pos",
+            self._series_object, start_expression, stop_expression
+        )
+        json_str_expression = Expression.construct(
+            "'[' || ARRAY_TO_STRING(ARRAY({}), ', ') || ']'",
+            values_expression
+        )
+        return self._series_object\
+            .copy_override(expression=json_str_expression)
+
+    def _get_slice_partial_expr(self, value: Optional[int], start: bool) -> Expression:
+        """
+        Return expression for either the lower bound or upper bound of a slice.
+
+        Assumes that self._series_object is an array!
+
+        :param value: slice.start or slice.stop
+        :param start: whether value is the slice.start (True) or slice.stop (False) value
+        :return: Expression that will evaluate to an integer that can be used to compare against positions
+                    in the array.
+        """
+        if value is not None and not isinstance(value, int):
+            raise TypeError(f'Slice value must be None or an integer, value: {value}')
+
+        if value is None:
+            if start:
+                return Expression.construct('0')
+            else:
+                max_int = 2 ** 63 - 1
+                return Expression.construct(f'{max_int}')
+        elif value >= 0:
+            return Expression.construct(f'{value}')
+        else:
+            expr_len = Expression.construct('ARRAY_LENGTH(JSON_EXTRACT_ARRAY({}))', self._series_object)
+            return Expression.construct(f'({{}} {value})', expr_len)
+
+    def get_array_item(self, key: int) -> 'SeriesJson':
+        """
+        Get item from toplevel array.
+
+        This assumes the top-level item in the json is an array. Will result in an exception (later on) if
+        that's not the case!
+
+        :param key: the 0-based index. If negative this will count from the end of the array (1 based). The
+            index MUST exist in the array
+        :returns: series with the selected value.
+        """
+        if key >= 0:
+            expression = Expression.construct(f'''JSON_QUERY({{}}, '$[{key}]')''', self._series_object)
+            return self._series_object.copy_override(expression=expression)
+        # case key <= 0
+        # BigQuery doesn't (yet) natively support this, so we emulate this.
+        expr_len = Expression.construct('ARRAY_LENGTH(JSON_EXTRACT_ARRAY({}))', self._series_object)
+        expr_offset = Expression.construct(f'OFFSET({{}} {key})', expr_len)
+        expression = Expression.construct('JSON_EXTRACT_ARRAY({})[{}]', self._series_object, expr_offset)
+        return self._series_object.copy_override(expression=expression)
+
+    def get_dict_item(self, key: str) -> 'SeriesJson':
+        """
+        Get item from toplevel object.
+
+        This assumes the top-level item in the json is an object. Will result in an exception (later on) if
+        that's not the case!
+
+        :param key: the key to return the values for.
+        :returns: series with the selected value.
+        """
+        return cast('SeriesJson', self.get_value(key=key, as_str=False))
 
     def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'SeriesJson']:
         """
@@ -365,6 +444,7 @@ class JsonBigQueryAccessor:
         :param as_str: if True, it returns a string Series, json otherwise.
         :returns: series with the selected object value.
         """
+        # TODO: as_str is never used?
         # TODO: ESCAPE KEY!
         # note: escaping is function dependent. for JSON_VALUE[1]: 'If a JSON key uses invalid JSONPath
         # characters, then you can escape those characters using double quotes.'

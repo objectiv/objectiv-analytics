@@ -1,7 +1,7 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-from sql_models.util import is_postgres
+from sql_models.util import is_postgres, is_bigquery
 from tests.functional.bach.test_data_and_utils import get_df_with_json_data, assert_equals_data
 import pytest
 
@@ -119,9 +119,10 @@ def test_json_getitem(engine, dtype):
     )
 
 
-def test_json_getitem_slice(pg_engine, dtype):
-    # TODO: BigQuery
-    bt = get_df_with_json_data(engine=pg_engine, dtype=dtype)
+def test_json_getitem_slice(engine, dtype):
+    # TODO: make this a one-query test
+
+    bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bts = bt.list_column.json[1:]
     assert_equals_data(
         bts,
@@ -165,8 +166,23 @@ def test_json_getitem_slice(pg_engine, dtype):
     )
 
     bts = bt.mixed_column.json[1:-1]
-    with pytest.raises(Exception):  # slices only work on columns with only lists
-        bts.head()
+    # slices only work on columns with only lists
+    # But behaviour of Postgres and BigQuery is different. For now we just accept that's the way it is.
+    if is_postgres(engine):
+        with pytest.raises(Exception):
+           bts.head()
+    if is_bigquery(engine):
+        assert_equals_data(
+            bts,
+            use_to_pandas=True,
+            expected_columns=['_index_row', 'mixed_column'],
+            expected_data=[
+                [0, []],
+                [1, ["b", "c"]],
+                [2, []],
+                [3, [{"_type": "SectionContext", "id": "home"}, {"_type": "SectionContext", "id": "top-10"}]]
+            ]
+        )
 
 
 # tests below are for functions kind of specific to the objectiv (location) stack
