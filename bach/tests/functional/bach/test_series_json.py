@@ -125,6 +125,7 @@ def test_json_getitem_slice(pg_engine, dtype):
     bts = bt.list_column.json[1:]
     assert_equals_data(
         bts,
+        use_to_pandas=True,
         expected_columns=['_index_row', 'list_column'],
         expected_data=[
             [0, [{"c": "d"}]],
@@ -137,14 +138,32 @@ def test_json_getitem_slice(pg_engine, dtype):
     bts = bt.list_column.json[1:-1]
     assert_equals_data(
         bts,
+        use_to_pandas=True,
         expected_columns=['_index_row', 'list_column'],
         expected_data=[
-            [0, None],
+            [0, []],
             [1, ["b", "c"]],
             [2, [{"_type": "c", "id": "d"}]],
             [3, [{"_type": "SectionContext", "id": "home"}, {"_type": "SectionContext", "id": "top-10"}]]
         ]
     )
+    bts = bt.list_column.json[:]
+    assert_equals_data(
+        bts,
+        use_to_pandas=True,
+        expected_columns=['_index_row', 'list_column'],
+        expected_data=[
+            [0, [{'a': 'b'}, {'c': 'd'}]],
+            [1, ['a', 'b', 'c', 'd']],
+            [2, [{'id': 'b', '_type': 'a'}, {'id': 'd', '_type': 'c'}, {'id': 'f', '_type': 'e'}]],
+            [3, [
+                {'id': '#document', '_type': 'WebDocumentContext'},
+                {'id': 'home', '_type': 'SectionContext'},
+                {'id': 'top-10', '_type': 'SectionContext'}, {'id': '5o7Wv5Q5ZE', '_type': 'ItemContext'}]
+             ]
+        ]
+    )
+
     bts = bt.mixed_column.json[1:-1]
     with pytest.raises(Exception):  # slices only work on columns with only lists
         bts.head()
@@ -161,9 +180,9 @@ def test_json_getitem_query(pg_engine, dtype):
         bts,
         expected_columns=['_index_row', 'list_column'],
         expected_data=[
-            [0, None],
-            [1, None],
-            [2, None],
+            [0, []],
+            [1, []],
+            [2, []],
             [3, [{"_type": "SectionContext", "id": "home"}, {"_type": "SectionContext", "id": "top-10"},
                  {"_type": "ItemContext", "id": "5o7Wv5Q5ZE"}]]
         ]
@@ -173,10 +192,10 @@ def test_json_getitem_query(pg_engine, dtype):
         bts,
         expected_columns=['_index_row', 'list_column'],
         expected_data=[
-            [0, None],
-            [1, None],
+            [0, []],
+            [1, []],
             [2, [{"_type": "c", "id": "d"}]],
-            [3, None]
+            [3, []]
         ]
     )
     bts = bt.list_column.json[{'_type': 'a'}: {'id': 'd'}]
@@ -184,10 +203,10 @@ def test_json_getitem_query(pg_engine, dtype):
         bts,
         expected_columns=['_index_row', 'list_column'],
         expected_data=[
-            [0, None],
-            [1, None],
+            [0, []],
+            [1, []],
             [2, [{"_type": "a", "id": "b"}, {"_type": "c", "id": "d"}]],
-            [3, None]
+            [3, []]
         ]
     )
 

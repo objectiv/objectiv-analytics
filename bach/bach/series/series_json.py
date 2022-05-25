@@ -23,7 +23,8 @@ class SeriesJson(Series):
     """
     A Series that represents the JSON type and its specific operations.
 
-    Depending on the database this Series is backed by different database types:
+
+    **Database support and types**
 
     * On Postgres this utilizes the native 'jsonb' database type.
     * On BigQuery this utilizes the generic 'STRING' database type.
@@ -429,16 +430,21 @@ class JsonPostgresAccessor:
                 else:
                     where = f'>= {start}'
             else:
-                where = f'<= {stop}'
+                if key.stop is not None:
+                    where = f'<= {stop}'
+                else:
+                    # no start and stop: we want to select all elements.
+                    where = 'is not null'  # should be true for all ordinalities.
             combined_expression = f"""(select jsonb_agg(x.value)
             from jsonb_array_elements({{}}) with ordinality x
             where ordinality - 1 {where})"""
             expression_references += 1
+            non_null_expression = f"coalesce({combined_expression}, '[]'::jsonb)"
             return self._series_object\
                 .copy_override_dtype(dtype=self._return_dtype)\
                 .copy_override(
                     expression=Expression.construct(
-                        combined_expression,
+                        non_null_expression,
                         *([self._series_object] * expression_references)
                     )
                 )
