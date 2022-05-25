@@ -38,12 +38,12 @@ def test_uuid_value_to_expression(engine):
          '0022c7dd-074b-4a44-a7cb-b7716b668264',
          uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), True, True, True],
     ]
-    expected_data = convert_uuid_expected_data(engine, expected_data)
 
     assert_equals_data(
         bt,
         expected_columns=['_index_skating_order', 'city', 'x', 'y', 'yy', 'z', 'zz', 'zzz'],
-        expected_data=expected_data
+        expected_data=expected_data,
+        convert_uuid=True,
     )
 
 
@@ -58,11 +58,11 @@ def test_uuid_from_dtype_to_sql(engine):
         [2, 'Snits', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), '0022c7dd-074b-4a44-a7cb-b7716b668264', 123456],
         [3, 'Drylts', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), '0022c7dd-074b-4a44-a7cb-b7716b668264', 123456],
     ]
-    expected_data = convert_uuid_expected_data(engine, expected_data)
     assert_equals_data(
         bt,
         expected_columns=['_index_skating_order', 'city', 'x', 'y', 'z'],
-        expected_data=expected_data
+        expected_data=expected_data,
+        convert_uuid=True,
     )
 
     bt = bt.astype({'x': 'uuid'})
@@ -74,11 +74,11 @@ def test_uuid_from_dtype_to_sql(engine):
         [2, 'Snits', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), 123456],
         [3, 'Drylts', uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'), 123456],
     ]
-    expected_data = convert_uuid_expected_data(engine, expected_data)
     assert_equals_data(
         bt,
         expected_columns=['_index_skating_order', 'city', 'x', 'y', 'z'],
-        expected_data=expected_data
+        expected_data=expected_data,
+        convert_uuid=True,
     )
 
 
@@ -161,17 +161,3 @@ def test_to_pandas(engine):
     result_pdf = bt[['a', 'c']].to_pandas()
     assert result_pdf[['a']].to_numpy()[0] == [uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264')]
     assert type(result_pdf[['a']].to_numpy()[0][0]) == type(uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'))
-
-
-def convert_uuid_expected_data(engine: Engine, data: List[List[Any]]) -> List[List[Any]]:
-    """
-    Convert any UUID objects in data to string, if we represent uuids with strings in the engine's dialect.
-    """
-    if is_postgres(engine):
-        return data
-    if is_bigquery(engine):
-        result = [
-            [str(cell) if isinstance(cell, uuid.UUID) else cell for cell in row]
-            for row in data
-        ]
-        return result
