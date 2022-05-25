@@ -107,8 +107,7 @@ def test_set_const_timedelta(engine):
     check_set_const(engine, constants, SeriesTimedelta, 'interval')
 
 
-def test_set_const_json(pg_engine):
-    engine = pg_engine  # TODO: BigQuery
+def test_set_const_json(engine):
     constants = [
         ['a', 'b', 'c'],
         {'a': 'b', 'c': 'd'},

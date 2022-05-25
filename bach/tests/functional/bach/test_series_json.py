@@ -26,12 +26,12 @@ def skip_jsonb_if_not_postgres(request):
         pytest.skip(msg='json_postgres dtype is only supported on Postgres. Skipping for other databases')
 
 
-# TODO: BigQuery
-def test_json_get_value(pg_engine, dtype):
-    bt = get_df_with_json_data(engine=pg_engine, dtype=dtype)
+def test_json_get_value(engine, dtype):
+    bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bts = bt.mixed_column.json.get_value('a')
     assert_equals_data(
         bts,
+        use_to_pandas=True,
         expected_columns=['_index_row', 'mixed_column'],
         expected_data=[
             [0, "b"],
@@ -42,14 +42,19 @@ def test_json_get_value(pg_engine, dtype):
     )
 
 
-def test_json_get_single_value(pg_engine, dtype):
-    bt = get_df_with_json_data(engine=pg_engine, dtype=dtype)
+def test_json_get_single_value(engine, dtype):
+    bt = get_df_with_json_data(engine=engine, dtype=dtype)
     a = bt.mixed_column[2]
     assert a == {'a': 'b', 'c': {'a': 'c'}}
 
 
-def test_json_compare(pg_engine, dtype):
-    bt = get_df_with_json_data(engine=pg_engine, dtype=dtype)
+
+@pytest.mark.skip_bigquery
+def test_json_compare(engine, dtype):
+    # These less-than-or-equals compares check that the left hand is contained in the right hand, on
+    # Postgres. On BigQuery we cannot support this, so we skip this function for BQ on purpose.
+    # TODO: maybe get rid of the Postgres support too?
+    bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bts = {"a": "b"} <= bt.mixed_column
     assert_equals_data(
         bts,
@@ -74,11 +79,12 @@ def test_json_compare(pg_engine, dtype):
     )
 
 
-def test_json_getitem(pg_engine, dtype):
-    bt = get_df_with_json_data(engine=pg_engine, dtype=dtype)
+def test_json_getitem(engine, dtype):
+    bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bts = bt.mixed_column.json[0]
     assert_equals_data(
         bts,
+        use_to_pandas=True,
         expected_columns=['_index_row', 'mixed_column'],
         expected_data=[
             [0, None],
@@ -90,6 +96,7 @@ def test_json_getitem(pg_engine, dtype):
     bts = bt.mixed_column.json[-2]
     assert_equals_data(
         bts,
+        use_to_pandas=True,
         expected_columns=['_index_row', 'mixed_column'],
         expected_data=[
             [0, None],
@@ -101,6 +108,7 @@ def test_json_getitem(pg_engine, dtype):
     bts = bt.mixed_column.json["a"]
     assert_equals_data(
         bts,
+        use_to_pandas=True,
         expected_columns=['_index_row', 'mixed_column'],
         expected_data=[
             [0, "b"],
@@ -112,6 +120,7 @@ def test_json_getitem(pg_engine, dtype):
 
 
 def test_json_getitem_slice(pg_engine, dtype):
+    # TODO: BigQuery
     bt = get_df_with_json_data(engine=pg_engine, dtype=dtype)
     bts = bt.list_column.json[1:]
     assert_equals_data(
@@ -143,6 +152,7 @@ def test_json_getitem_slice(pg_engine, dtype):
 
 # tests below are for functions kind of specific to the objectiv (location) stack
 def test_json_getitem_query(pg_engine, dtype):
+    # TODO: BigQuery
     bt = get_df_with_json_data(engine=pg_engine, dtype=dtype)
     # if dict is contained in any of the dicts in the json list, the first index of the first match is
     # returned to the slice.
