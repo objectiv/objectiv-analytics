@@ -26,7 +26,7 @@ const DEFAULT_AUTO_START = true;
  */
 export const EventRecorder = new (class implements EventRecorderInterface {
   readonly transportName = 'EventRecorder';
-  enabled: boolean = true;
+  enabled: boolean = DEFAULT_ENABLED;
   maxEvents: number = DEFAULT_MAX_EVENTS;
   autoStart: boolean = DEFAULT_AUTO_START;
   recording: boolean = this.enabled && this.autoStart;
