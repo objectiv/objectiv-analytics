@@ -57,6 +57,7 @@ Sql Model
     :toctree:
 
     Series.base_node
+    Series.materialize
     Series.view_sql
 
 Comparison and set operations
@@ -76,6 +77,7 @@ Conversion, reshaping, sorting
 .. autosummary::
     :toctree:
 
+    Series.reset_index
     Series.sort_index
     Series.sort_values
     Series.fillna

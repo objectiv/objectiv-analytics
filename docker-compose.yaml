@@ -1,8 +1,12 @@
 # Start the Objectiv Pipeline.
 #
-# By default uses images from eu.gcr.io/objectiv-production
-# To use locally built images set the OBJECTIV_CONTAINER_URL variable to just "objectiv"
-# To use a specific image version instead of latest set OBJECTIV_CONTAINER_TAG
+# can simply be run using:
+# `docker-compose up -d`
+# No need to set any environment variables.
+#
+# By default this uses ready built images from dockerhub, or local images if available. To use a different
+# image repository, set OBJECTIV_CONTAINER_URL to that repo.
+# To use a specific image tag instead of latest set OBJECTIV_CONTAINER_TAG
 
 # WARNING: The postgres configuration here doesn't actually check passwords! This is for local testing only
 
@@ -35,7 +39,6 @@ services:
     container_name: objectiv_collector
     depends_on:
       - objectiv_postgres
-    # default image: eu.gcr.io/objectiv-production/backend:latest
     image: ${OBJECTIV_CONTAINER_URL-objectiv}/backend:${OBJECTIV_CONTAINER_TAG-latest}
     working_dir: /services
     entrypoint: bash -c "objectiv-db-init; ./entry_point.sh"
@@ -76,7 +79,6 @@ services:
 
   objectiv_notebook:
     container_name: objectiv_notebook
-    # default image: eu.gcr.io/objectiv-production/notebook:latest
     image: ${OBJECTIV_CONTAINER_URL-objectiv}/notebook:${OBJECTIV_CONTAINER_TAG-latest}
     ports:
       - "127.0.0.1:8888:8888"

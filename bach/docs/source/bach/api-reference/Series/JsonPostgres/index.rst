@@ -1,4 +1,4 @@
-.. _bach_reference_series_jsonb:
+.. _bach_reference_series_json_postgres:
 
 .. currentmodule:: bach
 
@@ -6,7 +6,7 @@
 Jsonb
 =====
 
-.. autoclass:: SeriesJsonb
+.. autoclass:: SeriesJsonPostgres
     :noindex:
 
 
@@ -17,4 +17,3 @@ Methods
 .. autosummary::
     :toctree: 
 
-    SeriesJsonb.json

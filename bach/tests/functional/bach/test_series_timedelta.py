@@ -7,28 +7,34 @@ import numpy as np
 import pandas as pd
 
 from bach import DataFrame
-from tests.functional.bach.test_data_and_utils import get_bt_with_food_data, assert_equals_data, \
-    get_bt_with_test_data
+from tests.functional.bach.test_data_and_utils import assert_equals_data, \
+    get_bt_with_test_data, get_df_with_test_data, get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
 
 
-def test_timedelta_arithmetic(pg_engine):
-    # TODO: BigQuery
+def test_timedelta_arithmetic(engine):
     data = [
         ['d', datetime.date(2020, 3, 11), 'date', ('date', None)],
         ['t', datetime.time(23, 11, 5), 'time', (None, None)],
         ['td', datetime.timedelta(days=321, seconds=9877), 'timedelta', ('timedelta', 'timedelta')],
         ['dt', datetime.datetime(2021, 5, 3, 11, 28, 36, 388000), 'timestamp', ('timestamp', None)]
     ]
-    types_plus_min(pg_engine, data, datetime.timedelta(days=123, seconds=5621), 'timedelta')
+
+    types_plus_min(
+        engine,
+        data,
+        datetime.timedelta(days=123, seconds=5621),
+        'timedelta',
+        use_to_pandas=True,  # bq return MonthDayNano object, better to parse as pandas type
+    )
 
 
-def test_timedelta_arithmetic2():
-    bt = get_bt_with_test_data(full_data_set=True)[['inhabitants']]
+def test_timedelta_arithmetic2(engine):
+    bt = get_df_with_test_data(engine, full_data_set=True)[['inhabitants']]
     td = datetime.timedelta(days=365, seconds=9877)
     td2 = datetime.timedelta(days=23, seconds=12)
 
-    bt['td'] = td
+    bt['td'] = np.timedelta64(td)
     bt['td2'] = td2
     expected = [td, td2]
     expected_types = ['timedelta', 'timedelta']
@@ -46,12 +52,13 @@ def test_timedelta_arithmetic2():
         expected_columns=list(bt.all_series.keys()),
         expected_data=[
             [1, 93485, *expected],
-        ]
+        ],
+        use_to_pandas=True,
     )
 
 
-def test_timedelta():
-    mt = get_bt_with_food_data()[['skating_order', 'moment']]
+def test_timedelta(engine):
+    mt = get_df_with_food_data(engine)[['skating_order', 'moment']]
 
     # import code has no means to distinguish between date and timestamp
     gb = mt.groupby([]).aggregate({'moment': ['min', 'max']})
@@ -61,8 +68,13 @@ def test_timedelta():
         gb,
         expected_columns=['moment_min', 'moment_max', 'delta'],
         expected_data=[
-            [datetime.datetime(2021, 5, 3, 11, 28, 36, 388000), datetime.datetime(2022, 5, 3, 14, 13, 13, 388000), datetime.timedelta(days=365, seconds=9877)]
-        ]
+            [
+                datetime.datetime(2021, 5, 3, 11, 28, 36, 388000),
+                datetime.datetime(2022, 5, 3, 14, 13, 13, 388000),
+                datetime.timedelta(days=365, seconds=9877),
+            ]
+        ],
+        use_to_pandas=True,
     )
 
     r2 = gb[['delta']].groupby().mean()
@@ -71,7 +83,8 @@ def test_timedelta():
         expected_columns=['delta_mean'],
         expected_data=[
             [datetime.timedelta(days=365, seconds=9877)]
-        ]
+        ],
+        use_to_pandas=True,
     )
 
     r3 = r2['delta_mean'] + datetime.timedelta()
@@ -80,12 +93,13 @@ def test_timedelta():
         expected_columns=['delta_mean'],
         expected_data=[
             [datetime.timedelta(days=365, seconds=9877)]
-        ]
+        ],
+        use_to_pandas=True,
     )
 
 
-def test_to_pandas():
-    bt = get_bt_with_test_data()
+def test_to_pandas(engine):
+    bt = get_df_with_test_data(engine)
     bt['td'] = datetime.timedelta(days=321, seconds=9877)
     bt[['td']].to_pandas()
     # TODO, this is not great, but at least it does not error when imported into pandas,
@@ -93,7 +107,7 @@ def test_to_pandas():
     assert bt[['td']].to_numpy()[0] == [27744277000000000]
 
 
-def test_timedelta_operations(pg_engine):
+def test_timedelta_operations(engine):
     pdf = pd.DataFrame(
         data={
             'start_date': [
@@ -104,7 +118,7 @@ def test_timedelta_operations(pg_engine):
             ]
         }
     )
-    df = DataFrame.from_pandas(engine=pg_engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
 
     pdf['diff'] = pdf['end_date'] - pdf['start_date']
     df['diff'] = df['end_date'] - df['start_date']
@@ -114,28 +128,38 @@ def test_timedelta_operations(pg_engine):
     np.testing.assert_equal(expected.to_numpy(), result.sort_index().to_numpy())
 
 
-def test_timedelta_dt_properties(pg_engine) -> None:
+def test_timedelta_dt_properties(engine) -> None:
     pdf = pd.DataFrame(
         data={
             'start_date': [
                 np.datetime64("2022-01-01 12:34:56.7800"),
                 np.datetime64("2022-01-05 01:23:45.6700"),
                 np.datetime64("2022-01-10 02:34:56.7800"),
+                np.datetime64("2020-12-10 02:34:56.7800"),
+                np.datetime64("2022-01-05 01:23:45.1234567"),
+                np.datetime64("2022-01-05 01:23:45.6700"),
+                np.datetime64("2022-01-03"),
             ],
             'end_date': [
                 np.datetime64("2022-01-03"),
                 np.datetime64("2022-01-06"),
                 np.datetime64("2022-01-10"),
+                np.datetime64("2022-01-10"),
+                np.datetime64("2022-01-05 01:23:45.7700"),
+                np.datetime64("1999-12-31 01:23:45.6700"),
+                np.datetime64("2022-01-01 12:34:56.7800"),
             ]
         }
     )
-    df = DataFrame.from_pandas(engine=pg_engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
 
     pdf['diff'] = pdf['end_date'] - pdf['start_date']
     df['diff'] = df['end_date'] - df['start_date']
 
     dt_properties = ['days', 'seconds', 'microseconds']
-    properties_df = df.copy_override(
+    # properties df might have a different base node from parent timedelta series
+    total_seconds_df = df['diff'].dt.total_seconds.to_frame()
+    properties_df = total_seconds_df.copy_override(
         series={
             p: getattr(df['diff'].dt, p)
             for p in dt_properties
@@ -153,29 +177,39 @@ def test_timedelta_dt_properties(pg_engine) -> None:
     properties_df['total_seconds'] = df['diff'].dt.total_seconds
 
     expected_data = [
-        [1., 41103., 220000., 127503.22],
-        [0., 81374., 330000., 81374.33],
-        [-1., 77103., 220000., -9296.78],
+        [1.,   41103., 220000.,   127503.22],
+        [0.,   81374., 330000.,    81374.33],
+        [-1.,  77103., 220000.,    -9296.78],
+        [395., 77103., 220000., 34205103.22],
+        [0.,       0., 646544.,     0.64654],
+        [-8041.,   0.,      0., -694742400.],
+        [-2.,  45296., 780000.,  -127503.22],
     ]
-    np.testing.assert_equal(
-        expected_data, properties_df.sort_index().to_numpy()
+    np.testing.assert_almost_equal(
+        expected_data, properties_df.sort_index().to_numpy(), decimal=4,
     )
 
 
-def test_timedelta_dt_components(pg_engine) -> None:
+def test_timedelta_dt_components(engine) -> None:
     pdf = pd.DataFrame(
         data={
             'start_date': [
                 np.datetime64("2022-01-01 12:34:56.7800"),
                 np.datetime64("2022-01-05 01:23:45.6700"),
+                np.datetime64("2022-01-05 01:23:45.1234567"),
+                np.datetime64("2022-01-05 01:23:45.6700"),
+                np.datetime64("2022-01-03"),
             ],
             'end_date': [
                 np.datetime64("2022-01-03"),
                 np.datetime64("2022-01-06"),
+                np.datetime64("2022-01-05 01:23:45.7700"),
+                np.datetime64("1999-12-31 01:23:45.6700"),
+                np.datetime64("2022-01-01 12:34:56.7800"),
             ]
         }
     )
-    df = DataFrame.from_pandas(engine=pg_engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
 
     pdf['diff'] = pdf['end_date'] - pdf['start_date']
     df['diff'] = df['end_date'] - df['start_date']

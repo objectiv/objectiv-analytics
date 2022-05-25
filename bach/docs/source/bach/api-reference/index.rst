@@ -34,5 +34,5 @@ This is the complete API reference of Bach.
     Series/AbstractDateTime/index
     Series/Boolean/index
     Series/Json/index
-    Series/Jsonb/index
+    Series/JsonPG/index
     Series/String/index

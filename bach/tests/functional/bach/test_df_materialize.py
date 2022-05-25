@@ -8,7 +8,8 @@ import pytest
 from bach import SeriesUuid
 from sql_models.graph_operations import get_graph_nodes_info
 from sql_models.util import is_bigquery, is_postgres
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
+from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data, \
+    get_df_with_json_data
 
 
 @pytest.mark.parametrize("inplace", [False, True])
@@ -67,7 +68,7 @@ def test_materialize_with_non_aggregation_series(inplace: bool, engine):
     btg = bt.groupby('municipality')
     assert btg.group_by is not None
     with pytest.raises(ValueError, match="groupby set, but contains Series that have no aggregation func.*"
-                                         "\\['_index_skating_order', 'founding', 'inhabitants'\\]"):
+                                         "\\['founding', 'inhabitants'\\]"):
         btg.materialize(inplace=inplace)
 
     assert btg.base_node == bt.base_node
@@ -75,7 +76,7 @@ def test_materialize_with_non_aggregation_series(inplace: bool, engine):
     # Add one that's aggregated, should still fail
     btg['founding'] = btg.founding.sum()
     with pytest.raises(ValueError, match="groupby set, but contains Series that have no aggregation func.*"
-                                         "\\['_index_skating_order', 'inhabitants'\\]"):
+                                         "\\['inhabitants'\\]"):
         btg.materialize(inplace=inplace)
     assert btg.base_node == bt.base_node
 
@@ -91,7 +92,6 @@ def test_materialize_with_non_aggregation_series(inplace: bool, engine):
 
     # Fix the last one,
     btg['inhabitants'] = btg.inhabitants.sum()
-    btg['_index_skating_order'] = btg._index_skating_order.sum()
     bt_materialized = btg.copy().materialize(inplace=inplace)
     assert bt_materialized.base_node != btg.base_node
 
@@ -164,3 +164,15 @@ def test_is_materialized(engine):
     assert df.is_materialized
     del df['municipality']
     assert not df.is_materialized
+
+
+def test_is_materialized_json(pg_engine):
+    # Note that we only test the 'json' type here, not the Postgres specific json_postgres, as there is a known
+    # problem that is_materialized is always False if such a column is present.
+    engine = pg_engine  # TODO: BigQuery
+
+    df = get_df_with_json_data(engine=pg_engine, dtype='json')
+    assert df.is_materialized
+
+
+# TODO: we should probably have a test here for each dtype
