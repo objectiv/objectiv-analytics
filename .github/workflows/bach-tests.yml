@@ -83,11 +83,11 @@ jobs:
         run: |
           cd bach
           echo $GCP_SERVICE_ACCOUNT > $OBJ_DB_BQ_CREDENTIALS_PATH
-      - name: Unit tests BQ
+      - name: Unit tests ALL
         run: |
           cd bach
-          pytest -n 4 --dist loadgroup --big-query tests/unit tests/ -W error::DeprecationWarning
-      - name: Functional tests BQ
+          pytest -n 4 --dist loadgroup --all tests/unit tests/ -W error::DeprecationWarning
+      - name: Functional tests ALL
         run: |
           cd bach
-          pytest -n 4 --dist loadgroup --big-query tests/functional tests/ -W error::DeprecationWarning
+          pytest -n 4 --dist loadgroup --all tests/functional tests/ -W error::DeprecationWarning
