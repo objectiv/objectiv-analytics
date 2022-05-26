@@ -3,9 +3,8 @@ Copyright 2021 Objectiv B.V.
 """
 
 # Any import from modelhub initializes all the types, do not remove
-from modelhub import __version__, ModelHub
+from modelhub import __version__
 import pytest
-
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 from uuid import UUID
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
@@ -127,20 +126,14 @@ def test_is_new_user(db_params):
     )
 
 
-@pytest.mark.skip_bigquery
-def test_is_conversion_event(db_params): # TODO: Remove when bach supports json slicing for BigQuery
+@pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
+def test_is_conversion_event(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
     # add conversion event
-    modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
-                            event_type='ClickEvent',
-                            name='github_clicks')
-
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
     modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext',
                                                                          'id': 'cta-repo-button'}:],
                                   event_type='ClickEvent', name='github_clicks')
-
     s = modelhub.map.is_conversion_event(df, 'github_clicks')
 
     assert_equals_data(
@@ -175,6 +168,13 @@ def test_is_conversion_event(db_params): # TODO: Remove when bach supports json 
         ],
         order_by='event_id'
     )
+
+    # wrong conversion_event name
+    with pytest.raises(KeyError, match="not labeled as a conversion"):
+        modelhub.map.is_conversion_event(df, 'some_clicks')
+
+    with pytest.raises(KeyError, match="not labeled as a conversion"):
+        modelhub.map.is_conversion_event(df, None)
 
 
 @pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
