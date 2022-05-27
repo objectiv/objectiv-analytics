@@ -1,3 +1,6 @@
+"""
+Copyright 2021 Objectiv B.V.
+"""
 import bach
 
 from enum import Enum

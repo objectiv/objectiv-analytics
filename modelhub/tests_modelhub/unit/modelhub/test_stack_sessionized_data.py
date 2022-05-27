@@ -1,3 +1,6 @@
+"""
+Copyright 2022 Objectiv B.V.
+"""
 import bach
 import pandas as pd
 
@@ -18,7 +21,7 @@ def test_convert_dtypes(db_params) -> None:
     ).reset_index(drop=True)
 
     assert df['session_id'].dtype == 'string'
-    assert df['session_id'].dtype == 'string'
+    assert df['session_hit_number'].dtype == 'string'
 
     result = pipeline._convert_dtypes(df)
     assert result['session_id'].dtype == 'int64'

@@ -1,3 +1,6 @@
+"""
+Copyright 2022 Objectiv B.V.
+"""
 import bach
 import pandas as pd
 import pytest
