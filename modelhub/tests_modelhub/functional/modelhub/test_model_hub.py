@@ -126,126 +126,9 @@ def test_is_new_user(db_params):
     )
 
 
-@pytest.mark.skip_bigquery
+@pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
 def test_is_conversion_event(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
-
-    location_stack = df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
-    event_type = 'ClickEvent'
-    conversion = 'github_clicks'
-    modelhub.add_conversion_event(location_stack=location_stack,
-                                  event_type=event_type,
-                                  name=conversion)
-
-    assert isinstance(modelhub._conversion_events, dict)
-    assert len(modelhub._conversion_events) == 1
-    assert modelhub._conversion_events[conversion] == (location_stack, event_type)
-
-    ser = modelhub.map.is_conversion_event(df, 'github_clicks')
-    assert_equals_data(
-        ser,
-        expected_columns=['event_id', 'is_conversion_event'],
-        expected_data=[
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac302'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac304'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac305'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac306'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac307'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac308'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac309'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac310'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), False]
-        ],
-        order_by='event_id'
-    )
-
-    # location_stack not set
-    modelhub.add_conversion_event(event_type=event_type, name=conversion)
-    assert modelhub._conversion_events[conversion] == (None, event_type)
-
-    ser = modelhub.map.is_conversion_event(df, 'github_clicks')
-
-    assert_equals_data(
-        ser,
-        expected_columns=['event_id', 'is_conversion_event'],
-        expected_data=[
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac302'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac304'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac305'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac306'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac307'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac308'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac309'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac310'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
-        ],
-        order_by='event_id'
-    )
-
-    # event_type not set
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
-    modelhub.add_conversion_event(location_stack=location_stack, name='github_clicks')
-    assert len(modelhub._conversion_events) == 1
-    assert modelhub._conversion_events[conversion] == (location_stack, None)
-
-    ser = modelhub.map.is_conversion_event(df, 'github_clicks')
-
-    assert_equals_data(
-        ser,
-        expected_columns=['event_id', 'is_conversion_event'],
-        expected_data=[
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac302'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac304'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac305'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac306'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac307'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac308'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac309'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac310'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), False],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), False]
-        ],
-        order_by='event_id'
-    )
-
-    # name not set
-    modelhub.add_conversion_event(event_type='ClickEvent')
-    assert len(modelhub._conversion_events) == 2
-    assert modelhub._conversion_events['conversion_2'] == (None, event_type)
-
-    ser = modelhub.map.is_conversion_event(df, 'conversion_2')
-
-    assert_equals_data(
-        ser,
-        expected_columns=['event_id', 'is_conversion_event'],
-        expected_data=[
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac302'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac304'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac305'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac306'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac307'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac308'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac309'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac310'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
-        ],
-        order_by='event_id'
-    )
-
-
-def test_is_conversion_event():
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
 
     # add conversion event
     modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext',
@@ -294,7 +177,7 @@ def test_is_conversion_event():
         modelhub.map.is_conversion_event(df, None)
 
 
-@pytest.mark.skip_bigquery
+@pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
 def test_conversions_counter(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
@@ -365,7 +248,7 @@ def test_conversions_counter(db_params):
     )
 
 
-@pytest.mark.skip_bigquery
+@pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
 def test_conversions_in_time(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
@@ -411,7 +294,7 @@ def test_conversions_in_time(db_params):
     )
 
 
-@pytest.mark.skip_bigquery
+@pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
 def test_pre_conversion_hit_number(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
