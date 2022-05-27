@@ -1,9 +1,6 @@
-<<<<<<< HEAD
 """
 Copyright 2022 Objectiv B.V.
 """
-=======
->>>>>>> tests for sessionized data, more docstrings
 import bach
 import pandas as pd
 import pytest

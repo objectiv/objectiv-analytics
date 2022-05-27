@@ -1,9 +1,6 @@
-<<<<<<< HEAD
 """
 Copyright 2022 Objectiv B.V.
 """
-=======
->>>>>>> tests for sessionized data, more docstrings
 import bach
 import pandas as pd
 
@@ -24,11 +21,7 @@ def test_convert_dtypes(db_params) -> None:
     ).reset_index(drop=True)
 
     assert df['session_id'].dtype == 'string'
-<<<<<<< HEAD
     assert df['session_hit_number'].dtype == 'string'
-=======
-    assert df['session_id'].dtype == 'string'
->>>>>>> tests for sessionized data, more docstrings
 
     result = pipeline._convert_dtypes(df)
     assert result['session_id'].dtype == 'int64'
