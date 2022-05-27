@@ -2,12 +2,24 @@
 Copyright 2022 Objectiv B.V.
 
 ### Fixtures
+<<<<<<< HEAD
 There is some pytest 'magic' here that automatically fills out the db parameters for
 test functions that require an engine.
 By default such a test function will get a Postgres db parameters. But if --big-query or --all is
 specified on the commandline, then it will (also) get a BigQuery db parameters. For specific
 tests, it is possible to disable postgres or bigquery testing, see 'marks' section below.
 
+=======
+There is some pytest 'magic' here that automatically fills out the 'engine' and 'dialect' parameters for
+test functions that have either of those.
+By default such a test function will get a Postgres dialect or engine. But if --big-query or --all is
+specified on the commandline, then it will (also) get a BigQuery dialect or engine. For specific
+tests, it is possible to disable postgres or bigquery testing, see 'marks' section below.
+
+Additionally we define a 'pg_engine' fixture here that always return a Postgres engine. This fixture should
+not be used for new functions tho! After fully implementing BigQuery it will be removed.
+
+>>>>>>> BasePipeline, ExtractedContextsPipeline, SessionizedDataPipeline
 ### Marks and Test Categorization
 A lot of functionality needs to be tested for multiple databases. The 'engine' and 'dialects' fixtures
 mentioned above help with that. Additionally we have some marks (`@pytest.mark.<type>`) to make it explicit
@@ -22,11 +34,20 @@ We broadly want 5 categories of tests:
   *  functional-tests that run against all supported databases except Postgres (4)
   *  functional-tests that run against all supported databases except BigQuery (5)
 
+<<<<<<< HEAD
 1 and 3 are the default for tests. These either get 'db_params' as fixture and run against all
 databases. Category 2 are tests that test generic code that is not geared to a specific database.
 Category 4 and 5 are for functionality that we explicitly not support on some databases.
 
 Category 4, and 5 are the exception, these need to be marked with the `skip_postgres` or `skip_bigquery` marks.
+=======
+1 and 3 are the default for tests. These either get 'engine' or 'dialect' as fixture and run against all
+databases. Category 2 are tests that test generic code that is not geared to a specific database.
+Category 4 and 5 are for functionality that we explicitly not support on some databases.
+
+Category 2, 4, and 5 are the exception, these need to be marked with the `db_independent`, `skip_postgres`,
+or `skip_bigquery` marks.
+>>>>>>> BasePipeline, ExtractedContextsPipeline, SessionizedDataPipeline
 """
 import os
 from enum import Enum
@@ -34,7 +55,10 @@ from typing import Dict, NamedTuple, Optional
 
 import bach
 import pytest
+<<<<<<< HEAD
 from _pytest.fixtures import SubRequest
+=======
+>>>>>>> BasePipeline, ExtractedContextsPipeline, SessionizedDataPipeline
 from _pytest.main import Session
 from _pytest.python import Metafunc
 from _pytest.config.argparsing import Parser

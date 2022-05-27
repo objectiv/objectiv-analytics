@@ -215,4 +215,3 @@ def test_get_extracted_contexts_df(db_params) -> None:
     result = get_extracted_contexts_df(engine=engine, table_name=db_params.table_name, set_index=False)
     assert 'event_id' not in result.index
     assert 'event_id' in result.data
-
