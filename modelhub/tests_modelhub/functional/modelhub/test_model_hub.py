@@ -283,10 +283,10 @@ def test_is_conversion_event():
     )
 
     # wrong conversion_event name
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match="not labeled as a conversion"):
         modelhub.map.is_conversion_event(df, 'some_clicks')
 
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match="not labeled as a conversion"):
         modelhub.map.is_conversion_event(df, None)
 
 
