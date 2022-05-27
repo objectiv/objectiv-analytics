@@ -53,7 +53,11 @@ class WindowFunction(Enum):
 
     def supports_window_frame_clause(self, dialect: Dialect) -> bool:
         if is_bigquery(dialect):
-            return self.value not in WindowFunction._NUMBERING_FUNCTIONS.value
+            unsupported_nav_func = (WindowFunction.LAG.value, WindowFunction.LEAD.value,)
+            return (
+                self.value not in WindowFunction._NUMBERING_FUNCTIONS.value
+                and self.value not in unsupported_nav_func
+            )
 
         if is_postgres(dialect):
             return True
