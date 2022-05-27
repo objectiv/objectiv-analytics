@@ -2,14 +2,11 @@
 Copyright 2022 Objectiv B.V.
 
 ### Fixtures
-There is some pytest 'magic' here that automatically fills out the 'engine' and 'dialect' parameters for
-test functions that have either of those.
-By default such a test function will get a Postgres dialect or engine. But if --big-query or --all is
-specified on the commandline, then it will (also) get a BigQuery dialect or engine. For specific
+There is some pytest 'magic' here that automatically fills out the db parameters for
+test functions that require an engine.
+By default such a test function will get a Postgres db parameters. But if --big-query or --all is
+specified on the commandline, then it will (also) get a BigQuery db parameters. For specific
 tests, it is possible to disable postgres or bigquery testing, see 'marks' section below.
-
-Additionally we define a 'pg_engine' fixture here that always return a Postgres engine. This fixture should
-not be used for new functions tho! After fully implementing BigQuery it will be removed.
 
 ### Marks and Test Categorization
 A lot of functionality needs to be tested for multiple databases. The 'engine' and 'dialects' fixtures
@@ -25,12 +22,11 @@ We broadly want 5 categories of tests:
   *  functional-tests that run against all supported databases except Postgres (4)
   *  functional-tests that run against all supported databases except BigQuery (5)
 
-1 and 3 are the default for tests. These either get 'engine' or 'dialect' as fixture and run against all
+1 and 3 are the default for tests. These either get 'db_params' as fixture and run against all
 databases. Category 2 are tests that test generic code that is not geared to a specific database.
 Category 4 and 5 are for functionality that we explicitly not support on some databases.
 
-Category 2, 4, and 5 are the exception, these need to be marked with the `db_independent`, `skip_postgres`,
-or `skip_bigquery` marks.
+Category 4, and 5 are the exception, these need to be marked with the `skip_postgres` or `skip_bigquery` marks.
 """
 import os
 from enum import Enum
@@ -38,6 +34,7 @@ from typing import Dict, NamedTuple, Optional
 
 import bach
 import pytest
+from _pytest.fixtures import SubRequest
 from _pytest.main import Session
 from _pytest.python import Metafunc
 from _pytest.config.argparsing import Parser
@@ -64,11 +61,15 @@ _DB_PARAMS: Dict[DB, DBParams] = {}
 
 
 @pytest.fixture(autouse=True, scope='session')
-def setup_postgres_db() -> None:
-    if DB.POSTGRES not in _DB_PARAMS:
+def setup_postgres_db(request: SubRequest) -> None:
+    """
+    Helper for creating postgres database used by all functional tests. Only created if it is required
+    to run tests against Postgres.
+    """
+    if request.session.config.getoption("big_query"):
         return
 
-    db_params = _DB_PARAMS[DB.POSTGRES]
+    db_params = _get_postgres_db_params()
     engine = create_engine(url=db_params.url)
     setup_db(
         engine,
@@ -81,24 +82,6 @@ def setup_postgres_db() -> None:
             'value': bach.SeriesJson.supported_db_dtype[DBDialect.POSTGRES],
         },
     )
-
-
-def pytest_sessionstart(session: Session):
-    # Initialize _ENGINE_CACHE per pytest-xdist worker session based on current pytest running config.
-    # This way we avoid the creation of a new engine per test, as this is quite inefficient and might
-    # cause failures due to multiple clients trying to connect to db server.
-
-    # For more information, please see:
-    # https://pytest-xdist.readthedocs.io/en/latest/distribution.html
-    # https://docs.pytest.org/en/6.2.x/reference.html#pytest.hookspec.pytest_sessionstart
-
-    if session.config.getoption("all"):
-        _DB_PARAMS[DB.POSTGRES] = _get_postgres_db_params()
-        _DB_PARAMS[DB.BIGQUERY] = _get_bigquery_db_params()
-    elif session.config.getoption("big_query"):
-        _DB_PARAMS[DB.BIGQUERY] = _get_bigquery_db_params()
-    else:  # default option, don't even check if --postgres is set
-        _DB_PARAMS[DB.POSTGRES] = _get_postgres_db_params()
 
 
 def pytest_addoption(parser: Parser):
@@ -114,7 +97,7 @@ def pytest_addoption(parser: Parser):
 
 
 def pytest_generate_tests(metafunc: Metafunc):
-    # Paramaterize the 'engine_url' parameters of tests based on the options specified by the
+    # Paramaterize the 'db_params' parameters of tests based on the options specified by the
     # user (see pytest_addoption() for options).
 
     # This function will automatically be called by pytest while it is creating the list of tests to run,
@@ -124,12 +107,11 @@ def pytest_generate_tests(metafunc: Metafunc):
     skip_bigquery = any(mark.name == MARK_SKIP_BIGQUERY for mark in markers)
 
     db_params = []
-    for name, params in _DB_PARAMS.items():
-        if name == DB.POSTGRES and skip_postgres:
-            continue
-        if name == DB.BIGQUERY and skip_bigquery:
-            continue
-        db_params.append(params)
+    if not skip_postgres:
+        db_params.append(_get_postgres_db_params())
+
+    if not skip_bigquery:
+        db_params.append(_get_bigquery_db_params())
 
     if 'db_params' in metafunc.fixturenames:
         metafunc.parametrize("db_params", db_params)

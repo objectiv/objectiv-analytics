@@ -97,6 +97,7 @@ def check_objectiv_dataframe(
 ) -> None:
     """
     Helper function that determines if provided dataframe is an objectiv dataframe.
+    :param df: bach DataFrame to be checked
     :param columns_to_check: list of columns to verify,
         if not provided, all expected objectiv columns will be used instead.
     :param check_index: if true, will check if dataframe has expected index series

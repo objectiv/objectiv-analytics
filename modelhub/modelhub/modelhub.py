@@ -72,7 +72,8 @@ class ModelHub:
         """
         return self._conversion_events
 
-    def _check_data_is_objectiv_data(self, data: bach.DataFrame):
+    @staticmethod
+    def _check_data_is_objectiv_data(data: bach.DataFrame):
         """
         Validates that provided DataFrame is a representation of an objectiv dataframe.
         """
@@ -82,7 +83,8 @@ class ModelHub:
     @staticmethod
     def _get_db_engine(db_url: Optional[str], bq_credentials_path: Optional[str] = None) -> Engine:
         """
-        returns db_connection based on db_url. If db_url is for BigQuery, bq_credentials_path must be provided.
+        returns db_connection based on db_url.
+        If db_url is for BigQuery, bq_credentials_path must be provided.
         """
         if db_url and re.match(r'^bigquery://.+', db_url):
             if not bq_credentials_path:
