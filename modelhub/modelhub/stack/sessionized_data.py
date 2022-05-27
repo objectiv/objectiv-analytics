@@ -155,7 +155,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
           1. Grouping events by user ids and ordering by moment and event id
 
           2. Calculate the amount of time between previous and current event.
-            (event_lapsed_time = events[n-1][moment] - events[n][moment])
+            (event_lapsed_time = events[n][moment] - events[n-1][moment])
 
           3. How to determine if the event is start of a session:
             a) If the row is the first observed event for the user's entire history, then by default it is a
