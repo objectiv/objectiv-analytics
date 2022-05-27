@@ -57,9 +57,6 @@ class DBParams(NamedTuple):
     table_name: str
 
 
-_DB_PARAMS: Dict[DB, DBParams] = {}
-
-
 @pytest.fixture(autouse=True, scope='session')
 def setup_postgres_db(request: SubRequest) -> None:
     """
