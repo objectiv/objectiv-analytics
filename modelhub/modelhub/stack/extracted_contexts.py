@@ -32,7 +32,6 @@ _DEFAULT_TAXONOMY_DTYPE_PER_FIELD = {
     'time': bach.SeriesInt64.dtype,
 }
 
-# current Postgres definition, rename this if other engines use other structure
 _PG_TAXONOMY_COLUMN = TaxonomyColumnDefinition(name='value', dtype=bach.SeriesJson.dtype)
 
 _BQ_TAXONOMY_COLUMN = TaxonomyColumnDefinition(
