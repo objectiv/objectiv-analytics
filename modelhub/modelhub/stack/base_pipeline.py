@@ -9,6 +9,13 @@ from sqlalchemy.engine import Engine
 
 
 class BaseDataPipeline:
+    """
+    Abstract class that specifies the engine and table from where the pipeline will extract the data.
+    Child classes are in charge of implementing:
+     - _get_pipeline_result method, which is in charge of generating the correct bach DataFrame
+     - validate_pipeline_result method, which is in charge of verifying that the
+       pipeline is generating the expected result.
+    """
     def __init__(self, engine: Engine, table_name: str):
         self._engine = engine
         self._table_name = table_name

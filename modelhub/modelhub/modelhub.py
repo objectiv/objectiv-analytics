@@ -73,11 +73,17 @@ class ModelHub:
         return self._conversion_events
 
     def _check_data_is_objectiv_data(self, data: bach.DataFrame):
+        """
+        Validates that provided DataFrame is a representation of an objectiv dataframe.
+        """
         from modelhub.stack.util import check_objectiv_dataframe
-        check_objectiv_dataframe(data, columns_to_check=['event_id'], check_index=True)
+        check_objectiv_dataframe(data, check_index=True, check_dtypes=True, with_md_dtypes=True)
 
     @staticmethod
     def _get_db_engine(db_url: Optional[str], bq_credentials_path: Optional[str] = None) -> Engine:
+        """
+        returns db_connection based on db_url. If db_url is for BigQuery, bq_credentials_path must be provided.
+        """
         if db_url and re.match(r'^bigquery://.+', db_url):
             if not bq_credentials_path:
                 raise ValueError('BigQuery credentials path is required for engine creation.')
@@ -113,6 +119,9 @@ class ModelHub:
         :param end_date: last date for which data is loaded to the DataFrame. If None, data is loaded up to
             and including the last date in the sql table. Format as 'YYYY-MM-DD'.
 
+        :param bq_credentials_path: path for BigQuery credentials. If db_url is for BigQuery engine, this
+            parameter is required.
+
         :returns: :py:class:`bach.DataFrame` with Objectiv data.
         """
         engine = self._get_db_engine(db_url=db_url, bq_credentials_path=bq_credentials_path)
@@ -125,6 +134,7 @@ class ModelHub:
             table_name=table_name,
         )
 
+        # sessionized data returns both series as bach.SeriesJson.
         data['global_contexts'] = data.global_contexts.astype('objectiv_global_context')
         data['location_stack'] = data.location_stack.astype('objectiv_location_stack')
         return data

@@ -47,7 +47,7 @@ def _get_parsed_test_data_pandas_df(engine) -> pd.DataFrame:
     return pd.DataFrame(bq_data)
 
 
-def _get_expected_context_pandas_df(engine) -> pd.DataFrame:
+def get_expected_context_pandas_df(engine) -> pd.DataFrame:
     pdf = pd.DataFrame(get_parsed_objectiv_data(engine))
     context_pdf = pdf['value'].apply(pd.Series)
 
@@ -75,7 +75,7 @@ def test_get_pipeline_result(db_params) -> None:
     engine = context_pipeline._engine
 
     result = context_pipeline().sort_values(by='event_id').to_pandas()
-    expected = _get_expected_context_pandas_df(engine)
+    expected = get_expected_context_pandas_df(engine)
     pd.testing.assert_frame_equal(expected, result)
 
 
@@ -132,7 +132,7 @@ def test_process_taxonomy_data(db_params) -> None:
         assert expected_s in result.data
 
     result = result.sort_values(by='event_id')[expected_series]
-    expected = _get_expected_context_pandas_df(engine)[expected_series]
+    expected = get_expected_context_pandas_df(engine)[expected_series]
 
     pd.testing.assert_frame_equal(
         expected,
@@ -159,7 +159,7 @@ def test_apply_extra_processing(db_params) -> None:
     assert 'moment' not in df.data
     assert 'moment' in result.data
 
-    expected_data = _get_expected_context_pandas_df(engine)[['day', 'moment']].values.tolist()
+    expected_data = get_expected_context_pandas_df(engine)[['day', 'moment']].values.tolist()
     assert_equals_data(
         result.sort_values(by='event_id')[['day', 'moment']],
         expected_columns=['day', 'moment'],
@@ -172,7 +172,7 @@ def test_apply_date_filter(db_params) -> None:
     context_pipeline = _get_extracted_contexts_pipeline(db_params)
     engine = context_pipeline._engine
 
-    pdf = _get_expected_context_pandas_df(engine)[['event_id', 'day']]
+    pdf = get_expected_context_pandas_df(engine)[['event_id', 'day']]
     if is_bigquery(engine):
         pdf['event_id'] = pdf['event_id'].astype(str)
 
@@ -209,7 +209,7 @@ def test_get_extracted_contexts_df(db_params) -> None:
 
     result = get_extracted_contexts_df(engine=engine, table_name=db_params.table_name)
     result = result.sort_index()
-    expected = _get_expected_context_pandas_df(engine).set_index('event_id')
+    expected = get_expected_context_pandas_df(engine).set_index('event_id')
     pd.testing.assert_frame_equal(expected, result.to_pandas())
 
     result = get_extracted_contexts_df(engine=engine, table_name=db_params.table_name, set_index=False)

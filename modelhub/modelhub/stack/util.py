@@ -1,9 +1,12 @@
 import bach
 
 from enum import Enum
-from typing import Tuple, Dict, Any, List, Optional
+from typing import Tuple, Dict, List
+
+from modelhub.series import series_objectiv
 
 
+# Columns that Modelhub expects in an Objectiv dataframe
 class ObjectivSupportedColumns(Enum):
     EVENT_ID = 'event_id'
     DAY = 'day'
@@ -52,26 +55,37 @@ class ObjectivSupportedColumns(Enum):
         return cls.get_index_columns() + cls.get_data_columns()
 
 
-# mapping for series names and dtypes
-_OBJECTIV_SUPPORTED_COLUMNS_X_SERIES_CLS = {
-    ObjectivSupportedColumns.EVENT_ID: bach.SeriesUuid,
-    ObjectivSupportedColumns.DAY: bach.SeriesDate,
-    ObjectivSupportedColumns.MOMENT: bach.SeriesTimestamp,
-    ObjectivSupportedColumns.USER_ID: bach.SeriesUuid,
-    ObjectivSupportedColumns.GLOBAL_CONTEXTS: bach.SeriesJson,
-    ObjectivSupportedColumns.LOCATION_STACK: bach.SeriesJson,
-    ObjectivSupportedColumns.EVENT_TYPE: bach.SeriesString,
-    ObjectivSupportedColumns.STACK_EVENT_TYPES: bach.SeriesJson,
-    ObjectivSupportedColumns.SESSION_ID: bach.SeriesInt64,
-    ObjectivSupportedColumns.SESSION_HIT_NUMBER: bach.SeriesInt64,
+# mapping for series names and bach series dtypes
+_OBJECTIV_SUPPORTED_COLUMNS_X_SERIES_DTYPE = {
+    ObjectivSupportedColumns.EVENT_ID: bach.SeriesUuid.dtype,
+    ObjectivSupportedColumns.DAY: bach.SeriesDate.dtype,
+    ObjectivSupportedColumns.MOMENT: bach.SeriesTimestamp.dtype,
+    ObjectivSupportedColumns.USER_ID: bach.SeriesUuid.dtype,
+    ObjectivSupportedColumns.GLOBAL_CONTEXTS: bach.SeriesJson.dtype,
+    ObjectivSupportedColumns.LOCATION_STACK: bach.SeriesJson.dtype,
+    ObjectivSupportedColumns.EVENT_TYPE: bach.SeriesString.dtype,
+    ObjectivSupportedColumns.STACK_EVENT_TYPES: bach.SeriesJson.dtype,
+    ObjectivSupportedColumns.SESSION_ID: bach.SeriesInt64.dtype,
+    ObjectivSupportedColumns.SESSION_HIT_NUMBER: bach.SeriesInt64.dtype,
+}
+
+# mapping for series names and modelhub series dtypes
+_OBJECTIV_SUPPORTED_COLUMNS_X_MODELHUB_SERIES_DTYPE = {
+    ObjectivSupportedColumns.GLOBAL_CONTEXTS: series_objectiv.SeriesGlobalContexts.dtype,
+    ObjectivSupportedColumns.LOCATION_STACK: series_objectiv.SeriesLocationStack.dtype,
 }
 
 
-def get_supported_dtypes_per_objectiv_column() -> Dict[str, str]:
-    return {
-        col.value: series_cls.dtype
-        for col, series_cls in _OBJECTIV_SUPPORTED_COLUMNS_X_SERIES_CLS.items()
-    }
+def get_supported_dtypes_per_objectiv_column(with_md_dtypes: bool = False) -> Dict[str, str]:
+    """
+    Helper function that returns mapping between Objectiv series name and dtype
+    If with_md_types is true, it will return mapping against modelhub own dtypes
+    """
+    supported_dtypes = _OBJECTIV_SUPPORTED_COLUMNS_X_SERIES_DTYPE.copy()
+    if with_md_dtypes:
+        supported_dtypes.update(_OBJECTIV_SUPPORTED_COLUMNS_X_MODELHUB_SERIES_DTYPE)
+
+    return {col.value: dtype for col, dtype in supported_dtypes.items()}
 
 
 def check_objectiv_dataframe(
@@ -79,9 +93,18 @@ def check_objectiv_dataframe(
     columns_to_check: List[str] = None,
     check_index: bool = False,
     check_dtypes: bool = False,
+    with_md_dtypes: bool = False,
 ) -> None:
+    """
+    Helper function that determines if provided dataframe is an objectiv dataframe.
+    :param columns_to_check: list of columns to verify,
+        if not provided, all expected objectiv columns will be used instead.
+    :param check_index: if true, will check if dataframe has expected index series
+    :param check_dtypes: if true, will check if each series has expected dtypes
+    :param with_md_dtypes: if true, will check if series has expected modelhub dtype
+    """
     columns = columns_to_check if columns_to_check else ObjectivSupportedColumns.get_all_columns()
-    supported_dtypes = get_supported_dtypes_per_objectiv_column()
+    supported_dtypes = get_supported_dtypes_per_objectiv_column(with_md_dtypes=with_md_dtypes)
 
     for col in columns:
         supported_col = ObjectivSupportedColumns(col)

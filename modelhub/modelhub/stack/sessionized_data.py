@@ -20,12 +20,19 @@ class _BaseCalculatedSessionSeries(Enum):
 
 
 class SessionizedDataPipeline(BaseDataPipeline):
+    """
+    Pipeline in charge of calculating Objectiv sessionized columns.
+    This pipeline is dependent on the result from ExtractedContextsPipeline, therefore it expects that
+    the result from the latter is generated correctly.
+    """
     def _get_pipeline_result(self, session_gap_seconds=180, **kwargs) -> bach.DataFrame:
+        # initial data is the result from ExtractedContextsPipeline
         context_df = get_extracted_contexts_df(
             engine=self._engine, table_name=self._table_name, set_index=False, **kwargs,
         )
+
+        # make sure the result has AT LEAST the following series
         self._validate_data_columns(
-            # context dataframe MUST have this columns
             expected_columns=[
                 ObjectivSupportedColumns.EVENT_ID.value,
                 ObjectivSupportedColumns.USER_ID.value,
@@ -34,6 +41,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
             current_columns=context_df.data_columns,
         )
 
+        # calculate series that are needed for the final result
         sessionized_df = self._calculate_base_session_series(
             context_df, session_gap_seconds=session_gap_seconds,
         )
@@ -51,6 +59,9 @@ class SessionizedDataPipeline(BaseDataPipeline):
 
     @classmethod
     def validate_pipeline_result(cls, result: bach.DataFrame) -> None:
+        """
+        Checks if we are returning ALL expected context series and sessionized series with respective dtype.
+        """
         ExtractedContextsPipeline.validate_pipeline_result(result)
         check_objectiv_dataframe(
             result,
@@ -58,21 +69,37 @@ class SessionizedDataPipeline(BaseDataPipeline):
             check_dtypes=True,
         )
 
-    def _convert_dtypes(self, df: bach.DataFrame) -> bach.DataFrame:
+    @staticmethod
+    def _convert_dtypes(df: bach.DataFrame) -> bach.DataFrame:
+        """
+        Helper function that converts each sessionized series to its correct dtype,
+        this way we ensure the pipeline is returning the dtypes Modelhub is expecting.
+
+        Returns a bach DataFrame
+        """
         df_cp = df.copy()
         objectiv_dtypes = get_supported_dtypes_per_objectiv_column()
         for col in ObjectivSupportedColumns.get_sessionized_columns():
             if col not in df_cp.data:
                 continue
 
-            df_cp[col] = df_cp[col].copy_override_dtype(
-                dtype=df_cp[col].dtype,
-                instance_dtype=objectiv_dtypes[col],
-            )
+            df_cp[col] = df_cp[col] = df_cp[col].astype(objectiv_dtypes[col])
 
         return df_cp
 
     def _calculate_base_session_series(self, df: bach.DataFrame, session_gap_seconds: int) -> bach.DataFrame:
+        """
+        Calculates each series required for calculating the final sessionized series.
+
+        Series to calculate:
+            - is_start_of_session: boolean series that defines if an event/row
+                is the start of a user's session
+            - session_start_id: Session number in the whole dataset,
+                only rows where is_start_of_session is True are numbered.
+            - is_one_session: amount of observed session starts before current session start
+
+        Returns a bach DataFrame
+        """
         sessionized_df = df.copy()
 
         is_session_start_series = self._calculate_session_start(sessionized_df, session_gap_seconds)
@@ -89,6 +116,15 @@ class SessionizedDataPipeline(BaseDataPipeline):
 
     @staticmethod
     def _calculate_objectiv_session_series(df: bach.DataFrame) -> bach.DataFrame:
+        """
+        Calculates all Sessionized Objectiv series expected by Modelhub. df MUST contain all
+        calculated series from _calculate_base_session_series step.
+
+        Series to calculate:
+           - session_id: Corresponding session_start_id of event
+           - session_hit_number: event's number in respective session
+        Returns a bach DataFrame
+        """
         sort_by = [ObjectivSupportedColumns.MOMENT.value, ObjectivSupportedColumns.EVENT_ID.value]
         group_by = [_BaseCalculatedSessionSeries.SESSION_COUNT.value]
         window = df.sort_values(by=sort_by).groupby(group_by).window()
@@ -111,7 +147,26 @@ class SessionizedDataPipeline(BaseDataPipeline):
         return df_cp.materialize(node_name='objectiv_sessionized_data')
 
     @staticmethod
-    def _calculate_session_start(df: bach.DataFrame, session_gap_seconds) -> bach.SeriesBoolean:
+    def _calculate_session_start(df: bach.DataFrame, session_gap_seconds: int) -> bach.SeriesBoolean:
+        """
+        Generates is_session_start series which determines if an event is the first event of a user's session.
+
+        This is performed by:
+          1. Grouping events by user ids and ordering by moment and event id
+
+          2. Calculate the amount of time between previous and current event.
+            (event_lapsed_time = events[n-1][moment] - events[n][moment])
+
+          3. How to determine if the event is start of a session:
+            a) If the row is the first observed event for the user's entire history, then by default it is a
+                session start.
+
+            b) Identify which event is the end of the session by comparing time differences.
+                If the event_lapsed time is greater than session_gap_seconds, then we can deduct the current
+                event is a session start.
+
+        Returns bach SeriesBoolean
+        """
         sort_by = [ObjectivSupportedColumns.MOMENT.value, ObjectivSupportedColumns.EVENT_ID.value]
         group_by = [ObjectivSupportedColumns.USER_ID.value]
         window = df.sort_values(by=sort_by).groupby(by=group_by).window()
@@ -121,18 +176,18 @@ class SessionizedDataPipeline(BaseDataPipeline):
         # create lag series with correct expression
         # this way we avoid materializing when
         # doing an arithmetic operation with window function result
-        lag_moment = moment_series.copy_override(
+        previous_moment_series = moment_series.copy_override(
             expression=moment_series.window_lag(window=window).expression,
         )
-        lag_moment = lag_moment.copy_override_type(bach.SeriesTimestamp)
+        previous_moment_series = previous_moment_series.copy_override_type(bach.SeriesTimestamp)
 
-        total_duration_session = (moment_series - lag_moment).copy_override_type(bach.SeriesTimedelta)
+        event_lapsed_time = (moment_series - previous_moment_series).copy_override_type(bach.SeriesTimedelta)
 
         result_series_name = _BaseCalculatedSessionSeries.IS_START_OF_SESSION.value
         df_cp = df.copy()
         df_cp[result_series_name] = True
 
-        session_gap_mask = total_duration_session.dt.total_seconds <= session_gap_seconds
+        session_gap_mask = event_lapsed_time.dt.total_seconds <= session_gap_seconds
         df_cp.loc[session_gap_mask, result_series_name] = bach.SeriesBoolean.from_value(
             base=df_cp,
             value=None,
@@ -142,13 +197,19 @@ class SessionizedDataPipeline(BaseDataPipeline):
 
     @staticmethod
     def _calculate_session_start_id(df: bach.DataFrame) -> bach.SeriesInt64:
+        """
+        Calculates session_start_id by numbering each event that is a session start.
+
+        Returns a bach SeriesInt64
+        """
         sort_by = [ObjectivSupportedColumns.MOMENT.value, ObjectivSupportedColumns.EVENT_ID.value]
         group_by = [_BaseCalculatedSessionSeries.IS_START_OF_SESSION.value]
         window = df.sort_values(by=sort_by).groupby(by=group_by).window()
 
-        start_session_series = df[_BaseCalculatedSessionSeries.IS_START_OF_SESSION.value]
-        session_start_id = start_session_series.copy_override(
-            expression=start_session_series.window_row_number(window=window).expression,
+        is_start_session_series = df[_BaseCalculatedSessionSeries.IS_START_OF_SESSION.value]
+        # group all rows by is_start_of_session and number each event
+        session_start_id = is_start_session_series.copy_override(
+            expression=is_start_session_series.window_row_number(window=window).expression,
         )
         session_start_id = session_start_id.copy_override_type(bach.SeriesInt64)
 
@@ -157,11 +218,24 @@ class SessionizedDataPipeline(BaseDataPipeline):
         df_cp[result_series_name] = bach.SeriesInt64.from_value(
             base=df_cp, value=None, name=result_series_name,
         )
-        df_cp.loc[start_session_series, result_series_name] = session_start_id
+        # consider only events that are start of session
+        df_cp.loc[is_start_session_series, result_series_name] = session_start_id
         return df_cp[result_series_name]
 
     @staticmethod
     def _calculate_session_count(df: bach.DataFrame) -> bach.SeriesInt64:
+        """
+        Calculates the amount of observed session starts before current session start.
+        For example:
+           event_id  is_start_of_session   session_count
+              1            True                1
+              2            None                1
+              3            True                2
+              4            True                3
+              5            None                3
+
+        Returns a bach SeriesInt64
+        """
         sort_by = [
             ObjectivSupportedColumns.USER_ID.value,
             ObjectivSupportedColumns.MOMENT.value,
@@ -177,6 +251,14 @@ class SessionizedDataPipeline(BaseDataPipeline):
 
 
 def get_sessionized_data(engine: Engine, table_name: str, set_index: bool = True, **kwargs) -> bach.DataFrame:
+    """
+    Gets context and sessionized data from pipeline.
+    :param engine: db connection
+    :param table_name: table from where to extract data
+    :param set_index: set index series for final dataframe
+
+    returns a bach DataFrame
+    """
     pipeline = SessionizedDataPipeline(engine=engine, table_name=table_name)
     result = pipeline(**kwargs)
     if set_index:

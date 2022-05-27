@@ -48,6 +48,9 @@ _BQ_TAXONOMY_COLUMN = TaxonomyColumnDefinition(
 
 
 def _get_taxonomy_column_definition(engine: Engine) -> TaxonomyColumnDefinition:
+    """
+    Returns the definition of the Objectiv taxonomy column per supported engine
+    """
     if is_postgres(engine):
         return _PG_TAXONOMY_COLUMN
 
@@ -58,8 +61,15 @@ def _get_taxonomy_column_definition(engine: Engine) -> TaxonomyColumnDefinition:
 
 
 class ExtractedContextsPipeline(BaseDataPipeline):
+    """
+    Pipeline in charge of extracting Objectiv context columns from event data source.
+    Based on the provided engine, it will perform the proper transformations for generating a bach DataFrame
+    that contains all expected series to be used by Modelhub.
+    """
     DATE_FILTER_COLUMN = ObjectivSupportedColumns.DAY.value
 
+    # extra columns that are needed to be fetched, taxonomy column provided for the engine
+    # is ALWAYS selected
     required_context_columns_per_dialect: Dict[DBDialect, Dict[str, StructuredDtype]] = {
         DBDialect.POSTGRES: {
             'event_id': bach.SeriesUuid.dtype,
@@ -85,6 +95,10 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         )
 
     def _get_pipeline_result(self, **kwargs) -> bach.DataFrame:
+        """
+        Calls all operations performed to the initial data and returns a bach DataFrame with the expected
+        context series
+        """
         context_df = self._get_initial_data()
         context_df = self._process_taxonomy_data(context_df)
         context_df = self._apply_extra_processing(context_df)
@@ -97,6 +111,9 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         return context_df.materialize(node_name='context_data')
 
     def _get_base_dtypes(self) -> Mapping[str, StructuredDtype]:
+        """
+        Returns mapping of series names and dtypes expected from initial data
+        """
         db_dialect = DBDialect.from_engine(self._engine)
         return {
             self._taxonomy_column.name: self._taxonomy_column.dtype,
@@ -112,6 +129,13 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         )
 
     def _process_taxonomy_data(self, df: bach.DataFrame) -> bach.DataFrame:
+        """
+        Extracts all needed values from the taxonomy json/dict and creates a new Series for each.
+        Fields are dependent on the engine's taxonomy definition, therefore the new generated series might be
+        different per engine.
+
+        Returns a bach DataFrame containing each extracted field as series
+        """
         df_cp = df.copy()
         taxonomy_series = df_cp[self._taxonomy_column.name]
         dtypes = _DEFAULT_TAXONOMY_DTYPE_PER_FIELD
@@ -144,11 +168,17 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         return df_cp.materialize(node_name='extracted_taxonomy')
 
     def _apply_extra_processing(self, df: bach.DataFrame) -> bach.DataFrame:
+        """
+        Applies more operations to the dataframe (if needed).
+
+        Returns a bach DataFrame
+        """
         df_cp = df.copy()
         if not is_bigquery(self._engine):
             return df_cp
 
-        # extra processing needed for moment and day columns
+        # BQ data source has no moment and day columns, therefore we need to generate them
+        # based on the time value from the taxonomy column
         df_cp['moment'] = df_cp['time'].copy_override(
             expression=bach.expression.Expression.construct(f'TIMESTAMP_MILLIS({{}})', df_cp['time']),
         )
@@ -159,6 +189,12 @@ class ExtractedContextsPipeline(BaseDataPipeline):
 
     @staticmethod
     def _convert_dtypes(df: bach.DataFrame) -> bach.DataFrame:
+        """
+        Helper function that converts each context series to its correct dtype,
+        this way we ensure the pipeline is returning the dtypes Modelhub is expecting.
+
+        Returns a bach DataFrame
+        """
         df_cp = df.copy()
         objectiv_dtypes = get_supported_dtypes_per_objectiv_column()
         for col in ObjectivSupportedColumns.get_extracted_context_columns():
@@ -171,6 +207,9 @@ class ExtractedContextsPipeline(BaseDataPipeline):
 
     @classmethod
     def validate_pipeline_result(cls, result: bach.DataFrame) -> None:
+        """
+        Checks if we are returning ALL expected context series with proper dtype.
+        """
         check_objectiv_dataframe(
             result,
             columns_to_check=list(ObjectivSupportedColumns.get_extracted_context_columns()),
@@ -184,6 +223,11 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         end_date: Optional[str] = None,
         **kwargs,
     ) -> bach.DataFrame:
+        """
+        Filters dataframe by a date range.
+
+        returns bach DataFrame
+        """
         context_df_cp = context_df.copy()
 
         if not start_date and not end_date:
@@ -201,6 +245,14 @@ class ExtractedContextsPipeline(BaseDataPipeline):
 def get_extracted_contexts_df(
     engine: Engine, table_name: str, set_index=True, **kwargs
 ) -> bach.DataFrame:
+    """
+    Gets extracted context from pipeline.
+    :param engine: db connection
+    :param table_name: table from where to extract data
+    :param set_index: set index series for final dataframe
+
+    returns a bach DataFrame
+    """
     pipeline = ExtractedContextsPipeline(engine=engine, table_name=table_name)
     result = pipeline(**kwargs)
     if set_index:
