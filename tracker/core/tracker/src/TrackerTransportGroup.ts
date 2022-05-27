@@ -36,6 +36,7 @@ export class TrackerTransportGroup implements TrackerTransportInterface {
       globalThis.objectiv.TrackerConsole.log(
         `Usable Transports: ${this.usableTransports.map((transport) => transport.transportName).join(', ')}`
       );
+      globalThis.objectiv.TrackerConsole.groupEnd();
     }
   }
 

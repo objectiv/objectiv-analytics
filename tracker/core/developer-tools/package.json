@@ -43,7 +43,7 @@
   },
   "scripts": {
     "generate": "ts-node -r tsconfig-paths/register src/scripts/generateErrorMessages.ts",
-    "build": "tsup src/index.ts --format cjs,esm --legacy-output --minify --dts --sourcemap --clean",
+    "build": "tsup src/index.ts --format cjs,esm --legacy-output --minify --sourcemap --clean",
     "prettify": "prettier --write .",
     "prettify:generated": "yarn prettier --write ./src/ContextErrorMessages.ts",
     "tsc": "tsc --noEmit",
