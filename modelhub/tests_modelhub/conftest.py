@@ -105,12 +105,15 @@ def pytest_generate_tests(metafunc: Metafunc):
     markers = list(metafunc.definition.iter_markers())
     skip_postgres = any(mark.name == MARK_SKIP_POSTGRES for mark in markers)
     skip_bigquery = any(mark.name == MARK_SKIP_BIGQUERY for mark in markers)
-
     db_params = []
-    if not skip_postgres:
+
+    testing_pg = not metafunc.config.getoption("big_query")
+    testing_bq = metafunc.config.getoption("all") or metafunc.config.getoption("big_query")
+
+    if testing_pg and not skip_postgres:
         db_params.append(_get_postgres_db_params())
 
-    if not skip_bigquery:
+    if testing_bq and not skip_bigquery:
         db_params.append(_get_bigquery_db_params())
 
     if 'db_params' in metafunc.fixturenames:
