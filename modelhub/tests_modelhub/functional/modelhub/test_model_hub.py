@@ -126,11 +126,7 @@ def test_is_new_user(db_params):
     )
 
 
-<<<<<<< HEAD
 @pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
-=======
-@pytest.mark.skip_bigquery
->>>>>>> BasePipeline, ExtractedContextsPipeline, SessionizedDataPipeline
 def test_is_conversion_event(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
@@ -177,15 +173,11 @@ def test_is_conversion_event(db_params):
     with pytest.raises(KeyError, match="not labeled as a conversion"):
         modelhub.map.is_conversion_event(df, 'some_clicks')
 
-<<<<<<< HEAD
     with pytest.raises(KeyError, match="not labeled as a conversion"):
         modelhub.map.is_conversion_event(df, None)
 
 
 @pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
-=======
-@pytest.mark.skip_bigquery
->>>>>>> BasePipeline, ExtractedContextsPipeline, SessionizedDataPipeline
 def test_conversions_counter(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
@@ -256,11 +248,7 @@ def test_conversions_counter(db_params):
     )
 
 
-<<<<<<< HEAD
 @pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
-=======
-@pytest.mark.skip_bigquery
->>>>>>> BasePipeline, ExtractedContextsPipeline, SessionizedDataPipeline
 def test_conversions_in_time(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
@@ -306,11 +294,7 @@ def test_conversions_in_time(db_params):
     )
 
 
-<<<<<<< HEAD
 @pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
-=======
-@pytest.mark.skip_bigquery
->>>>>>> BasePipeline, ExtractedContextsPipeline, SessionizedDataPipeline
 def test_pre_conversion_hit_number(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
