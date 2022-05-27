@@ -40,6 +40,14 @@ class SeriesAbstractNumeric(Series, ABC):
     def _comparator_operation(self, other, comparator, other_dtypes=('int64', 'float64')) -> 'SeriesBoolean':
         return super()._comparator_operation(other, comparator, other_dtypes)
 
+    def exp(self) -> 'SeriesAbstractNumeric':
+        """
+        Get Exp of value
+        """
+        return self.copy_override(
+            expression=Expression.construct(f'exp({{}})', self)
+        )
+
     def round(self, decimals: int = 0) -> 'SeriesAbstractNumeric':
         """
         Round the value of this series to the given amount of decimals.

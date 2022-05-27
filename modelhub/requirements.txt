@@ -3,3 +3,7 @@ objectiv-bach
 
 # metabase
 requests
+
+sklearn
+asyncio
+aiohttp
