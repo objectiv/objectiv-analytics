@@ -121,7 +121,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
         calculated series from _calculate_base_session_series step.
 
         Series to calculate:
-           - session_id: Corresponding session_start_id of event
+           - session_id: correct session_id for all rows with the same value for is_one_session
            - session_hit_number: event's number in respective session
         Returns a bach DataFrame
         """
@@ -225,9 +225,10 @@ class SessionizedDataPipeline(BaseDataPipeline):
     @staticmethod
     def _calculate_session_count(df: bach.DataFrame) -> bach.SeriesInt64:
         """
-        Calculates the amount of observed session starts before current session start.
+        generates a unique number for each session, but not in the right order,
+        by calculating the amount of observed session starts before current session start.
         For example:
-           event_id  is_start_of_session   session_count
+           event_id  is_start_of_session   is_one_session
               1            True                1
               2            None                1
               3            True                2
