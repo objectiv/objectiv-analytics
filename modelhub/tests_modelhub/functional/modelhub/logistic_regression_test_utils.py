@@ -86,7 +86,7 @@ class TestLR:
             modelhub_data = modelhub_data.to_numpy()
             equals = np.isclose(sklearn_data, modelhub_data).all()
 
-        assert equals, f"{modelhub_data=} != {sklearn_data=}"
+        assert equals, f"modelhub_data: {modelhub_data} != sklearn_data: {sklearn_data}"
 
         print(f"test ok")
         print(f'modelhub value: {modelhub_data}\nsklearn value : {sklearn_data}\n')
