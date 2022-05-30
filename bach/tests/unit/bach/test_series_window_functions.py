@@ -104,6 +104,30 @@ def test_window_ntile(dialect):
         )
 
 
+def test_window_lag(dialect):
+    left = get_fake_df(dialect, ['a'], ['b', 'c'])
+    series_b = left['b']
+
+    w = left.sort_values(by='b', ascending=False).window()
+    result = series_b.window_lag(window=w)
+
+    result_sql = result.expression.to_sql(dialect)
+    column_name = '`b`' if is_bigquery(dialect) else '"b"'
+    value = 'NULL' if is_bigquery(dialect) else 'cast(NULL as bigint)'
+
+    if is_bigquery(dialect):
+        assert result_sql == (
+            f'lag({column_name}, 1, {value}) over '
+            f'( order by {column_name} desc )'
+        )
+        return
+
+    assert result_sql == (
+        f'lag({column_name}, 1, {value}) over '
+        f'( order by {column_name} desc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
+    )
+
+
 def test_window_lead(dialect):
     left = get_fake_df(dialect, ['a'], ['b', 'c'])
     series_b = left['b']
@@ -114,6 +138,14 @@ def test_window_lead(dialect):
     result_sql = result.expression.to_sql(dialect)
     column_name = '`b`' if is_bigquery(dialect) else '"b"'
     value = 'NULL' if is_bigquery(dialect) else 'cast(NULL as bigint)'
+
+    if is_bigquery(dialect):
+        assert result_sql == (
+            f'lead({column_name}, 1, {value}) over '
+            f'( order by {column_name} desc )'
+        )
+        return
+
     assert result_sql == (
         f'lead({column_name}, 1, {value}) over '
         f'( order by {column_name} desc RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)'
