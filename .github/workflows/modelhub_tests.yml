@@ -63,10 +63,6 @@ jobs:
         run: |
           cd modelhub
           pycodestyle modelhub
-      - name: Unit tests
-        run: |
-          cd modelhub
-          pytest tests_modelhub/unit/  -W error::DeprecationWarning
       - name: Functional tests
         run: |
           cd modelhub
