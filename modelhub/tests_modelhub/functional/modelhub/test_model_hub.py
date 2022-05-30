@@ -3,9 +3,9 @@ Copyright 2021 Objectiv B.V.
 """
 
 # Any import from modelhub initializes all the types, do not remove
-from modelhub import __version__, ModelHub
+from modelhub import __version__
 import pytest
-
+from tests_modelhub.functional.modelhub.data_and_utils import get_objectiv_dataframe_test
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 from uuid import UUID
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
@@ -131,15 +131,118 @@ def test_is_new_user(db_params):
 def test_is_conversion_event(db_params): # TODO: Remove when bach supports json slicing for BigQuery
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
-    # add conversion event
-    modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
-                            event_type='ClickEvent',
-                            name='github_clicks')
+    location_stack = df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
+    event_type = 'ClickEvent'
+    conversion = 'github_clicks'
+    modelhub.add_conversion_event(location_stack=location_stack,
+                                  event_type=event_type,
+                                  name=conversion)
 
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
-    modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext',
-                                                                         'id': 'cta-repo-button'}:],
-                                  event_type='ClickEvent', name='github_clicks')
+    assert isinstance(modelhub._conversion_events, dict)
+    assert len(modelhub._conversion_events) == 1
+    assert modelhub._conversion_events[conversion] == (location_stack, event_type)
+
+    ser = modelhub.map.is_conversion_event(df, 'github_clicks')
+    assert_equals_data(
+        ser,
+        expected_columns=['event_id', 'is_conversion_event'],
+        expected_data=[
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac302'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac304'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac305'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac306'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac307'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac308'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac309'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac310'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), False]
+        ],
+        order_by='event_id'
+    )
+
+    # location_stack not set
+    modelhub.add_conversion_event(event_type=event_type, name=conversion)
+    assert modelhub._conversion_events[conversion] == (None, event_type)
+
+    ser = modelhub.map.is_conversion_event(df, 'github_clicks')
+
+    assert_equals_data(
+        ser,
+        expected_columns=['event_id', 'is_conversion_event'],
+        expected_data=[
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac302'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac304'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac305'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac306'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac307'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac308'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac309'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac310'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
+        ],
+        order_by='event_id'
+    )
+
+    # event_type not set
+    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+    modelhub.add_conversion_event(location_stack=location_stack, name='github_clicks')
+    assert len(modelhub._conversion_events) == 1
+    assert modelhub._conversion_events[conversion] == (location_stack, None)
+
+    ser = modelhub.map.is_conversion_event(df, 'github_clicks')
+
+    assert_equals_data(
+        ser,
+        expected_columns=['event_id', 'is_conversion_event'],
+        expected_data=[
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac302'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac304'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac305'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac306'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac307'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac308'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac309'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac310'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), False],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), False]
+        ],
+        order_by='event_id'
+    )
+
+    # name not set
+    modelhub.add_conversion_event(event_type='ClickEvent')
+    assert len(modelhub._conversion_events) == 2
+    assert modelhub._conversion_events['conversion_2'] == (None, event_type)
+
+    ser = modelhub.map.is_conversion_event(df, 'conversion_2')
+
+    assert_equals_data(
+        ser,
+        expected_columns=['event_id', 'is_conversion_event'],
+        expected_data=[
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac302'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac304'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac305'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac306'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac307'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac308'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac309'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac310'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
+        ],
+        order_by='event_id'
+    )
 
     s = modelhub.map.is_conversion_event(df, 'github_clicks')
 
@@ -175,6 +278,13 @@ def test_is_conversion_event(db_params): # TODO: Remove when bach supports json 
         ],
         order_by='event_id'
     )
+
+    # wrong conversion_event name
+    with pytest.raises(KeyError, match="not labeled as a conversion"):
+        modelhub.map.is_conversion_event(df, 'some_clicks')
+
+    with pytest.raises(KeyError, match="not labeled as a conversion"):
+        modelhub.map.is_conversion_event(df, None)
 
 
 @pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
