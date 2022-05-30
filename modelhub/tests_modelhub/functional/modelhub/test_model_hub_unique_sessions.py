@@ -10,7 +10,6 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data
 from uuid import UUID
 pytestmark = [pytest.mark.skip_bigquery]  # TODO: BigQuery
 
-pytestmark = [pytest.mark.skip_bigquery]  # TODO: BigQuery
 
 def test_defaults(db_params):
     # setting nothing, thus using all defaults (which is just moment without formatting)
