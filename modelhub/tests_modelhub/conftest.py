@@ -30,12 +30,12 @@ Category 4, and 5 are the exception, these need to be marked with the `skip_post
 """
 import os
 from enum import Enum
-from typing import Dict, NamedTuple, Optional
+from typing import NamedTuple, Optional
+
 
 import bach
 import pytest
 from _pytest.fixtures import SubRequest
-from _pytest.main import Session
 from _pytest.python import Metafunc
 from _pytest.config.argparsing import Parser
 from sql_models.constants import DBDialect

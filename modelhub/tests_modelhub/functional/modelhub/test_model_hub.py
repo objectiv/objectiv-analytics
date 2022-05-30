@@ -5,13 +5,11 @@ Copyright 2021 Objectiv B.V.
 # Any import from modelhub initializes all the types, do not remove
 from modelhub import __version__
 import pytest
-from tests_modelhub.functional.modelhub.data_and_utils import get_objectiv_dataframe_test
+from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 from uuid import UUID
-from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 
 # map
-
 def test_is_first_session(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
@@ -57,7 +55,6 @@ def test_is_first_session(db_params):
     )
 
 
-@pytest.mark.skip_bigquery
 def test_is_new_user(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
@@ -190,7 +187,7 @@ def test_is_conversion_event(db_params): # TODO: Remove when bach supports json 
     )
 
     # event_type not set
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
     modelhub.add_conversion_event(location_stack=location_stack, name='github_clicks')
     assert len(modelhub._conversion_events) == 1
     assert modelhub._conversion_events[conversion] == (location_stack, None)

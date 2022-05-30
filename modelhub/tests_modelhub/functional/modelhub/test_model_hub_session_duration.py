@@ -11,9 +11,9 @@ import datetime
 pytestmark = [pytest.mark.skip_bigquery]  # TODO: BigQuery
 
 
-def test_defaults():
+def test_defaults(db_params):
     # setting nothing, thus using all defaults (which is just moment without formatting)
-    df, modelhub = get_objectiv_dataframe_test()
+    df, modelhub = get_objectiv_dataframe_test(db_params)
     s = modelhub.aggregate.session_duration(df)
 
     # with standard time_aggregation, all sessions are bounces
@@ -23,9 +23,9 @@ def test_defaults():
     (True, [[datetime.timedelta(microseconds=2667)]]),
     (False, [[datetime.timedelta(microseconds=1143)]])
 ])
-def test_no_grouping(exclude_bounces, expected_data):
+def test_no_grouping(db_params, exclude_bounces, expected_data):
     # not grouping to anything
-    df, modelhub = get_objectiv_dataframe_test()
+    df, modelhub = get_objectiv_dataframe_test(db_params)
     s = modelhub.aggregate.session_duration(df, groupby=None, exclude_bounces=exclude_bounces)
 
     assert_equals_data(
@@ -34,9 +34,9 @@ def test_no_grouping(exclude_bounces, expected_data):
         expected_data=expected_data
     )
 
-def test_time_aggregation_in_df():
+def test_time_aggregation_in_df(db_params):
     # using time_aggregation (and default groupby: mh.time_agg(df, ))
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
     s = modelhub.aggregate.session_duration(df)
 
     assert_equals_data(
@@ -49,9 +49,9 @@ def test_time_aggregation_in_df():
         ]
     )
 
-def test_overriding_time_aggregation_in():
+def test_overriding_time_aggregation_in(db_params):
     # overriding time_aggregation
-    df, modelhub = get_objectiv_dataframe_test()
+    df, modelhub = get_objectiv_dataframe_test(db_params)
     bts = modelhub.aggregate.session_duration(df, groupby=modelhub.time_agg(df, 'YYYY-MM'))
 
     assert_equals_data(
@@ -70,9 +70,9 @@ def test_overriding_time_aggregation_in():
             ['2021-12', datetime.timedelta(microseconds=3000)]]
     )
 
-def test_groupby():
+def test_groupby(db_params):
     # group by other columns
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
     s = modelhub.aggregate.session_duration(df, groupby='event_type')
 
     assert_equals_data(
@@ -81,9 +81,9 @@ def test_groupby():
         expected_data=[['ClickEvent', datetime.timedelta(microseconds=2667)]]
     )
 
-def test_groupby_incl_time_agg():
+def test_groupby_incl_time_agg(db_params):
     # group by other columns (as series), including time_agg
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
     s = modelhub.aggregate.session_duration(df, groupby=[modelhub.time_agg(df, 'YYYY-MM'), df.session_id])
 
     assert_equals_data(
