@@ -8,15 +8,12 @@ import pytest
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 from uuid import UUID
-
-
-def test_get_objectiv_stack():
-    get_objectiv_dataframe_test()
+pytestmark = [pytest.mark.skip_bigquery]  # TODO: BigQuery
 
 
 # map
-def test_is_first_session():
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+def test_is_first_session(db_params):
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
     s = modelhub.map.is_first_session(df)
 
@@ -60,8 +57,8 @@ def test_is_first_session():
     )
 
 
-def test_is_new_user():
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+def test_is_new_user(db_params):
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
     s = modelhub.map.is_new_user(df)
 
@@ -129,8 +126,8 @@ def test_is_new_user():
     )
 
 
-def test_add_conversion_event():
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+def test_add_conversion_event(db_params):
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
     location_stack = df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
     event_type = 'ClickEvent'
@@ -191,7 +188,7 @@ def test_add_conversion_event():
     )
 
     # event_type not set
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
     modelhub.add_conversion_event(location_stack=location_stack, name='github_clicks')
     assert len(modelhub._conversion_events) == 1
     assert modelhub._conversion_events[conversion] == (location_stack, None)
@@ -246,8 +243,8 @@ def test_add_conversion_event():
     )
 
 
-def test_is_conversion_event():
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+def test_is_conversion_event(db_params):
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
     # add conversion event
     modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext',
@@ -297,8 +294,8 @@ def test_is_conversion_event():
         modelhub.map.is_conversion_event(df, None)
 
 
-def test_conversions_counter():
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+def test_conversions_counter(db_params):
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
     # add conversion event
     modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
@@ -367,8 +364,8 @@ def test_conversions_counter():
     )
 
 
-def test_conversions_in_time():
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+def test_conversions_in_time(db_params):
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
     # add conversion event
     modelhub.add_conversion_event(
@@ -412,8 +409,8 @@ def test_conversions_in_time():
     )
 
 
-def test_pre_conversion_hit_number():
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+def test_pre_conversion_hit_number(db_params):
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
     # add conversion event
     modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
@@ -479,8 +476,8 @@ def test_pre_conversion_hit_number():
     )
 
 
-def test_time_agg():
-    df, modelhub = get_objectiv_dataframe_test()
+def test_time_agg(db_params):
+    df, modelhub = get_objectiv_dataframe_test(db_params)
     s = modelhub.time_agg(df)
 
     assert_equals_data(
@@ -551,7 +548,7 @@ def test_time_agg():
         convert_uuid=True,
     )
 
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
     s = modelhub.time_agg(df, time_aggregation='YYYY')
 
     assert_equals_data(
