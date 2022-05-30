@@ -273,7 +273,8 @@ def test_is_conversion_event(db_params): # TODO: Remove when bach supports json 
         expected_data=[
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # wrong conversion_event name
