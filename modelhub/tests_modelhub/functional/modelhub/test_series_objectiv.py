@@ -68,11 +68,11 @@ def test_objectiv_stack_type3():
         bts,
         expected_columns=['_index_event_id', 'b'],
         expected_data=[
-            [1, None],
+            [1, []],
             [2, [{'id': 'navigation', '_type': 'NavigationContext', '_types': ['AbstractContext', 'AbstractLocationContext', 'NavigationContext', 'SectionContext']}]],
-            [3, None],
-            [4, None],
-            [5, None]
+            [3, []],
+            [4, []],
+            [5, []]
         ]
     )
 

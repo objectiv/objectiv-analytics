@@ -211,3 +211,18 @@ def test_json_getitem_query(pg_engine, dtype):
     )
 
     # TODO needs to_pandas() test
+
+
+def test_json_get_array_length(engine, dtype):
+    df = get_df_with_json_data(engine=engine, dtype=dtype)
+    s = df.list_column.json.get_array_length()
+    assert_equals_data(
+        s,
+        expected_columns=['_index_row', 'list_column'],
+        expected_data=[
+            [0, 2],
+            [1, 4],
+            [2, 3],
+            [3, 4]
+        ]
+    )
