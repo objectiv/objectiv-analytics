@@ -34,7 +34,8 @@ def test_is_first_session(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # use created series to filter dataframe
@@ -51,7 +52,8 @@ def test_is_first_session(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
 
@@ -77,7 +79,8 @@ def test_is_new_user(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # use created series to filter dataframe
@@ -95,7 +98,8 @@ def test_is_new_user(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     s = modelhub.map.is_new_user(df, time_aggregation='YYYY-MM')
@@ -117,7 +121,8 @@ def test_is_new_user(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
 
@@ -264,7 +269,8 @@ def test_is_conversion_event(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), False],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), False]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # use created series to filter dataframe
@@ -276,7 +282,8 @@ def test_is_conversion_event(db_params):
         expected_data=[
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # wrong conversion_event name
@@ -314,7 +321,8 @@ def test_conversions_counter(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), 0],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), 0]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # use created series to filter dataframe
@@ -328,7 +336,8 @@ def test_conversions_counter(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac302'), 1],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), 1]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     s = modelhub.map.conversions_counter(df, 'github_clicks', partition='user_id')
@@ -350,7 +359,8 @@ def test_conversions_counter(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), 1],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), 1]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
 
@@ -381,7 +391,8 @@ def test_conversions_in_time(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), 0],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), 0]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # use created series to filter dataframe
@@ -393,7 +404,8 @@ def test_conversions_in_time(db_params):
         expected_data=[
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
 
@@ -423,7 +435,8 @@ def test_pre_conversion_hit_number(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), None],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), None]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # use created series to filter dataframe
@@ -435,7 +448,8 @@ def test_pre_conversion_hit_number(db_params):
         expected_data=[
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), True],
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     s = modelhub.map.pre_conversion_hit_number(df, 'github_clicks', partition='user_id')
@@ -457,7 +471,8 @@ def test_pre_conversion_hit_number(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), 4],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), 3]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
 
@@ -482,7 +497,8 @@ def test_time_agg(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), '2021-11-29 10:23:36.286'],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), '2021-11-29 10:23:36.287']
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM')
@@ -505,7 +521,8 @@ def test_time_agg(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), '2021-11'],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), '2021-11']
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     df, modelhub = get_objectiv_dataframe_test()
@@ -527,7 +544,8 @@ def test_time_agg(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac310'), '2021-12-03'],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), '2021-11-29'],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), '2021-11-29']],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
@@ -549,5 +567,6 @@ def test_time_agg(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac310'), '2021'],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), '2021'],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), '2021']],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )

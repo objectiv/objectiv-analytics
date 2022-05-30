@@ -7,6 +7,7 @@ This file does not contain any test, but having the file's name start with `test
 as a test file. This makes pytest rewrite the asserts to give clearer errors.
 """
 import datetime
+import uuid
 from decimal import Decimal
 from typing import List, Union, Type, Dict, Any
 
@@ -234,6 +235,20 @@ def df_to_list(df):
     return(data_list)
 
 
+def _convert_uuid_expected_data(engine: Engine, data: List[List[Any]]) -> List[List[Any]]:
+    """
+    Convert any UUID objects in data to string, if we represent uuids with strings in the engine's dialect.
+    """
+    if is_postgres(engine):
+        return data
+    if is_bigquery(engine):
+        result = [
+            [str(cell) if isinstance(cell, uuid.UUID) else cell for cell in row]
+            for row in data
+        ]
+        return result
+
+
 def assert_equals_data(
     bt: Union[DataFrame, Series],
     expected_columns: List[str],
@@ -242,6 +257,7 @@ def assert_equals_data(
     use_to_pandas: bool = False,
     round_decimals: bool = False,
     decimal=4,
+    convert_uuid: bool = False,
 ) -> List[List[Any]]:
     """
     Execute the sql of ButTuhDataFrame/Series's view_sql(), with the given order_by, and make sure the
@@ -257,6 +273,9 @@ def assert_equals_data(
     if isinstance(bt, Series):
         # Otherwise sorting does not work as expected
         bt = bt.to_frame()
+
+    if convert_uuid:
+        expected_data = _convert_uuid_expected_data(bt.engine, expected_data)
 
     if order_by:
         bt = bt.sort_values(order_by)
