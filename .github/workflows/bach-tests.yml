@@ -53,7 +53,7 @@ jobs:
         with:
           # This path is specific to Ubuntu
           path: ~/.cache/pip
-          key: pip-${{ matrix.python-version }}-${{ hashFiles('bach/requirements.txt', 'bach/requirements-dev.txt') }}
+          key: pip-${{ matrix.python-version }}-${{ hashFiles('bach/requirements.txt', 'bach/requirements-dev.txt', 'bach/requirements-bigquery.txt') }}
       - name: Install dependencies (requirements + requirements-dev)
         # install base dependencies + -dev, but not BQ
         run: |
