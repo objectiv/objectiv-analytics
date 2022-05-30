@@ -9,9 +9,6 @@ from tests.functional.bach.test_data_and_utils import get_bt, run_query
 from modelhub import ModelHub
 from tests_modelhub.data_and_utils.data_json_real import TEST_DATA_JSON_REAL, JSON_COLUMNS_REAL
 
-PG_DB_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
-PG_TABLE_NAME = 'objectiv_data'
-
 
 def get_bt_with_json_data_real() -> DataFrame:
     bt = get_bt(TEST_DATA_JSON_REAL, JSON_COLUMNS_REAL, True)
