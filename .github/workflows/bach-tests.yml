@@ -38,6 +38,7 @@ jobs:
       # tell tests to use the above defined postgres service
       OBJ_DB_PG_TEST_URL: 'postgresql://objectiv:no_password_set@localhost:5432/objectiv'
       GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      # Just the path to a temp file, the actual secret is fully contained in the env var above.
       OBJ_DB_BQ_CREDENTIALS_PATH: './sa.json'
     steps:
       - uses: actions/checkout@v2
