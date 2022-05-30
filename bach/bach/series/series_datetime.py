@@ -14,9 +14,10 @@ from bach import DataFrame
 from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64
 from bach.expression import Expression
 from bach.series.series import WrappedPartition, ToPandasInfo
+from bach.series.utils.datetime_formats import parse_date_format_str
 from bach.types import DtypeOrAlias, StructuredDtype
 from sql_models.constants import DBDialect
-from sql_models.util import is_postgres, is_bigquery
+from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
 
 
 class DatePart(str, Enum):
@@ -47,13 +48,17 @@ class DateTimeOperation:
     def __init__(self, series: 'SeriesAbstractDateTime'):
         self._series = series
 
-    def sql_format(self, format_str: str) -> SeriesString:
+    def sql_format(self, format_str: str, parse_format_str: bool = True) -> SeriesString:
         """
         Allow formatting of this Series (to a string type).
 
         :param format_str: The format to apply to the date/time column.
-            Currently, this uses Postgres' data format string syntax:
-            https://www.postgresql.org/docs/14/functions-formatting.html
+            Currently, this uses  1989 C standard format codes:
+            https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+
+        :param parse_format_str: If True, it will assume that format_str is in standard format and will
+            parse each format code into its equivalent based on engine, otherwise the format passed will be
+            used without any changes.
 
         .. code-block:: python
 
@@ -62,8 +67,20 @@ class DateTimeOperation:
 
         :returns: a SeriesString containing the formatted date.
         """
-        expression = Expression.construct('to_char({}, {})',
-                                          self._series, Expression.string_value(format_str))
+        engine = self._series.engine
+        parsed_format_str = parse_date_format_str(engine, format_str) if parse_format_str else format_str
+
+        if is_postgres(engine):
+            expression = Expression.construct(
+                'to_char({}, {})', self._series, Expression.string_value(parsed_format_str),
+            )
+        elif is_bigquery(engine):
+            expression = Expression.construct(
+                'format_date({}, {})', Expression.string_value(parsed_format_str), self._series,
+            )
+        else:
+            raise DatabaseNotSupportedException(engine)
+
         str_series = self._series.copy_override_type(SeriesString).copy_override(expression=expression)
         return str_series
 
