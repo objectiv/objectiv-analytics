@@ -11,13 +11,13 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 def test_top_used_product_features():
     df, modelhub = get_objectiv_dataframe_test()
+    df['application'] = df.global_contexts.gc.application
 
     with pytest.raises(ValueError, match=f'The DataFrame has not all the necessary columns, '
-                                         f'missing columns: feature_nice_name, application'):
+                                         f'missing columns: feature_nice_name'):
         modelhub.aggregate.top_used_product_features(df)
 
-    # adding the necessary columns
-    df['application'] = df.global_contexts.gc.application
+    # adding the missing column
     df['feature_nice_name'] = df.location_stack.ls.nice_name
 
     tdf = modelhub.aggregate.top_used_product_features(df)
