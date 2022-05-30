@@ -299,6 +299,9 @@ class DataFrame:
         """
         return list(self.data.keys())
 
+    # alias for getting data names
+    columns = data_columns
+
     @property
     def index_dtypes(self) -> Dict[str, str]:
         """
