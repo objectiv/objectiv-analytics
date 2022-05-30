@@ -21,17 +21,14 @@ We broadly want 5 categories of tests:
   *  functional-tests that run against all supported databases (3)
   *  functional-tests that run against all supported databases except Postgres (4)
   *  functional-tests that run against all supported databases except BigQuery (5)
-
 1 and 3 are the default for tests. These either get 'db_params' as fixture and run against all
 databases. Category 2 are tests that test generic code that is not geared to a specific database.
 Category 4 and 5 are for functionality that we explicitly not support on some databases.
-
 Category 4, and 5 are the exception, these need to be marked with the `skip_postgres` or `skip_bigquery` marks.
 """
 import os
 from enum import Enum
 from typing import NamedTuple, Optional
-
 
 import bach
 import pytest

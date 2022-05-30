@@ -93,9 +93,7 @@ def _prep_db_table(engine, table_name: str, columns: Dict[str, Any]):
         column_stmt = ','.join(f'{col_name} {db_type}' for col_name, db_type in columns.items())
         sql = f"""
             drop table if exists {table_name};
-
             create table {table_name} ({column_stmt});
-
             alter table {table_name}
                 owner to objectiv
         """
