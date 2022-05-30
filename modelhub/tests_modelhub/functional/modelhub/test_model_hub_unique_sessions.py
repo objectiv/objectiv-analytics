@@ -97,7 +97,8 @@ def test_groupby_incl_time_agg():
             ['2021-12', UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b1'), 1],
             ['2021-12', UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b3'), 2],
             ['2021-12', UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b4'), 1]
-        ]
+        ],
+        convert_uuid=True,
     )
 
 def test_groupby_illegal_column():
