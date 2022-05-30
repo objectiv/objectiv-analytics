@@ -168,3 +168,31 @@ class Aggregate:
         frequency = total_sessions_user.groupby(['session_id_nunique']).aggregate({'user_id': 'nunique'})
 
         return frequency.user_id_nunique
+
+    def top_used_product_features(self,
+                                  data: bach.DataFrame,
+                                  event_types: str = 'InteractiveEvent') -> bach.DataFrame:
+        """
+        Calculate the top used features in the product
+        :param data: :py:class:`bach.DataFrame` to apply the method on.
+        :param event_types: event type. Must be a valid event_type
+        :returns: bach DataFrame with results.
+        """
+
+        self._mh._check_data_is_objectiv_data(data)
+
+        # the following columns should be in the data
+        groupby_col = ['application', 'feature_nice_name', 'event_type']
+        columns = groupby_col + ['user_id']
+        missing_col = list(set(columns) - set(data.data_columns))
+
+        if missing_col:
+            raise ValueError(f'The DataFrame has not all the necessary columns, '
+                             f'missing columns: {", ".join(missing_col)}')
+
+        # selects specific event types, so stack_event_types must be a superset of [event_types]
+        interactive_events = data[data.stack_event_types >= [event_types]]
+
+        # users by feature
+        users_feature = interactive_events.groupby(groupby_col).agg({'user_id': 'nunique'})
+        return users_feature.sort_values('user_id_nunique', ascending=False)
