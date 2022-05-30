@@ -20,15 +20,24 @@ def get_bt_with_json_data_real() -> DataFrame:
     return bt
 
 
-def get_objectiv_dataframe_test(time_aggregation=None):
+def get_objectiv_dataframe_test(db_params=None, time_aggregation=None):
+    if not db_params:
+        # by default use PG (this should be removed after modelhub is able to work with all bach engines)
+        import os
+        db_url = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
+        table_name = 'objectiv_data'
+    else:
+        db_url = db_params.url
+        table_name = db_params.table_name
+
     kwargs = {}
     if time_aggregation:
         kwargs = {'time_aggregation': time_aggregation}
     modelhub = ModelHub(**kwargs)
 
     return modelhub.get_objectiv_dataframe(
-        db_url=PG_DB_URL,
-        table_name=PG_TABLE_NAME,
+        db_url=db_url,
+        table_name=table_name,
     ), modelhub
 
 
