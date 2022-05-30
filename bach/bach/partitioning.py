@@ -29,34 +29,21 @@ class WindowFunction(Enum):
     NTILE = 'ntile'
     ROW_NUMBER = 'row_number'
 
-    _NAVIGATION_FUNCTIONS = (
-        FIRST_VALUE,
-        LAST_VALUE,
-        NTH_VALUE,
-        LEAD,
-        LAG,
-    )
-
-    _NUMBERING_FUNCTIONS = (
+    _BQ_FUNCTIONS_THAT_DO_NOT_SUPPORT_WINDOW_FRAME_CLAUSE = (
         RANK,
         DENSE_RANK,
         PERCENT_RANK,
         CUME_DIST,
         NTILE,
         ROW_NUMBER,
-    )
-
-    _ALL_FUNCTIONS = (
-        *_NAVIGATION_FUNCTIONS,
-        *_NUMBERING_FUNCTIONS,
+        LAG,
+        LEAD,
     )
 
     def supports_window_frame_clause(self, dialect: Dialect) -> bool:
         if is_bigquery(dialect):
-            unsupported_nav_func = (WindowFunction.LAG.value, WindowFunction.LEAD.value,)
             return (
-                self.value not in WindowFunction._NUMBERING_FUNCTIONS.value
-                and self.value not in unsupported_nav_func
+                self.value not in WindowFunction._BQ_FUNCTIONS_THAT_DO_NOT_SUPPORT_WINDOW_FRAME_CLAUSE.value
             )
 
         if is_postgres(dialect):
