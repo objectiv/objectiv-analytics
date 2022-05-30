@@ -11,7 +11,7 @@ from typing import List, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from modelhub import ModelHub
-
+    from modelhub.series import SeriesLocationStack
 
 GroupByType = Union[List[Union[str, Series]], str, Series, NotSet]
 
@@ -171,24 +171,29 @@ class Aggregate:
 
     def top_used_product_features(self,
                                   data: bach.DataFrame,
+                                  location_stack: 'SeriesLocationStack' = None,
                                   event_types: str = 'InteractiveEvent') -> bach.DataFrame:
         """
-        Calculate the top used features in the product
+        Calculate the top used features in the product.
+
         :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param event_types: event type. Must be a valid event_type
+        :param location_stack: the location stack, can be any slice in of a
+            :py:class:`modelhub.SeriesLocationStack` type column.
+        :param event_types: event type. Must be a valid event_type.
         :returns: bach DataFrame with results.
         """
 
         self._mh._check_data_is_objectiv_data(data)
 
-        # the following columns should be in the data
-        groupby_col = ['application', 'feature_nice_name', 'event_type']
-        columns = groupby_col + ['user_id']
-        missing_col = list(set(columns) - set(data.data_columns))
+        # the following columns have to be in the data
+        data['_application'] = data.global_contexts.gc.application
 
-        if missing_col:
-            raise ValueError(f'The DataFrame has not all the necessary columns, '
-                             f'missing columns: {", ".join(missing_col)}')
+        if location_stack is not None:
+            data['_feature_nice_name'] = location_stack.ls.nice_name
+        else:
+            data['_feature_nice_name'] = data.location_stack.ls.nice_name
+
+        groupby_col = ['_application', '_feature_nice_name', 'event_type']
 
         # selects specific event types, so stack_event_types must be a superset of [event_types]
         interactive_events = data[data.stack_event_types >= [event_types]]

@@ -4,31 +4,21 @@ Copyright 2022 Objectiv B.V.
 
 # Any import from modelhub initializes all the types, do not remove
 from modelhub import __version__
-import pytest
 from tests_modelhub.functional.modelhub.data_and_utils import get_objectiv_dataframe_test
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 
 def test_top_used_product_features():
     df, modelhub = get_objectiv_dataframe_test()
-    df['application'] = df.global_contexts.gc.application
 
-    with pytest.raises(ValueError, match=f'The DataFrame has not all the necessary columns, '
-                                         f'missing columns: feature_nice_name'):
-        modelhub.aggregate.top_used_product_features(df)
-
-    # adding the missing column
-    df['feature_nice_name'] = df.location_stack.ls.nice_name
-
+    # without location_stack
     tdf = modelhub.aggregate.top_used_product_features(df)
-
-    # index checks
     assert len(tdf.index) == 3
 
-    # index application
+    # index _application
     assert_equals_data(
-        tdf.index["application"],
-        expected_columns=["application"],
+        tdf.index["_application"],
+        expected_columns=["_application"],
         expected_data=[
             ['objectiv-docs'],
             ['objectiv-website'],
@@ -45,7 +35,7 @@ def test_top_used_product_features():
     )
 
     # index feature_nice_name
-    assert "feature_nice_name" in tdf.index
+    assert "_feature_nice_name" in tdf.index
 
     # index event_type
     assert set(tdf.index["event_type"].array) == {'ClickEvent'}
@@ -53,4 +43,27 @@ def test_top_used_product_features():
     # data info
     assert list(tdf.data.keys()) == ['user_id_nunique']
     assert set(tdf["user_id_nunique"].array) == {1}
+
+    # with location_stack
+    location_stack = df.location_stack.json[{'_type': 'LinkContext'}:]
+    tdf = modelhub.aggregate.top_used_product_features(df, location_stack)
+
+    assert_equals_data(
+        tdf,
+
+        expected_columns=['_application', '_feature_nice_name', 'event_type', 'user_id_nunique'],
+        expected_data=[
+            ['objectiv-website', 'Link: About Us', 'ClickEvent', 2],
+            ['objectiv-docs', 'Link: notebook-product-analytics', 'ClickEvent', 1],
+            ['objectiv-docs', None, 'ClickEvent', 1],
+            ['objectiv-website', 'Link: Contact Us', 'ClickEvent', 1],
+            ['objectiv-website', 'Link: Cookies', 'ClickEvent', 1],
+            ['objectiv-website', 'Link: cta-docs-location-stack', 'ClickEvent', 1],
+            ['objectiv-website', 'Link: cta-docs-taxonomy', 'ClickEvent', 1],
+            ['objectiv-website', 'Link: cta-repo-button', 'ClickEvent', 1],
+            ['objectiv-website', 'Link: Docs', 'ClickEvent', 1],
+            ['objectiv-docs', 'Link: logo', 'ClickEvent', 1],
+            ['objectiv-website', 'Link: GitHub', 'ClickEvent', 1]
+        ],
+    )
 
