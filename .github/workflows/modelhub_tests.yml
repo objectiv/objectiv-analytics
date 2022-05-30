@@ -35,6 +35,7 @@ jobs:
     env:
       # tell tests to use the above defined postgres service
       OBJ_DB_PG_TEST_URL: 'postgresql://objectiv:no_password_set@localhost:5432/objectiv'
+      OBJECTIV_VERSION_CHECK_DISABLE: 'true'
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}

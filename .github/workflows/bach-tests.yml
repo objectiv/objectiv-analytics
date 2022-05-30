@@ -39,6 +39,7 @@ jobs:
       OBJ_DB_PG_TEST_URL: 'postgresql://objectiv:no_password_set@localhost:5432/objectiv'
       GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       OBJ_DB_BQ_CREDENTIALS_PATH: './sa.json'
+      OBJECTIV_VERSION_CHECK_DISABLE: 'true'
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
