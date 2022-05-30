@@ -1,18 +1,15 @@
 """
 Copyright 2022 Objectiv B.V.
-
 ### Fixtures
 There is some pytest 'magic' here that automatically fills out the db parameters for
 test functions that require an engine.
 By default such a test function will get a Postgres db parameters. But if --big-query or --all is
 specified on the commandline, then it will (also) get a BigQuery db parameters. For specific
 tests, it is possible to disable postgres or bigquery testing, see 'marks' section below.
-
 ### Marks and Test Categorization
 A lot of functionality needs to be tested for multiple databases. The 'engine' and 'dialects' fixtures
 mentioned above help with that. Additionally we have some marks (`@pytest.mark.<type>`) to make it explicit
 which databases we expect tests to run against.
-
 We broadly want 5 categories of tests:
 * unit-test: These don't interact with a database
   * unit-tests that are tested with multiple database dialects (1)
