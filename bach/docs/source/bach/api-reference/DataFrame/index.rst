@@ -44,6 +44,7 @@ Axes
     DataFrame.all_series
     DataFrame.index_columns
     DataFrame.data_columns
+    DataFrame.columns
     DataFrame.group_by
     DataFrame.order_by
 
