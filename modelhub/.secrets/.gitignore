@@ -1,0 +1,4 @@
+# This directory is used for storing credentials for tets.
+# Ignore everything in this directory, except for this file.
+*
+!.gitignore

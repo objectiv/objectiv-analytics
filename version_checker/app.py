@@ -70,7 +70,7 @@ def check_version() -> Response:
     :return:Response object
     """
     # we only check our own packages, other packages will be ignored
-    packages_to_check = ['objectiv-bach', 'objectiv-modelhub']
+    packages_to_check = ['objectiv-modelhub']
 
     request: Request = flask.request
     data = parse_payload(request)

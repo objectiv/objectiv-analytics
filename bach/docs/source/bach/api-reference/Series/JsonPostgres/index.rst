@@ -2,12 +2,11 @@
 
 .. currentmodule:: bach
 
-=====
-Jsonb
-=====
+============
+JsonPostgres
+============
 
 .. autoclass:: SeriesJsonPostgres
-    :noindex:
 
 
 Methods
