@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import bach
 from modelhub.aggregate import Aggregate
 from modelhub.map import Map
+from modelhub.models.logistic_regression import LogisticRegression as _LogisticRegression
 from modelhub.series.series_objectiv import MetaBase
 from sql_models.constants import NotSet, DBDialect
 from modelhub.stack.util import sessionized_data_model
@@ -275,3 +276,23 @@ class ModelHub():
 
         """
         return Aggregate(self)
+
+    def LogisticRegression(self, *args, **kwargs):
+        """
+        A binary class logistic regression model that takes Bach data objects as input data. It is based on
+        sklean's LogisticRegression. All supported methods are run on the database using Bach directly,
+        with the exeption of :py:meth:`ModelHub.from_objectiv_data`. For the `fit` method, data is extracted
+        from the database before applying sklearn's fit method on the data.
+
+        For the full documentation, including a description of the parameters, of the Logistic Regression
+        model see:
+        https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+
+
+        .. autoclass:: LogisticRegression
+            :members:
+            :noindex:
+
+        """
+
+        return _LogisticRegression(*args, **kwargs)

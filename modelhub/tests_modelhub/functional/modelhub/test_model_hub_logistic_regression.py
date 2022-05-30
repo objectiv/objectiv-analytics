@@ -21,7 +21,6 @@ def test_fitted_model(engine):
 
 
 @pytest.mark.parametrize("method_name,X,y", [
-    ('decision_function', True, False),
     ('predict', True, False),
     ('predict_proba', True, False),
     ('score', True, True),

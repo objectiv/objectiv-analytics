@@ -8,7 +8,7 @@ Copyright 2021 Objectiv B.V.
 
 from typing import Iterable
 import bach
-from sklearn.linear_model import LogisticRegression as LogisticRegression
+from sklearn.linear_model import LogisticRegression
 from modelhub import ModelHub
 import numpy as np
 
@@ -36,7 +36,7 @@ class TestLR:
         modelhub = ModelHub()
 
         self.sklearn_lr = LogisticRegression(**kwargs)
-        self.modelhub_lr = modelhub.agg.LogisticRegression(**kwargs)
+        self.modelhub_lr = modelhub.LogisticRegression(**kwargs)
 
         self.sklearn_lr.fit(self.X_p, self.y_p)
         self.modelhub_lr.fit(self.X, self.y)

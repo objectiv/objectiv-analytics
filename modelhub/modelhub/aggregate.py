@@ -7,8 +7,6 @@ import bach
 from bach.series import Series
 from sql_models.constants import NotSet, not_set
 from typing import List, Union, TYPE_CHECKING
-from modelhub.models import LogisticRegression
-
 
 if TYPE_CHECKING:
     from modelhub import ModelHub
@@ -169,6 +167,3 @@ class Aggregate:
         frequency = total_sessions_user.groupby(['session_id_nunique']).aggregate({'user_id': 'nunique'})
 
         return frequency.user_id_nunique
-
-    def LogisticRegression(self, *args, **kwargs):
-        return LogisticRegression(*args, **kwargs)

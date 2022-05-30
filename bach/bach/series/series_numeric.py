@@ -42,7 +42,7 @@ class SeriesAbstractNumeric(Series, ABC):
 
     def exp(self) -> 'SeriesAbstractNumeric':
         """
-        Get Exp of value
+        Get exp of value
         """
         return self.copy_override(
             expression=Expression.construct(f'exp({{}})', self)
