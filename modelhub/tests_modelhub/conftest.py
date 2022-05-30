@@ -70,7 +70,7 @@ def setup_postgres_db(request: SubRequest) -> None:
             'day': bach.SeriesDate.supported_db_dtype[DBDialect.POSTGRES],
             'moment': bach.SeriesTimestamp.supported_db_dtype[DBDialect.POSTGRES],
             'cookie_id': bach.SeriesUuid.supported_db_dtype[DBDialect.POSTGRES],
-            'value': bach.SeriesJson.supported_db_dtype[DBDialect.POSTGRES],
+            'value': bach.SeriesJsonPostgres.supported_db_dtype[DBDialect.POSTGRES],
         },
     )
 
