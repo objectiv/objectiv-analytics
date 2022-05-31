@@ -101,13 +101,21 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         context_df = self._get_initial_data()
         context_df = self._process_taxonomy_data(context_df)
         context_df = self._apply_extra_processing(context_df)
-        context_df = self._convert_dtypes(context_df)
-        context_df = self._apply_date_filter(context_df=context_df, **kwargs)
 
-        final_columns = list(ObjectivSupportedColumns.get_extracted_context_columns())
-        context_df = context_df[final_columns]
+        context_df = self._convert_dtypes(df=context_df)
+        context_df = self._apply_date_filter(df=context_df, **kwargs)
 
+        context_columns = ObjectivSupportedColumns.get_extracted_context_columns()
+        context_df = context_df[context_columns]
         return context_df.materialize(node_name='context_data')
+
+    @property
+    def result_series_dtypes(self) -> Dict[str, str]:
+        context_columns = ObjectivSupportedColumns.get_extracted_context_columns()
+        return {
+            col: dtype for col, dtype in get_supported_dtypes_per_objectiv_column().items()
+            if col in context_columns
+        }
 
     def _get_base_dtypes(self) -> Mapping[str, StructuredDtype]:
         """
@@ -164,7 +172,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             },
         )
 
-        return df_cp.materialize(node_name='extracted_taxonomy')
+        return df_cp
 
     def _apply_extra_processing(self, df: bach.DataFrame) -> bach.DataFrame:
         """
@@ -176,6 +184,9 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         if not is_bigquery(self._engine):
             return df_cp
 
+        # this materialization is to generate a readable query
+        df_cp = df_cp.materialize(node_name='bq_moment_day_extraction')
+
         # BQ data source has no moment and day columns, therefore we need to generate them
         # based on the time value from the taxonomy column
         df_cp['moment'] = df_cp['time'].copy_override(
@@ -186,24 +197,6 @@ class ExtractedContextsPipeline(BaseDataPipeline):
 
         return df_cp
 
-    @staticmethod
-    def _convert_dtypes(df: bach.DataFrame) -> bach.DataFrame:
-        """
-        Helper function that converts each context series to its correct dtype,
-        this way we ensure the pipeline is returning the dtypes Modelhub is expecting.
-
-        Returns a bach DataFrame
-        """
-        df_cp = df.copy()
-        objectiv_dtypes = get_supported_dtypes_per_objectiv_column()
-        for col in ObjectivSupportedColumns.get_extracted_context_columns():
-            if col not in df_cp.data:
-                continue
-
-            df_cp[col] = df_cp[col].astype(objectiv_dtypes[col])
-
-        return df_cp
-
     @classmethod
     def validate_pipeline_result(cls, result: bach.DataFrame) -> None:
         """
@@ -211,13 +204,13 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         """
         check_objectiv_dataframe(
             result,
-            columns_to_check=list(ObjectivSupportedColumns.get_extracted_context_columns()),
+            columns_to_check=ObjectivSupportedColumns.get_extracted_context_columns(),
             check_dtypes=True,
         )
 
     def _apply_date_filter(
         self,
-        context_df: bach.DataFrame,
+        df: bach.DataFrame,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         **kwargs,
@@ -227,18 +220,18 @@ class ExtractedContextsPipeline(BaseDataPipeline):
 
         returns bach DataFrame
         """
-        context_df_cp = context_df.copy()
+        df_cp = df.copy()
 
         if not start_date and not end_date:
-            return context_df_cp
+            return df_cp
 
         date_filters = []
         if start_date:
-            date_filters.append(context_df_cp[self.DATE_FILTER_COLUMN] >= start_date)
+            date_filters.append(df_cp[self.DATE_FILTER_COLUMN] >= start_date)
         if end_date:
-            date_filters.append(context_df_cp[self.DATE_FILTER_COLUMN] <= end_date)
+            date_filters.append(df_cp[self.DATE_FILTER_COLUMN] <= end_date)
 
-        return context_df_cp[reduce(operator.and_, date_filters)]
+        return df_cp[reduce(operator.and_, date_filters)]
 
 
 def get_extracted_contexts_df(
@@ -255,7 +248,6 @@ def get_extracted_contexts_df(
     pipeline = ExtractedContextsPipeline(engine=engine, table_name=table_name)
     result = pipeline(**kwargs)
     if set_index:
-        indexes = list(ObjectivSupportedColumns.get_index_columns())
-        result = result.set_index(keys=indexes)
+        result = result.set_index(keys=ObjectivSupportedColumns.get_index_columns())
 
     return result

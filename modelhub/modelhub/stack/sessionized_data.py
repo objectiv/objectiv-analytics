@@ -2,6 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 from enum import Enum
+from typing import Dict, List
 
 import bach
 from sqlalchemy.engine import Engine
@@ -48,11 +49,10 @@ class SessionizedDataPipeline(BaseDataPipeline):
 
         # adds required objectiv session series
         sessionized_df = self._calculate_objectiv_session_series(sessionized_df)
-        sessionized_df = self._convert_dtypes(sessionized_df)
 
-        final_columns = (
-            context_df.data_columns + list(ObjectivSupportedColumns.get_sessionized_columns())
-        )
+        sessionized_df = self._convert_dtypes(df=sessionized_df)
+
+        final_columns = context_df.data_columns + ObjectivSupportedColumns.get_sessionized_columns()
         sessionized_df = sessionized_df[final_columns]
 
         return sessionized_df
@@ -65,27 +65,17 @@ class SessionizedDataPipeline(BaseDataPipeline):
         ExtractedContextsPipeline.validate_pipeline_result(result)
         check_objectiv_dataframe(
             result,
-            columns_to_check=list(ObjectivSupportedColumns.get_sessionized_columns()),
+            columns_to_check=ObjectivSupportedColumns.get_sessionized_columns(),
             check_dtypes=True,
         )
 
-    @staticmethod
-    def _convert_dtypes(df: bach.DataFrame) -> bach.DataFrame:
-        """
-        Helper function that converts each sessionized series to its correct dtype,
-        this way we ensure the pipeline is returning the dtypes Modelhub is expecting.
-
-        Returns a bach DataFrame
-        """
-        df_cp = df.copy()
-        objectiv_dtypes = get_supported_dtypes_per_objectiv_column()
-        for col in ObjectivSupportedColumns.get_sessionized_columns():
-            if col not in df_cp.data:
-                continue
-
-            df_cp[col] = df_cp[col] = df_cp[col].astype(objectiv_dtypes[col])
-
-        return df_cp
+    @property
+    def result_series_dtypes(self) -> Dict[str, str]:
+        sessionized_columns = ObjectivSupportedColumns.get_sessionized_columns()
+        return {
+            col: dtype for col, dtype in get_supported_dtypes_per_objectiv_column().items()
+            if col in sessionized_columns
+        }
 
     def _calculate_base_session_series(self, df: bach.DataFrame, session_gap_seconds: int) -> bach.DataFrame:
         """
