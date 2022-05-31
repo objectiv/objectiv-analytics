@@ -180,9 +180,11 @@ class Aggregate:
         :param location_stack: the location stack
             - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column
             - if None - the whole location stack is taken.
-        :param event_type: event type. Must be a valid event_type.
+        :param event_type: event type. Must be a valid event_type (either parent or child).
         :returns: bach DataFrame with results.
         """
+
+        data = data.copy()
 
         self._mh._check_data_is_objectiv_data(data)
 
