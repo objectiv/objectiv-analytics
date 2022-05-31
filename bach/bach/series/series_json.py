@@ -385,6 +385,9 @@ class JsonBigQueryAccessor:
         This assumes the top-level item in the json is an array. Will result in an exception (later on) if
         that's not the case!
         """
+        # Implementing a more generic __len__() function is not trivial as a json object can be (among
+        # others) an array, a dict, or a string, all of which should be supported by a generic __len__().
+        # So for now we have a dedicated len function for arrays.
         from bach.series import SeriesInt64
         expression = Expression.construct('ARRAY_LENGTH(JSON_EXTRACT_ARRAY({}))', self._series_object)
         return self._series_object \
