@@ -2,6 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
+import { TrackerEvent } from "./TrackerEvent";
 import { TrackerValidationLifecycleInterface } from './TrackerValidationLifecycleInterface';
 
 /**
@@ -12,6 +13,11 @@ export type TrackerValidationRuleConfig = {
    * Optional. Allows adding further information to the logging prefix, e.g. ｢objectiv:<logPrefix><ruleName>｣<message>
    */
   logPrefix?: string;
+
+  /**
+   * Optional. A predicated for discriminating which events are affected by this rule.
+   */
+  eventMatches?: (event: TrackerEvent) => boolean;
 };
 
 /**

@@ -33,6 +33,11 @@ export class TrackerEvent implements UntrackedEvent, Contexts {
   id: string;
   time?: number;
 
+  // Discriminators. TODO: Have the TS Schema generator add these to AbstractEvent.
+  __interactive_event?: true;
+  __non_interactive_event?: true;
+  __media_event?: true;
+
   // Contexts interface
   readonly location_stack: AbstractLocationContext[];
   readonly global_contexts: AbstractGlobalContext[];

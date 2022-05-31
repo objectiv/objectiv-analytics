@@ -53,6 +53,16 @@ describe('Tracker', () => {
             position: 0,
             once: true,
             validate: expect.any(Function),
+            eventMatches: expect.any(Function)
+          },
+          {
+            validationRuleName: 'GlobalContextValidationRule',
+            logPrefix: 'OpenTaxonomyValidationPlugin',
+            contextName: GlobalContextName.PathContext,
+            platform: 'CORE',
+            once: true,
+            validate: expect.any(Function),
+            eventMatches: expect.any(Function)
           },
         ],
       },
@@ -103,6 +113,16 @@ describe('Tracker', () => {
             position: 0,
             once: true,
             validate: expect.any(Function),
+            eventMatches: expect.any(Function)
+          },
+          {
+            validationRuleName: 'GlobalContextValidationRule',
+            logPrefix: 'OpenTaxonomyValidationPlugin',
+            contextName: GlobalContextName.PathContext,
+            platform: 'CORE',
+            once: true,
+            validate: expect.any(Function),
+            eventMatches: expect.any(Function)
           },
         ],
       },
@@ -153,6 +173,16 @@ describe('Tracker', () => {
             position: 0,
             once: true,
             validate: expect.any(Function),
+            eventMatches: expect.any(Function)
+          },
+          {
+            validationRuleName: 'GlobalContextValidationRule',
+            logPrefix: 'OpenTaxonomyValidationPlugin',
+            contextName: GlobalContextName.PathContext,
+            platform: 'CORE',
+            once: true,
+            validate: expect.any(Function),
+            eventMatches: expect.any(Function)
           },
         ],
       },
