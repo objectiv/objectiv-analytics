@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { TrackerEvent } from './TrackerEvent';
+import { EventToValidate } from './TrackerEvent';
 import { TrackerValidationLifecycleInterface } from './TrackerValidationLifecycleInterface';
 
 /**
@@ -17,7 +17,7 @@ export type TrackerValidationRuleConfig = {
   /**
    * Optional. A predicated for discriminating which events are affected by this rule.
    */
-  eventMatches?: (event: TrackerEvent) => boolean;
+  eventMatches?: (event: EventToValidate) => boolean;
 };
 
 /**

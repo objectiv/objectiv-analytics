@@ -2,7 +2,13 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { AbstractEvent, AbstractGlobalContext, AbstractLocationContext, Contexts } from '@objectiv/schema';
+import {
+  AbstractEvent,
+  AbstractGlobalContext,
+  AbstractLocationContext,
+  Contexts,
+  EventAbstractDiscriminators,
+} from '@objectiv/schema';
 import { cleanObjectFromInternalProperties } from './cleanObjectFromInternalProperties';
 import { ContextsConfig } from './Context';
 import { generateUUID } from './helpers';
@@ -32,11 +38,6 @@ export class TrackerEvent implements UntrackedEvent, Contexts {
   readonly _type: string;
   id: string;
   time?: number;
-
-  // Discriminators. TODO: Have the TS Schema generator add these to AbstractEvent.
-  __interactive_event?: true;
-  __non_interactive_event?: true;
-  __media_event?: true;
 
   // Contexts interface
   readonly location_stack: AbstractLocationContext[];
@@ -93,3 +94,8 @@ export class TrackerEvent implements UntrackedEvent, Contexts {
     };
   }
 }
+
+/**
+ * An Event ready to be validated.
+ */
+export type EventToValidate = TrackerEvent & EventAbstractDiscriminators;
