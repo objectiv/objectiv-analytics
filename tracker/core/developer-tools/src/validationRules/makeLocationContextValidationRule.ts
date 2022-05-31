@@ -34,7 +34,7 @@ export const makeLocationContextValidationRule: LocationContextValidationRuleFac
      * Verifies whether the given Context is present, duplicated or in the wrong position in the given TrackerEvent.
      */
     validate(event: TrackerEvent): void {
-      if(parameters.eventMatches && !parameters.eventMatches(event)) {
+      if (parameters.eventMatches && !parameters.eventMatches(event)) {
         return;
       }
 

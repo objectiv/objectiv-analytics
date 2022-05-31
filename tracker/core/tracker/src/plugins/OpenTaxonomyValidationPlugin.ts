@@ -29,7 +29,7 @@ export class OpenTaxonomyValidationPlugin implements TrackerPluginInterface {
           platform,
           logPrefix: this.pluginName,
           contextName: GlobalContextName.ApplicationContext,
-          once: true
+          once: true,
         }),
         globalThis.objectiv.makeLocationContextValidationRule({
           platform,
@@ -37,14 +37,14 @@ export class OpenTaxonomyValidationPlugin implements TrackerPluginInterface {
           contextName: LocationContextName.RootLocationContext,
           once: true,
           position: 0,
-          eventMatches: (event: TrackerEvent) => event.__interactive_event === true
+          eventMatches: (event: TrackerEvent) => event.__interactive_event === true,
         }),
         globalThis.objectiv.makeGlobalContextValidationRule({
           platform,
           logPrefix: this.pluginName,
           contextName: GlobalContextName.PathContext,
           once: true,
-          eventMatches: (event: TrackerEvent) => event.__interactive_event === true
+          eventMatches: (event: TrackerEvent) => event.__interactive_event === true,
         }),
       ];
 

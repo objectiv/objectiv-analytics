@@ -62,7 +62,7 @@ describe('ObjectivProvider', () => {
                 position: 0,
                 once: true,
                 validate: expect.any(Function),
-                eventMatches: expect.any(Function)
+                eventMatches: expect.any(Function),
               },
               {
                 validationRuleName: 'GlobalContextValidationRule',
@@ -71,7 +71,7 @@ describe('ObjectivProvider', () => {
                 platform: 'CORE',
                 once: true,
                 validate: expect.any(Function),
-                eventMatches: expect.any(Function)
+                eventMatches: expect.any(Function),
               },
             ],
           },

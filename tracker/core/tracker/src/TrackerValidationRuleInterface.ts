@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { TrackerEvent } from "./TrackerEvent";
+import { TrackerEvent } from './TrackerEvent';
 import { TrackerValidationLifecycleInterface } from './TrackerValidationLifecycleInterface';
 
 /**

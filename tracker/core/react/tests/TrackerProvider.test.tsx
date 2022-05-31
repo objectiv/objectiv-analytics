@@ -53,7 +53,7 @@ describe('TrackerProvider', () => {
                 position: 0,
                 once: true,
                 validate: expect.any(Function),
-                eventMatches: expect.any(Function)
+                eventMatches: expect.any(Function),
               },
               {
                 validationRuleName: 'GlobalContextValidationRule',
@@ -62,7 +62,7 @@ describe('TrackerProvider', () => {
                 platform: 'CORE',
                 once: true,
                 validate: expect.any(Function),
-                eventMatches: expect.any(Function)
+                eventMatches: expect.any(Function),
               },
             ],
           },

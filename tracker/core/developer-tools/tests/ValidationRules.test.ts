@@ -22,7 +22,7 @@ describe('Validation Rules', () => {
       const testGlobalContextValidationRule = makeGlobalContextValidationRule({
         platform: TrackerPlatform.CORE,
         contextName: GlobalContextName.PathContext,
-        eventMatches: () => false
+        eventMatches: () => false,
       });
 
       jest.resetAllMocks();
@@ -102,7 +102,7 @@ describe('Validation Rules', () => {
       const testLocationContextValidationRule = makeLocationContextValidationRule({
         platform: TrackerPlatform.CORE,
         contextName: LocationContextName.ContentContext,
-        eventMatches: () => false
+        eventMatches: () => false,
       });
 
       jest.resetAllMocks();
