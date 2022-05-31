@@ -98,8 +98,8 @@ class ModelHub:
 
     def get_objectiv_dataframe(
         self,
-        db_url: str,
-        table_name: str,
+        db_url: str = None,
+        table_name: str = 'data',
         start_date: str = None,
         end_date: str = None,
         *,
