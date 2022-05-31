@@ -64,6 +64,22 @@ class ExtractedContextsPipeline(BaseDataPipeline):
     Pipeline in charge of extracting Objectiv context columns from event data source.
     Based on the provided engine, it will perform the proper transformations for generating a bach DataFrame
     that contains all expected series to be used by Modelhub.
+
+    The steps followed in this pipeline are the following:
+        1. _get_initial_data: Gets the initial bach DataFrame containing all required context columns
+            based on the engine.
+        2. _process_taxonomy_data: Will extract required fields from taxonomy json, it will use
+            _DEFAULT_TAXONOMY_DTYPE_PER_FIELD by default. If engine requires other fields, it should be specified
+            to the pipeline.
+        3. _apply_extra_processing: Applies extra processing if required, this is mainly based on the engine.
+            For example, for BigQuery, the pipeline will generate moment and day series from `time` series
+            extracted from the taxonomy.
+        4. _convert_dtypes: Will convert all required context series to their correct dtype
+        5. _apply_date_filter: Applies start_date and end_date filter, if required.
+
+    Final bach DataFrame will be later validated, it must include:
+        - all context series defined in ObjectivSupportedColumns
+        - correct dtypes for context series
     """
     DATE_FILTER_COLUMN = ObjectivSupportedColumns.DAY.value
 
