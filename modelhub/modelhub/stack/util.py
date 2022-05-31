@@ -4,7 +4,7 @@ Copyright 2021 Objectiv B.V.
 import bach
 
 from enum import Enum
-from typing import Tuple, Dict, List
+from typing import Dict, List
 
 from modelhub.series import series_objectiv
 
@@ -38,23 +38,23 @@ class ObjectivSupportedColumns(Enum):
     )
 
     @classmethod
-    def get_extracted_context_columns(cls) -> Tuple[str, ...]:
-        return cls._EXTRACTED_CONTEXT_COLUMNS.value
+    def get_extracted_context_columns(cls) -> List[str]:
+        return list(cls._EXTRACTED_CONTEXT_COLUMNS.value)
 
     @classmethod
-    def get_sessionized_columns(cls) -> Tuple[str, ...]:
-        return cls._SESSIONIZED_COLUMNS.value
+    def get_sessionized_columns(cls) -> List[str]:
+        return list(cls._SESSIONIZED_COLUMNS.value)
 
     @classmethod
-    def get_data_columns(cls) -> Tuple[str, ...]:
-        return cls._DATA_SERIES.value
+    def get_data_columns(cls) -> List[str]:
+        return list(cls._DATA_SERIES.value)
 
     @classmethod
-    def get_index_columns(cls) -> Tuple[str, ...]:
-        return cls._INDEX_SERIES.value
+    def get_index_columns(cls) -> List[str]:
+        return list(cls._INDEX_SERIES.value)
 
     @classmethod
-    def get_all_columns(cls) -> Tuple[str, ...]:
+    def get_all_columns(cls) -> List[str]:
         return cls.get_index_columns() + cls.get_data_columns()
 
 
@@ -111,18 +111,20 @@ def check_objectiv_dataframe(
     supported_dtypes = get_supported_dtypes_per_objectiv_column(with_md_dtypes=with_md_dtypes)
 
     for col in columns:
-        supported_col = ObjectivSupportedColumns(col)
-        if supported_col.value not in df.all_series:
-            raise ValueError(f'{supported_col.value} is not present in DataFrame.')
+        if col not in supported_dtypes:
+            raise ValueError(f'{col} is not present in Objectiv supported columns.')
+
+        if col not in df.all_series:
+            raise ValueError(f'{col} is not present in DataFrame.')
 
         if (
             check_index
             and col in ObjectivSupportedColumns.get_index_columns()
             and col not in df.index
         ):
-            raise ValueError(f'{supported_col.value} is not present in DataFrame index.')
+            raise ValueError(f'{col} is not present in DataFrame index.')
 
         if check_dtypes:
-            dtype = supported_dtypes[supported_col.value]
-            if df.all_series[supported_col.value].dtype != dtype:
-                raise ValueError(f'{supported_col.value} must be {dtype} dtype.')
+            dtype = supported_dtypes[col]
+            if df.all_series[col].dtype != dtype:
+                raise ValueError(f'{col} must be {dtype} dtype.')

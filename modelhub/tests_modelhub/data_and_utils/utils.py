@@ -14,7 +14,7 @@ from tests_modelhub.data_and_utils.data_json_real import TEST_DATA_JSON_REAL, JS
 from tests_modelhub.data_and_utils.data_objectiv import TEST_DATA_OBJECTIV
 
 
-def convert_moment_to_utc_time(moment: str) -> int:
+def _convert_moment_to_utc_time(moment: str) -> int:
     dt = datetime.fromisoformat(moment)
     dt = dt.replace(tzinfo=timezone.utc)
     return int(dt.timestamp() * 1e3)
@@ -59,7 +59,7 @@ def get_parsed_objectiv_data(engine):
         # BQ uses time from taxonomy json for getting moment and day
         # therefore time value MUST be the same as moment
         if is_bigquery(engine):
-            value['time'] = convert_moment_to_utc_time(moment)
+            value['time'] = _convert_moment_to_utc_time(moment)
 
         parsed_data.append(
             {

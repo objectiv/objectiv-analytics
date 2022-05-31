@@ -24,7 +24,6 @@ Category 4 and 5 are for functionality that we explicitly not support on some da
 Category 4, and 5 are the exception, these need to be marked with the `skip_postgres` or `skip_bigquery` marks.
 """
 import os
-from enum import Enum
 from typing import NamedTuple, Optional
 
 import bach
@@ -38,11 +37,6 @@ from tests_modelhub.data_and_utils.utils import setup_db
 
 MARK_SKIP_POSTGRES = 'skip_postgres'
 MARK_SKIP_BIGQUERY = 'skip_bigquery'
-
-
-class DB(Enum):
-    POSTGRES = 'postgres'
-    BIGQUERY = 'bigquery'
 
 
 class DBParams(NamedTuple):
@@ -84,7 +78,7 @@ def pytest_addoption(parser: Parser):
     # https://docs.pytest.org/en/6.2.x/reference.html#initialization-hooks
     parser.addoption('--postgres', action='store_true', help='run the functional tests for Postgres')
     parser.addoption('--big-query', action='store_true', help='run the functional tests for BigQuery')
-    parser.addoption('--all', action='store_true', help='run the functional tests for BigQuery')
+    parser.addoption('--all', action='store_true', help='run the functional tests for all databases.')
 
 
 def pytest_generate_tests(metafunc: Metafunc):
