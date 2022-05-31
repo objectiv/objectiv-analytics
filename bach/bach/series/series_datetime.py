@@ -69,15 +69,11 @@ class DateTimeOperation:
         """
         engine = self._series.engine
         parsed_format_str = parse_date_format_str(engine, format_str) if parse_format_str else format_str
-
+        string_value_expr = Expression.string_value(parsed_format_str)
         if is_postgres(engine):
-            expression = Expression.construct(
-                'to_char({}, {})', self._series, Expression.string_value(parsed_format_str),
-            )
+            expression = Expression.construct('to_char({}, {})', self._series, string_value_expr)
         elif is_bigquery(engine):
-            expression = Expression.construct(
-                'format_date({}, {})', Expression.string_value(parsed_format_str), self._series,
-            )
+            expression = Expression.construct('format_date({}, {})', string_value_expr, self._series)
         else:
             raise DatabaseNotSupportedException(engine)
 
