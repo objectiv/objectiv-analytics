@@ -55,6 +55,7 @@ def test_is_first_session(db_params):
     )
 
 
+@pytest.mark.skip_bigquery
 def test_is_new_user(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
@@ -125,7 +126,7 @@ def test_is_new_user(db_params):
 
 
 @pytest.mark.skip_bigquery
-def test_is_conversion_event(db_params): # TODO: Remove when bach supports json slicing for BigQuery
+def test_add_conversion_event(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
     location_stack = df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
@@ -157,7 +158,8 @@ def test_is_conversion_event(db_params): # TODO: Remove when bach supports json 
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), False],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), False]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # location_stack not set
@@ -183,7 +185,8 @@ def test_is_conversion_event(db_params): # TODO: Remove when bach supports json 
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # event_type not set
@@ -211,7 +214,8 @@ def test_is_conversion_event(db_params): # TODO: Remove when bach supports json 
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), False],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), False]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # name not set
@@ -238,9 +242,19 @@ def test_is_conversion_event(db_params): # TODO: Remove when bach supports json 
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
+
+@pytest.mark.skip_bigquery
+def test_is_conversion_event(db_params): # TODO: Remove when bach supports json slicing for BigQuery
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+
+    # add conversion event
+    modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext',
+                                                                         'id': 'cta-repo-button'}:],
+                                  event_type='ClickEvent', name='github_clicks')
     s = modelhub.map.is_conversion_event(df, 'github_clicks')
 
     assert_equals_data(
@@ -273,7 +287,8 @@ def test_is_conversion_event(db_params): # TODO: Remove when bach supports json 
         expected_data=[
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # wrong conversion_event name

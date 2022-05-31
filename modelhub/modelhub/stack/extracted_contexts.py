@@ -64,6 +64,22 @@ class ExtractedContextsPipeline(BaseDataPipeline):
     Pipeline in charge of extracting Objectiv context columns from event data source.
     Based on the provided engine, it will perform the proper transformations for generating a bach DataFrame
     that contains all expected series to be used by Modelhub.
+
+    The steps followed in this pipeline are the following:
+        1. _get_initial_data: Gets the initial bach DataFrame containing all required context columns
+            based on the engine.
+        2. _process_taxonomy_data: Will extract required fields from taxonomy json, it will use
+            _DEFAULT_TAXONOMY_DTYPE_PER_FIELD by default. If engine requires other fields,
+            it should be specified to the pipeline.
+        3. _apply_extra_processing: Applies extra processing if required, this is mainly based on the engine.
+            For example, for BigQuery, the pipeline will generate moment and day series from `time` series
+            extracted from the taxonomy.
+        4. _convert_dtypes: Will convert all required context series to their correct dtype
+        5. _apply_date_filter: Applies start_date and end_date filter, if required.
+
+    Final bach DataFrame will be later validated, it must include:
+        - all context series defined in ObjectivSupportedColumns
+        - correct dtypes for context series
     """
     DATE_FILTER_COLUMN = ObjectivSupportedColumns.DAY.value
 
@@ -101,13 +117,21 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         context_df = self._get_initial_data()
         context_df = self._process_taxonomy_data(context_df)
         context_df = self._apply_extra_processing(context_df)
-        context_df = self._convert_dtypes(context_df)
-        context_df = self._apply_date_filter(context_df=context_df, **kwargs)
 
-        final_columns = list(ObjectivSupportedColumns.get_extracted_context_columns())
-        context_df = context_df[final_columns]
+        context_df = self._convert_dtypes(df=context_df)
+        context_df = self._apply_date_filter(df=context_df, **kwargs)
 
+        context_columns = ObjectivSupportedColumns.get_extracted_context_columns()
+        context_df = context_df[context_columns]
         return context_df.materialize(node_name='context_data')
+
+    @property
+    def result_series_dtypes(self) -> Dict[str, str]:
+        context_columns = ObjectivSupportedColumns.get_extracted_context_columns()
+        return {
+            col: dtype for col, dtype in get_supported_dtypes_per_objectiv_column().items()
+            if col in context_columns
+        }
 
     def _get_base_dtypes(self) -> Mapping[str, StructuredDtype]:
         """
@@ -142,6 +166,8 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         if is_bigquery(df.engine):
             # taxonomy column is a list, we just need to get the first value (LIST IS ALWAYS A SINGLE EVENT)
             taxonomy_series = taxonomy_series.elements[0]
+
+            # same definition as _DEFAULT_TAXONOMY_DTYPE_PER_FIELD with some extra fields
             dtypes = self._taxonomy_column.dtype[0]
 
         for key, dtype in dtypes.items():
@@ -150,6 +176,8 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             if isinstance(taxonomy_series, bach.SeriesJson):
                 taxonomy_col = taxonomy_series.json.get_value(key, as_str=True)
             else:
+                # taxonomy_series is dtype='dict' for BQ. Therefore, we need to explicitly
+                # cast the resultant element as string
                 taxonomy_col = taxonomy_series.elements[key].astype('string')
 
             taxonomy_col = taxonomy_col.astype(dtype).copy_override(name=key)
@@ -164,7 +192,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             },
         )
 
-        return df_cp.materialize(node_name='extracted_taxonomy')
+        return df_cp
 
     def _apply_extra_processing(self, df: bach.DataFrame) -> bach.DataFrame:
         """
@@ -176,6 +204,9 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         if not is_bigquery(self._engine):
             return df_cp
 
+        # this materialization is to generate a readable query
+        df_cp = df_cp.materialize(node_name='bq_moment_day_extraction')
+
         # BQ data source has no moment and day columns, therefore we need to generate them
         # based on the time value from the taxonomy column
         df_cp['moment'] = df_cp['time'].copy_override(
@@ -186,24 +217,6 @@ class ExtractedContextsPipeline(BaseDataPipeline):
 
         return df_cp
 
-    @staticmethod
-    def _convert_dtypes(df: bach.DataFrame) -> bach.DataFrame:
-        """
-        Helper function that converts each context series to its correct dtype,
-        this way we ensure the pipeline is returning the dtypes Modelhub is expecting.
-
-        Returns a bach DataFrame
-        """
-        df_cp = df.copy()
-        objectiv_dtypes = get_supported_dtypes_per_objectiv_column()
-        for col in ObjectivSupportedColumns.get_extracted_context_columns():
-            if col not in df_cp.data:
-                continue
-
-            df_cp[col] = df_cp[col].astype(objectiv_dtypes[col])
-
-        return df_cp
-
     @classmethod
     def validate_pipeline_result(cls, result: bach.DataFrame) -> None:
         """
@@ -211,13 +224,13 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         """
         check_objectiv_dataframe(
             result,
-            columns_to_check=list(ObjectivSupportedColumns.get_extracted_context_columns()),
+            columns_to_check=ObjectivSupportedColumns.get_extracted_context_columns(),
             check_dtypes=True,
         )
 
     def _apply_date_filter(
         self,
-        context_df: bach.DataFrame,
+        df: bach.DataFrame,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         **kwargs,
@@ -227,18 +240,18 @@ class ExtractedContextsPipeline(BaseDataPipeline):
 
         returns bach DataFrame
         """
-        context_df_cp = context_df.copy()
+        df_cp = df.copy()
 
         if not start_date and not end_date:
-            return context_df_cp
+            return df_cp
 
         date_filters = []
         if start_date:
-            date_filters.append(context_df_cp[self.DATE_FILTER_COLUMN] >= start_date)
+            date_filters.append(df_cp[self.DATE_FILTER_COLUMN] >= start_date)
         if end_date:
-            date_filters.append(context_df_cp[self.DATE_FILTER_COLUMN] <= end_date)
+            date_filters.append(df_cp[self.DATE_FILTER_COLUMN] <= end_date)
 
-        return context_df_cp[reduce(operator.and_, date_filters)]
+        return df_cp[reduce(operator.and_, date_filters)]
 
 
 def get_extracted_contexts_df(
@@ -255,7 +268,6 @@ def get_extracted_contexts_df(
     pipeline = ExtractedContextsPipeline(engine=engine, table_name=table_name)
     result = pipeline(**kwargs)
     if set_index:
-        indexes = list(ObjectivSupportedColumns.get_index_columns())
-        result = result.set_index(keys=indexes)
+        result = result.set_index(keys=ObjectivSupportedColumns.get_index_columns())
 
     return result

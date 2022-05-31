@@ -2,6 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 from enum import Enum
+from typing import Dict, List
 
 import bach
 from sqlalchemy.engine import Engine
@@ -24,6 +25,20 @@ class SessionizedDataPipeline(BaseDataPipeline):
     Pipeline in charge of calculating Objectiv sessionized columns.
     This pipeline is dependent on the result from ExtractedContextsPipeline, therefore it expects that
     the result from the latter is generated correctly.
+
+    The steps followed in this pipeline are the following:
+        1. get_extracted_contexts_df: Gets the generated DataFrame from ExtractedContextsPipeline.
+        2. _validate_data_columns: Validates if result from previous step has event_id, user_id and
+            moment series.
+        3. _calculate_base_session_series: Calculates `is_start_of_session`, `session_start_id` and
+            `is_one_session` series.
+        4. _calculate_objectiv_session_series: Calculates final sessionized series:
+            `session_id` and `session_hit_number`
+        5. _convert_dtypes: Will convert all required sessionized series to their correct dtype
+
+    Final bach DataFrame will be later validated, it must include:
+        - all context and sessionized series defined in ObjectivSupportedColumns
+        - correct dtypes for both context and sessionized series
     """
     def _get_pipeline_result(self, session_gap_seconds=180, **kwargs) -> bach.DataFrame:
         # initial data is the result from ExtractedContextsPipeline
@@ -32,6 +47,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
         )
 
         # make sure the result has AT LEAST the following series
+        # even though the ExtractedContextsPipeline already validates series
         self._validate_data_columns(
             expected_columns=[
                 ObjectivSupportedColumns.EVENT_ID.value,
@@ -48,14 +64,11 @@ class SessionizedDataPipeline(BaseDataPipeline):
 
         # adds required objectiv session series
         sessionized_df = self._calculate_objectiv_session_series(sessionized_df)
-        sessionized_df = self._convert_dtypes(sessionized_df)
 
-        final_columns = (
-            context_df.data_columns + list(ObjectivSupportedColumns.get_sessionized_columns())
-        )
-        sessionized_df = sessionized_df[final_columns]
+        sessionized_df = self._convert_dtypes(df=sessionized_df)
 
-        return sessionized_df
+        final_columns = context_df.data_columns + ObjectivSupportedColumns.get_sessionized_columns()
+        return sessionized_df[final_columns]
 
     @classmethod
     def validate_pipeline_result(cls, result: bach.DataFrame) -> None:
@@ -65,27 +78,17 @@ class SessionizedDataPipeline(BaseDataPipeline):
         ExtractedContextsPipeline.validate_pipeline_result(result)
         check_objectiv_dataframe(
             result,
-            columns_to_check=list(ObjectivSupportedColumns.get_sessionized_columns()),
+            columns_to_check=ObjectivSupportedColumns.get_sessionized_columns(),
             check_dtypes=True,
         )
 
-    @staticmethod
-    def _convert_dtypes(df: bach.DataFrame) -> bach.DataFrame:
-        """
-        Helper function that converts each sessionized series to its correct dtype,
-        this way we ensure the pipeline is returning the dtypes Modelhub is expecting.
-
-        Returns a bach DataFrame
-        """
-        df_cp = df.copy()
-        objectiv_dtypes = get_supported_dtypes_per_objectiv_column()
-        for col in ObjectivSupportedColumns.get_sessionized_columns():
-            if col not in df_cp.data:
-                continue
-
-            df_cp[col] = df_cp[col] = df_cp[col].astype(objectiv_dtypes[col])
-
-        return df_cp
+    @property
+    def result_series_dtypes(self) -> Dict[str, str]:
+        sessionized_columns = ObjectivSupportedColumns.get_sessionized_columns()
+        return {
+            col: dtype for col, dtype in get_supported_dtypes_per_objectiv_column().items()
+            if col in sessionized_columns
+        }
 
     def _calculate_base_session_series(self, df: bach.DataFrame, session_gap_seconds: int) -> bach.DataFrame:
         """
