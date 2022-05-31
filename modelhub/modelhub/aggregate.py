@@ -172,14 +172,15 @@ class Aggregate:
     def top_used_product_features(self,
                                   data: bach.DataFrame,
                                   location_stack: 'SeriesLocationStack' = None,
-                                  event_types: str = 'InteractiveEvent') -> bach.DataFrame:
+                                  event_type: str = 'InteractiveEvent') -> bach.DataFrame:
         """
         Calculate the top used features in the product.
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param location_stack: the location stack, can be any slice in of a
-            :py:class:`modelhub.SeriesLocationStack` type column.
-        :param event_types: event type. Must be a valid event_type.
+        :param location_stack: the location stack
+            - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column
+            - if None - the whole location stack is taken.
+        :param event_type: event type. Must be a valid event_type.
         :returns: bach DataFrame with results.
         """
 
@@ -196,7 +197,7 @@ class Aggregate:
         groupby_col = ['_application', '_feature_nice_name', 'event_type']
 
         # selects specific event types, so stack_event_types must be a superset of [event_types]
-        interactive_events = data[data.stack_event_types >= [event_types]]
+        interactive_events = data[data.stack_event_types >= [event_type]]
 
         # users by feature
         users_feature = interactive_events.groupby(groupby_col).agg({'user_id': 'nunique'})

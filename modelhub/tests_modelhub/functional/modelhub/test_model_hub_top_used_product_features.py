@@ -50,20 +50,20 @@ def test_top_used_product_features():
 
     assert_equals_data(
         tdf,
-
         expected_columns=['_application', '_feature_nice_name', 'event_type', 'user_id_nunique'],
         expected_data=[
-            ['objectiv-website', 'Link: About Us', 'ClickEvent', 2],
+            ['objectiv-docs', 'Link: logo', 'ClickEvent', 1],
             ['objectiv-docs', 'Link: notebook-product-analytics', 'ClickEvent', 1],
             ['objectiv-docs', None, 'ClickEvent', 1],
+            ['objectiv-website', 'Link: About Us', 'ClickEvent', 2],
             ['objectiv-website', 'Link: Contact Us', 'ClickEvent', 1],
             ['objectiv-website', 'Link: Cookies', 'ClickEvent', 1],
             ['objectiv-website', 'Link: cta-docs-location-stack', 'ClickEvent', 1],
             ['objectiv-website', 'Link: cta-docs-taxonomy', 'ClickEvent', 1],
             ['objectiv-website', 'Link: cta-repo-button', 'ClickEvent', 1],
             ['objectiv-website', 'Link: Docs', 'ClickEvent', 1],
-            ['objectiv-docs', 'Link: logo', 'ClickEvent', 1],
-            ['objectiv-website', 'Link: GitHub', 'ClickEvent', 1]
+            ['objectiv-website', 'Link: GitHub', 'ClickEvent', 1],
         ],
+        order_by=['_application', '_feature_nice_name', 'user_id_nunique']
     )
 
