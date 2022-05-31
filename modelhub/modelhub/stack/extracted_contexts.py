@@ -150,6 +150,8 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         if is_bigquery(df.engine):
             # taxonomy column is a list, we just need to get the first value (LIST IS ALWAYS A SINGLE EVENT)
             taxonomy_series = taxonomy_series.elements[0]
+
+            # same definition as _DEFAULT_TAXONOMY_DTYPE_PER_FIELD with some extra fields
             dtypes = self._taxonomy_column.dtype[0]
 
         for key, dtype in dtypes.items():
@@ -158,6 +160,8 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             if isinstance(taxonomy_series, bach.SeriesJson):
                 taxonomy_col = taxonomy_series.json.get_value(key, as_str=True)
             else:
+                # taxonomy_series is dtype='dict' for BQ. Therefore, we need to explicitly
+                # cast the resultant element as string
                 taxonomy_col = taxonomy_series.elements[key].astype('string')
 
             taxonomy_col = taxonomy_col.astype(dtype).copy_override(name=key)

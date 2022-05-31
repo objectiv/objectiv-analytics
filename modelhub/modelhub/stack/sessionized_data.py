@@ -33,6 +33,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
         )
 
         # make sure the result has AT LEAST the following series
+        # even though the ExtractedContextsPipeline already validates series
         self._validate_data_columns(
             expected_columns=[
                 ObjectivSupportedColumns.EVENT_ID.value,
@@ -53,9 +54,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
         sessionized_df = self._convert_dtypes(df=sessionized_df)
 
         final_columns = context_df.data_columns + ObjectivSupportedColumns.get_sessionized_columns()
-        sessionized_df = sessionized_df[final_columns]
-
-        return sessionized_df
+        return sessionized_df[final_columns]
 
     @classmethod
     def validate_pipeline_result(cls, result: bach.DataFrame) -> None:
