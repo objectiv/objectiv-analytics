@@ -71,11 +71,11 @@ jobs:
       - name: Unit tests postgres
         run: |
           cd bach
-          pytest --postgres tests/unit
+          pytest -n 4 --dist loadgroup --postgres tests/unit
       - name: Functional tests postgres
         run: |
           cd bach
-          pytest --postgres tests/functional
+          pytest -n 4 --dist loadgroup --postgres tests/functional
       - name: Install BQ dependencies
         run: |
           cd bach
