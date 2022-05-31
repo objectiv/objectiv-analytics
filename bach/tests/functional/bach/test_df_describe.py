@@ -210,7 +210,7 @@ def test_describe_boolean(pg_engine) -> None:
     pd.testing.assert_frame_equal(expected_df, result.to_pandas())
 
 
-def test_describe_json(pg_engine) -> None:
+def test_describe_json(engine) -> None:
     pdf = pd.DataFrame(
         data=[
             ['"a string"'],
@@ -220,7 +220,7 @@ def test_describe_json(pg_engine) -> None:
         ],
         columns=['column'],
     )
-    df = DataFrame.from_pandas(engine=pg_engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     df['column'] = df['column'].astype('json')
 
     result = df.describe()
@@ -237,23 +237,24 @@ def test_describe_json(pg_engine) -> None:
     pd.testing.assert_frame_equal(expected_df, result.to_pandas())
 
 
-def test_describe_uuid(pg_engine) -> None:
+def test_describe_uuid(engine) -> None:
     pdf = pd.DataFrame(
         data=[
             ['0022c7dd-074b-4a44-a7cb-b7716b668264'],
             ['0022c7dd-074b-4a44-a7cb-b7716b668265'],
             ['0022c7dd-074b-4a44-a7cb-b7716b668266'],
+            ['0022c7dd-074b-4a44-a7cb-b7716b668264'],
         ],
         columns=['column'],
     )
-    df = DataFrame.from_pandas(engine=pg_engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     df['column'] = df['column'].astype('uuid')
     result = df.describe()
     result = result.reset_index(drop=False)
 
     expected_df = pd.DataFrame(
         data=[
-            ['count', '3'],
+            ['count', '4'],
             ['nunique', '3'],
             ['mode', '0022c7dd-074b-4a44-a7cb-b7716b668264'],
         ],
