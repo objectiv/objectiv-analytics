@@ -3,7 +3,7 @@
  */
 
 /**
- * All possible Abstract Event Abstract discriminators. These are used by Validation Rules to skip checks on certain events.
+ * All possible Abstract Event discriminators. These are used by Validation Rules to skip checks on certain events.
  */
 export type EventAbstractDiscriminators = {
   __non_interactive_event?: true;

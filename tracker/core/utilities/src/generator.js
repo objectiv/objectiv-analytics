@@ -726,7 +726,7 @@ discriminators_content += `
  * All possible Abstract Event discriminators. These are used by Validation Rules to skip checks on certain events.
  */
 `;
-discriminators_content += 'export type AbstractEventDiscriminators = {\n';
+discriminators_content += 'export type EventAbstractDiscriminators = {\n';
 discriminators.forEach((discriminator) => {
   discriminators_content += `\t${discriminator}?: true;`;
 });
