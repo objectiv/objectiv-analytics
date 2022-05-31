@@ -10,7 +10,7 @@ assignees: ''
 ## What would you like to change or add?
 
 
-## What’s the use case & for whom?
+## What’s the use case?
 
 
 ## Do you know anyone who can test-run the change?
