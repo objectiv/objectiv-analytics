@@ -69,8 +69,8 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         1. _get_initial_data: Gets the initial bach DataFrame containing all required context columns
             based on the engine.
         2. _process_taxonomy_data: Will extract required fields from taxonomy json, it will use
-            _DEFAULT_TAXONOMY_DTYPE_PER_FIELD by default. If engine requires other fields, it should be specified
-            to the pipeline.
+            _DEFAULT_TAXONOMY_DTYPE_PER_FIELD by default. If engine requires other fields,
+            it should be specified to the pipeline.
         3. _apply_extra_processing: Applies extra processing if required, this is mainly based on the engine.
             For example, for BigQuery, the pipeline will generate moment and day series from `time` series
             extracted from the taxonomy.

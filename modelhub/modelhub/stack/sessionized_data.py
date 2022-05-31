@@ -28,7 +28,8 @@ class SessionizedDataPipeline(BaseDataPipeline):
 
     The steps followed in this pipeline are the following:
         1. get_extracted_contexts_df: Gets the generated DataFrame from ExtractedContextsPipeline.
-        2. _validate_data_columns: Validates if result from previous step has event_id, user_id and moment series.
+        2. _validate_data_columns: Validates if result from previous step has event_id, user_id and
+            moment series.
         3. _calculate_base_session_series: Calculates `is_start_of_session`, `session_start_id` and
             `is_one_session` series.
         4. _calculate_objectiv_session_series: Calculates final sessionized series:
