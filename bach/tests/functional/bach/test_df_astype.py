@@ -5,6 +5,7 @@ from datetime import date, datetime, time
 
 import pytest
 
+from sql_models.util import is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_json_data, \
     CITIES_INDEX_AND_COLUMNS, get_df_with_test_data
 
@@ -164,10 +165,14 @@ def test_astype_to_time(engine):
     )
 
 @pytest.mark.parametrize('dtype', ('json', 'json_postgres'))
-def test_astype_to_json(pg_engine, dtype):
-    # TODO: BigQuery
-    bt = get_df_with_json_data(engine=pg_engine, dtype='string')
+def test_astype_to_json(engine, dtype):
+    if not is_postgres(engine) and dtype != 'json':
+        pytest.skip(msg='json_postgres dtype is only supported on Postgres. Skipping for other databases')
+
+    bt = get_df_with_json_data(engine=engine, dtype='string')
     assert bt.dict_column.dtype == 'string'
+    assert bt.list_column.dtype == 'string'
+    assert bt.mixed_column.dtype == 'string'
     bt_json_dict = bt.dict_column.astype(dtype)
     bt_json_list = bt.list_column.astype(dtype)
     bt_json_mixed = bt.mixed_column.astype(dtype)
@@ -179,7 +184,8 @@ def test_astype_to_json(pg_engine, dtype):
             [1, {"_type": "SectionContext", "id": "home"}],
             [2, {"a": "b", "c": {"a": "c"}}],
             [3, {"a": "b", "e": [{"a": "b"}, {"c": "d"}]}]
-        ]
+        ],
+        use_to_pandas=True
     )
     assert_equals_data(
         bt_json_list,
@@ -189,7 +195,8 @@ def test_astype_to_json(pg_engine, dtype):
             [1, ["a", "b", "c", "d"]],
             [2, [{"_type": "a", "id": "b"}, {"_type": "c", "id": "d"}, {"_type": "e", "id": "f"}]],
             [3, [{"_type": "WebDocumentContext", "id": "#document"}, {"_type": "SectionContext", "id": "home"}, {"_type": "SectionContext", "id": "top-10"}, {"_type": "ItemContext", "id": "5o7Wv5Q5ZE"}]]
-        ]
+        ],
+        use_to_pandas=True
     )
     assert_equals_data(
         bt_json_mixed,
@@ -199,5 +206,6 @@ def test_astype_to_json(pg_engine, dtype):
             [1, ["a", "b", "c", "d"]],
             [2, {"a": "b", "c": {"a": "c"}}],
             [3, [{"_type": "WebDocumentContext", "id": "#document"}, {"_type": "SectionContext", "id": "home"}, {"_type": "SectionContext", "id": "top-10"}, {"_type": "ItemContext", "id": "5o7Wv5Q5ZE"}]]
-        ]
+        ],
+        use_to_pandas=True
     )
