@@ -56,7 +56,7 @@ def test_is_first_session(db_params):
 
 
 def test_is_new_user(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
     s = modelhub.map.is_new_user(df)
 
@@ -100,7 +100,7 @@ def test_is_new_user(db_params):
         convert_uuid=True,
     )
 
-    s = modelhub.map.is_new_user(df, time_aggregation='YYYY-MM')
+    s = modelhub.map.is_new_user(df, time_aggregation='%Y-%m')
 
     assert_equals_data(
         s,
