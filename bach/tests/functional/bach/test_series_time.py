@@ -8,7 +8,6 @@ from tests.functional.bach.test_series_timestamp import types_plus_min
 
 
 def test_time_arithmetic(engine):
-    # TODO: BigQuery
     data = [
         ['d', datetime.date(2020, 3, 11), 'date', (None, None)],
         ['t', datetime.time(23, 11, 5), 'time', (None, None)],
