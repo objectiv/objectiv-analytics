@@ -10,6 +10,7 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 def test_top_used_product_features():
     df, modelhub = get_objectiv_dataframe_test()
+    initial_columns = df.data_columns
 
     # without location_stack
     tdf = modelhub.aggregate.top_used_product_features(df)
@@ -67,3 +68,5 @@ def test_top_used_product_features():
         order_by=['_application', '_feature_nice_name', 'user_id_nunique']
     )
 
+    # check if any new column is added to the original dataframe
+    assert sorted(initial_columns) == sorted(df.data_columns)
