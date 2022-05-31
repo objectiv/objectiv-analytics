@@ -55,7 +55,6 @@ def test_is_first_session(db_params):
     )
 
 
-@pytest.mark.skip_bigquery
 def test_is_new_user(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 

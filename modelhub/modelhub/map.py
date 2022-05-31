@@ -58,31 +58,26 @@ class Map:
         """
 
         self._mh._check_data_is_objectiv_data(data)
+        data_cp = data.copy()
+        data_cp['time_aggregation'] = self._mh.time_agg(data, time_aggregation)
 
-        window = data.groupby('user_id').window(
-            mode=WindowFrameMode.ROWS,
-            start_boundary=WindowFrameBoundary.PRECEDING,
-            start_value=None,
-            end_boundary=WindowFrameBoundary.FOLLOWING,
-            end_value=None)
+        frame_args = {
+            'mode': WindowFrameMode.ROWS,
+            'start_boundary': WindowFrameBoundary.PRECEDING,
+            'end_boundary': WindowFrameBoundary.FOLLOWING,
+        }
+        window = data_cp.groupby('user_id').window(**frame_args)
+        ta_window = data_cp.groupby(['time_aggregation', 'user_id']).window(**frame_args)
 
-        is_first_session = window['session_id'].min()
+        session_id_series = data_cp['session_id']
+        is_first_session = session_id_series.min(partition=window)
+        is_first_session_time_aggregation = session_id_series.min(partition=ta_window)
 
-        window = data.groupby([self._mh.time_agg(data, time_aggregation),
-                               'user_id']).window(
-            mode=WindowFrameMode.ROWS,
-            start_boundary=WindowFrameBoundary.PRECEDING,
-            start_value=None,
-            end_boundary=WindowFrameBoundary.FOLLOWING,
-            end_value=None)
-        is_first_session_time_aggregation = window['session_id'].min()
-
-        series = is_first_session_time_aggregation == is_first_session
-
-        new_series = series.copy_override(name='is_new_user',
-                                          index=data.index).materialize()
-
-        return new_series
+        is_new_user_series = is_first_session_time_aggregation == is_first_session
+        return is_new_user_series.copy_override(
+            name='is_new_user',
+            index=data_cp.index,
+        ).materialize()
 
     def is_conversion_event(self, data: bach.DataFrame, name: str) -> bach.SeriesBoolean:
         """
