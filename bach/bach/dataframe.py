@@ -299,6 +299,9 @@ class DataFrame:
         """
         return list(self.data.keys())
 
+    # alias for getting data names
+    columns = data_columns
+
     @property
     def index_dtypes(self) -> Dict[str, str]:
         """
@@ -333,8 +336,8 @@ class DataFrame:
         a DataFrame will change it to be not materialized. Calling :py:meth:`materialize` on a
         non-materialized DataFrame will return a new DataFrame that is materialized.
 
-        TODO: a known problem is that DataFrames with 'json' columns are never in a materialized state, and
-         cannot be materialized with materialize()
+        TODO: a known problem is that DataFrames with 'json_postgres' columns are never in a materialized
+         state, and cannot be materialized with materialize()
 
         :returns: True if this DataFrame is in a materialized state, False otherwise
         """
@@ -572,9 +575,11 @@ class DataFrame:
                 bq_project_id=bq_project_id
             )
 
-        # For postgres we just generate:    'SELECT * FROM "table_name"'
-        # For BQ we might need to generate: 'SELECT * FROM `project_id`.`data_set`.`table_name`'
-
+        # For postgres we just generate:
+        # 'SELECT "column_1", ... , "column_N" FROM "table_name"'
+        # For BQ we might need to generate:
+        # 'SELECT `column_1`, ... , `column_N`  FROM `project_id`.`data_set`.`table_name`'
+        #  columns in select statement are based on keys from dtypes
         sql_table_name_template = '{table_name}'
         sql_params = {'table_name': quote_identifier(engine.dialect, table_name)}
         if bq_dataset:
@@ -584,7 +589,15 @@ class DataFrame:
             sql_table_name_template = f'{{bq_project_id}}.{sql_table_name_template}'
             sql_params['bq_project_id'] = quote_identifier(engine.dialect, bq_project_id)
 
-        sql = f'SELECT * FROM {sql_table_name_template}'
+        # use placeholders for columns in order to avoid conflicts when extracting spec references
+        column_stmt = ','.join(f'{{col_{col_index}}}' for col_index in range(len(dtypes)))
+        column_placeholders = {
+            f'col_{col_index}': quote_identifier(engine.dialect, col_name)
+            for col_index, col_name in enumerate(dtypes.keys())
+        }
+        sql_params.update(column_placeholders)
+
+        sql = f'SELECT {column_stmt} FROM {sql_table_name_template}'
         model_builder = CustomSqlModelBuilder(sql=sql, name='from_table')
         sql_model = model_builder(**sql_params)
 
@@ -987,7 +1000,7 @@ class DataFrame:
         make sense for very large expressions, or for non-deterministic expressions (e.g. see
         :py:meth:`SeriesUuid.sql_gen_random_uuid`).
 
-        TODO: a known problem is that DataFrames with 'json' columns cannot be fully materialized.
+        TODO: a known problem is that DataFrames with 'json_postgres' columns cannot be fully materialized.
 
         :param node_name: The name of the node that's going to be created
         :param inplace: Perform operation on self if ``inplace=True``, or create a copy.
@@ -1176,8 +1189,8 @@ class DataFrame:
             return self.copy_override(
                 base_node=node,
                 group_by=None,
-                index_dtypes={name: series.dtype for name, series in self.index.items()},
-                series_dtypes={name: series.dtype for name, series in self.data.items()},
+                index_dtypes={name: series.instance_dtype for name, series in self.index.items()},
+                series_dtypes={name: series.instance_dtype for name, series in self.data.items()},
                 single_value=single_value
             )
         raise NotImplementedError(f"Only str, (set|list)[str], slice or SeriesBoolean are supported, "
@@ -2042,7 +2055,7 @@ class DataFrame:
         group_by_clause = None
 
         column_exprs = []
-        column_names = []
+        column_names: List[str] = []
 
         non_group_by_series = self.all_series
         if self.group_by:
@@ -2064,9 +2077,9 @@ class DataFrame:
 
             if group_by_column_expr:
                 group_by_clause = Expression.construct('group by {}', group_by_column_expr)
-                column_exprs = self.group_by.get_index_column_expressions(construct_multi_levels)
-                column_names = list(self.group_by.index.keys())
-
+                expr_mapping = self.group_by.get_index_column_expressions(construct_multi_levels)
+                column_exprs = list(expr_mapping.values())
+                column_names = list(expr_mapping.keys())
                 non_group_by_series = self.data
 
         for s in non_group_by_series.values():
@@ -2139,8 +2152,10 @@ class DataFrame:
         :param right: DataFrame or Series to join on self
         :param how: supported values: {‘left’, ‘right’, ‘outer’, ‘inner’, ‘cross’}
         :param on: optional, column(s) or condition(s) to join left and right on.
-            If *on* is based on a condition (``SeriesBoolean``), the condition MUST make reference to both
-            nodes involved in the merge.
+            If *on* is based on a condition (:class:`SeriesBoolean`), then self and right must have different
+            base_nodes and the condition must make reference to both nodes involved in the merge.
+            If multiple columns and/or conditions are specified then the clauses are joined with 'and', i.e.
+            all clauses must be true to join a row in self and right.
         :param left_on: optional, column(s) from the left df to join on
         :param right_on: optional, column(s) from the right df/series to join on
         :param left_index: If true uses the index of the left df as columns to join on

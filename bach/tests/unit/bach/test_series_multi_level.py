@@ -178,11 +178,15 @@ def test_series_numeric_interval_get_column_expression(dialect) -> None:
     result = numeric_interval.get_column_expression().to_sql(dialect)
     if is_postgres(dialect):
         assert result == (
-            "numrange(cast(cast(0 as bigint) as numeric), cast(cast(1 as bigint) as numeric), '(]') "
-            'as "num_interval"'
+            'CASE WHEN (((((cast(0 as bigint) is not null)) AND ((cast(1 as bigint) is not null)))) '
+            'AND ((\'(]\' is not null))) THEN numrange(cast(cast(0 as bigint) as numeric), '
+            'cast(cast(1 as bigint) as numeric), \'(]\') ELSE NULL END as "num_interval"'
         )
     elif is_bigquery(dialect):
-        assert result == 'struct(0 as lower, 1 as upper, """(]""" as bounds) as `num_interval`'
+        assert result == (
+            'CASE WHEN (((((0 is not null)) AND ((1 is not null)))) AND (("""(]""" is not null))) '
+            'THEN struct(0 as lower, 1 as upper, """(]""" as bounds) ELSE NULL END as `num_interval`'
+        )
     else:
         raise Exception()
 

@@ -96,6 +96,9 @@ class Map:
 
         self._mh._check_data_is_objectiv_data(data)
 
+        if name not in self._mh._conversion_events:
+            raise KeyError(f"Key {name} is not labeled as a conversion")
+
         conversion_stack, conversion_event = self._mh._conversion_events[name]
 
         if conversion_stack is None:
