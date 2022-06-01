@@ -48,13 +48,16 @@ class SessionizedDataPipeline(BaseDataPipeline):
 
         # make sure the result has AT LEAST the following series
         # even though the ExtractedContextsPipeline already validates series
-        self._validate_data_columns(
-            expected_columns=[
-                ObjectivSupportedColumns.EVENT_ID.value,
-                ObjectivSupportedColumns.USER_ID.value,
-                ObjectivSupportedColumns.MOMENT.value,
-            ],
-            current_columns=context_df.data_columns,
+        supported_dtypes = get_supported_dtypes_per_objectiv_column()
+        expected_context_columns = [
+            ObjectivSupportedColumns.EVENT_ID.value,
+            ObjectivSupportedColumns.USER_ID.value,
+            ObjectivSupportedColumns.MOMENT.value,
+        ]
+
+        self._validate_data_dtypes(
+            expected_dtypes={col: supported_dtypes[col] for col in expected_context_columns},
+            current_dtypes=context_df.dtypes,
         )
 
         # calculate series that are needed for the final result

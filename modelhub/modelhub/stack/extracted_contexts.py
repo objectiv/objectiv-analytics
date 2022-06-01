@@ -104,9 +104,9 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             engine=self._engine,
             table_name=self._table_name,
         )
-        self._validate_data_columns(
-            expected_columns=list(self._get_base_dtypes().keys()),
-            current_columns=list(dtypes.keys()),
+        self._validate_data_dtypes(
+            expected_dtypes=dict(self._get_base_dtypes()),
+            current_dtypes=dtypes,
         )
 
     def _get_pipeline_result(self, **kwargs) -> bach.DataFrame:
