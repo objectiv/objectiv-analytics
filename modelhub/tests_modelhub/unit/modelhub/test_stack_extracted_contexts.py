@@ -2,11 +2,25 @@
 Copyright 2022 Objectiv B.V.
 """
 import pandas as pd
+import pytest
 from bach import DataFrame
 from sql_models.util import is_postgres, is_bigquery
 
 from modelhub.stack.extracted_contexts import ExtractedContextsPipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data
+
+
+@pytest.fixture(autouse=True)
+def patch_extracted_contexts_validations(monkeypatch):
+    monkeypatch.setattr(
+        'modelhub.stack.extracted_contexts.bach.from_database.get_dtypes_from_table',
+        lambda *args, **kwargs: {},
+    )
+
+    monkeypatch.setattr(
+        'modelhub.stack.extracted_contexts.ExtractedContextsPipeline._validate_data_columns',
+        lambda *args, **kwargs: None,
+    )
 
 
 def test_get_base_dtypes(db_params) -> None:

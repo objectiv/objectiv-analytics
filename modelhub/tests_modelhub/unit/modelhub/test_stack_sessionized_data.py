@@ -3,9 +3,23 @@ Copyright 2022 Objectiv B.V.
 """
 import bach
 import pandas as pd
+import pytest
 
 from modelhub import SessionizedDataPipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params
+
+
+@pytest.fixture(autouse=True)
+def patch_extracted_contexts_validations(monkeypatch):
+    monkeypatch.setattr(
+        'modelhub.stack.extracted_contexts.bach.from_database.get_dtypes_from_table',
+        lambda *args, **kwargs: {},
+    )
+
+    monkeypatch.setattr(
+        'modelhub.stack.extracted_contexts.ExtractedContextsPipeline._validate_data_columns',
+        lambda *args, **kwargs: None,
+    )
 
 
 def test_convert_dtypes(db_params) -> None:
