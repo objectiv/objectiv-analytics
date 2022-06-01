@@ -4,10 +4,11 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { TrackerConsole } from '@objectiv/tracker-core';
 import { ReactTracker } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv?.EventRecorder.configure({ enabled: false });
 
 describe('Without DOM', () => {
   it('ReactTracker: should not instantiate LocalStorage but MemoryQueue instead', () => {

@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { TrackerConsole, TrackerEvent, makeTransportSendError } from '@objectiv/tracker-core';
+import { TrackerEvent, makeTransportSendError } from '@objectiv/tracker-core';
 import { defaultFetchOptions } from './defaultFetchOptions';
 
 /**
@@ -18,10 +18,12 @@ export const defaultFetchFunction = async ({
   options?: typeof defaultFetchOptions;
 }): Promise<Response> => {
   return new Promise(function (resolve, reject) {
-    TrackerConsole.groupCollapsed(`｢objectiv:FetchTransport｣ Sending`);
-    TrackerConsole.log(`Events:`);
-    TrackerConsole.log(events);
-    TrackerConsole.groupEnd();
+    if (globalThis.objectiv) {
+      globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:FetchTransport｣ Sending`);
+      globalThis.objectiv.TrackerConsole.log(`Events:`);
+      globalThis.objectiv.TrackerConsole.log(events);
+      globalThis.objectiv.TrackerConsole.groupEnd();
+    }
 
     fetch(endpoint, {
       ...options,
@@ -34,27 +36,33 @@ export const defaultFetchFunction = async ({
     })
       .then((response) => {
         if (response.status === 200) {
-          TrackerConsole.groupCollapsed(`｢objectiv:FetchTransport｣ Succeeded`);
-          TrackerConsole.log(`Events:`);
-          TrackerConsole.log(events);
-          TrackerConsole.groupEnd();
+          if (globalThis.objectiv) {
+            globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:FetchTransport｣ Succeeded`);
+            globalThis.objectiv.TrackerConsole.log(`Events:`);
+            globalThis.objectiv.TrackerConsole.log(events);
+            globalThis.objectiv.TrackerConsole.groupEnd();
+          }
 
           resolve(response);
         } else {
-          TrackerConsole.groupCollapsed(`｢objectiv:FetchTransport｣ Failed`);
-          TrackerConsole.log(`Events:`);
-          TrackerConsole.log(events);
-          TrackerConsole.log(`Response: ${response}`);
-          TrackerConsole.groupEnd();
+          if (globalThis.objectiv) {
+            globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:FetchTransport｣ Failed`);
+            globalThis.objectiv.TrackerConsole.log(`Events:`);
+            globalThis.objectiv.TrackerConsole.log(events);
+            globalThis.objectiv.TrackerConsole.log(`Response: ${response}`);
+            globalThis.objectiv.TrackerConsole.groupEnd();
+          }
 
           reject(makeTransportSendError());
         }
       })
       .catch(() => {
-        TrackerConsole.groupCollapsed(`｢objectiv:FetchTransport｣ Error`);
-        TrackerConsole.log(`Events:`);
-        TrackerConsole.log(events);
-        TrackerConsole.groupEnd();
+        if (globalThis.objectiv) {
+          globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:FetchTransport｣ Error`);
+          globalThis.objectiv.TrackerConsole.log(`Events:`);
+          globalThis.objectiv.TrackerConsole.log(events);
+          globalThis.objectiv.TrackerConsole.groupEnd();
+        }
 
         reject(makeTransportSendError());
       });

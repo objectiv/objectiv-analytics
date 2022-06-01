@@ -1,19 +1,11 @@
 /*
- * Copyright 2021-2022 Objectiv B.V.
+ * Copyright 2022 Objectiv B.V.
  */
 
 import { AbstractLocationContext } from '@objectiv/schema';
-import { generateUUID, getLocationPath } from '@objectiv/tracker-core';
-
-/**
- * LocationTree nodes have the same shape of LocationContext, but they can have a parent LocationNode themselves.
- */
-export type LocationNode = AbstractLocationContext & {
-  /**
-   * The parent LocationNode identifier.
-   */
-  parentLocationId: string | null;
-};
+import { generateUUID, LocationNode, LocationTreeInterface } from '@objectiv/tracker-core';
+import { getLocationPath } from './getLocationPath';
+import { TrackerConsole } from './TrackerConsole';
 
 /**
  * The Root LocationNode of LocationTree
@@ -45,7 +37,7 @@ export const errorCache = new Map<string, 'collision'>();
  * LocationTree is a global object providing a few utility methods to interact with the `locationNodes` global state.
  * LocationContextWrapper makes sure to add new LocationNodes to the tree whenever a Location Wrapper is used.
  */
-export const LocationTree = {
+export const LocationTree: LocationTreeInterface = {
   /**
    * Completely resets LocationTree state. Mainly useful while testing.
    */
@@ -68,15 +60,15 @@ export const LocationTree = {
    */
   error: (locationId: string, message: string, type: 'collision' = 'collision') => {
     if (errorCache.get(locationId) !== type) {
-      console.error(`｢objectiv｣ ${message}`);
-      console.log(`Location Tree:`);
+      TrackerConsole.error(`｢objectiv｣ ${message}`);
+      TrackerConsole.log(`Location Tree:`);
       LocationTree.log();
       errorCache.set(locationId, type);
     }
   },
 
   /**
-   * Logs a readable version of the `locationNodes` state to the console
+   * Logs a readable version of the `locationNodes` state to the TrackerConsole
    */
   log: (locationNode?: LocationNode, depth = 0) => {
     let nodeToLog = locationNode;
@@ -85,7 +77,7 @@ export const LocationTree = {
       nodeToLog = rootNode;
     } else {
       // Log the given node
-      console.log('  '.repeat(depth) + nodeToLog._type + ':' + nodeToLog.id);
+      TrackerConsole.log('  '.repeat(depth) + nodeToLog._type + ':' + nodeToLog.id);
 
       // Increase depth
       depth++;
@@ -99,7 +91,7 @@ export const LocationTree = {
 
   /**
    * Checks the validity of the `locationNodes` state.
-   * Currently, we perform only Uniqueness Check: if identical branches are detected they will be logged to the console.
+   * Currently, we perform only Collision Checks: if identical branches are detected they get logged to TrackerConsole.
    *
    * Note: This method is invoked automatically when calling `LocationTree.add`.
    */

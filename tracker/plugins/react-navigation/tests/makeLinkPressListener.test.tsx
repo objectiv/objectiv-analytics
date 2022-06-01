@@ -3,7 +3,7 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { GlobalContextName, LocationContextName, TrackerConsole } from '@objectiv/tracker-core';
+import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import {
   NavigationContextWrapper,
   ObjectivProvider,
@@ -17,7 +17,8 @@ import React from 'react';
 import { Text } from 'react-native';
 import { makeLinkPressListener } from '../src/makeLinkPressListener';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('makePressListener', () => {
   beforeEach(() => {
@@ -42,19 +43,21 @@ describe('makePressListener', () => {
                 <Tab.Screen
                   options={{ tabBarTestID: 'TabA ' }}
                   name="ScreenA"
-                  component={() => <Text>Screen A</Text>}
                   listeners={({ navigation }) => ({
                     tabPress: makeLinkPressListener({ trackingContext, navigation }),
                   })}
-                />
+                >
+                  {() => <Text>Screen A</Text>}
+                </Tab.Screen>
                 <Tab.Screen
                   options={{ tabBarTestID: 'TabB ' }}
                   name="ScreenB"
-                  component={() => <Text>Screen B</Text>}
                   listeners={({ navigation }) => ({
                     tabPress: makeLinkPressListener({ trackingContext, navigation }),
                   })}
-                />
+                >
+                  {() => <Text>Screen B</Text>}
+                </Tab.Screen>
               </Tab.Navigator>
             )}
           </NavigationContextWrapper>

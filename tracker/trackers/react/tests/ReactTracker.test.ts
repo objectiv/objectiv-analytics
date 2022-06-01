@@ -5,7 +5,6 @@
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
   GlobalContextName,
-  TrackerConsole,
   TrackerEvent,
   TrackerQueue,
   TrackerQueueMemoryStore,
@@ -17,7 +16,9 @@ import fetchMock from 'jest-fetch-mock';
 import { clear, mockUserAgent } from 'jest-useragent-mock';
 import { ReactTracker } from '../src/';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv?.EventRecorder.configure({ enabled: false });
 
 describe('ReactTracker', () => {
   beforeEach(() => {

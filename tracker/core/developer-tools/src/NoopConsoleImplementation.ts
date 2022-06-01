@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { TrackerConsoleImplementation } from './TrackerConsole';
+import { TrackerConsoleImplementation } from '@objectiv/tracker-core';
 
 /**
  * NoopConsole is an empty implementation of TrackerConsole that doesn't do anything.

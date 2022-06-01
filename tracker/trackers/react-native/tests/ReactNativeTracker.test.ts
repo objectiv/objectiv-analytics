@@ -3,19 +3,15 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import {
-  GlobalContextName,
-  TrackerConsole,
-  TrackerEvent,
-  TrackerQueue,
-  TrackerTransportRetry,
-} from '@objectiv/tracker-core';
+import { GlobalContextName, TrackerEvent, TrackerQueue, TrackerTransportRetry } from '@objectiv/tracker-core';
 import { DebugTransport } from '@objectiv/transport-debug';
 import { defaultFetchFunction, FetchTransport } from '@objectiv/transport-fetch';
 import fetchMock from 'jest-fetch-mock';
 import { ReactNativeTracker } from '../src/';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv?.EventRecorder.configure({ enabled: false });
 
 describe('ReactNativeTracker', () => {
   beforeEach(() => {

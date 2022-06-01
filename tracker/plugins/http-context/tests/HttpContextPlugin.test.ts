@@ -9,16 +9,35 @@ import {
   GlobalContextName,
   makeHttpContext,
   Tracker,
-  TrackerConsole,
   TrackerEvent,
 } from '@objectiv/tracker-core';
 import { HttpContextPlugin } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('HttpContextPlugin', () => {
   beforeEach(() => {
     jest.restoreAllMocks();
+  });
+
+  it('should TrackerConsole.error when calling `validate` before `initialize`', () => {
+    const testHttpContextPlugin = new HttpContextPlugin();
+    const validEvent = new TrackerEvent({
+      _type: 'test',
+      global_contexts: [
+        makeHttpContext({
+          id: '/test',
+          user_agent: 'test',
+          referrer: 'test',
+          remote_address: 'test',
+        }),
+      ],
+    });
+    testHttpContextPlugin.validate(validEvent);
+    expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
+      '｢objectiv:HttpContextPlugin｣ Cannot validate. Make sure to initialize the plugin first.'
+    );
   });
 
   it('should add the HttpContext to the Event when `initialize` is executed by the Tracker', async () => {
@@ -99,8 +118,25 @@ describe('HttpContextPlugin', () => {
     Object.defineProperty(navigator, 'userAgent', { value: originalUserAgent });
   });
 
-  describe('Validation', () => {
-    it('should succeed', () => {
+  describe('Without developer tools', () => {
+    let objectivGlobal = globalThis.objectiv;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      globalThis.objectiv = undefined;
+    });
+
+    afterEach(() => {
+      globalThis.objectiv = objectivGlobal;
+    });
+
+    const testTracker = new Tracker({
+      applicationId: 'app-id',
+      plugins: [new HttpContextPlugin()],
+      trackApplicationContext: false,
+    });
+
+    it('should return silently  when calling `validate` before `initialize`', () => {
       const testHttpContextPlugin = new HttpContextPlugin();
       const validEvent = new TrackerEvent({
         _type: 'test',
@@ -113,34 +149,15 @@ describe('HttpContextPlugin', () => {
           }),
         ],
       });
-
-      jest.resetAllMocks();
-
       testHttpContextPlugin.validate(validEvent);
-
-      expect(MockConsoleImplementation.groupCollapsed).not.toHaveBeenCalled();
+      expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
     });
 
-    it('should fail when given TrackerEvent does not have HttpContext', () => {
+    it('should not validate', () => {
       const testHttpContextPlugin = new HttpContextPlugin();
-      const eventWithoutHttpContext = new TrackerEvent({ _type: 'test' });
-
-      jest.resetAllMocks();
-
-      testHttpContextPlugin.validate(eventWithoutHttpContext);
-
-      expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
-      expect(MockConsoleImplementation.groupCollapsed).toHaveBeenNthCalledWith(
-        1,
-        `%c｢objectiv:HttpContextPlugin:GlobalContextValidationRule｣ Error: HttpContext is missing from Global Contexts.`,
-        'color:red'
-      );
-    });
-
-    it('should fail when given TrackerEvent has multiple HttpContexts', () => {
-      const testHttpContextPlugin = new HttpContextPlugin();
+      testHttpContextPlugin.initialize(testTracker);
       const eventWithDuplicatedHttpContext = new TrackerEvent({
-        _type: 'test',
+        _type: 'TestEvent',
         global_contexts: [
           makeHttpContext({
             id: '/test',
@@ -161,12 +178,7 @@ describe('HttpContextPlugin', () => {
 
       testHttpContextPlugin.validate(eventWithDuplicatedHttpContext);
 
-      expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
-      expect(MockConsoleImplementation.groupCollapsed).toHaveBeenNthCalledWith(
-        1,
-        `%c｢objectiv:HttpContextPlugin:GlobalContextValidationRule｣ Error: Only one HttpContext should be present in Global Contexts.`,
-        'color:red'
-      );
+      expect(MockConsoleImplementation.groupCollapsed).not.toHaveBeenCalled();
     });
   });
 });

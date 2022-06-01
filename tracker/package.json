@@ -12,24 +12,27 @@
   ],
   "scripts": {
     "clear": "yarn exec make clean && yarn test --clearCache && yarn cache clean",
-    "build-core": "yarn workspaces foreach --include @objectiv/tracker-core --include @objectiv/tracker-react-core --verbose run build",
+    "build-core": "yarn workspaces foreach --include @objectiv/developer-tools --include @objectiv/tracker-core --include @objectiv/tracker-react-core --verbose run build",
     "build-plugins": "yarn workspaces foreach -p --include '@objectiv/plugin**' --verbose run build",
     "build-queues": "yarn workspaces foreach -p --include '@objectiv/queue**' --verbose run build",
     "build-transports": "yarn workspaces foreach -p --include '@objectiv/transport**' --verbose run build",
     "build-trackers": "yarn workspace @objectiv/tracker-react build && yarn workspace @objectiv/tracker-react-native build && yarn workspace @objectiv/tracker-browser build && yarn workspace @objectiv/tracker-angular build",
     "build": "yarn build-core && yarn build-plugins & yarn build-queues & yarn build-transports && yarn build-trackers",
     "prettify": "yarn workspaces foreach --parallel --exclude root --verbose run prettify",
-    "prettify:generated": "yarn workspace @objectiv/schema prettify:generated & yarn workspace @objectiv/tracker-core prettify:generated",
+    "prettify:generated": "yarn workspace @objectiv/schema prettify:generated && yarn workspace @objectiv/tracker-core prettify:generated && yarn workspace @objectiv/developer-tools prettify:generated",
     "list": "yarn workspaces list",
     "tsc": "yarn workspaces foreach --parallel --exclude root --verbose run tsc",
-    "tsc:generated": "yarn workspace @objectiv/schema tsc & yarn workspace @objectiv/tracker-core tsc",
+    "tsc:generated": "yarn workspace @objectiv/schema tsc && yarn workspace @objectiv/tracker-core tsc && yarn workspace @objectiv/developer-tools tsc",
     "test": "yarn workspaces foreach --parallel --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/testing-tools --exclude @objectiv/tracker-angular --verbose run test",
     "test:ci": "yarn workspaces foreach --parallel --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/testing-tools --exclude @objectiv/tracker-angular --verbose run test:ci",
     "test:coverage": "yarn workspaces foreach --parallel --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/testing-tools --exclude @objectiv/tracker-angular --verbose run test:coverage",
     "check:dependencies": "yarn workspaces foreach --parallel --exclude root --exclude @objectiv/tracker-angular --verbose run check:dependencies",
     "publish": "yarn workspaces foreach --exclude root --exclude @objectiv/utilities --exclude @objectiv/testing-tools --verbose run npm-publish",
     "publish:verdaccio": "yarn workspaces foreach --exclude root --exclude @objectiv/utilities --exclude @objectiv/testing-tools --verbose run npm-publish:verdaccio",
-    "utils:generate": "yarn workspace @objectiv/utilities generate && yarn prettify:generated && yarn tsc:generated",
-    "version:patch": "yarn workspaces foreach --exclude root --verbose version patch && rm -rf .yarn/versions"
+    "utils:generate": "yarn workspace @objectiv/utilities generate && yarn workspace @objectiv/developer-tools generate && yarn prettify:generated && yarn tsc:generated",
+    "version:major": "yarn workspaces foreach --exclude root --verbose version major && rm -rf .yarn/versions",
+    "version:minor": "yarn workspaces foreach --exclude root --verbose version minor && rm -rf .yarn/versions",
+    "version:patch": "yarn workspaces foreach --exclude root --verbose version patch && rm -rf .yarn/versions",
+    "version:prerelease": "yarn workspaces foreach --exclude root --verbose version prerelease && rm -rf .yarn/versions"
   }
 }

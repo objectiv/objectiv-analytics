@@ -1,7 +1,8 @@
 /*
- * Copyright 2021-2022 Objectiv B.V.
+ * Copyright 2022 Objectiv B.V.
  */
 
+import { MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
   LocationContextName,
   makeContentContext,
@@ -10,13 +11,14 @@ import {
   makePressableContext,
   makeRootLocationContext,
 } from '@objectiv/tracker-core';
-import { locationNodes, LocationTree, rootNode } from '../src';
+import { locationNodes, LocationTree, rootNode } from '../src/LocationTree';
+import { TrackerConsole } from '../src/TrackerConsole';
+
+TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('LocationTree', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-    jest.spyOn(console, 'log').mockImplementation(() => {});
     LocationTree.clear();
   });
 
@@ -28,7 +30,7 @@ describe('LocationTree', () => {
   it('should not log anything (empty LocationTree)', () => {
     LocationTree.log();
 
-    expect(console.log).not.toHaveBeenCalled();
+    expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
   });
 
   it('should add nodes', () => {
@@ -204,7 +206,7 @@ describe('LocationTree', () => {
     ]);
   });
 
-  it('should console.error collisions', () => {
+  it('should TrackerConsole.error collisions', () => {
     const rootSection = makeContentContext({ id: 'root' });
     const section1 = makeContentContext({ id: '1' });
     const section2 = makeContentContext({ id: 'oops' });
@@ -217,18 +219,18 @@ describe('LocationTree', () => {
     LocationTree.add(section3, rootSection);
     LocationTree.add(section4, rootSection);
 
-    expect(console.error).toHaveBeenCalledTimes(2);
-    expect(console.error).toHaveBeenNthCalledWith(
+    expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(2);
+    expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
       1,
       '｢objectiv｣ Location collision detected: Content:root / Content:oops'
     );
-    expect(console.error).toHaveBeenNthCalledWith(
+    expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
       2,
       '｢objectiv｣ Location collision detected: Content:root / Content:oops'
     );
   });
 
-  it('should not console.error collisions in children of already colliding nodes', () => {
+  it('should not TrackerConsole.error collisions in children of already colliding nodes', () => {
     const rootSection = makeContentContext({ id: 'root' });
     const section1 = makeContentContext({ id: '1' });
     const section2 = makeContentContext({ id: 'oops' });
@@ -245,12 +247,12 @@ describe('LocationTree', () => {
     LocationTree.add(section5, section4);
     LocationTree.add(section6, section4);
 
-    expect(console.error).toHaveBeenCalledTimes(2);
-    expect(console.error).toHaveBeenNthCalledWith(
+    expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(2);
+    expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
       1,
       '｢objectiv｣ Location collision detected: Content:root / Content:oops'
     );
-    expect(console.error).toHaveBeenNthCalledWith(
+    expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
       2,
       '｢objectiv｣ Location collision detected: Content:root / Content:1'
     );
@@ -277,19 +279,19 @@ describe('LocationTree', () => {
     LocationTree.add(footer, rootSection);
     LocationTree.add(section4, footer);
 
-    jest.spyOn(console, 'log').mockImplementation(() => {});
+    jest.resetAllMocks();
 
     LocationTree.log();
 
-    expect(console.log).toHaveBeenCalledTimes(9);
-    expect(console.log).toHaveBeenNthCalledWith(1, `${LocationContextName.ContentContext}:root`);
-    expect(console.log).toHaveBeenNthCalledWith(2, `  ${LocationContextName.ContentContext}:1`);
-    expect(console.log).toHaveBeenNthCalledWith(3, `  ${LocationContextName.ContentContext}:2`);
-    expect(console.log).toHaveBeenNthCalledWith(4, `    ${LocationContextName.ContentContext}:2a`);
-    expect(console.log).toHaveBeenNthCalledWith(5, `    ${LocationContextName.ContentContext}:2b`);
-    expect(console.log).toHaveBeenNthCalledWith(6, `  ${LocationContextName.ContentContext}:3`);
-    expect(console.log).toHaveBeenNthCalledWith(7, `    ${LocationContextName.ContentContext}:3a`);
-    expect(console.log).toHaveBeenNthCalledWith(8, `  ${LocationContextName.ContentContext}:footer`);
-    expect(console.log).toHaveBeenNthCalledWith(9, `    ${LocationContextName.ContentContext}:4`);
+    expect(MockConsoleImplementation.log).toHaveBeenCalledTimes(9);
+    expect(MockConsoleImplementation.log).toHaveBeenNthCalledWith(1, `${LocationContextName.ContentContext}:root`);
+    expect(MockConsoleImplementation.log).toHaveBeenNthCalledWith(2, `  ${LocationContextName.ContentContext}:1`);
+    expect(MockConsoleImplementation.log).toHaveBeenNthCalledWith(3, `  ${LocationContextName.ContentContext}:2`);
+    expect(MockConsoleImplementation.log).toHaveBeenNthCalledWith(4, `    ${LocationContextName.ContentContext}:2a`);
+    expect(MockConsoleImplementation.log).toHaveBeenNthCalledWith(5, `    ${LocationContextName.ContentContext}:2b`);
+    expect(MockConsoleImplementation.log).toHaveBeenNthCalledWith(6, `  ${LocationContextName.ContentContext}:3`);
+    expect(MockConsoleImplementation.log).toHaveBeenNthCalledWith(7, `    ${LocationContextName.ContentContext}:3a`);
+    expect(MockConsoleImplementation.log).toHaveBeenNthCalledWith(8, `  ${LocationContextName.ContentContext}:footer`);
+    expect(MockConsoleImplementation.log).toHaveBeenNthCalledWith(9, `    ${LocationContextName.ContentContext}:4`);
   });
 });

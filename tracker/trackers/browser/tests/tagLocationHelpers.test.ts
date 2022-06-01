@@ -15,10 +15,10 @@ import {
   tagOverlay,
   tagPressable,
   tagRootLocation,
-  TrackerConsole,
 } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('tagLocationHelpers', () => {
   beforeEach(() => {

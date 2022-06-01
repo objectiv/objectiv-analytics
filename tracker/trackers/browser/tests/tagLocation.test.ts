@@ -4,20 +4,20 @@
 
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
-  makePressableContext,
+  LocationContextName,
+  makeContentContext,
   makeExpandableContext,
   makeInputContext,
   makeLinkContext,
   makeMediaPlayerContext,
   makeNavigationContext,
   makeOverlayContext,
-  makeContentContext,
-  TrackerConsole,
-  LocationContextName,
+  makePressableContext,
 } from '@objectiv/tracker-core';
 import { tagContent, TaggingAttribute, tagLocation, tagOverlay } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('tagLocation', () => {
   beforeEach(() => {

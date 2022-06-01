@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { getLocationPath, makeIdFromString, TrackerConsole } from '@objectiv/tracker-core';
+import { makeIdFromString } from '@objectiv/tracker-core';
 import {
   makeTitleFromChildren,
   PressableContextWrapper,
@@ -32,11 +32,14 @@ export const TrackedPressableContext = React.forwardRef<HTMLElement, TrackedPres
   };
 
   // If we couldn't generate an `id`, log the issue and return an untracked Component.
-  const locationPath = getLocationPath(useLocationStack());
+  const locationStack = useLocationStack();
   if (!pressableId) {
-    TrackerConsole.error(
-      `｢objectiv｣ Could not generate a valid id for PressableContext @ ${locationPath}. Please provide either the \`title\` or the \`id\` property manually.`
-    );
+    if (globalThis.objectiv) {
+      const locationPath = globalThis.objectiv.getLocationPath(locationStack);
+      globalThis.objectiv.TrackerConsole.error(
+        `｢objectiv｣ Could not generate a valid id for PressableContext @ ${locationPath}. Please provide either the \`title\` or the \`id\` property manually.`
+      );
+    }
     return React.createElement(Component, componentProps);
   }
 

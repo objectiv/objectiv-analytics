@@ -4,18 +4,12 @@
 
 import { PathContextFromURLPlugin } from '@objectiv/plugin-path-context-from-url';
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import {
-  generateUUID,
-  getLocationPath,
-  LocationStack,
-  makeContentContext,
-  TrackerConsole,
-  TrackerPluginInterface,
-} from '@objectiv/tracker-core';
+import { generateUUID, LocationStack, makeContentContext, TrackerPluginInterface } from '@objectiv/tracker-core';
 import { BrowserTracker, getElementLocationStack, TaggableElement } from '../src';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('getElementLocationStack', () => {
   const mainSection = makeTaggedElement(generateUUID(), 'main', 'section');
@@ -56,7 +50,7 @@ describe('getElementLocationStack', () => {
     expectedPathsByElement.forEach(([element, expectedLocationPath]) => {
       it(`element: ${element.dataset.objectivElementId}: ${expectedLocationPath}`, () => {
         const locationStack = getElementLocationStack({ element });
-        const locationPath = getLocationPath(locationStack);
+        const locationPath = globalThis.objectiv?.getLocationPath(locationStack);
 
         expect(locationPath).toBe(expectedLocationPath);
       });
@@ -81,7 +75,7 @@ describe('getElementLocationStack', () => {
     expectedPathsByElement.forEach(([element, expectedLocationPath]) => {
       it(`element: ${element.dataset.objectivElementId}: ${expectedLocationPath}`, () => {
         const locationStack = getElementLocationStack({ element, tracker });
-        const locationPath = getLocationPath(locationStack);
+        const locationPath = globalThis.objectiv?.getLocationPath(locationStack);
 
         expect(locationPath).toBe(expectedLocationPath);
       });
@@ -107,10 +101,29 @@ describe('getElementLocationStack', () => {
     expectedPathsByElement.forEach(([element, expectedLocationPath]) => {
       it(`element: ${element.dataset.objectivElementId}: ${expectedLocationPath}`, () => {
         const locationStack = getElementLocationStack({ element, tracker });
-        const locationPath = getLocationPath(locationStack);
+        const locationPath = globalThis.objectiv?.getLocationPath(locationStack);
 
         expect(locationPath).toBe(expectedLocationPath);
       });
+    });
+  });
+
+  describe('Without developer tools', () => {
+    let objectivGlobal = globalThis.objectiv;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      globalThis.objectiv = undefined;
+    });
+
+    afterEach(() => {
+      globalThis.objectiv = objectivGlobal;
+    });
+
+    it('should not TrackerConsole.error when invoked with `null`', () => {
+      // @ts-ignore
+      expect(getElementLocationStack(null)).toHaveLength(0);
+      expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
     });
   });
 });

@@ -5,18 +5,11 @@
 import { LocationContextName, Tracker } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render } from '@testing-library/react';
 import React from 'react';
-import {
-  ExpandableContextWrapper,
-  LocationTree,
-  ObjectivProvider,
-  trackPressEvent,
-  usePressEventTracker,
-} from '../src';
+import { ExpandableContextWrapper, ObjectivProvider, trackPressEvent, usePressEventTracker } from '../src';
 
 describe('ExpandableContextWrapper', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    LocationTree.clear();
   });
 
   afterEach(() => {

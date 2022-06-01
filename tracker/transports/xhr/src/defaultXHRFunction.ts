@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeTransportSendError, TrackerConsole, TrackerEvent } from '@objectiv/tracker-core';
+import { makeTransportSendError, TrackerEvent } from '@objectiv/tracker-core';
 
 /**
  * The default XMLHttpRequest function implementation.
@@ -15,10 +15,12 @@ export const defaultXHRFunction = ({
   events: [TrackerEvent, ...TrackerEvent[]];
 }): Promise<unknown> => {
   return new Promise(function (resolve, reject) {
-    TrackerConsole.groupCollapsed(`｢objectiv:XHRTransport｣ Sending`);
-    TrackerConsole.log(`Events:`);
-    TrackerConsole.log(events);
-    TrackerConsole.groupEnd();
+    if (globalThis.objectiv) {
+      globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:XHRTransport｣ Sending`);
+      globalThis.objectiv.TrackerConsole.log(`Events:`);
+      globalThis.objectiv.TrackerConsole.log(events);
+      globalThis.objectiv.TrackerConsole.groupEnd();
+    }
 
     const xhr = new XMLHttpRequest();
     const async = true;
@@ -27,27 +29,33 @@ export const defaultXHRFunction = ({
     xhr.withCredentials = true;
     xhr.onload = () => {
       if (xhr.status === 200) {
-        TrackerConsole.groupCollapsed(`｢objectiv:XHRTransport｣ Succeeded`);
-        TrackerConsole.log(`Events:`);
-        TrackerConsole.log(events);
-        TrackerConsole.groupEnd();
+        if (globalThis.objectiv) {
+          globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:XHRTransport｣ Succeeded`);
+          globalThis.objectiv.TrackerConsole.log(`Events:`);
+          globalThis.objectiv.TrackerConsole.log(events);
+          globalThis.objectiv.TrackerConsole.groupEnd();
+        }
 
         resolve(xhr.response);
       } else {
-        TrackerConsole.groupCollapsed(`｢objectiv:XHRTransport｣ Failed`);
-        TrackerConsole.log(`Events:`);
-        TrackerConsole.log(events);
-        TrackerConsole.log(`Response: ${xhr}`);
-        TrackerConsole.groupEnd();
+        if (globalThis.objectiv) {
+          globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:XHRTransport｣ Failed`);
+          globalThis.objectiv.TrackerConsole.log(`Events:`);
+          globalThis.objectiv.TrackerConsole.log(events);
+          globalThis.objectiv.TrackerConsole.log(`Response: ${xhr}`);
+          globalThis.objectiv.TrackerConsole.groupEnd();
+        }
 
         reject(makeTransportSendError());
       }
     };
     xhr.onerror = () => {
-      TrackerConsole.groupCollapsed(`｢objectiv:XHRTransport｣ Error`);
-      TrackerConsole.log(`Events:`);
-      TrackerConsole.log(events);
-      TrackerConsole.groupEnd();
+      if (globalThis.objectiv) {
+        globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:XHRTransport｣ Error`);
+        globalThis.objectiv.TrackerConsole.log(`Events:`);
+        globalThis.objectiv.TrackerConsole.log(events);
+        globalThis.objectiv.TrackerConsole.groupEnd();
+      }
 
       reject(makeTransportSendError());
     };

@@ -3,12 +3,13 @@
  */
 
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateUUID, LocationContextName, TrackerConsole } from '@objectiv/tracker-core';
+import { generateUUID, LocationContextName } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker, TaggingAttribute } from '../src';
 import { trackRemovedElements } from '../src/mutationObserver/trackRemovedElements';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('trackRemovedElements', () => {
   beforeEach(() => {

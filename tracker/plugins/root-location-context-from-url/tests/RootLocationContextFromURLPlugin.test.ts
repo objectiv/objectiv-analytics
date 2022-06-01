@@ -3,17 +3,11 @@
  */
 
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import {
-  ContextsConfig,
-  generateUUID,
-  LocationContextName,
-  Tracker,
-  TrackerConsole,
-  TrackerEvent,
-} from '@objectiv/tracker-core';
+import { ContextsConfig, generateUUID, LocationContextName, Tracker, TrackerEvent } from '@objectiv/tracker-core';
 import { RootLocationContextFromURLPlugin } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('RootLocationContextFromURLPlugin', () => {
   beforeEach(() => {
@@ -174,6 +168,40 @@ describe('RootLocationContextFromURLPlugin', () => {
       __location_context: true,
       _type: LocationContextName.RootLocationContext,
       id: 'welcome',
+    });
+  });
+
+  describe('Without developer tools', () => {
+    let objectivGlobal = globalThis.objectiv;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      globalThis.objectiv = undefined;
+    });
+
+    afterEach(() => {
+      globalThis.objectiv = objectivGlobal;
+    });
+
+    it('should not console.error', async () => {
+      Object.defineProperty(window, 'location', {
+        value: {
+          // Can't really happen, but just to test this case
+          pathname: null,
+        },
+        writable: true,
+      });
+
+      const testTracker = new Tracker({
+        applicationId: 'app-id',
+        plugins: [new RootLocationContextFromURLPlugin()],
+        trackApplicationContext: false,
+      });
+      const testEvent = new TrackerEvent({ _type: 'test-event' });
+      expect(testEvent.location_stack).toHaveLength(0);
+      const trackedEvent = await testTracker.trackEvent(testEvent);
+      expect(trackedEvent.location_stack).toHaveLength(0);
+      expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,18 +1,9 @@
 /*
- * Copyright 2021-2022 Objectiv B.V.
+ * Copyright 2022 Objectiv B.V.
  */
 
-import { NoopConsoleImplementation, TrackerConsole } from '../src';
-
-jest.mock('../src/helpers', () => {
-  const originalModule = jest.requireActual('../src/helpers');
-
-  return {
-    __esModule: true,
-    ...originalModule,
-    isDevMode: () => false,
-  };
-});
+import { NoopConsoleImplementation } from '../src/NoopConsoleImplementation';
+import { TrackerConsole } from '../src/TrackerConsole';
 
 describe('TrackerConsole', () => {
   it('should return undefined', () => {

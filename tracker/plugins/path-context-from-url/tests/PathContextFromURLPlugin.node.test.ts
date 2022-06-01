@@ -3,10 +3,11 @@
  * @jest-environment node
  */
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { makePathContext, TrackerConsole, TrackerEvent } from '@objectiv/tracker-core';
+import { makePathContext, TrackerEvent } from '@objectiv/tracker-core';
 import { PathContextFromURLPlugin } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('PathContextFromURLPlugin - node', () => {
   beforeEach(() => {
