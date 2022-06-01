@@ -104,7 +104,6 @@ def test_get_initial_data(db_params) -> None:
     # need to sort the rows since order is non-deterministic
     result['event_id'] = result[taxonomy_column].elements[0].elements['event_id']
     result = result.sort_values(by='event_id')
-    result = result.materialize()
     result = result[[taxonomy_column]]
 
     assert_equals_data(

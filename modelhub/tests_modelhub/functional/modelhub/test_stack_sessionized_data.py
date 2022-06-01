@@ -69,11 +69,13 @@ def test_get_pipeline_result(db_params, monkeypatch) -> None:
     user_id = UUID('b2df75d2-d7ca-48ac-9747-af47d7a4a2b1')
     pdf = pdf[pdf['user_id'] == user_id]
 
-    if is_bigquery(engine):
-        pdf['user_id'] = pdf['user_id'].astype(str)
-        pdf['event_id'] = pdf['event_id'].astype(str)
+    # bq doesn't support uuids, cast it later
+    pdf['user_id'] = pdf['user_id'].astype(str)
+    pdf['event_id'] = pdf['event_id'].astype(str)
 
     context_df = bach.DataFrame.from_pandas(df=pdf, engine=engine, convert_objects=True).reset_index(drop=True)
+    context_df['user_id'] = context_df['user_id'].astype('uuid')
+    context_df['event_id'] = context_df['event_id'].astype('uuid')
 
     monkeypatch.setattr(
         'modelhub.stack.sessionized_data.get_extracted_contexts_df',
@@ -108,7 +110,6 @@ def test_get_pipeline_result(db_params, monkeypatch) -> None:
                 2,
             ],
         ],
-        convert_uuid=True,
         use_to_pandas=True,
         order_by=['event_id'],
     )
