@@ -2,10 +2,10 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { ApplicationContextPlugin } from '@objectiv/plugin-application-context';
 import { AbstractGlobalContext, AbstractLocationContext, Contexts } from '@objectiv/schema';
 import { ContextsConfig } from './Context';
 import { waitForPromise } from './helpers';
-import { ApplicationContextPlugin } from './plugins/ApplicationContextPlugin';
 import { OpenTaxonomyValidationPlugin } from './plugins/OpenTaxonomyValidationPlugin';
 import { TrackerEvent, TrackerEventConfig } from './TrackerEvent';
 import { TrackerPluginInterface } from './TrackerPluginInterface';

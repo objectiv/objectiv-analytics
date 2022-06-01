@@ -3,10 +3,12 @@
  */
 
 import { ApplicationContext } from '@objectiv/schema';
-import { ContextsConfig } from '../Context';
-import { makeApplicationContext } from '../ContextFactories';
-import { TrackerInterface } from '../Tracker';
-import { TrackerPluginInterface } from '../TrackerPluginInterface';
+import {
+  ContextsConfig,
+  makeApplicationContext,
+  TrackerInterface,
+  TrackerPluginInterface,
+} from '@objectiv/tracker-core';
 
 /**
  * The ApplicationContextPlugin adds an ApplicationContext as GlobalContext before events are transported.
@@ -14,6 +16,7 @@ import { TrackerPluginInterface } from '../TrackerPluginInterface';
  */
 export class ApplicationContextPlugin implements TrackerPluginInterface {
   readonly pluginName = `ApplicationContextPlugin`;
+  initialized: boolean = false;
   applicationContext?: ApplicationContext;
 
   /**
@@ -23,6 +26,8 @@ export class ApplicationContextPlugin implements TrackerPluginInterface {
     this.applicationContext = makeApplicationContext({
       id: tracker.applicationId,
     });
+
+    this.initialized = true;
 
     if (globalThis.objectiv) {
       globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:${this.pluginName}｣ Initialized`);
@@ -38,13 +43,14 @@ export class ApplicationContextPlugin implements TrackerPluginInterface {
    * Add the ApplicationContext to the Event's Global Contexts
    */
   enrich(contexts: Required<ContextsConfig>): void {
-    if (!this.applicationContext) {
+    if (!this.initialized) {
       globalThis.objectiv?.TrackerConsole.error(
         `｢objectiv:${this.pluginName}｣ Cannot enrich. Make sure to initialize the plugin first.`
       );
-      return;
     }
-    contexts.global_contexts.push(this.applicationContext);
+    if (this.applicationContext) {
+      contexts.global_contexts.push(this.applicationContext);
+    }
   }
 
   /**

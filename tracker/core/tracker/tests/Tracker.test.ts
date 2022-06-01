@@ -68,6 +68,7 @@ describe('Tracker', () => {
       },
       {
         pluginName: 'ApplicationContextPlugin',
+        initialized: true,
         applicationContext: {
           __instance_id: matchUUID,
           __global_context: true,
@@ -128,6 +129,7 @@ describe('Tracker', () => {
       },
       {
         pluginName: 'ApplicationContextPlugin',
+        initialized: true,
         applicationContext: {
           __instance_id: matchUUID,
           __global_context: true,
@@ -687,6 +689,7 @@ describe('Without developer tools', () => {
       },
       {
         pluginName: 'ApplicationContextPlugin',
+        initialized: true,
         applicationContext: {
           __instance_id: matchUUID,
           __global_context: true,
