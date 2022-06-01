@@ -18,7 +18,7 @@ def patch_extracted_contexts_validations(monkeypatch):
     )
 
     monkeypatch.setattr(
-        'modelhub.stack.extracted_contexts.ExtractedContextsPipeline._validate_data_columns',
+        'modelhub.stack.extracted_contexts.ExtractedContextsPipeline._validate_data_dtypes',
         lambda *args, **kwargs: None,
     )
 
