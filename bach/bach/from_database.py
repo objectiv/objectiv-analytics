@@ -16,7 +16,9 @@ from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigqu
 def get_dtypes_from_model(engine: Engine, node: SqlModel) -> Dict[str, StructuredDtype]:
     """ Create a temporary database table from model and use it to deduce the model's dtypes. """
     if not is_postgres(engine):
-        raise DatabaseNotSupportedException(engine)
+        message_override = f'We cannot automatically derive dtypes from a SqlModel for database ' \
+                           f'dialect "{engine.name}".'
+        raise DatabaseNotSupportedException(engine, message_override=message_override)
     new_node = CustomSqlModelBuilder(sql='select * from {{previous}} limit 0')(previous=node)
     select_statement = to_sql(dialect=engine.dialect, model=new_node)
     sql = f"""

@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import re
-from typing import List, Union, Optional
+from typing import List, Union, Dict, Tuple, Optional, cast
 from typing import TYPE_CHECKING
 
 import bach
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from modelhub.series import SeriesLocationStack
 
 GroupByType = Union[List[Union[str, bach.Series]], str, bach.Series, NotSet]
-
+ConversionEventDefinitionType = Tuple[Optional['SeriesLocationStack'], Optional[str]]
 
 TIME_DEFAULT_FORMAT = 'YYYY-MM-DD HH24:MI:SS.MS'
 
@@ -51,7 +51,7 @@ class ModelHub:
         """
 
         self._time_aggregation = time_aggregation
-        self._conversion_events = {}  # type: ignore
+        self._conversion_events = cast(Dict[str, ConversionEventDefinitionType], {})
 
         # init metabase
         self._metabase = None
