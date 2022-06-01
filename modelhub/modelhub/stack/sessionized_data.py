@@ -176,12 +176,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
 
         moment_series = df[ObjectivSupportedColumns.MOMENT.value]
 
-        # create lag series with correct expression
-        # this way we avoid materializing when
-        # doing an arithmetic operation with window function result
-        previous_moment_series = moment_series.copy_override(
-            expression=moment_series.window_lag(window=window).expression,
-        )
+        previous_moment_series = moment_series.window_lag(window=window)
         previous_moment_series = previous_moment_series.copy_override_type(bach.SeriesTimestamp)
 
         event_lapsed_time = (moment_series - previous_moment_series).copy_override_type(bach.SeriesTimedelta)
@@ -211,9 +206,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
 
         is_start_session_series = df[_BaseCalculatedSessionSeries.IS_START_OF_SESSION.value]
         # group all rows by is_start_of_session and number each event
-        session_start_id = is_start_session_series.copy_override(
-            expression=is_start_session_series.window_row_number(window=window).expression,
-        )
+        session_start_id = is_start_session_series.window_row_number(window=window)
         session_start_id = session_start_id.copy_override_type(bach.SeriesInt64)
 
         result_series_name = _BaseCalculatedSessionSeries.SESSION_START_ID.value
@@ -248,8 +241,8 @@ class SessionizedDataPipeline(BaseDataPipeline):
         window = df.sort_values(by=sort_by).groupby().window()
 
         start_session_series = df[_BaseCalculatedSessionSeries.IS_START_OF_SESSION.value]
-        return start_session_series.copy_override(
-            expression=start_session_series.count(partition=window).expression,
+        session_count_series = start_session_series.count(partition=window)
+        return session_count_series.copy_override(
             name=_BaseCalculatedSessionSeries.SESSION_COUNT.value,
         ).copy_override_type(bach.SeriesInt64)
 
