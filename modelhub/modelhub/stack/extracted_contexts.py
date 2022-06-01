@@ -201,7 +201,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         Returns a bach DataFrame
         """
         df_cp = df.copy()
-        if not is_bigquery(self._engine):
+        if is_postgres(self._engine):
             return df_cp
 
         # this materialization is to generate a readable query

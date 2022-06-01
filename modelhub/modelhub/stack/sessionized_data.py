@@ -182,7 +182,8 @@ class SessionizedDataPipeline(BaseDataPipeline):
         previous_moment_series = moment_series.window_lag(window=window)
         previous_moment_series = previous_moment_series.copy_override_type(bach.SeriesTimestamp)
 
-        event_lapsed_time = (moment_series - previous_moment_series).copy_override_type(bach.SeriesTimedelta)
+        event_lapsed_time = moment_series - previous_moment_series
+        assert isinstance(event_lapsed_time, bach.SeriesTimedelta)  # help mypy
 
         result_series_name = _BaseCalculatedSessionSeries.IS_START_OF_SESSION.value
         df_cp = df.copy()
