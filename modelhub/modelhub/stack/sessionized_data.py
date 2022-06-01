@@ -187,9 +187,14 @@ class SessionizedDataPipeline(BaseDataPipeline):
 
         result_series_name = _BaseCalculatedSessionSeries.IS_START_OF_SESSION.value
         df_cp = df.copy()
+        # let's assume all events are session starts
         df_cp[result_series_name] = True
 
         session_gap_mask = event_lapsed_time.dt.total_seconds <= session_gap_seconds
+        # set None to those events with lapse time less than or equal to the session_gap_seconds
+        # we can assume those are part of a same session
+        # We use None instead of False because _calculate_session_count will count the values
+        # from the resultant series, therefore we want to ignore non session start events
         df_cp.loc[session_gap_mask, result_series_name] = bach.SeriesBoolean.from_value(
             base=df_cp,
             value=None,
