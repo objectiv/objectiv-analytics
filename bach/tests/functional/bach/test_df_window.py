@@ -4,11 +4,12 @@ import pytest
 
 from bach import DataFrame
 from bach.partitioning import WindowFrameMode, WindowFrameBoundary
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_bt_with_test_data
+from tests.functional.bach.test_data_and_utils import assert_equals_data, get_bt_with_test_data, get_df_with_test_data
 
 
-def test_windowing_frame_clause():
-    bt = get_bt_with_test_data(full_data_set=True)
+def test_windowing_frame_clause(pg_engine):
+    engine = pg_engine  # TODO: BigQuery
+    bt = get_df_with_test_data(engine, full_data_set=True)
     w = bt.window().group_by
     # Check the default
     assert (w.frame_clause == "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW")
@@ -106,7 +107,7 @@ def test_windowing_frame_clause():
                             start_boundary=WindowFrameBoundary.PRECEDING,
                             start_value=1,
                             end_boundary=WindowFrameBoundary.FOLLOWING,
-                            end_value = None)
+                            end_value=None)
 
     with pytest.raises(ValueError):
         frame_clause_equals("",
@@ -114,7 +115,7 @@ def test_windowing_frame_clause():
                             start_boundary=WindowFrameBoundary.PRECEDING,
                             start_value= None,
                             end_boundary=WindowFrameBoundary.FOLLOWING,
-                            end_value = 2)
+                            end_value=2)
 
     #     Restrictions are that
     #     - frame_start cannot be UNBOUNDED FOLLOWING,
@@ -124,7 +125,7 @@ def test_windowing_frame_clause():
                             start_boundary=WindowFrameBoundary.FOLLOWING,
                             start_value=None,
                             end_boundary=WindowFrameBoundary.FOLLOWING,
-                            end_value = None)
+                            end_value=None)
 
     #     - frame_end cannot be UNBOUNDED PRECEDING
     with pytest.raises(ValueError):
@@ -133,7 +134,7 @@ def test_windowing_frame_clause():
                             start_boundary=WindowFrameBoundary.PRECEDING,
                             start_value=None,
                             end_boundary=WindowFrameBoundary.PRECEDING,
-                            end_value = None)
+                            end_value=None)
 
     #     - frame_end choice cannot appear earlier in the above list than the frame_start choice:
     #         for example RANGE BETWEEN CURRENT ROW AND value PRECEDING is not allowed.
@@ -143,7 +144,7 @@ def test_windowing_frame_clause():
                             start_boundary=WindowFrameBoundary.PRECEDING,
                             start_value=2,
                             end_boundary=WindowFrameBoundary.PRECEDING,
-                            end_value = 3)
+                            end_value=3)
 
     with pytest.raises(ValueError):
         frame_clause_equals("",
@@ -151,11 +152,12 @@ def test_windowing_frame_clause():
                             start_boundary=WindowFrameBoundary.FOLLOWING,
                             start_value=3,
                             end_boundary=WindowFrameBoundary.FOLLOWING,
-                            end_value = 2)
+                            end_value=2)
 
-def test_windowing_windows():
+def test_windowing_windows(pg_engine):
+    engine = pg_engine  # TODO: BigQuery
     ## Just test that different windows don't generate SQL errors. Logic will be checked in different tests.
-    bt = get_bt_with_test_data(full_data_set=True)
+    bt = get_df_with_test_data(engine, full_data_set=True)
 
     # no sorting, no partition
     p0 = bt.window()
@@ -177,10 +179,10 @@ def test_windowing_windows():
         bt.inhabitants.window_first_value(window=bt.groupby())
 
 
-def test_windowing_functions_agg():
+def test_windowing_functions_agg(engine):
 
     ## Test window as an argument to agg func
-    arg = get_bt_with_test_data(full_data_set=True)
+    arg = get_df_with_test_data(engine, full_data_set=True)
     window = arg.sort_values('inhabitants').groupby('municipality').window()
     arg['min'] = arg.inhabitants.min(window)
     arg['max'] = arg.inhabitants.max(window)
@@ -191,7 +193,7 @@ def test_windowing_functions_agg():
         arg['nunique'] = arg.inhabitants.nunique(window)
 
     ## Test window as the dataframe that caries it.
-    df = get_bt_with_test_data(full_data_set=True)
+    df = get_df_with_test_data(engine, full_data_set=True)
     window = df.sort_values('inhabitants').groupby('municipality').window()
     df['min'] = window.inhabitants.min()
     df['max'] = window.inhabitants.max()
@@ -225,9 +227,9 @@ def test_windowing_functions_agg():
 
 
 
-def test_windowing_functions_basics_argument():
+def test_windowing_functions_basics_argument(engine):
     # just check the results in too many ways, first by calling the aggregation funcs with a window argument
-    arg = get_bt_with_test_data(full_data_set=True)
+    arg = get_df_with_test_data(engine, full_data_set=True)
     # Create an unbounded window to make sure we can easily relate to the results.
     window = arg.sort_values('inhabitants').groupby('municipality').window(
         mode=WindowFrameMode.ROWS,
@@ -248,7 +250,7 @@ def test_windowing_functions_basics_argument():
     arg['nth_value'] = arg.inhabitants.window_nth_value(2, window=window)
 
     # just check the results in too many ways, first by calling the aggregation funcs with a window argument
-    df = get_bt_with_test_data(full_data_set=True)
+    df = get_df_with_test_data(engine, full_data_set=True)
     # Create an unbounded window to make sure we can easily relate to the results.
     window = df.sort_values('inhabitants').groupby('municipality').window(
         mode=WindowFrameMode.ROWS,
@@ -292,8 +294,8 @@ def test_windowing_functions_basics_argument():
         )
 
 
-def test_windowing_expressions():
-    bt = get_bt_with_test_data(full_data_set=False)
+def test_windowing_expressions(engine):
+    bt = get_df_with_test_data(engine, full_data_set=False)
     bt['lag'] = bt.inhabitants.window_lag(window=bt.sort_values('inhabitants').window())
     bt['test'] = bt['lag'] == 3055
 

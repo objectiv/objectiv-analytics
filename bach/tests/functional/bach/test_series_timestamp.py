@@ -113,20 +113,17 @@ def test_timestamp_comparator(engine, asstring: bool):
     )
 
 
-def test_timestamp_arithmetic(pg_engine):
-    # TODO: BigQuery
+def test_timestamp_arithmetic(engine):
     data = [
         ['d', datetime.date(2020, 3, 11), 'date', (None, None)],
         ['t', datetime.time(23, 11, 5), 'time', (None, None)],
         ['td', datetime.timedelta(days=321, seconds=9877), 'timedelta', ('timestamp', 'timestamp')],
         ['dt', datetime.datetime(2021, 5, 3, 11, 28, 36, 388000), 'timestamp', (None, 'timedelta')]
     ]
-    types_plus_min(pg_engine, data, datetime.datetime(2019, 8, 16, 2, 54, 39, 166000), 'timestamp')
+    types_plus_min(engine, data, datetime.datetime(2019, 8, 16, 2, 54, 39, 166000), 'timestamp')
 
 
-def types_plus_min(
-    engine: Engine, data: List[list], base_value: Any, base_type: str, use_to_pandas: bool = False,
-):
+def types_plus_min(engine: Engine, data: List[list], base_value: Any, base_type: str):
     """
     Function to test all + and - operation combinations of data vs base, to make sure
     that all operations supported in python are supported in Bach and vice versa.
@@ -188,6 +185,6 @@ def types_plus_min(
         expected_data=[
             [1, 93485, *expected],
         ],
-        use_to_pandas=use_to_pandas,
+        use_to_pandas=True,
     )
     return bt, expected, expected_types

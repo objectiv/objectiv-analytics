@@ -5,18 +5,15 @@ Copyright 2021 Objectiv B.V.
 # Any import from modelhub initializes all the types, do not remove
 from modelhub import __version__
 import pytest
-from tests_modelhub.functional.modelhub.data_and_utils import get_objectiv_dataframe_test
+from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 from uuid import UUID
-
-
-def test_get_objectiv_stack():
-    get_objectiv_dataframe_test()
+pytestmark = [pytest.mark.skip_bigquery]  # TODO: BigQuery
 
 
 # map
-def test_is_first_session():
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+def test_is_first_session(db_params):
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
     s = modelhub.map.is_first_session(df)
 
@@ -37,7 +34,8 @@ def test_is_first_session():
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # use created series to filter dataframe
@@ -54,12 +52,13 @@ def test_is_first_session():
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
 
-def test_is_new_user():
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+def test_is_new_user(db_params):
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
     s = modelhub.map.is_new_user(df)
 
@@ -80,7 +79,8 @@ def test_is_new_user():
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # use created series to filter dataframe
@@ -98,7 +98,8 @@ def test_is_new_user():
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     s = modelhub.map.is_new_user(df, time_aggregation='YYYY-MM')
@@ -120,12 +121,13 @@ def test_is_new_user():
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
 
-def test_add_conversion_event():
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+def test_add_conversion_event(db_params):
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
     location_stack = df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
     event_type = 'ClickEvent'
@@ -186,7 +188,7 @@ def test_add_conversion_event():
     )
 
     # event_type not set
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
     modelhub.add_conversion_event(location_stack=location_stack, name='github_clicks')
     assert len(modelhub._conversion_events) == 1
     assert modelhub._conversion_events[conversion] == (location_stack, None)
@@ -241,8 +243,8 @@ def test_add_conversion_event():
     )
 
 
-def test_is_conversion_event():
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+def test_is_conversion_event(db_params):
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
     # add conversion event
     modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext',
@@ -267,7 +269,8 @@ def test_is_conversion_event():
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), False],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), False]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # use created series to filter dataframe
@@ -279,7 +282,8 @@ def test_is_conversion_event():
         expected_data=[
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # wrong conversion_event name
@@ -290,8 +294,8 @@ def test_is_conversion_event():
         modelhub.map.is_conversion_event(df, None)
 
 
-def test_conversions_counter():
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+def test_conversions_counter(db_params):
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
     # add conversion event
     modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
@@ -317,7 +321,8 @@ def test_conversions_counter():
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), 0],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), 0]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # use created series to filter dataframe
@@ -331,7 +336,8 @@ def test_conversions_counter():
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac302'), 1],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), 1]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     s = modelhub.map.conversions_counter(df, 'github_clicks', partition='user_id')
@@ -353,12 +359,13 @@ def test_conversions_counter():
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), 1],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), 1]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
 
-def test_conversions_in_time():
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+def test_conversions_in_time(db_params):
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
     # add conversion event
     modelhub.add_conversion_event(
@@ -384,7 +391,8 @@ def test_conversions_in_time():
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), 0],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), 0]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # use created series to filter dataframe
@@ -396,12 +404,13 @@ def test_conversions_in_time():
         expected_data=[
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
 
-def test_pre_conversion_hit_number():
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+def test_pre_conversion_hit_number(db_params):
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
     # add conversion event
     modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
@@ -426,7 +435,8 @@ def test_pre_conversion_hit_number():
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), None],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), None]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # use created series to filter dataframe
@@ -438,7 +448,8 @@ def test_pre_conversion_hit_number():
         expected_data=[
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), True],
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     s = modelhub.map.pre_conversion_hit_number(df, 'github_clicks', partition='user_id')
@@ -460,12 +471,13 @@ def test_pre_conversion_hit_number():
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), 4],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), 3]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
 
-def test_time_agg():
-    df, modelhub = get_objectiv_dataframe_test()
+def test_time_agg(db_params):
+    df, modelhub = get_objectiv_dataframe_test(db_params)
     s = modelhub.time_agg(df)
 
     assert_equals_data(
@@ -485,7 +497,8 @@ def test_time_agg():
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), '2021-11-29 10:23:36.286'],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), '2021-11-29 10:23:36.287']
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM')
@@ -508,7 +521,8 @@ def test_time_agg():
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), '2021-11'],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), '2021-11']
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     df, modelhub = get_objectiv_dataframe_test()
@@ -530,10 +544,11 @@ def test_time_agg():
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac310'), '2021-12-03'],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), '2021-11-29'],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), '2021-11-29']],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
     s = modelhub.time_agg(df, time_aggregation='YYYY')
 
     assert_equals_data(
@@ -552,5 +567,6 @@ def test_time_agg():
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac310'), '2021'],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), '2021'],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), '2021']],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
