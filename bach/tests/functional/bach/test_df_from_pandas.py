@@ -49,6 +49,7 @@ TYPES_COLUMNS = ['int_column', 'float_column', 'bool_column', 'datetime_column',
                  'dict_column', 'timedelta_column', 'mixed_column']
 
 
+@pytest.mark.xdist_group(name="from_pd_table")
 def test_from_pandas_table(pg_engine):
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS)
     bt = DataFrame.from_pandas(

@@ -96,14 +96,17 @@ class Map:
 
         self._mh._check_data_is_objectiv_data(data)
 
+        if name not in self._mh._conversion_events:
+            raise KeyError(f"Key {name} is not labeled as a conversion")
+
         conversion_stack, conversion_event = self._mh._conversion_events[name]
 
         if conversion_stack is None:
             series = data.event_type == conversion_event
         elif conversion_event is None:
-            series = conversion_stack.notnull()
+            series = conversion_stack.json.get_array_length() > 0
         else:
-            series = ((conversion_stack.notnull()) & (data.event_type == conversion_event))
+            series = ((conversion_stack.json.get_array_length() > 0) & (data.event_type == conversion_event))
         return series.copy_override(name='is_conversion_event')
 
     def conversions_counter(self,
