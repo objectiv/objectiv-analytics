@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import json
-from typing import Dict, Union, TYPE_CHECKING, Tuple, cast, Optional, List, Any
+from typing import Dict, Union, TYPE_CHECKING, Tuple, cast, Optional, List, Any, TypeVar, Generic
 
 from sqlalchemy.engine import Dialect
 
@@ -143,12 +143,10 @@ class SeriesJson(Series):
     }
     supported_value_types = (dict, list)
 
-    return_dtype = 'json'
-
     @property
     def json(self) -> 'JsonAccessor':
         """
-        Get access to json operations via the class that's return through this accessor.
+        Get access to json operations via the class that's returned through this accessor.
         Use as `my_series.json.get_value()` or `my_series.json[:2]`
 
         .. autoclass:: bach.series.series_json.JsonAccessor
@@ -280,7 +278,6 @@ class SeriesJsonPostgres(SeriesJson):
     supported_db_dtype = {
         DBDialect.POSTGRES: 'json',
     }
-    return_dtype = 'json'
 
     def __init__(self,
                  engine,
@@ -305,6 +302,19 @@ class SeriesJsonPostgres(SeriesJson):
                          instance_dtype=instance_dtype,
                          **kwargs)
 
+    @property
+    def json(self) -> 'JsonAccessor':
+        """
+        Get access to json operations via the class that's return through this accessor.
+        Use as `my_series.json.get_value()` or `my_series.json[:2]`
+
+        .. autoclass:: bach.series.series_json.JsonAccessor
+            :members:
+        """
+        json_series = self.astype('json')
+        assert isinstance(json_series, SeriesJson)  # help mypy
+        return JsonPostgresAccessor(series_object=json_series)
+
     def materialize(
             self,
             node_name='manual_materialize',
@@ -320,13 +330,16 @@ class SeriesJsonPostgres(SeriesJson):
         raise Exception(f'{self.__class__.__name__} cannot be materialized.')
 
 
-class JsonAccessor:
+TSeriesJson = TypeVar('TSeriesJson', bound='SeriesJson')
+
+
+class JsonAccessor(Generic[TSeriesJson]):
     """
     Abstract class with accessor methods to JSON type data.
 
     Database specific subclasses implement the abstract functions.
     """
-    def __init__(self, series_object: 'SeriesJson'):
+    def __init__(self, series_object: 'TSeriesJson'):
         self._series_object = series_object
 
     def __getitem__(self, key: Union[str, int, slice]):
@@ -345,7 +358,7 @@ class JsonAccessor:
 
         raise TypeError('Key should either be a string, integer, or slice.')
 
-    def get_array_slice(self, key: slice) -> 'SeriesJson':
+    def get_array_slice(self, key: slice) -> 'TSeriesJson':
         """
         Get items from toplevel array.
 
@@ -357,7 +370,7 @@ class JsonAccessor:
         """
         raise NotImplementedError()
 
-    def get_array_item(self, key: int) -> 'SeriesJson':
+    def get_array_item(self, key: int) -> 'TSeriesJson':
         """
         Get item from toplevel array.
 
@@ -370,7 +383,7 @@ class JsonAccessor:
         """
         raise NotImplementedError()
 
-    def get_dict_item(self, key: str) -> 'SeriesJson':
+    def get_dict_item(self, key: str) -> 'TSeriesJson':
         """
         Get item from toplevel object by key.
 
@@ -382,7 +395,7 @@ class JsonAccessor:
         """
         raise NotImplementedError()
 
-    def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'SeriesJson']:
+    def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'TSeriesJson']:
         """
         Get item from toplevel object by key.
 
@@ -405,12 +418,12 @@ class JsonAccessor:
         raise NotImplementedError()
 
 
-class JsonBigQueryAccessor(JsonAccessor):
+class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
     """
     BigQuery specific implementation of JsonAccessor.
     """
 
-    def get_array_slice(self, key: slice) -> 'SeriesJson':
+    def get_array_slice(self, key: slice) -> 'TSeriesJson':
         """ See implementation in parent class :class:`JsonAccessor` """
         if key.step:
             raise NotImplementedError('slice steps not supported')
@@ -458,7 +471,7 @@ class JsonBigQueryAccessor(JsonAccessor):
             expr_len = Expression.construct('ARRAY_LENGTH(JSON_EXTRACT_ARRAY({}))', self._series_object)
             return Expression.construct(f'({{}} {value})', expr_len)
 
-    def get_array_item(self, key: int) -> 'SeriesJson':
+    def get_array_item(self, key: int) -> 'TSeriesJson':
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         if key >= 0:
             expression = Expression.construct(f'''JSON_QUERY({{}}, '$[{key}]')''', self._series_object)
@@ -470,11 +483,11 @@ class JsonBigQueryAccessor(JsonAccessor):
         expression = Expression.construct('JSON_EXTRACT_ARRAY({})[{}]', self._series_object, expr_offset)
         return self._series_object.copy_override(expression=expression)
 
-    def get_dict_item(self, key: str) -> 'SeriesJson':
+    def get_dict_item(self, key: str) -> 'TSeriesJson':
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
-        return cast('SeriesJson', self.get_value(key=key, as_str=False))
+        return cast('TSeriesJson', self.get_value(key=key, as_str=False))
 
-    def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'SeriesJson']:
+    def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'TSeriesJson']:
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         # TODO: as_str is never used?
         # TODO: ESCAPE KEY!
@@ -502,16 +515,10 @@ class JsonBigQueryAccessor(JsonAccessor):
             .copy_override(expression=expression)
 
 
-class JsonPostgresAccessor(JsonAccessor):
+class JsonPostgresAccessor(JsonAccessor, Generic[TSeriesJson]):
     """
     Postgres specific implementation of JsonAccessor.
     """
-    def __init__(self, series_object: 'SeriesJson'):
-        """
-        Note: series_object.return_dtype must be dtype of a subclass of SeriesJson
-        """
-        self._return_dtype: Dtype = series_object.return_dtype
-        super().__init__(series_object=series_object)
 
     def _find_in_json_list(self, key: Union[str, Dict[str, str]]):
         if isinstance(key, (dict, str)):
@@ -523,7 +530,7 @@ class JsonPostgresAccessor(JsonAccessor):
         else:
             raise TypeError(f'key should be int or slice, actual type: {type(key)}')
 
-    def get_array_slice(self, key: slice) -> 'SeriesJson':
+    def get_array_slice(self, key: slice) -> 'TSeriesJson':
         """ See implementation in parent class :class:`JsonAccessor` """
         expression_references = 0
         if key.step:
@@ -567,40 +574,36 @@ class JsonPostgresAccessor(JsonAccessor):
         where ordinality - 1 {where})"""
         expression_references += 1
         non_null_expression = f"coalesce({combined_expression}, '[]'::jsonb)"
-        result = self._series_object \
-            .copy_override_dtype(dtype=self._return_dtype) \
+        return self._series_object \
             .copy_override(
                expression=Expression.construct(
                     non_null_expression,
                     *([self._series_object] * expression_references)
                 )
             )
-        return cast('SeriesJson', result)
 
-    def get_array_item(self, key: int) -> 'SeriesJson':
+    def get_array_item(self, key: int) -> 'TSeriesJson':
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
-        result = self._series_object \
-            .copy_override_dtype(dtype=self._return_dtype) \
+        return self._series_object \
             .copy_override(expression=Expression.construct(f'{{}}->{key}', self._series_object))
-        return cast('SeriesJson', result)
 
-    def get_dict_item(self, key: str) -> 'SeriesJson':
+    def get_dict_item(self, key: str) -> 'TSeriesJson':
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
-        return cast('SeriesJson', self.get_value(key=key, as_str=False))
+        return cast('TSeriesJson', self.get_value(key=key, as_str=False))
 
-    def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'SeriesJson']:
+    def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'TSeriesJson']:
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         return_as_string_operator = ''
-        return_dtype = self._return_dtype
         if as_str:
             return_as_string_operator = '>'
-            return_dtype = 'string'
         expression = Expression.construct(f"{{}}->{return_as_string_operator}{{}}",
                                           self._series_object,
                                           Expression.string_value(key))
-        return self._series_object\
-            .copy_override_dtype(dtype=return_dtype)\
-            .copy_override(expression=expression)
+        result = self._series_object.copy_override(expression=expression)
+        if as_str:
+            from bach.series import SeriesString
+            return result.copy_override_type(SeriesString)
+        return result
 
     def get_array_length(self) -> 'SeriesInt64':
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
