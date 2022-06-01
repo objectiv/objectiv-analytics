@@ -8,8 +8,6 @@ declare global {
   var objectiv: undefined | TrackerDeveloperToolsInterface;
 }
 
-export * from './plugins/OpenTaxonomyValidationPlugin';
-
 export * from './cleanObjectFromInternalProperties';
 export * from './Context';
 export * from './ContextFactories';

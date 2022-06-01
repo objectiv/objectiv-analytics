@@ -682,12 +682,7 @@ describe('Without developer tools', () => {
     expect(testTracker).toBeInstanceOf(Tracker);
     expect(testTracker.transport).toStrictEqual(testTransport);
     expect(testTracker.plugins.plugins).toEqual([
-      {
-        pluginName: 'OpenTaxonomyValidationPlugin',
-        initialized: true,
-        validationRules: [],
-      },
-      {
+      expect.objectContaining({
         pluginName: 'ApplicationContextPlugin',
         initialized: true,
         applicationContext: {
@@ -696,7 +691,7 @@ describe('Without developer tools', () => {
           _type: GlobalContextName.ApplicationContext,
           id: 'app-id',
         },
-      },
+      }),
     ]);
     expect(testTracker.location_stack).toStrictEqual([]);
     expect(testTracker.global_contexts).toStrictEqual([]);

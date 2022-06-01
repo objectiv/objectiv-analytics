@@ -6,6 +6,7 @@ import { TrackerDeveloperToolsInterface } from '@objectiv/tracker-core';
 import { EventRecorder } from './EventRecorder';
 import { getLocationPath } from './getLocationPath';
 import { LocationTree } from './LocationTree';
+import { OpenTaxonomyValidationPlugin } from './OpenTaxonomyValidationPlugin';
 import { TrackerConsole } from './TrackerConsole';
 import { makeGlobalContextValidationRule } from './validationRules/makeGlobalContextValidationRule';
 import { makeLocationContextValidationRule } from './validationRules/makeLocationContextValidationRule';
@@ -19,6 +20,7 @@ const developerTools: TrackerDeveloperToolsInterface = {
   LocationTree,
   makeGlobalContextValidationRule,
   makeLocationContextValidationRule,
+  OpenTaxonomyValidationPlugin,
   TrackerConsole,
 };
 

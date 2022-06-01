@@ -6,7 +6,6 @@ import { ApplicationContextPlugin } from '@objectiv/plugin-application-context';
 import { AbstractGlobalContext, AbstractLocationContext, Contexts } from '@objectiv/schema';
 import { ContextsConfig } from './Context';
 import { waitForPromise } from './helpers';
-import { OpenTaxonomyValidationPlugin } from './plugins/OpenTaxonomyValidationPlugin';
 import { TrackerEvent, TrackerEventConfig } from './TrackerEvent';
 import { TrackerPluginInterface } from './TrackerPluginInterface';
 import { TrackerPlugins } from './TrackerPlugins';
@@ -76,7 +75,11 @@ export type TrackerConfig = ContextsConfig & {
 export const makeCoreTrackerDefaultPluginsList = (trackerConfig: TrackerConfig) => {
   const { trackApplicationContext = true } = trackerConfig;
 
-  const plugins: TrackerPluginInterface[] = [new OpenTaxonomyValidationPlugin()];
+  const plugins: TrackerPluginInterface[] = [];
+
+  if (globalThis.objectiv) {
+    plugins.push(globalThis.objectiv.OpenTaxonomyValidationPlugin);
+  }
 
   if (trackApplicationContext) {
     plugins.push(new ApplicationContextPlugin());

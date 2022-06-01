@@ -7,6 +7,7 @@ import { GlobalContextValidationRuleFactory, LocationContextValidationRuleFactor
 import { EventRecorderInterface } from './EventRecorderInterface';
 import { LocationTreeInterface } from './LocationTreeInterface';
 import { TrackerConsoleInterface } from './TrackerConsoleInterface';
+import { TrackerPluginInterface } from './TrackerPluginInterface';
 
 /**
  * DeveloperTools interface definition.
@@ -17,5 +18,6 @@ export interface TrackerDeveloperToolsInterface {
   LocationTree: LocationTreeInterface;
   makeGlobalContextValidationRule: GlobalContextValidationRuleFactory;
   makeLocationContextValidationRule: LocationContextValidationRuleFactory;
+  OpenTaxonomyValidationPlugin: TrackerPluginInterface;
   TrackerConsole: TrackerConsoleInterface;
 }
