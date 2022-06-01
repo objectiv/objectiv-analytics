@@ -1527,7 +1527,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@objectiv/plugin-application-context@workspace:plugins/application-context":
+"@objectiv/plugin-application-context@^0.0.20-0, @objectiv/plugin-application-context@workspace:plugins/application-context":
   version: 0.0.0-use.local
   resolution: "@objectiv/plugin-application-context@workspace:plugins/application-context"
   dependencies:
@@ -1757,6 +1757,7 @@ __metadata:
   resolution: "@objectiv/tracker-core@workspace:core/tracker"
   dependencies:
     "@objectiv/developer-tools": ^0.0.20-0
+    "@objectiv/plugin-application-context": ^0.0.20-0
     "@objectiv/schema": ^0.0.20-0
     "@objectiv/testing-tools": ^0.0.20-0
     "@types/jest": ^27.4.1
