@@ -146,16 +146,13 @@ class SeriesJson(Series):
     return_dtype = 'json'
 
     @property
-    def json(self):
+    def json(self) -> 'JsonAccessor':
         """
-        .. _json_accessor:
-
         Get access to json operations via the class that's return through this accessor.
         Use as `my_series.json.get_value()` or `my_series.json[:2]`
 
-        .. autoclass:: JsonPostgresAccessor
+        .. autoclass:: bach.series.series_json.JsonAccessor
             :members:
-            :special-members: __getitem__
 
         """
         if is_postgres(self.engine):
@@ -323,9 +320,11 @@ class SeriesJsonPostgres(SeriesJson):
         raise Exception(f'{self.__class__.__name__} cannot be materialized.')
 
 
-class JsonBigQueryAccessor:
+class JsonAccessor:
     """
-    class with accessor methods to JSON type data columns on BigQuery.
+    Abstract class with accessor methods to JSON type data.
+
+    Database specific subclasses implement the abstract functions.
     """
     def __init__(self, series_object: 'SeriesJson'):
         self._series_object = series_object
@@ -356,6 +355,63 @@ class JsonBigQueryAccessor:
         :param key: array-slice.
         :returns: series with the selected values.
         """
+        raise NotImplementedError()
+
+    def get_array_item(self, key: int) -> 'SeriesJson':
+        """
+        Get item from toplevel array.
+
+        This assumes the top-level item in the json is an array. Will result in an exception (later on) if
+        that's not the case!
+
+        :param key: the 0-based index. If negative this will count from the end of the array (1 based). The
+            index MUST exist in the array
+        :returns: series with the selected value.
+        """
+        raise NotImplementedError()
+
+    def get_dict_item(self, key: str) -> 'SeriesJson':
+        """
+        Get item from toplevel object by key.
+
+        This assumes the top-level item in the json is an object. Will result in an exception (later on) if
+        that's not the case!
+
+        :param key: the key to return the values for.
+        :returns: series with the selected value.
+        """
+        raise NotImplementedError()
+
+    def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'SeriesJson']:
+        """
+        Get item from toplevel object by key.
+
+        :param key: the key to return the values for.
+        :param as_str: if True, it returns a string Series, json otherwise.
+        :returns: series with the selected object value.
+        """
+        raise NotImplementedError()
+
+    def get_array_length(self) -> 'SeriesInt64':
+        """
+        Get the length of the toplevel array.
+
+        This assumes the top-level item in the json is an array. Will result in an exception (later on) if
+        that's not the case!
+        """
+        # Implementing a more generic __len__() function is not trivial as a json object can be (among
+        # others) an array, a dict, or a string, all of which should be supported by a generic __len__().
+        # So for now we have a dedicated len function for arrays.
+        raise NotImplementedError()
+
+
+class JsonBigQueryAccessor(JsonAccessor):
+    """
+    BigQuery specific implementation of JsonAccessor.
+    """
+
+    def get_array_slice(self, key: slice) -> 'SeriesJson':
+        """ See implementation in parent class :class:`JsonAccessor` """
         if key.step:
             raise NotImplementedError('slice steps not supported')
 
@@ -403,16 +459,7 @@ class JsonBigQueryAccessor:
             return Expression.construct(f'({{}} {value})', expr_len)
 
     def get_array_item(self, key: int) -> 'SeriesJson':
-        """
-        Get item from toplevel array.
-
-        This assumes the top-level item in the json is an array. Will result in an exception (later on) if
-        that's not the case!
-
-        :param key: the 0-based index. If negative this will count from the end of the array (1 based). The
-            index MUST exist in the array
-        :returns: series with the selected value.
-        """
+        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         if key >= 0:
             expression = Expression.construct(f'''JSON_QUERY({{}}, '$[{key}]')''', self._series_object)
             return self._series_object.copy_override(expression=expression)
@@ -424,26 +471,11 @@ class JsonBigQueryAccessor:
         return self._series_object.copy_override(expression=expression)
 
     def get_dict_item(self, key: str) -> 'SeriesJson':
-        """
-        Get item from toplevel object.
-
-        This assumes the top-level item in the json is an object. Will result in an exception (later on) if
-        that's not the case!
-
-        :param key: the key to return the values for.
-        :returns: series with the selected value.
-        """
+        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         return cast('SeriesJson', self.get_value(key=key, as_str=False))
 
     def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'SeriesJson']:
-        """
-        Select values from objects by key. This works only on scalar values! to get json objects use
-        __getitem__, that is, object['key']
-
-        :param key: the key to return the values for.
-        :param as_str: if True, it returns a string Series, json otherwise.
-        :returns: series with the selected object value.
-        """
+        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         # TODO: as_str is never used?
         # TODO: ESCAPE KEY!
         # note: escaping is function dependent. for JSON_VALUE[1]: 'If a JSON key uses invalid JSONPath
@@ -459,12 +491,7 @@ class JsonBigQueryAccessor:
         return self._series_object.copy_override(expression=expression).copy_override_type(SeriesString)
 
     def get_array_length(self) -> 'SeriesInt64':
-        """
-        Get the length of the toplevel array.
-
-        This assumes the top-level item in the json is an array. Will result in an exception (later on) if
-        that's not the case!
-        """
+        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         # Implementing a more generic __len__() function is not trivial as a json object can be (among
         # others) an array, a dict, or a string, all of which should be supported by a generic __len__().
         # So for now we have a dedicated len function for arrays.
@@ -475,76 +502,16 @@ class JsonBigQueryAccessor:
             .copy_override(expression=expression)
 
 
-class JsonPostgresAccessor:
+class JsonPostgresAccessor(JsonAccessor):
     """
-    class with accessor methods to SeriesJson data on Postgres.
+    Postgres specific implementation of JsonAccessor.
     """
     def __init__(self, series_object: 'SeriesJson'):
-        self._series_object = series_object
+        """
+        Note: series_object.return_dtype must be dtype of a subclass of SeriesJson
+        """
         self._return_dtype: Dtype = series_object.return_dtype
-
-    def __getitem__(self, key: Union[str, int, slice]):
-        """
-        Slice the JSON data in pythonic ways
-        """
-        if isinstance(key, int):
-            return self._series_object\
-                .copy_override_dtype(dtype=self._return_dtype)\
-                .copy_override(expression=Expression.construct(f'{{}}->{key}', self._series_object))
-        elif isinstance(key, str):
-            return self.get_value(key)
-        elif isinstance(key, slice):
-            expression_references = 0
-            if key.step:
-                raise NotImplementedError('slice steps not supported')
-            if key.stop is not None:
-                negative_stop = ''
-                if isinstance(key.stop, int):
-                    if key.stop < 0:
-                        negative_stop = f'jsonb_array_length({{}})'
-                        expression_references += 1
-                    stop = f'{negative_stop} {key.stop} - 1'
-                elif isinstance(key.stop, (dict, str)):
-                    stop = self._find_in_json_list(key.stop)
-                    expression_references += 1
-                else:
-                    raise TypeError('cant')
-            if key.start is not None:
-                if isinstance(key.start, int):
-                    negative_start = ''
-                    if key.start < 0:
-                        negative_start = f'jsonb_array_length({{}})'
-                        expression_references += 1
-                    start = f'{negative_start} {key.start}'
-                elif isinstance(key.start, (dict, str)):
-                    start = self._find_in_json_list(key.start)
-                    expression_references += 1
-                else:
-                    raise TypeError('cant')
-                if key.stop is not None:
-                    where = f'between {start} and {stop}'
-                else:
-                    where = f'>= {start}'
-            else:
-                if key.stop is not None:
-                    where = f'<= {stop}'
-                else:
-                    # no start and no stop: we want to select all elements.
-                    where = 'is not null'  # should be true for all ordinalities.
-            combined_expression = f"""(select jsonb_agg(x.value)
-            from jsonb_array_elements({{}}) with ordinality x
-            where ordinality - 1 {where})"""
-            expression_references += 1
-            non_null_expression = f"coalesce({combined_expression}, '[]'::jsonb)"
-            return self._series_object\
-                .copy_override_dtype(dtype=self._return_dtype)\
-                .copy_override(
-                    expression=Expression.construct(
-                        non_null_expression,
-                        *([self._series_object] * expression_references)
-                    )
-                )
-        raise TypeError(f'key should be int or slice, actual type: {type(key)}')
+        super().__init__(series_object=series_object)
 
     def _find_in_json_list(self, key: Union[str, Dict[str, str]]):
         if isinstance(key, (dict, str)):
@@ -556,14 +523,73 @@ class JsonPostgresAccessor:
         else:
             raise TypeError(f'key should be int or slice, actual type: {type(key)}')
 
-    def get_value(self, key: str, as_str: bool = False):
-        """
-        Select values from objects by key. Same as using `.json[key]` on the json column.
+    def get_array_slice(self, key: slice) -> 'SeriesJson':
+        """ See implementation in parent class :class:`JsonAccessor` """
+        expression_references = 0
+        if key.step:
+            raise NotImplementedError('slice steps not supported')
+        if key.stop is not None:
+            negative_stop = ''
+            if isinstance(key.stop, int):
+                if key.stop < 0:
+                    negative_stop = f'jsonb_array_length({{}})'
+                    expression_references += 1
+                stop = f'{negative_stop} {key.stop} - 1'
+            elif isinstance(key.stop, (dict, str)):
+                stop = self._find_in_json_list(key.stop)
+                expression_references += 1
+            else:
+                raise TypeError('cant')
+        if key.start is not None:
+            if isinstance(key.start, int):
+                negative_start = ''
+                if key.start < 0:
+                    negative_start = f'jsonb_array_length({{}})'
+                    expression_references += 1
+                start = f'{negative_start} {key.start}'
+            elif isinstance(key.start, (dict, str)):
+                start = self._find_in_json_list(key.start)
+                expression_references += 1
+            else:
+                raise TypeError('cant')
+            if key.stop is not None:
+                where = f'between {start} and {stop}'
+            else:
+                where = f'>= {start}'
+        else:
+            if key.stop is not None:
+                where = f'<= {stop}'
+            else:
+                # no start and no stop: we want to select all elements.
+                where = 'is not null'  # should be true for all ordinalities.
+        combined_expression = f"""(select jsonb_agg(x.value)
+        from jsonb_array_elements({{}}) with ordinality x
+        where ordinality - 1 {where})"""
+        expression_references += 1
+        non_null_expression = f"coalesce({combined_expression}, '[]'::jsonb)"
+        result = self._series_object \
+            .copy_override_dtype(dtype=self._return_dtype) \
+            .copy_override(
+               expression=Expression.construct(
+                    non_null_expression,
+                    *([self._series_object] * expression_references)
+                )
+            )
+        return cast('SeriesJson', result)
 
-        :param key: the key to return the values for.
-        :param as_str: if True, it returns a string Series, jsonb otherwise.
-        :returns: series with the selected object value.
-        """
+    def get_array_item(self, key: int) -> 'SeriesJson':
+        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        result = self._series_object \
+            .copy_override_dtype(dtype=self._return_dtype) \
+            .copy_override(expression=Expression.construct(f'{{}}->{key}', self._series_object))
+        return cast('SeriesJson', result)
+
+    def get_dict_item(self, key: str) -> 'SeriesJson':
+        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        return cast('SeriesJson', self.get_value(key=key, as_str=False))
+
+    def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'SeriesJson']:
+        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         return_as_string_operator = ''
         return_dtype = self._return_dtype
         if as_str:
@@ -577,12 +603,7 @@ class JsonPostgresAccessor:
             .copy_override(expression=expression)
 
     def get_array_length(self) -> 'SeriesInt64':
-        """
-        Get the length of the toplevel array.
-
-        This assumes the top-level item in the json is an array. Will result in an exception (later on) if
-        that's not the case!
-        """
+        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         from bach.series import SeriesInt64
         expression = Expression.construct('jsonb_array_length({})', self._series_object)
         return self._series_object \
