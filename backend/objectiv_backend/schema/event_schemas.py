@@ -422,7 +422,7 @@ class EventSchema:
     def get_all_required_contexts_for_event(self, event_type: EventType) -> Set[ContextType]:
         return self.events.get_all_required_contexts(event_type=event_type)
 
-    def get_all_required_contexts_for_context(self, context_type: ContextType) -> set[ContextType]:
+    def get_all_required_contexts_for_context(self, context_type: ContextType) -> Set[ContextType]:
         return self.contexts.get_all_required_context_types(context_type=context_type)
 
     def is_valid_event_type(self, event_type: EventType) -> bool:
