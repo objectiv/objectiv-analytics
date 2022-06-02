@@ -8,8 +8,6 @@ import pytest
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 from uuid import UUID
-pytestmark = [pytest.mark.skip_bigquery]  # TODO: BigQuery
-
 
 # map
 def test_is_first_session(db_params):
@@ -57,6 +55,7 @@ def test_is_first_session(db_params):
     )
 
 
+@pytest.mark.skip_bigquery
 def test_is_new_user(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
@@ -126,6 +125,7 @@ def test_is_new_user(db_params):
     )
 
 
+@pytest.mark.skip_bigquery
 def test_add_conversion_event(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
@@ -158,7 +158,8 @@ def test_add_conversion_event(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), False],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), False]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # location_stack not set
@@ -184,7 +185,8 @@ def test_add_conversion_event(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # event_type not set
@@ -212,7 +214,8 @@ def test_add_conversion_event(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), False],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), False]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
     # name not set
@@ -239,11 +242,13 @@ def test_add_conversion_event(db_params):
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), True],
             [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), True]
         ],
-        order_by='event_id'
+        order_by='event_id',
+        convert_uuid=True,
     )
 
 
-def test_is_conversion_event(db_params):
+@pytest.mark.skip_bigquery
+def test_is_conversion_event(db_params): # TODO: Remove when bach supports json slicing for BigQuery
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
     # add conversion event
@@ -294,6 +299,7 @@ def test_is_conversion_event(db_params):
         modelhub.map.is_conversion_event(df, None)
 
 
+@pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
 def test_conversions_counter(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
@@ -364,6 +370,7 @@ def test_conversions_counter(db_params):
     )
 
 
+@pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
 def test_conversions_in_time(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
@@ -409,6 +416,7 @@ def test_conversions_in_time(db_params):
     )
 
 
+@pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
 def test_pre_conversion_hit_number(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
 
@@ -476,6 +484,7 @@ def test_pre_conversion_hit_number(db_params):
     )
 
 
+@pytest.mark.skip_bigquery
 def test_time_agg(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params)
     s = modelhub.time_agg(df)
@@ -501,7 +510,7 @@ def test_time_agg(db_params):
         convert_uuid=True,
     )
 
-    df, modelhub = get_objectiv_dataframe_test(time_aggregation='YYYY-MM')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM')
     s = modelhub.time_agg(df)
 
     assert_equals_data(
@@ -525,7 +534,7 @@ def test_time_agg(db_params):
         convert_uuid=True,
     )
 
-    df, modelhub = get_objectiv_dataframe_test()
+    df, modelhub = get_objectiv_dataframe_test(db_params)
     s = modelhub.time_agg(df, time_aggregation='YYYY-MM-DD')
 
     assert_equals_data(
