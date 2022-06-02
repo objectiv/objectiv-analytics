@@ -22,6 +22,11 @@ export type TrackedContextProps<T = HTMLElement> = WithComponentProp<AllHTMLAttr
    * Whether to forward the given id to the given Component
    */
   forwardId?: boolean;
+
+  /**
+   * Whether to normalize the given id, default to true
+   */
+  normalizeId?: boolean;
 };
 
 /**
@@ -80,6 +85,11 @@ export type ObjectivTrackingOptions = {
    * The unique id of the LinkContext. Required for links without any title nor text.
    */
   contextId?: string;
+
+  /**
+   * Whether to normalize the given id, default to true.
+   */
+  normalizeId?: boolean;
 };
 
 /**

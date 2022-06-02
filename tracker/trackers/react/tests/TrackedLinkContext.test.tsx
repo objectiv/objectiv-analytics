@@ -58,6 +58,58 @@ describe('TrackedLinkContext', () => {
     );
   });
 
+  it('should allow disabling id normalization', () => {
+    const spyTransport = new SpyTransport();
+    jest.spyOn(spyTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+
+    const { container } = render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedLinkContext Component={'a'} id={'Link Id 1'} href={'/some-url'}>
+          Trigger Event 1
+        </TrackedLinkContext>
+        <TrackedLinkContext Component={'a'} id={'Link Id 2'} normalizeId={false} href={'/some-url'}>
+          Trigger Event 2
+        </TrackedLinkContext>
+      </ObjectivProvider>
+    );
+
+    fireEvent.click(getByText(container, /trigger event 1/i));
+    fireEvent.click(getByText(container, /trigger event 2/i));
+
+    expect(spyTransport.handle).toHaveBeenCalledTimes(3);
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: 'ApplicationLoadedEvent',
+      })
+    );
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.LinkContext,
+            id: 'link-id-1',
+          }),
+        ]),
+      })
+    );
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.LinkContext,
+            id: 'Link Id 2',
+          }),
+        ]),
+      })
+    );
+  });
+
   it('should allow forwarding the id property', () => {
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
 

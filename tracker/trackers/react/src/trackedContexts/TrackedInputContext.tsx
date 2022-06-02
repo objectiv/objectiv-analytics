@@ -2,7 +2,13 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { InputContextWrapper, TrackingContext, trackInputChangeEvent } from '@objectiv/tracker-react-core';
+import { makeIdFromString } from '@objectiv/tracker-core';
+import {
+  InputContextWrapper,
+  TrackingContext,
+  trackInputChangeEvent,
+  useLocationStack,
+} from '@objectiv/tracker-react-core';
 import React, { FocusEvent, useState } from 'react';
 import { TrackedContextProps } from '../types';
 
@@ -12,8 +18,14 @@ import { TrackedContextProps } from '../types';
  */
 export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedContextProps<HTMLInputElement>>(
   (props, ref) => {
-    const { id, Component, forwardId = false, defaultValue, ...otherProps } = props;
+    const { id, Component, forwardId = false, defaultValue, normalizeId = true, ...otherProps } = props;
     const [previousValue, setPreviousValue] = useState<string>(defaultValue ? defaultValue.toString() : '');
+    const locationStack = useLocationStack();
+
+    let inputId: string | null = id;
+    if (normalizeId) {
+      inputId = makeIdFromString(inputId);
+    }
 
     const handleBlur = async (event: FocusEvent<HTMLInputElement>, trackingContext: TrackingContext) => {
       if (previousValue !== event.target.value) {
@@ -31,8 +43,18 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedCon
       defaultValue,
     };
 
+    if (!inputId) {
+      if (globalThis.objectiv) {
+        const locationPath = globalThis.objectiv.getLocationPath(locationStack);
+        globalThis.objectiv.TrackerConsole.error(
+          `｢objectiv｣ Could not generate a valid id for InputContext @ ${locationPath}. Please provide the \`id\` property.`
+        );
+      }
+      return React.createElement(Component, componentProps);
+    }
+
     return (
-      <InputContextWrapper id={id}>
+      <InputContextWrapper id={inputId}>
         {(trackingContext) =>
           React.createElement(Component, {
             ...componentProps,

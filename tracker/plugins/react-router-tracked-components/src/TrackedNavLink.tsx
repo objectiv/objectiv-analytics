@@ -27,7 +27,7 @@ export const TrackedNavLink = React.forwardRef<HTMLAnchorElement, TrackedNavLink
   const linkContextHref = useHref(props.to);
 
   // Attempt to generate an id for LinkContext by looking at `id`, `title`, `children` and `objectiv.contextId` props.
-  const linkContextId = makeIdFromTrackedAnchorProps(props);
+  const linkContextId = makeIdFromTrackedAnchorProps({ ...props, ...objectiv });
 
   // If we couldn't generate an `id`, log the issue and return a regular Link component.
   const locationStack = useLocationStack();

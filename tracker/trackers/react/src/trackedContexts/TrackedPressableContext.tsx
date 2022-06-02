@@ -17,11 +17,14 @@ import { TrackedPressableContextProps } from '../types';
  * Automatically tracks PressEvent when the given Component receives an `onClick` SyntheticEvent.
  */
 export const TrackedPressableContext = React.forwardRef<HTMLElement, TrackedPressableContextProps>((props, ref) => {
-  const { Component, id, title, forwardId = false, forwardTitle = false, ...otherProps } = props;
+  const { Component, id, title, forwardId = false, forwardTitle = false, normalizeId = true, ...otherProps } = props;
 
   // Attempt to auto-detect `id` for LinkContext by looking at either the `title` or `children` props.
   const pressableTitle = title ?? makeTitleFromChildren(props.children);
-  const pressableId = id ?? makeIdFromString(pressableTitle);
+  let pressableId: string | null = id ?? pressableTitle;
+  if (normalizeId) {
+    pressableId = makeIdFromString(pressableId);
+  }
 
   // Prepare new Component props
   const componentProps = {
