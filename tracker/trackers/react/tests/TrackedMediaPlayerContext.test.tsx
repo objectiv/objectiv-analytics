@@ -12,7 +12,7 @@ import {
   TrackedDiv,
   TrackedMediaPlayerContext,
   TrackedRootLocationContext,
-  usePressEventTracker
+  usePressEventTracker,
 } from '../src';
 
 require('@objectiv/developer-tools');

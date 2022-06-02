@@ -12,7 +12,7 @@ import {
   TrackedDiv,
   TrackedOverlayContext,
   TrackedRootLocationContext,
-  usePressEventTracker
+  usePressEventTracker,
 } from '../src';
 
 require('@objectiv/developer-tools');
@@ -123,7 +123,7 @@ describe('TrackedOverlayContext', () => {
         ]),
       })
     );
-  })
+  });
 
   it('should console.error if an id cannot be automatically generated', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});

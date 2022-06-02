@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from "@objectiv/tracker-core";
+import { makeIdFromString } from '@objectiv/tracker-core';
 import { OverlayContextWrapper, trackVisibility, useLocationStack, useOnChange } from '@objectiv/tracker-react-core';
 import React, { useState } from 'react';
 import { TrackedShowableContextProps } from '../types';

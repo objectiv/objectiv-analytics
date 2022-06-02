@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from "@objectiv/tracker-core";
+import { makeIdFromString } from '@objectiv/tracker-core';
 import { RootLocationContextWrapper } from '@objectiv/tracker-react-core';
 import React from 'react';
 import { TrackedContextProps } from '../types';
@@ -34,6 +34,8 @@ export const TrackedRootLocationContext = React.forwardRef<HTMLElement, TrackedC
   }
 
   return (
-    <RootLocationContextWrapper id={rootId}>{React.createElement(Component, componentProps)}</RootLocationContextWrapper>
+    <RootLocationContextWrapper id={rootId}>
+      {React.createElement(Component, componentProps)}
+    </RootLocationContextWrapper>
   );
 });

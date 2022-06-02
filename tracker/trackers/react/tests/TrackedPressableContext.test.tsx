@@ -113,7 +113,7 @@ describe('TrackedPressableContext', () => {
         ]),
       })
     );
-  })
+  });
 
   it('should allow forwarding the id property', () => {
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });

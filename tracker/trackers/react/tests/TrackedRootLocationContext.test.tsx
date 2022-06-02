@@ -116,7 +116,7 @@ describe('TrackedRootLocationContext', () => {
         ]),
       })
     );
-  })
+  });
 
   it('should console.error if an id cannot be automatically generated', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
