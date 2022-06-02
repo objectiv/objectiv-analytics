@@ -80,6 +80,7 @@ def test_json_compare(engine, dtype):
 
 
 def test_json_getitem(engine, dtype):
+    # TODO: make this a one-query test
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bts = bt.mixed_column.json[0]
     assert_equals_data(
@@ -116,6 +117,31 @@ def test_json_getitem(engine, dtype):
             [2, "b"],
             [3, None]
         ]
+    )
+
+
+def test_json_getitem_special_chars(engine, dtype):
+    # We support 'all' special characters, except for double quotes because of limitations in BigQuery
+    # see comments in bach.series.series_json.JsonBigQueryAccessor.get_value for more information
+    df = get_df_with_json_data(engine=engine, dtype=dtype)
+    df = df[['row']][:1].materialize()
+    data = {
+        'test.test': 'a',
+        'test': {'test': 'b'},
+        '123test': 'c',
+        '[{}@!{R#(!@(!': 'd',
+    }
+    df['data'] = data
+    df['select_a'] = df['data'].json['test.test']
+    df['select_b'] = df['data'].json['test'].json['test']
+    df['select_c'] = df['data'].json['123test']
+    df['select_d'] = df['data'].json['[{}@!{R#(!@(!']
+    print(f'\n\n\n{df.view_sql()}\n\n\n')
+    assert_equals_data(
+        df,
+        use_to_pandas=True,
+        expected_columns=['_index_row', 'row', 'data', 'select_a', 'select_b', 'select_c', 'select_d'],
+        expected_data=[[0, 0, data, 'a', 'b', 'c', 'd']]
     )
 
 

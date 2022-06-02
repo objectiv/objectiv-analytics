@@ -433,7 +433,7 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
 
         values_expression = Expression.construct(
             "select val "
-            "from unnest(JSON_EXTRACT_ARRAY({}, '$')) val with offset as pos "
+            "from unnest(JSON_QUERY_ARRAY({}, '$')) val with offset as pos "
             "where pos >= {} and pos < {} "
             "order by pos",
             self._series_object, start_expression, stop_expression
@@ -468,8 +468,8 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
         elif value >= 0:
             return Expression.construct(f'{value}')
         else:
-            expr_len = Expression.construct('ARRAY_LENGTH(JSON_EXTRACT_ARRAY({}))', self._series_object)
-            return Expression.construct(f'({{}} {value})', expr_len)
+            array_len = self.get_array_length()
+            return Expression.construct(f'({{}} {value})', array_len)
 
     def get_array_item(self, key: int) -> 'TSeriesJson':
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
@@ -480,7 +480,7 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
         # BigQuery doesn't (yet) natively support this, so we emulate this.
         array_len = self.get_array_length()
         expr_offset = Expression.construct(f'OFFSET({{}} {key})', array_len)
-        expression = Expression.construct('JSON_EXTRACT_ARRAY({})[{}]', self._series_object, expr_offset)
+        expression = Expression.construct('JSON_QUERY_ARRAY({})[{}]', self._series_object, expr_offset)
         return self._series_object.copy_override(expression=expression)
 
     def get_dict_item(self, key: str) -> 'TSeriesJson':
@@ -490,13 +490,23 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
     def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'TSeriesJson']:
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         # TODO: as_str is never used?
-        # TODO: ESCAPE KEY!
-        # note: escaping is function dependent. for JSON_VALUE[1]: 'If a JSON key uses invalid JSONPath
-        # characters, then you can escape those characters using double quotes.'
-        # [1] https://cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_value
-        assert '"' not in key
+        # Special characters are tricky. According to the latests jsonpath spec draft we should use the
+        # index selector [1] (e.g. `$['key with special characters']`). But BigQuery only supports the dot
+        # selector [2][3]. However BigQuery does allow us to quote the key when using the dot selector [4],
+        # which is not in the jsonpath draft spec. So we quote the key, and just raise an exception if
+        # anybody tries to use a key that contains a quote.
+        # [1] https://www.ietf.org/archive/id/draft-ietf-jsonpath-base-05.html#name-index-selector
+        # [2] https://www.ietf.org/archive/id/draft-ietf-jsonpath-base-05.html#name-dot-selector
+        # [3] https://cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#JSONPath_format
+        # [4] https://cloud.google.com/bigquery/docs/reference/standard-sql/json_functions
+        if '"' in key:
+            raise ValueError(f'key values containing double quotes are not supported. key: {key}')
 
-        expression = Expression.construct(f'''JSON_QUERY({{}}, '$."{key}"')''', self._series_object)
+        expression = Expression.construct(
+            '''JSON_QUERY({}, '$."{}"')''',
+            self._series_object,
+            Expression.raw(key)
+        )
 
         if not as_str:
             return self._series_object.copy_override(expression=expression)
@@ -509,7 +519,7 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
         # others) an array, a dict, or a string, all of which should be supported by a generic __len__().
         # So for now we have a dedicated len function for arrays.
         from bach.series import SeriesInt64
-        expression = Expression.construct('ARRAY_LENGTH(JSON_EXTRACT_ARRAY({}))', self._series_object)
+        expression = Expression.construct('ARRAY_LENGTH(JSON_QUERY_ARRAY({}))', self._series_object)
         return self._series_object \
             .copy_override_type(SeriesInt64) \
             .copy_override(expression=expression)
@@ -576,7 +586,7 @@ class JsonPostgresAccessor(JsonAccessor, Generic[TSeriesJson]):
         non_null_expression = f"coalesce({combined_expression}, '[]'::jsonb)"
         return self._series_object \
             .copy_override(
-               expression=Expression.construct(
+                expression=Expression.construct(
                     non_null_expression,
                     *([self._series_object] * expression_references)
                 )
