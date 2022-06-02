@@ -48,13 +48,16 @@ class SessionizedDataPipeline(BaseDataPipeline):
 
         # make sure the result has AT LEAST the following series
         # even though the ExtractedContextsPipeline already validates series
-        self._validate_data_columns(
-            expected_columns=[
-                ObjectivSupportedColumns.EVENT_ID.value,
-                ObjectivSupportedColumns.USER_ID.value,
-                ObjectivSupportedColumns.MOMENT.value,
-            ],
-            current_columns=context_df.data_columns,
+        supported_dtypes = get_supported_dtypes_per_objectiv_column()
+        expected_context_columns = [
+            ObjectivSupportedColumns.EVENT_ID.value,
+            ObjectivSupportedColumns.USER_ID.value,
+            ObjectivSupportedColumns.MOMENT.value,
+        ]
+
+        self._validate_data_dtypes(
+            expected_dtypes={col: supported_dtypes[col] for col in expected_context_columns},
+            current_dtypes=context_df.dtypes,
         )
 
         # calculate series that are needed for the final result
@@ -176,21 +179,22 @@ class SessionizedDataPipeline(BaseDataPipeline):
 
         moment_series = df[ObjectivSupportedColumns.MOMENT.value]
 
-        # create lag series with correct expression
-        # this way we avoid materializing when
-        # doing an arithmetic operation with window function result
-        previous_moment_series = moment_series.copy_override(
-            expression=moment_series.window_lag(window=window).expression,
-        )
+        previous_moment_series = moment_series.window_lag(window=window)
         previous_moment_series = previous_moment_series.copy_override_type(bach.SeriesTimestamp)
 
-        event_lapsed_time = (moment_series - previous_moment_series).copy_override_type(bach.SeriesTimedelta)
+        event_lapsed_time = moment_series - previous_moment_series
+        assert isinstance(event_lapsed_time, bach.SeriesTimedelta)  # help mypy
 
         result_series_name = _BaseCalculatedSessionSeries.IS_START_OF_SESSION.value
         df_cp = df.copy()
+        # let's assume all events are session starts
         df_cp[result_series_name] = True
 
         session_gap_mask = event_lapsed_time.dt.total_seconds <= session_gap_seconds
+        # set None to those events with lapse time less than or equal to the session_gap_seconds
+        # we can assume those are part of a same session
+        # We use None instead of False because _calculate_session_count will count the values
+        # from the resultant series, therefore we want to ignore non session start events
         df_cp.loc[session_gap_mask, result_series_name] = bach.SeriesBoolean.from_value(
             base=df_cp,
             value=None,
@@ -211,9 +215,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
 
         is_start_session_series = df[_BaseCalculatedSessionSeries.IS_START_OF_SESSION.value]
         # group all rows by is_start_of_session and number each event
-        session_start_id = is_start_session_series.copy_override(
-            expression=is_start_session_series.window_row_number(window=window).expression,
-        )
+        session_start_id = is_start_session_series.window_row_number(window=window)
         session_start_id = session_start_id.copy_override_type(bach.SeriesInt64)
 
         result_series_name = _BaseCalculatedSessionSeries.SESSION_START_ID.value
@@ -248,8 +250,8 @@ class SessionizedDataPipeline(BaseDataPipeline):
         window = df.sort_values(by=sort_by).groupby().window()
 
         start_session_series = df[_BaseCalculatedSessionSeries.IS_START_OF_SESSION.value]
-        return start_session_series.copy_override(
-            expression=start_session_series.count(partition=window).expression,
+        session_count_series = start_session_series.count(partition=window)
+        return session_count_series.copy_override(
             name=_BaseCalculatedSessionSeries.SESSION_COUNT.value,
         ).copy_override_type(bach.SeriesInt64)
 
