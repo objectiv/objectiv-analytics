@@ -8,6 +8,7 @@ from bach.series import Series
 from sql_models.constants import NotSet, not_set
 from typing import List, Union, TYPE_CHECKING
 
+
 if TYPE_CHECKING:
     from modelhub import ModelHub
 
