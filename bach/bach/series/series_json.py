@@ -15,7 +15,7 @@ from sql_models.constants import DBDialect
 from sql_models.util import quote_string, is_postgres, DatabaseNotSupportedException, is_bigquery
 
 if TYPE_CHECKING:
-    from bach.series import SeriesBoolean, SeriesString
+    from bach.series import SeriesBoolean, SeriesString, SeriesInt64
     from bach.partitioning import GroupBy
 
 
@@ -23,7 +23,8 @@ class SeriesJson(Series):
     """
     A Series that represents the JSON type and its specific operations.
 
-    Depending on the database this Series is backed by different database types:
+
+    **Database support and types**
 
     * On Postgres this utilizes the native 'jsonb' database type.
     * On BigQuery this utilizes the generic 'STRING' database type.
@@ -340,8 +341,8 @@ class JsonBigQueryAccessor:
                 return self._series_object.copy_override(expression=expression)
             # case key <= 0
             # BigQuery doesn't (yet) natively support this, so we emulate this.
-            expr_len = Expression.construct('ARRAY_LENGTH(JSON_EXTRACT_ARRAY({}))', self._series_object)
-            expr_offset = Expression.construct(f'OFFSET({{}} {key})', expr_len)
+            array_len = self.get_array_length()
+            expr_offset = Expression.construct(f'OFFSET({{}} {key})', array_len)
             expression = Expression.construct('JSON_EXTRACT_ARRAY({})[{}]', self._series_object, expr_offset)
             return self._series_object.copy_override(expression=expression)
 
@@ -376,6 +377,22 @@ class JsonBigQueryAccessor:
             return self._series_object.copy_override(expression=expression)
         from bach.series import SeriesString
         return self._series_object.copy_override(expression=expression).copy_override_type(SeriesString)
+
+    def get_array_length(self) -> 'SeriesInt64':
+        """
+        Get the length of the toplevel array.
+
+        This assumes the top-level item in the json is an array. Will result in an exception (later on) if
+        that's not the case!
+        """
+        # Implementing a more generic __len__() function is not trivial as a json object can be (among
+        # others) an array, a dict, or a string, all of which should be supported by a generic __len__().
+        # So for now we have a dedicated len function for arrays.
+        from bach.series import SeriesInt64
+        expression = Expression.construct('ARRAY_LENGTH(JSON_EXTRACT_ARRAY({}))', self._series_object)
+        return self._series_object \
+            .copy_override_type(SeriesInt64) \
+            .copy_override(expression=expression)
 
 
 class JsonPostgresAccessor:
@@ -429,16 +446,21 @@ class JsonPostgresAccessor:
                 else:
                     where = f'>= {start}'
             else:
-                where = f'<= {stop}'
+                if key.stop is not None:
+                    where = f'<= {stop}'
+                else:
+                    # no start and no stop: we want to select all elements.
+                    where = 'is not null'  # should be true for all ordinalities.
             combined_expression = f"""(select jsonb_agg(x.value)
             from jsonb_array_elements({{}}) with ordinality x
             where ordinality - 1 {where})"""
             expression_references += 1
+            non_null_expression = f"coalesce({combined_expression}, '[]'::jsonb)"
             return self._series_object\
                 .copy_override_dtype(dtype=self._return_dtype)\
                 .copy_override(
                     expression=Expression.construct(
-                        combined_expression,
+                        non_null_expression,
                         *([self._series_object] * expression_references)
                     )
                 )
@@ -472,4 +494,17 @@ class JsonPostgresAccessor:
                                           Expression.string_value(key))
         return self._series_object\
             .copy_override_dtype(dtype=return_dtype)\
+            .copy_override(expression=expression)
+
+    def get_array_length(self) -> 'SeriesInt64':
+        """
+        Get the length of the toplevel array.
+
+        This assumes the top-level item in the json is an array. Will result in an exception (later on) if
+        that's not the case!
+        """
+        from bach.series import SeriesInt64
+        expression = Expression.construct('jsonb_array_length({})', self._series_object)
+        return self._series_object \
+            .copy_override_type(SeriesInt64) \
             .copy_override(expression=expression)
