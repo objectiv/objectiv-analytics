@@ -121,7 +121,7 @@ def test_json_getitem(engine, dtype):
 
 
 def test_json_getitem_special_chars(engine, dtype):
-    # We support 'all' special characters, except for double quotes because of limitations in BigQuery
+    # We support 'special' characters, except for double quotes because of limitations in BigQuery
     # see comments in bach.series.series_json.JsonBigQueryAccessor.get_value for more information
     df = get_df_with_json_data(engine=engine, dtype=dtype)
     df = df[['row']][:1].materialize()

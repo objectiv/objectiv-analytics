@@ -305,7 +305,7 @@ class SeriesJsonPostgres(SeriesJson):
     @property
     def json(self) -> 'JsonAccessor':
         """
-        Get access to json operations via the class that's return through this accessor.
+        Get access to json operations via the class that's returned through this accessor.
         Use as `my_series.json.get_value()` or `my_series.json[:2]`
 
         .. autoclass:: bach.series.series_json.JsonAccessor
