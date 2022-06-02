@@ -24,37 +24,38 @@ import os
 
 def check_version():
     # check env for opt-out setting
-    if os.environ.get('OBJECTIV_VERSION_CHECK_DISABLE', 'false') == 'false':
-        try:
-            # wrap the import in try/except to make sure we don't fail if there are missing imports
-            import warnings
-            import requests
-            from bach import __version__ as bach_version
+    if os.environ.get('OBJECTIV_VERSION_CHECK_DISABLE', 'false') != 'false':
+        return
+    try:
+        # wrap the import in try/except to make sure we don't fail if there are missing imports
+        import warnings
+        import requests
+        from bach import __version__ as bach_version
 
-            check_url = os.environ.get('OBJECTIV_VERSION_CHECK_URL',
-                                       'https://version-check.objectiv.io/check_version')
-            packages = [
-                    f'objectiv-bach:{bach_version}',
-                    f'objectiv-modelhub:{__version__}'
-            ]
-            data = '\n'.join(packages)
+        check_url = os.environ.get('OBJECTIV_VERSION_CHECK_URL',
+                                   'https://version-check.objectiv.io/check_version')
+        packages = [
+                f'objectiv-bach:{bach_version}',
+                f'objectiv-modelhub:{__version__}'
+        ]
+        data = '\n'.join(packages)
 
-            response = requests.post(check_url, data=data, timeout=5)
-            lines = response.text
-            for line in lines.split('\n'):
-                items = line.split(':')
-                # we expect at least 4 items, but the message may contain colons, so there
-                # may be more items in the list. We combine the remaining ones into
-                # one str: message
-                if len(items) > 3:
-                    package, updated, version = items[:3]
-                    message = ':'.join(items[3:])
-                    # this is a line containing package:updated:version:message
+        response = requests.post(check_url, data=data, timeout=5)
+        lines = response.text
+        for line in lines.split('\n'):
+            items = line.split(':')
+            # we expect at least 4 items, but the message may contain colons, so there
+            # may be more items in the list. We combine the remaining ones into
+            # one str: message
+            if len(items) > 3:
+                package, updated, version = items[:3]
+                message = ':'.join(items[3:])
+                # this is a line containing package:updated:version:message
 
-                    if updated == 'True':
-                        warnings.warn(category=Warning, message=message)
-        except Exception as e:
-            pass
+                if updated == 'True':
+                    warnings.warn(category=Warning, message=message)
+    except Exception as e:
+        pass
 
 
 check_version()
