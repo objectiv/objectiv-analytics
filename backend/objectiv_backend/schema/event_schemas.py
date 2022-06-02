@@ -1,7 +1,7 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-import json5 # type: ignore
+import json5  # type: ignore
 import json
 import os
 import re
@@ -153,7 +153,8 @@ class EventSubSchema:
             class_properties = deepcopy(self.schema[klass].get("properties", {}))
             for key, value in class_properties.items():
                 # we replace any Abstract Context reference with 'object' for proper json-schema validation
-                if 'items' in value and 'type' in value['items'] and re.match('^Abstract.*?Context$', value['items']['type']):
+                if 'items' in value and 'type' in value['items'] and re.match('^Abstract.*?Context$',
+                                                                              value['items']['type']):
                     value['items']['type'] = 'object'
                 properties[key] = deepcopy(value)
 
@@ -179,8 +180,9 @@ class ContextSubSchema:
         """
         self.schema: Dict[str, Any] = {}
         # _compiled_* fields are derived fields that need to be calculated after self.schema is set.
-        self._compiled_list_context_types = []
-        self._compiled_all_parent_context_types = {}
+        self._compiled_list_context_types: List[ContextType] = []
+        self._compiled_all_parents_and_required_context_types: \
+            Dict[ContextType, Dict[str, Set[ContextType]]] = {}
         self._compiled_all_child_context_types = {}
 
     CONTEXT_NAME_REGEX = r'^[A-Z][a-zA-Z0-9]*Context$'
@@ -202,10 +204,11 @@ class ContextSubSchema:
                 raise ValueError(f'Invalid context name: {context_type}')
 
             if context_type not in schema:
-                schema[context_type] = {"parents": [], "properties": {}}
+                schema[context_type] = {"parents": [], "properties": {}, "requiresContext": []}
 
             schema[context_type]["parents"].extend(data.get("parents", []))
             schema[context_type]["description"] = data.get("description", '')
+            schema[context_type]["requiresContext"].extend(data.get("requiresContext", []))
 
             for property_type, property_data in data.get("properties", {}).items():
                 if property_type not in schema[context_type]["properties"]:
@@ -230,30 +233,30 @@ class ContextSubSchema:
         Must be called after the schema has changed.
         """
         self._compiled_list_context_types = sorted(self.schema.keys())
-        self._compiled_all_parent_context_types = {}
+        self._compiled_all_parent_and_required_context_types = {}
         self._compiled_all_child_context_types = {}
         # Calculate parent relations, and do some basic checks on graph
         for context_type in self._compiled_list_context_types:
-            self._compile_parent_context_types(context_type)
+            self._compile_parent_and_required_context_types(context_type)
 
         # Calculate child relations based on parent relations
         for context_type in self._compiled_list_context_types:
             children: Set[str] = set()
             for ct in self._compiled_list_context_types:
-                if context_type in self._compiled_all_parent_context_types[ct]:
+                if context_type in self._compiled_all_parent_and_required_context_types[ct]['parents']:
                     children.add(ct)
             self._compiled_all_child_context_types[context_type] = children
 
-    def _compile_parent_context_types(self,
-                                      context_type: ContextType,
-                                      count=MAX_HIERARCHY_DEPTH) -> Set[ContextType]:
+    def _compile_parent_and_required_context_types(self, context_type: ContextType, count=MAX_HIERARCHY_DEPTH) -> \
+            Tuple[Set[ContextType], Set[ContextType]]:
         """
         * Give the parent context-types of the given context-type (including the given type itself).
         * Fill self._compiled_all_parent_context_types for the explored context_types.
         * Check for two kind of type-graph errors: 1) non-existing parent context references, 2) cycles
         """
-        if context_type in self._compiled_all_parent_context_types:
-            return self._compiled_all_parent_context_types[context_type]
+        if context_type in self._compiled_all_parent_and_required_context_types:
+            return self._compiled_all_parent_and_required_context_types[context_type]['parents'], \
+                   self._compiled_all_parent_and_required_context_types[context_type]['requiredContexts']
 
         if count == 0:
             # This is a very crude way to check for cycles, but it works.
@@ -263,12 +266,20 @@ class ContextSubSchema:
         if context_type not in self.schema:
             raise ValueError(f'Not a valid context_type {context_type}')
 
-        result: Set[ContextType] = {context_type}
+        required_context_types: Set[ContextType] = set(self.schema[context_type].get('requiresContext', []))
+        parent_context_types: Set[ContextType] = {context_type}
         parents: List[ContextType] = self.schema[context_type].get('parents', [])
         for parent in parents:
-            result |= self._compile_parent_context_types(parent, count=count-1)
-        self._compiled_all_parent_context_types[context_type] = result
-        return result
+            pct, rct = \
+                self._compile_parent_and_required_context_types(context_type=parent, count=count - 1)
+            required_context_types |= rct
+            parent_context_types |= pct
+
+        self._compiled_all_parent_and_required_context_types[context_type] = {
+            'parents': parent_context_types,
+            'requiredContexts': required_context_types
+        }
+        return parent_context_types, required_context_types
 
     def list_context_types(self) -> List[ContextType]:
         """ Give a alphabetically sorted list of all context-types. """
@@ -278,7 +289,13 @@ class ContextSubSchema:
         """
         Given a context_type, give a set with that context_type and all its parent context_types
         """
-        return self._compiled_all_parent_context_types.get(context_type, {context_type})
+        return self._compiled_all_parent_and_required_context_types.get(context_type, {}).get('parents', [context_type])
+
+    def get_all_required_context_types(self, context_type: ContextType) -> Set[ContextType]:
+        """
+        Given a context_type, give a set with that context_type and all its parent context_types
+        """
+        return self._compiled_all_parent_and_required_context_types.get(context_type, {}).get('requiredContexts', {})
 
     def get_all_child_context_types(self, context_type: ContextType) -> Set[ContextType]:
         """
@@ -402,8 +419,11 @@ class EventSchema:
         """
         return self.events.get_all_parent_event_types(event_type=event_type)
 
-    def get_all_required_contexts(self, event_type: EventType) -> Set[ContextType]:
+    def get_all_required_contexts_for_event(self, event_type: EventType) -> Set[ContextType]:
         return self.events.get_all_required_contexts(event_type=event_type)
+
+    def get_all_required_contexts_for_context(self, context_type: ContextType) -> set[ContextType]:
+        return self.contexts.get_all_required_context_types(context_type=context_type)
 
     def is_valid_event_type(self, event_type: EventType) -> bool:
         return self.events.is_valid_event_type(event_type=event_type)
