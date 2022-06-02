@@ -2,6 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import json
+from abc import abstractmethod
 from typing import Dict, Union, TYPE_CHECKING, Tuple, cast, Optional, List, Any, TypeVar, Generic
 
 from sqlalchemy.engine import Dialect
@@ -358,6 +359,7 @@ class JsonAccessor(Generic[TSeriesJson]):
 
         raise TypeError('Key should either be a string, integer, or slice.')
 
+    @abstractmethod
     def get_array_slice(self, key: slice) -> 'TSeriesJson':
         """
         Get items from toplevel array.
@@ -370,6 +372,7 @@ class JsonAccessor(Generic[TSeriesJson]):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def get_array_item(self, key: int) -> 'TSeriesJson':
         """
         Get item from toplevel array.
@@ -383,6 +386,7 @@ class JsonAccessor(Generic[TSeriesJson]):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def get_dict_item(self, key: str) -> 'TSeriesJson':
         """
         Get item from toplevel object by key.
@@ -395,6 +399,7 @@ class JsonAccessor(Generic[TSeriesJson]):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'TSeriesJson']:
         """
         Get item from toplevel object by key.
@@ -405,6 +410,7 @@ class JsonAccessor(Generic[TSeriesJson]):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def get_array_length(self) -> 'SeriesInt64':
         """
         Get the length of the toplevel array.
@@ -428,8 +434,8 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
         if key.step:
             raise NotImplementedError('slice steps not supported')
 
-        start_expression = self._get_slice_partial_expr(value=key.start, start=True)
-        stop_expression = self._get_slice_partial_expr(value=key.stop, start=False)
+        start_expression = self._get_slice_partial_expr(value=key.start, is_start=True)
+        stop_expression = self._get_slice_partial_expr(value=key.stop, is_start=False)
 
         values_expression = Expression.construct(
             "select val "
@@ -445,14 +451,14 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
         return self._series_object\
             .copy_override(expression=json_str_expression)
 
-    def _get_slice_partial_expr(self, value: Optional[int], start: bool) -> Expression:
+    def _get_slice_partial_expr(self, value: Optional[int], is_start: bool) -> Expression:
         """
         Return expression for either the lower bound or upper bound of a slice.
 
         Assumes that self._series_object is an array!
 
         :param value: slice.start or slice.stop
-        :param start: whether value is the slice.start (True) or slice.stop (False) value
+        :param is_start: whether value is the slice.start (True) or slice.stop (False) value
         :return: Expression that will evaluate to an integer that can be used to compare against positions
                     in the array.
         """
@@ -460,9 +466,11 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
             raise TypeError(f'Slice value must be None or an integer, value: {value}')
 
         if value is None:
-            if start:
+            if is_start:
+                # return index of first item in the array
                 return Expression.construct('0')
             else:
+                # return index that is guaranteed to be beyond the last item in the array
                 max_int = 2 ** 63 - 1
                 return Expression.construct(f'{max_int}')
         elif value >= 0:
@@ -603,6 +611,10 @@ class JsonPostgresAccessor(JsonAccessor, Generic[TSeriesJson]):
 
     def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'TSeriesJson']:
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+
+        if '"' in key:
+            raise ValueError(f'key values containing double quotes are not supported. key: {key}')
+
         return_as_string_operator = ''
         if as_str:
             return_as_string_operator = '>'

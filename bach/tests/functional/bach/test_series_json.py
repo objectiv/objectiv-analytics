@@ -130,6 +130,7 @@ def test_json_getitem_special_chars(engine, dtype):
         'test': {'test': 'b'},
         '123test': 'c',
         '[{}@!{R#(!@(!': 'd',
+        '"double quote is "not" allowed"': 'e',
     }
     df['data'] = data
     df['select_a'] = df['data'].json['test.test']
@@ -143,6 +144,9 @@ def test_json_getitem_special_chars(engine, dtype):
         expected_columns=['_index_row', 'row', 'data', 'select_a', 'select_b', 'select_c', 'select_d'],
         expected_data=[[0, 0, data, 'a', 'b', 'c', 'd']]
     )
+
+    with pytest.raises(ValueError, match='key values containing double quotes are not supported'):
+        df['select_e'] = df['data'].json['"double quote is "not" allowed"']
 
 
 def test_json_getitem_slice(engine, dtype):
