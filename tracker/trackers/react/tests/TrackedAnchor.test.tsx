@@ -50,6 +50,51 @@ describe('TrackedAnchor', () => {
     );
   });
 
+  it('should allow disabling id normalization', () => {
+    const spyTransport = new SpyTransport();
+    jest.spyOn(spyTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+
+    const { container } = render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedAnchor href={'/some-url'}>Trigger Event 1</TrackedAnchor>
+        <TrackedAnchor href={'/some-url'} normalizeId={false}>Trigger Event 2</TrackedAnchor>
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    fireEvent.click(getByText(container, /trigger event 1/i));
+    fireEvent.click(getByText(container, /trigger event 2/i));
+
+    expect(spyTransport.handle).toHaveBeenCalledTimes(2);
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(1,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.LinkContext,
+            id: 'trigger-event-1',
+            href: '/some-url',
+          }),
+        ]),
+      })
+    );
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(2,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.LinkContext,
+            id: 'Trigger Event 2',
+            href: '/some-url',
+          }),
+        ]),
+      })
+    );
+  });
+
+
   it('should forwardHref to the given Component', () => {
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
 

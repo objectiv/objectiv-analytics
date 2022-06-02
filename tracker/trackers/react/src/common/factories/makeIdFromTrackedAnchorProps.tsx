@@ -5,11 +5,32 @@
 import { makeIdFromString } from '@objectiv/tracker-core';
 import { makeTitleFromChildren } from '@objectiv/tracker-react-core';
 import React from 'react';
-import { TrackingOptionsProp } from '../../types';
+import { ObjectivTrackingOptions } from '../../types';
+
+/**
+ * The parameters of makeIdFromTrackedAnchorProps
+ */
+export type makeIdFromTrackedAnchorPropsParameters = ObjectivTrackingOptions & {
+  id?: string;
+  title?: string;
+  children?: React.ReactNode;
+};
 
 /**
  * Attempts to generate an id by looking at `id`, `title`, `children` and `objectiv.contextId` props.
  */
-export const makeIdFromTrackedAnchorProps = (
-  props: { id?: string; title?: string; children?: React.ReactNode } & TrackingOptionsProp
-) => props.id ?? props.objectiv?.contextId ?? makeIdFromString(props.title ?? makeTitleFromChildren(props.children));
+export const makeIdFromTrackedAnchorProps = ({
+  id,
+  title,
+  children,
+  contextId,
+  normalizeId = true,
+}: makeIdFromTrackedAnchorPropsParameters) => {
+  const resultId = id ?? contextId ?? title ?? makeTitleFromChildren(children);
+
+  if (normalizeId) {
+    return makeIdFromString(resultId);
+  }
+
+  return resultId;
+};
