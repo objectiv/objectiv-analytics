@@ -1,5 +1,6 @@
-import pytest
-
+"""
+Copyright 2022 Objectiv B.V.
+"""
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code
 
 
