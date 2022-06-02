@@ -34,6 +34,10 @@ export const makeLocationContextValidationRule: LocationContextValidationRuleFac
      * Verifies whether the given Context is present, duplicated or in the wrong position in the given TrackerEvent.
      */
     validate(event: TrackerEvent): void {
+      if (parameters.eventMatches && !parameters.eventMatches(event)) {
+        return;
+      }
+
       const index = event.location_stack.findIndex((context) => context._type === this.contextName);
       const matches = event.location_stack.filter((context) => context._type === this.contextName);
 

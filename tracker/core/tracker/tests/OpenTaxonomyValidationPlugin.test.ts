@@ -8,7 +8,10 @@ import {
   LocationContextName,
   makeApplicationContext,
   makeContentContext,
+  makePathContext,
+  makePressEvent,
   makeRootLocationContext,
+  makeSuccessEvent,
   OpenTaxonomyValidationPlugin,
   Tracker,
   TrackerEvent,
@@ -118,13 +121,31 @@ describe('OpenTaxonomyValidationPlugin', () => {
       expect(MockConsoleImplementation.groupCollapsed).not.toHaveBeenCalled();
     });
 
+    it('should allow non-interactive Events without RootLocationContext and PathContext', () => {
+      const testOpenTaxonomyValidationPlugin = new OpenTaxonomyValidationPlugin();
+      testOpenTaxonomyValidationPlugin.initialize(coreTracker);
+      const eventWithoutRootLocationContext = new TrackerEvent(
+        makeSuccessEvent({
+          message: ' ok',
+          global_contexts: [makeApplicationContext({ id: 'test' })],
+        })
+      );
+
+      jest.resetAllMocks();
+
+      testOpenTaxonomyValidationPlugin.validate(eventWithoutRootLocationContext);
+
+      expect(MockConsoleImplementation.groupCollapsed).not.toHaveBeenCalled();
+    });
+
     it('should fail when given TrackerEvent does not have RootLocationContext', () => {
       const testOpenTaxonomyValidationPlugin = new OpenTaxonomyValidationPlugin();
       testOpenTaxonomyValidationPlugin.initialize(coreTracker);
-      const eventWithoutRootLocationContext = new TrackerEvent({
-        _type: 'TestEvent',
-        global_contexts: [makeApplicationContext({ id: 'test' })],
-      });
+      const eventWithoutRootLocationContext = new TrackerEvent(
+        makePressEvent({
+          global_contexts: [makeApplicationContext({ id: 'test' }), makePathContext({ id: '/path' })],
+        })
+      );
 
       jest.resetAllMocks();
 
@@ -133,7 +154,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenNthCalledWith(
         1,
-        '%c｢objectiv:OpenTaxonomyValidationPlugin｣ Error: RootLocationContext is missing from Location Stack of TestEvent.\n' +
+        '%c｢objectiv:OpenTaxonomyValidationPlugin｣ Error: RootLocationContext is missing from Location Stack of PressEvent.\n' +
           'Taxonomy documentation: https://objectiv.io/docs/taxonomy/reference/location-contexts/RootLocationContext.',
         'color:red'
       );
@@ -142,11 +163,12 @@ describe('OpenTaxonomyValidationPlugin', () => {
     it('should fail when given TrackerEvent has multiple RootLocationContexts', () => {
       const testOpenTaxonomyValidationPlugin = new OpenTaxonomyValidationPlugin();
       testOpenTaxonomyValidationPlugin.initialize(coreTracker);
-      const eventWithDuplicatedRootLocationContext = new TrackerEvent({
-        _type: 'TestEvent',
-        location_stack: [makeRootLocationContext({ id: '/test' }), makeRootLocationContext({ id: '/test' })],
-        global_contexts: [makeApplicationContext({ id: 'test' })],
-      });
+      const eventWithDuplicatedRootLocationContext = new TrackerEvent(
+        makePressEvent({
+          location_stack: [makeRootLocationContext({ id: '/test' }), makeRootLocationContext({ id: '/test' })],
+          global_contexts: [makeApplicationContext({ id: 'test' }), makePathContext({ id: '/path' })],
+        })
+      );
 
       jest.resetAllMocks();
 
@@ -155,7 +177,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenNthCalledWith(
         1,
-        '%c｢objectiv:OpenTaxonomyValidationPlugin｣ Error: Only one RootLocationContext should be present in Location Stack of TestEvent.\n' +
+        '%c｢objectiv:OpenTaxonomyValidationPlugin｣ Error: Only one RootLocationContext should be present in Location Stack of PressEvent.\n' +
           'Taxonomy documentation: https://objectiv.io/docs/taxonomy/reference/location-contexts/RootLocationContext.',
         'color:red'
       );
@@ -164,11 +186,12 @@ describe('OpenTaxonomyValidationPlugin', () => {
     it('should fail when given TrackerEvent has a RootLocationContext in the wrong position', () => {
       const testOpenTaxonomyValidationPlugin = new OpenTaxonomyValidationPlugin();
       testOpenTaxonomyValidationPlugin.initialize(coreTracker);
-      const eventWithRootLocationContextInWrongPosition = new TrackerEvent({
-        _type: 'TestEvent',
-        location_stack: [makeContentContext({ id: 'content-id' }), makeRootLocationContext({ id: '/test' })],
-        global_contexts: [makeApplicationContext({ id: 'test' })],
-      });
+      const eventWithRootLocationContextInWrongPosition = new TrackerEvent(
+        makePressEvent({
+          location_stack: [makeContentContext({ id: 'content-id' }), makeRootLocationContext({ id: '/test' })],
+          global_contexts: [makeApplicationContext({ id: 'test' }), makePathContext({ id: '/path' })],
+        })
+      );
 
       jest.resetAllMocks();
 
@@ -177,7 +200,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenNthCalledWith(
         1,
-        '%c｢objectiv:OpenTaxonomyValidationPlugin｣ Error: RootLocationContext is in the wrong position of the Location Stack of TestEvent.\n' +
+        '%c｢objectiv:OpenTaxonomyValidationPlugin｣ Error: RootLocationContext is in the wrong position of the Location Stack of PressEvent.\n' +
           'Taxonomy documentation: https://objectiv.io/docs/taxonomy/reference/location-contexts/RootLocationContext.',
         'color:red'
       );

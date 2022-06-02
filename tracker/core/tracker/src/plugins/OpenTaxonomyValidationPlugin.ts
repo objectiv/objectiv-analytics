@@ -5,7 +5,7 @@
 import { GlobalContextName, LocationContextName } from '../ContextNames';
 import { isDevMode } from '../helpers';
 import { TrackerInterface } from '../Tracker';
-import { TrackerEvent } from '../TrackerEvent';
+import { EventToValidate, TrackerEvent } from '../TrackerEvent';
 import { TrackerPluginInterface } from '../TrackerPluginInterface';
 import { TrackerValidationRuleInterface } from '../TrackerValidationRuleInterface';
 
@@ -37,6 +37,14 @@ export class OpenTaxonomyValidationPlugin implements TrackerPluginInterface {
           contextName: LocationContextName.RootLocationContext,
           once: true,
           position: 0,
+          eventMatches: (event: EventToValidate) => event.__interactive_event === true,
+        }),
+        globalThis.objectiv.makeGlobalContextValidationRule({
+          platform,
+          logPrefix: this.pluginName,
+          contextName: GlobalContextName.PathContext,
+          once: true,
+          eventMatches: (event: EventToValidate) => event.__interactive_event === true,
         }),
       ];
 

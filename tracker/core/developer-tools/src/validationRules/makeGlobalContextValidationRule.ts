@@ -33,6 +33,10 @@ export const makeGlobalContextValidationRule: GlobalContextValidationRuleFactory
      * Verifies whether the given Context is present or duplicated in the given TrackerEvent.
      */
     validate(event: TrackerEvent): void {
+      if (parameters.eventMatches && !parameters.eventMatches(event)) {
+        return;
+      }
+
       const matches = event.global_contexts.filter((context) => context._type === this.contextName);
 
       let errorType: GlobalContextErrorType | null = null;

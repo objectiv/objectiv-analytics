@@ -18,6 +18,20 @@ TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('Validation Rules', () => {
   describe('GlobalContextValidationRules', () => {
+    it('Should skip validation if the given `eventMatches` returns false', () => {
+      const testGlobalContextValidationRule = makeGlobalContextValidationRule({
+        platform: TrackerPlatform.CORE,
+        contextName: GlobalContextName.PathContext,
+        eventMatches: () => false,
+      });
+
+      jest.resetAllMocks();
+
+      testGlobalContextValidationRule.validate(new TrackerEvent({ _type: 'PressEvent' }));
+
+      expect(MockConsoleImplementation.groupCollapsed).not.toHaveBeenCalled();
+    });
+
     it('Should TrackerConsole.error if given contextName is missing', () => {
       const testGlobalContextValidationRule = makeGlobalContextValidationRule({
         platform: TrackerPlatform.CORE,
@@ -84,6 +98,20 @@ describe('Validation Rules', () => {
   });
 
   describe('LocationContextValidationRules', () => {
+    it('Should skip validation if the given `eventMatches` returns false', () => {
+      const testLocationContextValidationRule = makeLocationContextValidationRule({
+        platform: TrackerPlatform.CORE,
+        contextName: LocationContextName.ContentContext,
+        eventMatches: () => false,
+      });
+
+      jest.resetAllMocks();
+
+      testLocationContextValidationRule.validate(new TrackerEvent({ _type: 'PressEvent' }));
+
+      expect(MockConsoleImplementation.groupCollapsed).not.toHaveBeenCalled();
+    });
+
     it('Should TrackerConsole.error if given contextName is missing', () => {
       const testLocationContextValidationRule = makeLocationContextValidationRule({
         platform: TrackerPlatform.CORE,

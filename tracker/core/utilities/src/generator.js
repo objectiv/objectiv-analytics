@@ -56,6 +56,9 @@ const object_declarations = {
   location_contexts: {},
 };
 
+// holds a list of event discriminators, to generate discriminators.d.ts in the schema
+const discriminators = [];
+
 // contains factories to create instances of events / contexts
 const object_factories = {
   EventFactories: {},
@@ -295,8 +298,12 @@ function createMissingAbstracts(
     if (!object_definitions[class_name]) {
       const discriminator = camelToUnderscore(class_name.replace('Abstract', ''));
       const properties = {};
-      properties[DISCRIMINATING_PROPERTY_PREFIX + discriminator] = {};
-      properties[DISCRIMINATING_PROPERTY_PREFIX + discriminator]['discriminator'] = true;
+      const property_name = DISCRIMINATING_PROPERTY_PREFIX + discriminator;
+      properties[property_name] = {};
+      properties[property_name]['discriminator'] = true;
+      if (params.object_type === 'event') {
+        discriminators.push(property_name);
+      }
 
       // let's find the parent
       let parent = getParents(params.class_name).pop();
@@ -710,6 +717,27 @@ Object.keys(object_declarations).forEach((definition_type) => {
   console.log(`Written ${Object.values(object_declarations[definition_type]).length} definitions to ${filename}`);
 });
 
+// Generate discriminators.d.ts
+const discriminators_filename = `${core_schema_package_dir}discriminators.d.ts`;
+let discriminators_content = '';
+
+discriminators_content += `
+/**
+ * All possible Abstract Event discriminators. These are used by Validation Rules to skip checks on certain events.
+ */
+`;
+discriminators_content += 'export type EventAbstractDiscriminators = {\n';
+discriminators.forEach((discriminator) => {
+  discriminators_content += `\t${discriminator}?: true;`;
+});
+discriminators_content += '}\n';
+
+if (discriminators_content) {
+  fs.writeFileSync(discriminators_filename, COPYRIGHT);
+  fs.appendFileSync(discriminators_filename, discriminators_content);
+  console.log(`Written discriminators definitions to ${discriminators_filename}`);
+}
+
 // Generate ContextNames.ts enum definitions in Core Tracker
 const filename = `${core_tracker_package_dir}ContextNames.ts`;
 let content = '';
@@ -736,7 +764,7 @@ if (content) {
 
 // generate index for all declarations
 // this includes all generated types, as well as those in static.d.ts
-const export_file_list = [...Object.keys(object_declarations), ['static']];
+const export_file_list = [...Object.keys(object_declarations), 'static', 'discriminators'].sort();
 const index_filename = `${core_schema_package_dir}index.d.ts`;
 fs.writeFileSync(index_filename, COPYRIGHT);
 fs.appendFileSync(
