@@ -20,13 +20,7 @@ def test_timedelta_arithmetic(engine):
         ['dt', datetime.datetime(2021, 5, 3, 11, 28, 36, 388000), 'timestamp', ('timestamp', None)]
     ]
 
-    types_plus_min(
-        engine,
-        data,
-        datetime.timedelta(days=123, seconds=5621),
-        'timedelta',
-        use_to_pandas=True,  # bq return MonthDayNano object, better to parse as pandas type
-    )
+    types_plus_min(engine, data, datetime.timedelta(days=123, seconds=5621), 'timedelta')
 
 
 def test_timedelta_arithmetic2(engine):
