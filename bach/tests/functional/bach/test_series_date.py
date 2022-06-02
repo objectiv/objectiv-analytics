@@ -7,10 +7,12 @@ import pandas as pd
 import pytest
 
 from bach import SeriesDate, DataFrame
-from sql_models.util import is_bigquery, is_postgres
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_bt_with_food_data, \
+from sql_models.util import is_postgres
+from tests.functional.bach.test_data_and_utils import assert_equals_data,\
     assert_postgres_type, get_df_with_test_data, get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
+
+from bach.series.utils.datetime_formats import _C_STANDARD_CODES_X_POSTGRES_DATE_CODES
 
 
 @pytest.mark.parametrize("asstring", [True, False])
@@ -141,6 +143,26 @@ def test_date_format(engine, recwarn):
 
     expected_columns = df.columns[amount_of_srf_cols:]
     assert_equals_data(df[expected_columns], expected_columns=expected_columns, expected_data=expected_data)
+
+
+@pytest.mark.skip_bigquery
+def test_date_format_all_supported_pg_codes(engine):
+    timestamp = datetime.datetime(2021, 5, 3, 11, 28, 36, 388000, tzinfo=datetime.timezone.utc)
+    pdf = pd.DataFrame({'timestamp_series': [timestamp]})
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).reset_index(drop=True)
+
+    for c_code in _C_STANDARD_CODES_X_POSTGRES_DATE_CODES.keys():
+        # strrftime does not support quarter, and currently we are not considering timezone info
+        if c_code in ('%Q', '%z', '%Z'):
+            continue
+
+        df[c_code] = df['timestamp_series'].dt.strftime(c_code)
+        pdf[c_code] = pdf['timestamp_series'].dt.strftime(c_code)
+
+    pdf['%w'] = (pdf['%w'].astype(int) + 1).astype(str)  # weekday number starts from 1 in Postgres
+    # datetime divides year by 100 and truncates integral part, postgres considers '2001' as start of 21st century
+    pdf['%C'] = '21'
+    pd.testing.assert_frame_equal(pdf, df.to_pandas(), check_dtype=False)
 
 
 def test_date_arithmetic(pg_engine):
