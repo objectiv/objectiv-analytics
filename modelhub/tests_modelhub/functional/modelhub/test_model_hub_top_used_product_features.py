@@ -18,8 +18,8 @@ def test_top_used_product_features():
 
     # index _application
     assert_equals_data(
-        tdf.index["_application"],
-        expected_columns=["_application"],
+        tdf.index['_application'],
+        expected_columns=['_application'],
         expected_data=[
             ['objectiv-docs'],
             ['objectiv-website'],
@@ -36,14 +36,14 @@ def test_top_used_product_features():
     )
 
     # index feature_nice_name
-    assert "_feature_nice_name" in tdf.index
+    assert '_feature_nice_name' in tdf.index
 
     # index event_type
-    assert set(tdf.index["event_type"].array) == {'ClickEvent'}
+    assert set(tdf.index['event_type'].array) == {'ClickEvent'}
 
     # data info
     assert list(tdf.data.keys()) == ['user_id_nunique']
-    assert set(tdf["user_id_nunique"].array) == {1}
+    assert set(tdf['user_id_nunique'].array) == {1}
 
     # with location_stack
     location_stack = df.location_stack.json[{'_type': 'LinkContext'}:]

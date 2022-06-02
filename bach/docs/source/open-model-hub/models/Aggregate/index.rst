@@ -19,6 +19,7 @@ Aggregate
     unique_sessions
     session_duration
     frequency
+    converted_users_features
     top_used_product_features
 
 

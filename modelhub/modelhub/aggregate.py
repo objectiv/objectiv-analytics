@@ -208,7 +208,7 @@ class Aggregate:
                                  data: bach.DataFrame,
                                  location_stack: 'SeriesLocationStack' = None,
                                  conversion_label: str = '',
-                                 event_types: str = 'InteractiveEvent') -> bach.DataFrame:
+                                 event_type: str = 'InteractiveEvent') -> bach.DataFrame:
         """
         Calculates what users did before converting by
         combining several models from the model hub.
@@ -217,7 +217,7 @@ class Aggregate:
         :param location_stack: the location stack
             - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column
             - if None - the whole location stack is taken.
-        :param event_types: event type. Must be a valid event_type
+        :param event_type: event type. Must be a valid event_type
             (either parent or child).
         :param conversion_label: label of the conversion event.
             If conversion_label value is not passed a label
@@ -254,7 +254,7 @@ class Aggregate:
         converted_users = data[(data.converted_users & data.zero_conversions_at_moment)]
 
         # select only user interactions
-        converted_users_filtered = converted_users[converted_users.stack_event_types >= [event_types]]
+        converted_users_filtered = converted_users[converted_users.stack_event_types >= [event_type]]
 
         converted_users_features = self._mh.agg.unique_users(converted_users_filtered,
                                                              groupby=['_application',

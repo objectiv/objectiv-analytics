@@ -100,6 +100,9 @@ From this prepared dataset, we show the users for the home page first.
 
 .. code-block:: python
 
+    # select only user actions, so stack_event_types must be a superset of ['InteractiveEvent']
+    interactive_events = df[df.stack_event_types >= ['InteractiveEvent']]
+
     most_interactions = modelhub.agg.unique_users(interactive_events, groupby=['application','root_location','feature_nice_name', 'event_type'])
     most_interactions = most_interactions.reset_index()
 
@@ -171,30 +174,24 @@ From where do users convert most?
                                                      groupby=['application', 'feature_nice_name', 'event_type'])
 
 
-We can calculate what users did _before_ converting by combining several models from the model hub.
+We can calculate what users did _before_ converting.
+
+.. code-block:: python
+
+    users_features_before_converting = modelhub.agg.converted_users_features(df)
+    users_features_before_converting.head()
+
+At last we want to know how much time users that converted spent on our site before they converted.
 
 .. code-block:: python
 
     # label sessions with a conversion
-    df['converted_users'] = modelhub.map.conversions_counter(df, name='github_press')>=1
+    df['converted_users'] = modelhub.map.conversions_counter(df, name='github_press') >= 1
 
     # label hits where at that point in time, there are 0 conversions in the session
-    df['zero_conversions_at_moment'] = modelhub.map.conversions_in_time(df, 'github_press')==0
+    df['zero_conversions_at_moment'] = modelhub.map.conversions_in_time(df, 'github_press') == 0
 
     # filter on above created labels
     converted_users = df[(df.converted_users & df.zero_conversions_at_moment)]
-
-    # select only user interactions
-    converted_users_filtered = converted_users[converted_users.stack_event_types>=['InteractiveEvent']]
-
-    converted_users_features = modelhub.agg.unique_users(converted_users_filtered,
-                                                         groupby=['application',
-                                                                  'feature_nice_name',
-                                                                  'event_type'])
-
-At last we want to know how much time users that converted spent on our site before they converted. For this
-we reuse the object we created above.
-
-.. code-block:: python
 
     modelhub.aggregate.session_duration(converted_users, groupby=None).to_frame().head()
