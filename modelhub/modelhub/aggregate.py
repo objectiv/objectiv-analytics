@@ -11,7 +11,7 @@ from typing import List, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from modelhub import ModelHub
-
+    from modelhub.series import SeriesLocationStack
 
 GroupByType = Union[List[Union[str, Series]], str, Series, NotSet]
 
@@ -168,3 +168,39 @@ class Aggregate:
         frequency = total_sessions_user.groupby(['session_id_nunique']).aggregate({'user_id': 'nunique'})
 
         return frequency.user_id_nunique
+
+    def top_used_product_features(self,
+                                  data: bach.DataFrame,
+                                  location_stack: 'SeriesLocationStack' = None,
+                                  event_type: str = 'InteractiveEvent') -> bach.DataFrame:
+        """
+        Calculate the top used features in the product.
+
+        :param data: :py:class:`bach.DataFrame` to apply the method on.
+        :param location_stack: the location stack
+            - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column
+            - if None - the whole location stack is taken.
+        :param event_type: event type. Must be a valid event_type (either parent or child).
+        :returns: bach DataFrame with results.
+        """
+
+        data = data.copy()
+
+        self._mh._check_data_is_objectiv_data(data)
+
+        # the following columns have to be in the data
+        data['_application'] = data.global_contexts.gc.application
+
+        if location_stack is not None:
+            data['_feature_nice_name'] = location_stack.ls.nice_name
+        else:
+            data['_feature_nice_name'] = data.location_stack.ls.nice_name
+
+        groupby_col = ['_application', '_feature_nice_name', 'event_type']
+
+        # selects specific event types, so stack_event_types must be a superset of [event_types]
+        interactive_events = data[data.stack_event_types >= [event_type]]
+
+        # users by feature
+        users_feature = interactive_events.groupby(groupby_col).agg({'user_id': 'nunique'})
+        return users_feature.sort_values('user_id_nunique', ascending=False)
