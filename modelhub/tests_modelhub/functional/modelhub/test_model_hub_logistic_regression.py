@@ -8,9 +8,12 @@ Copyright 2021 Objectiv B.V.
 import pytest
 from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 from tests_modelhub.functional.modelhub.logistic_regression_test_utils import TestLR
+from tests_modelhub.data_and_utils.utils import create_engine_from_db_params
 
 
-def test_fitted_model(engine):
+def test_fitted_model(db_params):
+    engine = create_engine_from_db_params(db_params)
+
     bt = get_df_with_test_data(engine=engine, full_data_set=True)
     bt['target'] = bt.municipality == 'Súdwest-Fryslân'
 
@@ -25,7 +28,9 @@ def test_fitted_model(engine):
     ('predict_proba', True, False),
     ('score', True, True),
 ])
-def test_model_methods(engine, method_name, X, y):
+def test_model_methods(db_params, method_name, X, y):
+    engine = create_engine_from_db_params(db_params)
+
     bt = get_df_with_test_data(engine=engine, full_data_set=True)
     bt['target'] = bt.municipality == 'Súdwest-Fryslân'
 
