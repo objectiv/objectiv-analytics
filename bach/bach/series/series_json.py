@@ -343,24 +343,24 @@ class JsonAccessor(Generic[TSeriesJson]):
     def __init__(self, series_object: 'TSeriesJson'):
         self._series_object = series_object
 
-    def __getitem__(self, key: Union[str, int, slice]):
+    def __getitem__(self, key: Union[str, int, slice]) -> 'TSeriesJson':
         """
         Slice the JSON data in pythonic ways
         """
         # TODO: leverage instance_dtype information here, if we have that
         if isinstance(key, int):
-            return self.get_array_item(key)
+            return self._get_array_item(key)
 
         elif isinstance(key, str):
-            return self.get_dict_item(key)
+            return self._get_dict_item(key)
 
         elif isinstance(key, slice):
-            return self.get_array_slice(key)
+            return self._get_array_slice(key)
 
         raise TypeError('Key should either be a string, integer, or slice.')
 
     @abstractmethod
-    def get_array_slice(self, key: slice) -> 'TSeriesJson':
+    def _get_array_slice(self, key: slice) -> 'TSeriesJson':
         """
         Get items from toplevel array.
 
@@ -373,7 +373,7 @@ class JsonAccessor(Generic[TSeriesJson]):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_array_item(self, key: int) -> 'TSeriesJson':
+    def _get_array_item(self, key: int) -> 'TSeriesJson':
         """
         Get item from toplevel array.
 
@@ -387,7 +387,7 @@ class JsonAccessor(Generic[TSeriesJson]):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_dict_item(self, key: str) -> 'TSeriesJson':
+    def _get_dict_item(self, key: str) -> 'TSeriesJson':
         """
         Get item from toplevel object by key.
 
@@ -429,7 +429,7 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
     BigQuery specific implementation of JsonAccessor.
     """
 
-    def get_array_slice(self, key: slice) -> 'TSeriesJson':
+    def _get_array_slice(self, key: slice) -> 'TSeriesJson':
         """ See implementation in parent class :class:`JsonAccessor` """
         if key.step:
             raise NotImplementedError('slice steps not supported')
@@ -479,7 +479,7 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
             array_len = self.get_array_length()
             return Expression.construct(f'({{}} {value})', array_len)
 
-    def get_array_item(self, key: int) -> 'TSeriesJson':
+    def _get_array_item(self, key: int) -> 'TSeriesJson':
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         if key >= 0:
             expression = Expression.construct(f'''JSON_QUERY({{}}, '$[{key}]')''', self._series_object)
@@ -491,7 +491,7 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
         expression = Expression.construct('JSON_QUERY_ARRAY({})[{}]', self._series_object, expr_offset)
         return self._series_object.copy_override(expression=expression)
 
-    def get_dict_item(self, key: str) -> 'TSeriesJson':
+    def _get_dict_item(self, key: str) -> 'TSeriesJson':
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         return cast('TSeriesJson', self.get_value(key=key, as_str=False))
 
@@ -548,7 +548,7 @@ class JsonPostgresAccessor(JsonAccessor, Generic[TSeriesJson]):
         else:
             raise TypeError(f'key should be int or slice, actual type: {type(key)}')
 
-    def get_array_slice(self, key: slice) -> 'TSeriesJson':
+    def _get_array_slice(self, key: slice) -> 'TSeriesJson':
         """ See implementation in parent class :class:`JsonAccessor` """
         expression_references = 0
         if key.step:
@@ -600,12 +600,12 @@ class JsonPostgresAccessor(JsonAccessor, Generic[TSeriesJson]):
                 )
             )
 
-    def get_array_item(self, key: int) -> 'TSeriesJson':
+    def _get_array_item(self, key: int) -> 'TSeriesJson':
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         return self._series_object \
             .copy_override(expression=Expression.construct(f'{{}}->{key}', self._series_object))
 
-    def get_dict_item(self, key: str) -> 'TSeriesJson':
+    def _get_dict_item(self, key: str) -> 'TSeriesJson':
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         return cast('TSeriesJson', self.get_value(key=key, as_str=False))
 
