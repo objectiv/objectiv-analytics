@@ -8,9 +8,9 @@ describe('makeIdFromTrackedAnchorProps', () => {
   const testCases: [input: {}, output: string | null][] = [
     [{}, null],
     [{ id: 'test' }, 'test'],
-    [{ id: 'Click Me' }, 'click-me'],
+    [{ id: 'Click Me' }, 'Click Me'],
     [{ objectiv: { contextId: 'test' } }, 'test'],
-    [{ objectiv: { contextId: 'Click Me' } }, 'click-me'],
+    [{ objectiv: { contextId: 'Click Me' } }, 'Click Me'],
     [{ title: 'test' }, 'test'],
     [{ title: 'Click Me' }, 'click-me'],
     [{ children: 'test' }, 'test'],

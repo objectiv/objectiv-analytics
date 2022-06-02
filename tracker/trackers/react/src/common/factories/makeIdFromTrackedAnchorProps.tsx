@@ -12,4 +12,4 @@ import { TrackingOptionsProp } from '../../types';
  */
 export const makeIdFromTrackedAnchorProps = (
   props: { id?: string; title?: string; children?: React.ReactNode } & TrackingOptionsProp
-) => makeIdFromString(props.id ?? props.objectiv?.contextId ?? props.title ?? makeTitleFromChildren(props.children));
+) => props.id ?? props.objectiv?.contextId ?? makeIdFromString(props.title ?? makeTitleFromChildren(props.children));
