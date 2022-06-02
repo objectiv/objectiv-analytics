@@ -29,7 +29,7 @@ export const TrackedNavigationContext = React.forwardRef<HTMLElement, TrackedCon
     if (globalThis.objectiv) {
       const locationPath = globalThis.objectiv.getLocationPath(locationStack);
       globalThis.objectiv.TrackerConsole.error(
-        `｢objectiv｣ Could not generate a valid id for ContentContext @ ${locationPath}. Please provide the \`id\` property.`
+        `｢objectiv｣ Could not generate a valid id for NavigationContext @ ${locationPath}. Please provide the \`id\` property.`
       );
     }
     return React.createElement(Component, componentProps);
