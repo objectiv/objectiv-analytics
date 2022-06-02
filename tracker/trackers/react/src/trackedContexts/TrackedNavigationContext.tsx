@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from "@objectiv/tracker-core";
+import { makeIdFromString } from '@objectiv/tracker-core';
 import { NavigationContextWrapper, useLocationStack } from '@objectiv/tracker-react-core';
 import React from 'react';
 import { TrackedContextProps } from '../types';
@@ -15,7 +15,7 @@ export const TrackedNavigationContext = React.forwardRef<HTMLElement, TrackedCon
   const locationStack = useLocationStack();
 
   let navigationId: string | null = id;
-  if(normalizeId) {
+  if (normalizeId) {
     navigationId = makeIdFromString(navigationId);
   }
 
@@ -35,5 +35,9 @@ export const TrackedNavigationContext = React.forwardRef<HTMLElement, TrackedCon
     return React.createElement(Component, componentProps);
   }
 
-  return <NavigationContextWrapper id={navigationId}>{React.createElement(Component, componentProps)}</NavigationContextWrapper>;
+  return (
+    <NavigationContextWrapper id={navigationId}>
+      {React.createElement(Component, componentProps)}
+    </NavigationContextWrapper>
+  );
 });

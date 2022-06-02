@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from "@objectiv/tracker-core";
+import { makeIdFromString } from '@objectiv/tracker-core';
 import { ExpandableContextWrapper, trackVisibility, useLocationStack, useOnChange } from '@objectiv/tracker-react-core';
 import React, { useState } from 'react';
 import { TrackedShowableContextProps } from '../types';
@@ -17,7 +17,7 @@ export const TrackedExpandableContext = React.forwardRef<HTMLElement, TrackedSho
   const locationStack = useLocationStack();
 
   let expandableId: string | null = id;
-  if(normalizeId) {
+  if (normalizeId) {
     expandableId = makeIdFromString(expandableId);
   }
 

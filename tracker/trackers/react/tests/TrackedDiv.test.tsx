@@ -61,7 +61,7 @@ describe('TrackedDiv', () => {
     jest.spyOn(spyTransport, 'handle');
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
 
-    const TrackedButton = ({children}:{children: React.ReactNode}) => {
+    const TrackedButton = ({ children }: { children: React.ReactNode }) => {
       const trackPressEvent = usePressEventTracker();
       return <div onClick={trackPressEvent}>{children}</div>;
     };
@@ -83,7 +83,8 @@ describe('TrackedDiv', () => {
     fireEvent.click(getByText(container, /trigger event 2/i));
 
     expect(spyTransport.handle).toHaveBeenCalledTimes(2);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(1,
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      1,
       expect.objectContaining({
         _type: 'PressEvent',
         location_stack: expect.arrayContaining([
@@ -94,7 +95,8 @@ describe('TrackedDiv', () => {
         ]),
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(2,
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      2,
       expect.objectContaining({
         _type: 'PressEvent',
         location_stack: expect.arrayContaining([
@@ -105,7 +107,7 @@ describe('TrackedDiv', () => {
         ]),
       })
     );
-  })
+  });
 
   it('should console.error if an id cannot be automatically generated', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -115,9 +117,7 @@ describe('TrackedDiv', () => {
       <ObjectivProvider tracker={tracker}>
         <TrackedRootLocationContext Component={'div'} id={'root'}>
           <TrackedDiv id={'content'}>
-            <TrackedDiv id={'☹️'}>
-              {/* nothing to see here */}
-            </TrackedDiv>
+            <TrackedDiv id={'☹️'}>{/* nothing to see here */}</TrackedDiv>
           </TrackedDiv>
         </TrackedRootLocationContext>
       </ObjectivProvider>

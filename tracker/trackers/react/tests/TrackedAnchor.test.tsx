@@ -58,7 +58,9 @@ describe('TrackedAnchor', () => {
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
         <TrackedAnchor href={'/some-url'}>Trigger Event 1</TrackedAnchor>
-        <TrackedAnchor href={'/some-url'} normalizeId={false}>Trigger Event 2</TrackedAnchor>
+        <TrackedAnchor href={'/some-url'} normalizeId={false}>
+          Trigger Event 2
+        </TrackedAnchor>
       </ObjectivProvider>
     );
 
@@ -68,7 +70,8 @@ describe('TrackedAnchor', () => {
     fireEvent.click(getByText(container, /trigger event 2/i));
 
     expect(spyTransport.handle).toHaveBeenCalledTimes(2);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(1,
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      1,
       expect.objectContaining({
         _type: 'PressEvent',
         location_stack: expect.arrayContaining([
@@ -80,7 +83,8 @@ describe('TrackedAnchor', () => {
         ]),
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(2,
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      2,
       expect.objectContaining({
         _type: 'PressEvent',
         location_stack: expect.arrayContaining([
@@ -93,7 +97,6 @@ describe('TrackedAnchor', () => {
       })
     );
   });
-
 
   it('should forwardHref to the given Component', () => {
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });

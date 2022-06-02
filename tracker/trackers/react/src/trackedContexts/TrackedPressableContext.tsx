@@ -22,7 +22,7 @@ export const TrackedPressableContext = React.forwardRef<HTMLElement, TrackedPres
   // Attempt to auto-detect `id` for LinkContext by looking at either the `title` or `children` props.
   const pressableTitle = title ?? makeTitleFromChildren(props.children);
   let pressableId: string | null = id ?? pressableTitle;
-  if(normalizeId) {
+  if (normalizeId) {
     pressableId = makeIdFromString(pressableId);
   }
 

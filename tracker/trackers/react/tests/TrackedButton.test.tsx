@@ -67,7 +67,8 @@ describe('TrackedButton', () => {
     fireEvent.click(getByText(container, /trigger event 2/i));
 
     expect(spyTransport.handle).toHaveBeenCalledTimes(2);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(1,
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      1,
       expect.objectContaining({
         _type: 'PressEvent',
         location_stack: expect.arrayContaining([
@@ -78,7 +79,8 @@ describe('TrackedButton', () => {
         ]),
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(2,
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      2,
       expect.objectContaining({
         _type: 'PressEvent',
         location_stack: expect.arrayContaining([
@@ -89,5 +91,5 @@ describe('TrackedButton', () => {
         ]),
       })
     );
-  })
+  });
 });

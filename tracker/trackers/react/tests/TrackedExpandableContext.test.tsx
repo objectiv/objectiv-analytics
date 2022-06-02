@@ -8,10 +8,11 @@ import { fireEvent, getByText, render, screen } from '@testing-library/react';
 import React, { createRef } from 'react';
 import {
   ObjectivProvider,
-  ReactTracker, TrackedDiv,
+  ReactTracker,
+  TrackedDiv,
   TrackedExpandableContext,
   TrackedRootLocationContext,
-  usePressEventTracker
+  usePressEventTracker,
 } from '../src';
 
 require('@objectiv/developer-tools');
@@ -72,7 +73,7 @@ describe('TrackedExpandableContext', () => {
     jest.spyOn(spyTransport, 'handle');
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
 
-    const TrackedButton = ({children}:{children: React.ReactNode}) => {
+    const TrackedButton = ({ children }: { children: React.ReactNode }) => {
       const trackPressEvent = usePressEventTracker();
       return <div onClick={trackPressEvent}>{children}</div>;
     };
@@ -122,7 +123,7 @@ describe('TrackedExpandableContext', () => {
         ]),
       })
     );
-  })
+  });
 
   it('should console.error if an id cannot be automatically generated', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});

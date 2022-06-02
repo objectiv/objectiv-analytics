@@ -8,10 +8,11 @@ import { fireEvent, getByText, render, screen } from '@testing-library/react';
 import React, { createRef } from 'react';
 import {
   ObjectivProvider,
-  ReactTracker, TrackedDiv,
+  ReactTracker,
+  TrackedDiv,
   TrackedNavigationContext,
   TrackedRootLocationContext,
-  usePressEventTracker
+  usePressEventTracker,
 } from '../src';
 
 require('@objectiv/developer-tools');
@@ -66,13 +67,13 @@ describe('TrackedNavigationContext', () => {
       })
     );
   });
-  
-it('should allow disabling id normalization', () => {
+
+  it('should allow disabling id normalization', () => {
     const spyTransport = new SpyTransport();
     jest.spyOn(spyTransport, 'handle');
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
 
-    const TrackedButton = ({children}:{children: React.ReactNode}) => {
+    const TrackedButton = ({ children }: { children: React.ReactNode }) => {
       const trackPressEvent = usePressEventTracker();
       return <div onClick={trackPressEvent}>{children}</div>;
     };
@@ -94,7 +95,8 @@ it('should allow disabling id normalization', () => {
     fireEvent.click(getByText(container, /trigger event 2/i));
 
     expect(spyTransport.handle).toHaveBeenCalledTimes(2);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(1,
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      1,
       expect.objectContaining({
         _type: 'PressEvent',
         location_stack: expect.arrayContaining([
@@ -105,7 +107,8 @@ it('should allow disabling id normalization', () => {
         ]),
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(2,
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      2,
       expect.objectContaining({
         _type: 'PressEvent',
         location_stack: expect.arrayContaining([
@@ -119,14 +122,14 @@ it('should allow disabling id normalization', () => {
   });
 
   it('should console.error if an id cannot be automatically generated', () => {
-        jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
 
     render(
       <ObjectivProvider tracker={tracker}>
         <TrackedRootLocationContext Component={'div'} id={'root'}>
           <TrackedDiv id={'content'}>
-            <TrackedNavigationContext Component={'nav'} id={'☹️'}/>
+            <TrackedNavigationContext Component={'nav'} id={'☹️'} />
           </TrackedDiv>
         </TrackedRootLocationContext>
       </ObjectivProvider>
@@ -136,7 +139,7 @@ it('should allow disabling id normalization', () => {
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
       '｢objectiv｣ Could not generate a valid id for NavigationContext @ RootLocation:root / Content:content. Please provide the `id` property.'
     );
-  })  
+  });
 
   it('should allow forwarding the id property', () => {
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });

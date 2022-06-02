@@ -12,7 +12,7 @@ import {
   TrackedContentContext,
   TrackedDiv,
   TrackedRootLocationContext,
-  usePressEventTracker
+  usePressEventTracker,
 } from '../src';
 
 require('@objectiv/developer-tools');
@@ -73,7 +73,7 @@ describe('TrackedContentContext', () => {
     jest.spyOn(spyTransport, 'handle');
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
 
-    const TrackedButton = ({children}:{children: React.ReactNode}) => {
+    const TrackedButton = ({ children }: { children: React.ReactNode }) => {
       const trackPressEvent = usePressEventTracker();
       return <div onClick={trackPressEvent}>{children}</div>;
     };
