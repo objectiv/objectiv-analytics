@@ -2,6 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import datetime
+import warnings
 from abc import ABC
 from enum import Enum
 from typing import Union, cast, List, Tuple, Optional, Any
@@ -14,7 +15,7 @@ from bach import DataFrame
 from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64
 from bach.expression import Expression
 from bach.series.series import WrappedPartition, ToPandasInfo
-from bach.series.utils.datetime_formats import parse_date_format_str
+from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code
 from bach.types import DtypeOrAlias, StructuredDtype
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
@@ -48,32 +49,60 @@ class DateTimeOperation:
     def __init__(self, series: 'SeriesAbstractDateTime'):
         self._series = series
 
-    def sql_format(self, format_str: str, parse_format_str: bool = True) -> SeriesString:
+    def sql_format(self, format_str: str) -> SeriesString:
         """
         Allow formatting of this Series (to a string type).
 
         :param format_str: The format to apply to the date/time column.
-            Currently, this uses  1989 C standard format codes:
+            This uses  1989 C standard format codes:
             https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
 
-        :param parse_format_str: If True, it will assume that format_str is in standard format and will
-            parse each format code into its equivalent based on engine, otherwise the format passed will be
-            used without any changes.
+        .. warning::
+           We recommend using :meth:`SeriesAbstractDateTime.dt.strftime` instead.
 
         .. code-block:: python
 
-            df['year'] = df.some_date_series.dt.sql_format('YYYY')  # return year
-            df['date'] = df.some_date_series.dt.sql_format('YYYYMMDD')  # return date
+            df['year'] = df.some_date_series.dt.sql_format('%Y')  # return year
+            df['date'] = df.some_date_series.dt.sql_format('%Y%m%d')  # return date
+
+        :returns: a SeriesString containing the formatted date.
+        """
+        warnings.warn(
+            'Call to deprecated method, we recommend to use SeriesAbstractDateTime.dt.strftime instead',
+            category=DeprecationWarning,
+        )
+        return self.strftime(format_str)
+
+    def strftime(self, format_str: str) -> SeriesString:
+        """
+        Allow formatting of this Series (to a string type).
+
+        :param format_str: The format to apply to the date/time column.
+            This uses  1989 C standard format codes:
+            https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+
+        .. code-block:: python
+
+            df['year'] = df.some_date_series.dt.sql_format('%Y')  # return year
+            df['date'] = df.some_date_series.dt.sql_format('%Y%m%d')  # return date
 
         :returns: a SeriesString containing the formatted date.
         """
         engine = self._series.engine
-        parsed_format_str = parse_date_format_str(engine, format_str) if parse_format_str else format_str
-        string_value_expr = Expression.string_value(parsed_format_str)
+
         if is_postgres(engine):
-            expression = Expression.construct('to_char({}, {})', self._series, string_value_expr)
+            parsed_format_str = parse_c_standard_code_to_postgres_code(format_str)
+            expression = Expression.construct(
+                'to_char({}, {})', self._series, Expression.string_value(parsed_format_str),
+            )
         elif is_bigquery(engine):
-            expression = Expression.construct('format_date({}, {})', string_value_expr, self._series)
+            # BQ uses C Standard Codes
+            # https://cloud.google.com/bigquery/docs/reference/standard-sql/format-elements#format_elements_date_time
+            expression = Expression.construct(
+                'format_date({}, {})',
+                Expression.string_value(format_str),
+                self._series,
+            )
         else:
             raise DatabaseNotSupportedException(engine)
 
