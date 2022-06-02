@@ -15,14 +15,14 @@ def test_disable_version_check(monkeypatch):
     original_version_check_disable = os.environ.get('OBJECTIV_VERSION_CHECK_DISABLE', None)
 
     # disable the version check
-    os.environ['OBJECTIV_VERSION_CHECK_DISABLE'] = 'true'
+    monkeypatch.setenv('OBJECTIV_VERSION_CHECK_DISABLE', 'true')
     old_request_counter = request_counter
     check_version()
 
     # check that we didn't do a request
     assert request_counter == old_request_counter
 
-    os.environ['OBJECTIV_VERSION_CHECK_DISABLE'] = 'false'
+    monkeypatch.setenv('OBJECTIV_VERSION_CHECK_DISABLE', 'false')
     old_request_counter = request_counter
     check_version()
 
