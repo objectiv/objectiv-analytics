@@ -2,7 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { OverlayContextWrapper, trackVisibility, useOnChange } from '@objectiv/tracker-react-core';
+import { makeIdFromString } from "@objectiv/tracker-core";
+import { OverlayContextWrapper, trackVisibility, useLocationStack, useOnChange } from '@objectiv/tracker-react-core';
 import React, { useState } from 'react';
 import { TrackedShowableContextProps } from '../types';
 
@@ -12,7 +13,13 @@ import { TrackedShowableContextProps } from '../types';
  */
 export const TrackedOverlayContext = React.forwardRef<HTMLElement, TrackedShowableContextProps>((props, ref) => {
   const [wasVisible, setWasVisible] = useState<boolean>(false);
-  const { id, Component, forwardId = false, isVisible = false, ...otherProps } = props;
+  const { id, Component, forwardId = false, isVisible = false, normalizeId = true, ...otherProps } = props;
+  const locationStack = useLocationStack();
+
+  let overlayId: string | null = id;
+  if (normalizeId) {
+    overlayId = makeIdFromString(overlayId);
+  }
 
   useOnChange(isVisible, () => setWasVisible(isVisible));
 
@@ -22,8 +29,18 @@ export const TrackedOverlayContext = React.forwardRef<HTMLElement, TrackedShowab
     ...(forwardId ? { id } : {}),
   };
 
+  if (!overlayId) {
+    if (globalThis.objectiv) {
+      const locationPath = globalThis.objectiv.getLocationPath(locationStack);
+      globalThis.objectiv.TrackerConsole.error(
+        `｢objectiv｣ Could not generate a valid id for OverlayContext @ ${locationPath}. Please provide the \`id\` property.`
+      );
+    }
+    return React.createElement(Component, componentProps);
+  }
+
   return (
-    <OverlayContextWrapper id={id}>
+    <OverlayContextWrapper id={overlayId}>
       {(trackingContext) => {
         if ((wasVisible && !isVisible) || (!wasVisible && isVisible)) {
           trackVisibility({ isVisible, ...trackingContext });
