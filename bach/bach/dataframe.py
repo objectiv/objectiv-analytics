@@ -1988,7 +1988,7 @@ class DataFrame:
             fmtstr = []
 
             for sc in self._order_by:
-                fmt = f"{{}} {'asc' if sc.asc else 'desc'}"
+                fmt = f"{{}} {'asc' if sc.asc else 'desc'} nulls last"
                 if not sc.expression.has_multi_level_expressions:
                     exprs.append(sc.expression)
                     fmtstr.append(fmt)

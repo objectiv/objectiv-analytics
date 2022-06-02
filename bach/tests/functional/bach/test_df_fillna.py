@@ -1,6 +1,8 @@
 """
 Copyright 2022 Objectiv B.V.
 """
+import itertools
+from typing import Tuple
 
 import pandas as pd
 import pytest
@@ -50,15 +52,63 @@ def test_basic_fillna(engine) -> None:
     )
 
 
+@pytest.fixture
+def dataframes_sort(engine) -> Tuple[pd.DataFrame, DataFrame]:
+    pdf = pd.DataFrame(
+        [
+            [None, 1,        2],
+            [None, None,     3],
+            [None, 4,     None],
+            [1,    4,        5],
+            [None, None,  None],
+            [None, 2,        3],
+            [1,    None,  None],
+            [1,    None,     2],
+            [1,       2,  None],
+        ],
+        columns=['A', 'B', 'C']
+    )
+    df = DataFrame.from_pandas(engine, pdf, convert_objects=True).reset_index(drop=True)
+
+    return pdf, df
+
+
+@pytest.mark.parametrize(
+    "ascending",  [
+        *[list(perm) for perm in itertools.permutations([True, False, False])],
+        *[list(perm) for perm in itertools.permutations([True, True, False])],
+        [True, True, True],
+        [False, False, False],
+    ]
+)
+def test_sorting_df(dataframes_sort, ascending) -> None:
+    pdf, df = dataframes_sort
+    sort_by = ['A', 'B', 'C']
+    expected = pdf.sort_values(by=sort_by, ascending=ascending).reset_index(drop=True)
+    result = df.sort_values(by=sort_by, ascending=ascending).to_pandas()
+    pd.testing.assert_frame_equal(expected, result)
+
+
 def test_fillna_w_methods(pg_engine) -> None:
     engine = pg_engine  # TODO: BigQuery
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
     df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
 
-    result_ffill = df.fillna(
-        method='ffill', sort_by=['A', 'B', 'C'], ascending=[False, True, False],
-    )
-    result_ffill = result_ffill.sort_values(['A', 'B', 'C'], ascending=[False, True, False])
+    sort_by = ['A', 'B', 'C']
+    ascending = [False, True, False]
+
+    check_sort_expected = pdf.sort_values(by=sort_by, ascending=ascending)
+    check_sort_expected = check_sort_expected.dropna(subset=sort_by, how='all')
+
+    check_sort_result = df.sort_values(by=sort_by, ascending=ascending)
+    check_sort_result = check_sort_result.dropna(subset=sort_by, how='all').to_pandas()
+
+    # check if sort performed in ffilna generates same order based on sortby
+    # ignores when all columns involkved in sort by are NULL (non-deterministic)
+    pd.testing.assert_frame_equal(check_sort_expected, check_sort_result, check_index_type=False, check_names=False)
+
+    result_ffill = df.fillna(method='ffill', sort_by=sort_by, ascending=ascending)
+    result_ffill = result_ffill.sort_values(sort_by, ascending=ascending)
     assert_equals_data(
         result_ffill,
         expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
