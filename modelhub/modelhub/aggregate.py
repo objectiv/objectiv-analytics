@@ -11,7 +11,7 @@ from typing import List, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from modelhub import ModelHub
-
+    from modelhub.series import SeriesLocationStack
 
 GroupByType = Union[List[Union[str, Series]], str, Series, NotSet]
 
@@ -227,4 +227,3 @@ class Aggregate:
                                                                       'event_type'])
 
         return converted_users_features.sort_values(ascending=False).to_frame()
-
