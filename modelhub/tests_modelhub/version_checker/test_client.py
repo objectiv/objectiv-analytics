@@ -12,8 +12,6 @@ def test_disable_version_check(monkeypatch):
 
     monkeypatch.setattr('requests.post', custom_post)
 
-    original_version_check_disable = os.environ.get('OBJECTIV_VERSION_CHECK_DISABLE', None)
-
     # disable the version check
     monkeypatch.setenv('OBJECTIV_VERSION_CHECK_DISABLE', 'true')
     old_request_counter = request_counter
@@ -28,7 +26,3 @@ def test_disable_version_check(monkeypatch):
 
     # check that we did do a request
     assert request_counter == old_request_counter + 1
-
-    # restore version check setting
-    if original_version_check_disable:
-        os.environ['OBJECTIV_VERSION_CHECK_DISABLE'] = original_version_check_disable
