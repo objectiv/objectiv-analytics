@@ -476,7 +476,7 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
         if key >= 0:
             expression = Expression.construct(f'''JSON_QUERY({{}}, '$[{key}]')''', self._series_object)
             return self._series_object.copy_override(expression=expression)
-        # case key <= 0
+        # case key < 0
         # BigQuery doesn't (yet) natively support this, so we emulate this.
         array_len = self.get_array_length()
         expr_offset = Expression.construct(f'OFFSET({{}} {key})', array_len)
