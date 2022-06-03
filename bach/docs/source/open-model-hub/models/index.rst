@@ -8,7 +8,14 @@
 Models
 ======
 
-The :ref:`open model hub <open_model_hub>` has two main types of functions: 
+The :ref:`open model hub <open_model_hub>` has two main types of models:
+1. A collection of helper functions that perform multiple Bach instructions to make data analysis and
+product analytics on data collected with Objectiv’s Tracker as easy as possible.
+2. Machine learning models that can be used with Bach data.
+
+Helper functions
+----------------
+There are two main type of helper functions:
 :ref:`map <models_reference_mapping>` and :ref:`aggregate <models_reference_aggregation>`.
 
 - :ref:`map <models_reference_mapping>` functions always return a series with the same shape and index as the 
@@ -20,7 +27,7 @@ The :ref:`open model hub <open_model_hub>` has two main types of functions:
 
 
 Map
----
+~~~
 
 .. currentmodule:: modelhub.Map
 
@@ -44,7 +51,7 @@ Map
 .. currentmodule:: modelhub.Aggregate
 
 Aggregate
----------
+~~~~~~~~~
 
 .. autosummary::
     :toctree: Aggregate
@@ -59,3 +66,8 @@ Aggregate
     :hidden:
 
     Aggregate/index
+
+Machine Learning
+----------------
+
+Currently we support  :ref:`logistic regression <modelhub_reference_logistic_regression>` directly on Bach DataFrames and Series.

@@ -36,7 +36,7 @@ class TestLR:
         modelhub = ModelHub()
 
         self.sklearn_lr = LogisticRegression(**kwargs)
-        self.modelhub_lr = modelhub.LogisticRegression(**kwargs)
+        self.modelhub_lr = modelhub.get_logistic_regression(**kwargs)
 
         self.sklearn_lr.fit(self.X_p, self.y_p)
         self.modelhub_lr.fit(self.X, self.y)

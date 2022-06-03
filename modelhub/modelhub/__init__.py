@@ -6,6 +6,7 @@ __version__ = '0.0.8'
 from modelhub.modelhub import ModelHub
 from modelhub.aggregate import Aggregate
 from modelhub.map import Map
+from modelhub.models.logistic_regression import LogisticRegression
 from modelhub.stack import *
 from modelhub.series import *
 
