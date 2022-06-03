@@ -242,7 +242,7 @@ class ModelHub:
     def LogisticRegression(self, *args, **kwargs):
         """
         A binary class logistic regression model that takes Bach data objects as input data. It is based on
-        sklean's LogisticRegression. All supported methods are run on the database using Bach directly,
+        sklearn's LogisticRegression. All supported methods are run on the database using Bach directly,
         with the exeption of :py:meth:`ModelHub.from_objectiv_data`. For the `fit` method, data is extracted
         from the database before applying sklearn's fit method on the data.
 

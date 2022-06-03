@@ -11,21 +11,42 @@ if TYPE_CHECKING:
     from bach.series import SeriesFloat64
 
 
-class LogisticRegression(LogisticRegression_sk):
-    def _decision_function(self, X):
-        if len(X.data_columns) != len(self.coef_[0]):
+class LogisticRegression:
+    def __init__(self, *args, **kwargs):
+        self._model = LogisticRegression_sk(*args, **kwargs)
+
+    def __getattr__(self, item):
+
+        sklearn_methods = ['set_params', 'get_params']
+        sklearn_parameters = ['C', 'class_weight', 'dual', 'fit_intercept', 'intercept_scaling', 'l1_ratio',
+                              'max_iter', 'multi_class', 'n_jobs', 'penalty', 'random_state', 'solver', 'tol',
+                              'verbose', 'warm_start']
+        sklearn_attributes = ['classes_', 'coef_', 'intercept_', 'n_features_in_', 'feature_names_in_',
+                              'n_iter_']
+        if item in sklearn_methods + sklearn_parameters + sklearn_attributes:
+            return getattr(self._model, item)
+        raise AttributeError(f"no attribute '{item}'")
+
+    def __repr__(self):
+        return self._model.__repr__()
+
+    def _decision_function(self, X: 'DataFrame'):
+        if len(X.data_columns) != len(self._model.coef_[0]):
             raise ValueError("incorrect number of columns in X")
         X_copy = X.copy()
-        X_copy['confidence_score'] = self.intercept_[0]
-        for column, coef in zip(X.data_columns, self.coef_[0]):
+        X_copy['confidence_score'] = self._model.intercept_[0]
+        for column, coef in zip(X.data_columns, self._model.coef_[0]):
             X_copy['confidence_score'] = X_copy['confidence_score'] + X_copy[column] * coef
 
         return X_copy['confidence_score']
 
     def fit(self, X: 'DataFrame', y: 'SeriesBoolean'):
         """
-        Fits a binary class logistic regression model. This method uses sklearns LogisticRegression.fit,
-        meaning that the data in the database gets exported first before fitting the data.
+        Fits a binary class logistic regression model.
+
+        .. important::
+            This method uses sklearns LogisticRegression.fit, meaning that the data in the database gets
+            exported first before fitting the data.
 
         :param X: DataFrame with features.
         :param y: Series with the target variable.
@@ -37,7 +58,7 @@ class LogisticRegression(LogisticRegression_sk):
         X_p = X.to_pandas()
         y_p = y.to_pandas()
 
-        return super().fit(X_p, y_p)
+        return self._model.fit(X_p, y_p)
 
     def predict(self, X: 'DataFrame') -> SeriesBoolean:
         """
@@ -71,21 +92,3 @@ class LogisticRegression(LogisticRegression_sk):
         """
         y_pred = self.predict(X)
         return Metrics.accuracy_score(y, y_pred)
-
-    def predict_log_proba(self, X):
-        """
-        INTERNAL: Not implemented
-        """
-        raise NotImplementedError
-
-    def densify(self):
-        """
-        INTERNAL: Not implemented
-        """
-        raise NotImplementedError
-
-    def sparsify(self):
-        """
-        INTERNAL: Not implemented
-        """
-        raise NotImplementedError

@@ -37,6 +37,4 @@ def test_model_methods(db_params, method_name, X, y):
     test_lr = TestLR(X=bt[['skating_order', 'inhabitants', 'founding']],
                      y=bt['target'])
 
-    test_lr.test_method(method_name=method_name,
-                        X=X,
-                        y=y)
+    test_lr.test_method(method_name=method_name, X=X, y=y)

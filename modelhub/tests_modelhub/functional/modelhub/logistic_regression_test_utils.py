@@ -42,13 +42,13 @@ class TestLR:
         self.modelhub_lr.fit(self.X, self.y)
 
     def test_fitted_model(self):
-        for key, value in self.modelhub_lr.__dict__.items():
-            sklearn_value = self.sklearn_lr.__dict__[key]
+        for key, value in self.sklearn_lr.__dict__.items():
+            modelhub_value = getattr(self.modelhub_lr, key)
             print(f'testing {key}')
-            print(f'modelhub value: {value}\nsklearn value : {sklearn_value}\n')
-            result = value == sklearn_value
+            print(f'modelhub value: {modelhub_value}\nsklearn value : {value}\n')
+            result = modelhub_value == value
             if isinstance(result, Iterable):
-                result = result.any()
+                result = result.all()
             assert result
 
     def test_method(self, method_name, X=False, y=False, **kwargs):
@@ -78,6 +78,7 @@ class TestLR:
         modelhub_data = modelhub_method(*modelhub_args, **kwargs)
 
         if method_name == 'predict_proba':
+            # extract the probabilities from sklearn's predicted probabilities for the True class only:
             sklearn_data = sklearn_data[:, np.where(self.sklearn_lr.classes_)[0][0]]
 
         if method_name == 'score':
