@@ -67,9 +67,7 @@ export const OpenTaxonomyValidationPlugin = new (class implements TrackerPluginI
       return;
     }
 
-    if (this.isUsable()) {
-      this.validationRules.forEach((validationRule) => validationRule.validate(event));
-    }
+    this.validationRules.forEach((validationRule) => validationRule.validate(event));
   }
 
   /**
