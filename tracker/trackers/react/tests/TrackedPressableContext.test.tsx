@@ -63,6 +63,58 @@ describe('TrackedPressableContext', () => {
     );
   });
 
+  it('should allow disabling id normalization', () => {
+    const spyTransport = new SpyTransport();
+    jest.spyOn(spyTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+
+    const { container } = render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedPressableContext Component={'button'} id={'Pressable id 1'}>
+          Trigger Event 1
+        </TrackedPressableContext>
+        <TrackedPressableContext Component={'button'} id={'Pressable id 2'} normalizeId={false}>
+          Trigger Event 2
+        </TrackedPressableContext>
+      </ObjectivProvider>
+    );
+
+    fireEvent.click(getByText(container, /trigger event 1/i));
+    fireEvent.click(getByText(container, /trigger event 2/i));
+
+    expect(spyTransport.handle).toHaveBeenCalledTimes(3);
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: 'ApplicationLoadedEvent',
+      })
+    );
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.PressableContext,
+            id: 'pressable-id-1',
+          }),
+        ]),
+      })
+    );
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.PressableContext,
+            id: 'Pressable id 2',
+          }),
+        ]),
+      })
+    );
+  });
+
   it('should allow forwarding the id property', () => {
     const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
 

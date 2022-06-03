@@ -37,8 +37,8 @@ describe('Visibility', () => {
     const tracker = new Tracker({ applicationId: 'app-id', transport: spyTransport });
 
     const Component = () => {
-      const trackVisibility = useVisibilityTracker({ isVisible: false });
-      trackVisibility();
+      const trackVisibility = useVisibilityTracker();
+      trackVisibility({ isVisible: false });
 
       return <>Component triggering HiddenEvent via Visibility Event Tracker</>;
     };
@@ -62,11 +62,10 @@ describe('Visibility', () => {
 
     const Component = () => {
       const trackVisibility = useVisibilityTracker({
-        isVisible: false,
         tracker: customTracker,
         locationStack: [makeContentContext({ id: 'override' })],
       });
-      trackVisibility();
+      trackVisibility({ isVisible: false });
 
       return <>Component triggering HiddenEvent</>;
     };
@@ -108,8 +107,8 @@ describe('Visibility', () => {
     const tracker = new Tracker({ applicationId: 'app-id', transport: spyTransport });
 
     const Component = () => {
-      const trackVisibility = useVisibilityTracker({ isVisible: true });
-      trackVisibility();
+      const trackVisibility = useVisibilityTracker();
+      trackVisibility({ isVisible: true });
 
       return <>Component triggering VisibleEvent via Visibility Event Tracker</>;
     };
@@ -133,11 +132,10 @@ describe('Visibility', () => {
 
     const Component = () => {
       const trackVisibility = useVisibilityTracker({
-        isVisible: true,
         tracker: customTracker,
         locationStack: [makeContentContext({ id: 'override' })],
       });
-      trackVisibility();
+      trackVisibility({ isVisible: true });
 
       return <>Component triggering VisibleEvent via Visibility Event Tracker</>;
     };
