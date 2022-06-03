@@ -36,7 +36,8 @@ class ValuePropagation:
         is that Bach will always sort NULLS LAST, therefore reversing the order by won't work. By numbering
         each row, we can at least rely on a non-nullable value.
 
-    2. Sort dataframe based on the row number. Ascending if method == 'ffill' and descending if method == 'bfill'.
+    2. Sort dataframe based on the row number.
+            Ascending if method == 'ffill' and descending if method == 'bfill'.
     3. Partition each series to be filled, a partition is the cumulative sum of the total amount
         of observed non-nullable values in the series.
     4. Group the series to be filled by its partition and assign the first value.
@@ -65,12 +66,8 @@ class ValuePropagation:
         # Number each sorted row this way we avoid issues when sorting NULL values
         # since bfill is ffill with reversed sort (this might generate different results)
         base_series = df[df.data_columns[0]]
-
-        from bach.partitioning import Window
-        # not considering order in window, since NULLS LAST is not supported
-        # in window functions for BigQuery, therefore we should number the rows based on
-        # the main ORDER BY clause
-        window = Window(group_by_columns=[], order_by=[])
+        # order nulls last in window function, else numbering will be wrong
+        window = df.groupby().window(nulls_last=True)
         df[self.ROW_NUMBER_SERIES_NAME] = base_series.window_row_number(window)
         df = df.materialize(node_name='numbered_fillna')
 
@@ -117,7 +114,8 @@ class ValuePropagation:
     def _propagate_first_value_per_partition(self, df: DataFrame):
         """
         Helper function that fills null values based on partitions
-        NULL records are grouped by the partition and filled with the non-nullable value respective to the partition
+        NULL records are grouped by the partition and filled with the non-nullable value
+        respective to the partition
               Example:
               |   A  | __partition_A | filled_A |
               |:----:|:-------------:|:--------:|

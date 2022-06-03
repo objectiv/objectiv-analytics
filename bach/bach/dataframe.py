@@ -50,7 +50,6 @@ Level = Union[int, List[int], str, List[str]]
 class SortColumn(NamedTuple):
     expression: Expression
     asc: bool
-    nulls_last: bool = True
 
 
 class DtypeNamePair(NamedTuple):
@@ -1989,9 +1988,6 @@ class DataFrame:
             fmtstr = []
 
             for sc in self._order_by:
-                nulls_last_fmt = ''
-                if sc.nulls_last is not None:
-                    nulls_last_fmt = 'nulls {}'
                 fmt = f"{{}} {'asc' if sc.asc else 'desc'} nulls last"
                 if not sc.expression.has_multi_level_expressions:
                     exprs.append(sc.expression)

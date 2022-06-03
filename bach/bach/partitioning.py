@@ -336,6 +336,7 @@ class Window(GroupBy):
     def __init__(self,
                  group_by_columns: List['Series'],
                  order_by: List[SortColumn],
+                 nulls_last: bool = False,
                  mode: WindowFrameMode = WindowFrameMode.RANGE,
                  start_boundary: Optional[WindowFrameBoundary] = WindowFrameBoundary.PRECEDING,
                  start_value: int = None,
@@ -403,6 +404,7 @@ class Window(GroupBy):
                                 f' AND {end_boundary.frame_clause(end_value)}'
 
         self._order_by = order_by
+        self._nulls_last = nulls_last
 
     @property
     def frame_clause(self) -> str:
@@ -430,7 +432,9 @@ class Window(GroupBy):
         :see: __init__()
         """
         return Window(group_by_columns=list(self._index.values()),
-                      order_by=self._order_by, mode=mode,
+                      order_by=self._order_by,
+                      nulls_last=self._nulls_last,
+                      mode=mode,
                       start_boundary=start_boundary, start_value=start_value,
                       end_boundary=end_boundary, end_value=end_value)
 
@@ -441,7 +445,11 @@ class Window(GroupBy):
         """
         if self._order_by:
             exprs = [sc.expression for sc in self._order_by]
-            fmtstr = [f"{{}} {'asc' if sc.asc else 'desc'}" for sc in self._order_by]
+            nulls_last_stmt = 'nulls last' if self._nulls_last else ''
+            fmtstr = [
+                f"{{}} {'asc' if sc.asc else 'desc'} {nulls_last_stmt}".strip()
+                for sc in self._order_by
+            ]
             return Expression.construct(f'order by {", ".join(fmtstr)}', *exprs)
         else:
             return Expression.construct('')

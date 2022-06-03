@@ -125,13 +125,8 @@ def test_cut_w_include_empty_bins(engine) -> None:
     ]
     expected_index = [1., 1., 2., 3., 6., 7., 8.]
 
-    if is_bigquery(engine):
-        # TODO: Remove this, None value should be last after sorting
-        expected_data = [empty_interval] + expected_data
-        expected_index = [np.nan] + expected_index
-    else:
-        expected_data.append(empty_interval)
-        expected_index.append(np.nan)
+    expected_data.append(empty_interval)
+    expected_index.append(np.nan)
     expected = pd.Series(data=expected_data, index=expected_index)
     compare_boundaries(expected, result)
 
