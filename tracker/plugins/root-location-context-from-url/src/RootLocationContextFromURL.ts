@@ -29,6 +29,13 @@ export class RootLocationContextFromURLPlugin implements TrackerPluginInterface 
    * Generate a fresh RootLocationContext before each TrackerEvent is handed over to the TrackerTransport.
    */
   enrich(contexts: Required<ContextsConfig>): void {
+    if (!this.isUsable()) {
+      globalThis.objectiv?.TrackerConsole.error(
+        `｢objectiv:${this.pluginName}｣ Cannot enrich. Plugin is not usable (document: ${typeof document}).`
+      );
+      return;
+    }
+
     const rootLocationContextId = this.idFactoryFunction();
 
     if (rootLocationContextId) {
