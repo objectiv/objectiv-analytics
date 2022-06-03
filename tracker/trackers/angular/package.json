@@ -43,7 +43,7 @@
   "devDependencies": {
     "@angular/compiler": "~9.1.13",
     "@angular/compiler-cli": "~9.1.13",
-    "@angular/core": "~9.1.13",
+    "@angular/core": "~11.0.5",
     "@objectiv/tracker-browser": "^0.0.19",
     "ng-packagr": "^9.0.0",
     "prettier": "^2.5.1",
