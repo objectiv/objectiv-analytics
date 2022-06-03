@@ -55,7 +55,7 @@ describe('HttpContextPlugin - node', () => {
       testHttpContextPlugin.initialize(
         new Tracker({
           applicationId: 'app-id',
-          plugins: [new HttpContextPlugin()],
+          plugins: [],
           trackApplicationContext: false,
         })
       );

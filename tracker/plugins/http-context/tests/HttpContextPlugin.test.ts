@@ -18,7 +18,7 @@ globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation)
 
 describe('HttpContextPlugin', () => {
   beforeEach(() => {
-    jest.restoreAllMocks();
+    jest.resetAllMocks();
   });
 
   it('should TrackerConsole.error when calling `validate` before `initialize`', () => {

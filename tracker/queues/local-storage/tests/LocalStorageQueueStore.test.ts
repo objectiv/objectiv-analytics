@@ -11,7 +11,7 @@ globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation)
 
 describe('LocalStorageQueueStore', () => {
   beforeEach(() => {
-    jest.restoreAllMocks();
+    jest.resetAllMocks();
   });
 
   const TrackerEvent1 = new TrackerEvent({ id: 'a', _type: 'a' });
