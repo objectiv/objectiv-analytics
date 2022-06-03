@@ -246,7 +246,8 @@
     },
     "AbstractLocationContext": {
       "description": "AbstractLocationContext are the abstract parents of all Location Contexts. Location Contexts are meant to describe where an event originated from in the visual UI.",
-      "parents": ["AbstractContext"]
+      "parents": ["AbstractContext"],
+      "requiresContext": ["RootLocationContext", "PathContext"]
     },
     "InputContext": {
       "description": "A Location Context that describes an element that accepts user input, i.e. a form field.",
