@@ -7,6 +7,7 @@ This file does not contain any test, but having the file's name start with `test
 as a test file. This makes pytest rewrite the asserts to give clearer errors.
 """
 import datetime
+import uuid
 from decimal import Decimal
 from typing import List, Union, Type, Dict, Any
 
@@ -207,8 +208,8 @@ def get_bt_with_railway_data() -> DataFrame:
     return get_bt(TEST_DATA_RAILWAYS, RAILWAYS_COLUMNS, True)
 
 
-def get_df_with_json_data(engine: Engine, dtype='string') -> DataFrame:
-    assert dtype in ('string', 'json', 'jsonb')
+def get_df_with_json_data(engine: Engine, dtype='json') -> DataFrame:
+    assert dtype in ('string', 'json', 'json_postgres')
     df = DataFrame.from_pandas(
         engine=engine,
         df=get_pandas_df(TEST_DATA_JSON, JSON_COLUMNS),
@@ -218,7 +219,7 @@ def get_df_with_json_data(engine: Engine, dtype='string') -> DataFrame:
         df['dict_column'] = df.dict_column.astype(dtype)
         df['list_column'] = df.list_column.astype(dtype)
         df['mixed_column'] = df.mixed_column.astype(dtype)
-    return df
+    return df.materialize()
 
 
 def run_query(engine: sqlalchemy.engine, sql: str) -> ResultProxy:
@@ -234,6 +235,20 @@ def df_to_list(df):
     return(data_list)
 
 
+def _convert_uuid_expected_data(engine: Engine, data: List[List[Any]]) -> List[List[Any]]:
+    """
+    Convert any UUID objects in data to string, if we represent uuids with strings in the engine's dialect.
+    """
+    if is_postgres(engine):
+        return data
+    if is_bigquery(engine):
+        result = [
+            [str(cell) if isinstance(cell, uuid.UUID) else cell for cell in row]
+            for row in data
+        ]
+        return result
+
+
 def assert_equals_data(
     bt: Union[DataFrame, Series],
     expected_columns: List[str],
@@ -242,6 +257,7 @@ def assert_equals_data(
     use_to_pandas: bool = False,
     round_decimals: bool = False,
     decimal=4,
+    convert_uuid: bool = False,
 ) -> List[List[Any]]:
     """
     Execute the sql of ButTuhDataFrame/Series's view_sql(), with the given order_by, and make sure the
@@ -257,6 +273,9 @@ def assert_equals_data(
     if isinstance(bt, Series):
         # Otherwise sorting does not work as expected
         bt = bt.to_frame()
+
+    if convert_uuid:
+        expected_data = _convert_uuid_expected_data(bt.engine, expected_data)
 
     if order_by:
         bt = bt.sort_values(order_by)
@@ -296,11 +315,11 @@ def _get_view_sql_data(df: DataFrame):
 def _get_to_pandas_data(df: DataFrame):
     pdf = df.to_pandas()
     # Convert pdf to the same format as _get_view_sql_data gives
-    column_names = list(pdf.index.names) + list(pdf.columns)
+    column_names = (list(pdf.index.names) if df.index else []) + list(pdf.columns)
     pdf = pdf.reset_index()
     db_values = []
     for value_row in pdf.to_numpy().tolist():
-        db_values.append(value_row)
+        db_values.append(value_row if df.index else value_row[1:])  # don't include default index value
     print(db_values)
     return column_names, db_values
 

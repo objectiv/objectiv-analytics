@@ -72,5 +72,5 @@ introduction examples are :ref:`here <bach_examples>`.
     feature-engineering
     modelhub-basics
     open-taxonomy
-    feature_importance
+    feature-importance
 

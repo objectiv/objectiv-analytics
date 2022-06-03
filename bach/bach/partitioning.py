@@ -29,31 +29,22 @@ class WindowFunction(Enum):
     NTILE = 'ntile'
     ROW_NUMBER = 'row_number'
 
-    _NAVIGATION_FUNCTIONS = (
-        FIRST_VALUE,
-        LAST_VALUE,
-        NTH_VALUE,
-        LEAD,
-        LAG,
-    )
-
-    _NUMBERING_FUNCTIONS = (
+    _BQ_FUNCTIONS_THAT_DO_NOT_SUPPORT_WINDOW_FRAME_CLAUSE = (
         RANK,
         DENSE_RANK,
         PERCENT_RANK,
         CUME_DIST,
         NTILE,
         ROW_NUMBER,
-    )
-
-    _ALL_FUNCTIONS = (
-        *_NAVIGATION_FUNCTIONS,
-        *_NUMBERING_FUNCTIONS,
+        LAG,
+        LEAD,
     )
 
     def supports_window_frame_clause(self, dialect: Dialect) -> bool:
         if is_bigquery(dialect):
-            return self.value not in WindowFunction._NUMBERING_FUNCTIONS.value
+            return (
+                self.value not in WindowFunction._BQ_FUNCTIONS_THAT_DO_NOT_SUPPORT_WINDOW_FRAME_CLAUSE.value
+            )
 
         if is_postgres(dialect):
             return True
@@ -150,18 +141,23 @@ class GroupBy:
                 for n in self._index.keys())
         )
 
-    def get_index_column_expressions(self, construct_multi_levels: bool = False) -> List[Expression]:
+    def get_index_column_expressions(self, construct_multi_levels: bool = False) -> Dict[str, Expression]:
+        """
+        returns a mapping between column name and expression
+        """
         if construct_multi_levels:
-            return [g.get_column_expression() for g in self._index.values()]
+            return {g.name: g.get_column_expression() for g in self._index.values()}
 
         from bach.series import SeriesAbstractMultiLevel
-        exprs = [
-            [g.get_column_expression()] if not isinstance(g, SeriesAbstractMultiLevel)
-            else g.get_all_level_column_expression()
-            for g in self._index.values()
-        ]
+        exprs = {}
+        for g in self._index.values():
+            if not isinstance(g, SeriesAbstractMultiLevel):
+                exprs[g.name] = g.get_column_expression()
+                continue
+            for lvl in g.levels.values():
+                exprs[lvl.name] = lvl.get_column_expression()
 
-        return list(itertools.chain.from_iterable(exprs))
+        return exprs
 
     def get_index_expressions(self) -> List[Expression]:
         from bach.series import SeriesAbstractMultiLevel

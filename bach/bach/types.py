@@ -194,12 +194,12 @@ class TypeRegistry:
         from bach.series import \
             SeriesBoolean, SeriesInt64, SeriesFloat64, SeriesString,\
             SeriesTimestamp, SeriesDate, SeriesTime, SeriesTimedelta,\
-            SeriesUuid, SeriesJsonb, SeriesJson, SeriesNumericInterval, SeriesList, SeriesDict
+            SeriesUuid, SeriesJson, SeriesJsonPostgres, SeriesNumericInterval, SeriesList, SeriesDict
 
         standard_types: List[Type[Series]] = [
             SeriesBoolean, SeriesInt64, SeriesFloat64, SeriesString,
             SeriesTimestamp, SeriesDate, SeriesTime, SeriesTimedelta,
-            SeriesUuid, SeriesJsonb, SeriesJson, SeriesNumericInterval, SeriesList, SeriesDict
+            SeriesUuid, SeriesJson, SeriesJsonPostgres, SeriesNumericInterval, SeriesList, SeriesDict
         ]
 
         for klass in standard_types:
@@ -228,8 +228,8 @@ class TypeRegistry:
         self._register_value_klass(datetime.timedelta, SeriesTimedelta)
         self._register_value_klass(numpy.timedelta64, SeriesTimedelta)
         self._register_value_klass(UUID, SeriesUuid)
-        self._register_value_klass(dict, SeriesJsonb)
-        self._register_value_klass(list, SeriesJsonb)
+        self._register_value_klass(dict, SeriesJson)
+        self._register_value_klass(list, SeriesJson)
 
     def _register_dtype_klass(self, klass: Type['Series'], override=False):
         klass_dtype: DtypeOrAlias = klass.dtype

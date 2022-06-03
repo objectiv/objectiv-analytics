@@ -139,12 +139,12 @@ def test_get_unsampled_multiple_nodes():
     assert_equals_data(
         bt2,
         expected_columns=[
-            'municipality', '_index_skating_order_sum', 'founding_sum', 'inhabitants_plus_3000_sum',
+            'municipality', 'founding_sum', 'inhabitants_plus_3000_sum',
             'extra_ppl'
         ],
         expected_data=[
-            ['Leeuwarden', 1, 1285, 93485, 93490],
-            ['Súdwest-Fryslân', 5, 2724, 39575, 39580]
+            ['Leeuwarden', 1285, 93485, 93490],
+            ['Súdwest-Fryslân', 2724, 39575, 39580]
         ]
     )
 

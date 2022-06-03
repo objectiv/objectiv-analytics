@@ -4,12 +4,13 @@ from decimal import Decimal
 import pytest
 from psycopg2._range import NumericRange
 
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data, \
-get_df_with_railway_data
+from sql_models.util import is_postgres, is_bigquery
+from tests.functional.bach.test_data_and_utils import assert_equals_data, \
+    get_df_with_railway_data, get_df_with_test_data
 
 
-def test_value_counts_basic():
-    bt = get_bt_with_test_data()['municipality']
+def test_value_counts_basic(engine):
+    bt = get_df_with_test_data(engine)['municipality']
     result = bt.value_counts()
 
     np.testing.assert_equal(
@@ -42,19 +43,28 @@ def test_value_counts_basic():
     )
 
 
-def test_value_counts_w_bins() -> None:
+def test_value_counts_w_bins(engine) -> None:
     bins = 4
-    inhabitants = get_bt_with_test_data(full_data_set=True)['inhabitants']
+    inhabitants = get_df_with_test_data(engine, full_data_set=True)['inhabitants']
     result = inhabitants.value_counts(bins=bins)
     np.testing.assert_equal(
         inhabitants.to_pandas().value_counts(bins=bins).to_numpy(),
         result.to_numpy(),
     )
     bounds_right = '(]'
-    bin1 = NumericRange(Decimal('607.215'),  Decimal('23896.25'), bounds=bounds_right)
-    bin2 = NumericRange(Decimal('23896.25'),  Decimal('47092.5'), bounds=bounds_right)
-    bin3 = NumericRange(Decimal('47092.5'),  Decimal('70288.75'), bounds=bounds_right)
-    bin4 = NumericRange(Decimal('70288.75'), Decimal('93485'), bounds=bounds_right)
+    if is_postgres(engine):
+        bin1 = NumericRange(Decimal('607.215'),  Decimal('23896.25'), bounds=bounds_right)
+        bin2 = NumericRange(Decimal('23896.25'),  Decimal('47092.5'), bounds=bounds_right)
+        bin3 = NumericRange(Decimal('47092.5'),  Decimal('70288.75'), bounds=bounds_right)
+        bin4 = NumericRange(Decimal('70288.75'), Decimal('93485'), bounds=bounds_right)
+    elif is_bigquery(engine):
+        bin1 = {'lower': 607.215, 'upper': 23896.25, 'bounds': bounds_right}
+        bin2 = {'lower': 23896.25, 'upper': 47092.5, 'bounds': bounds_right}
+        bin3 = {'lower': 47092.5, 'upper': 70288.75, 'bounds': bounds_right}
+        bin4 = {'lower': 70288.75, 'upper': 93485, 'bounds': bounds_right}
+    else:
+        raise Exception()
+
     assert_equals_data(
         result.sort_index(),
         expected_columns=['range', 'value_counts'],
@@ -66,7 +76,12 @@ def test_value_counts_w_bins() -> None:
         ],
     )
 
-    bin1_bach = NumericRange(Decimal('700'), Decimal('23896.25'), bounds='[]')
+    if is_postgres(engine):
+        bin1_bach = NumericRange(Decimal('700'), Decimal('23896.25'), bounds='[]')
+    elif is_bigquery(engine):
+        bin1_bach = {'lower': 700, 'upper': 23896.25, 'bounds': '[]'}
+    else:
+        raise Exception()
     result_w_bach_method = inhabitants.value_counts(bins=bins, method='bach')
     assert_equals_data(
         result_w_bach_method.sort_index(),
