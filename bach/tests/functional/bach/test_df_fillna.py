@@ -3,6 +3,7 @@ Copyright 2022 Objectiv B.V.
 """
 import itertools
 from typing import Tuple
+from unittest.mock import ANY
 
 import pandas as pd
 import pytest
@@ -89,8 +90,7 @@ def test_sorting_df(dataframes_sort, ascending) -> None:
     pd.testing.assert_frame_equal(expected, result)
 
 
-def test_fillna_w_methods(pg_engine) -> None:
-    engine = pg_engine  # TODO: BigQuery
+def test_fillna_w_methods_against_pandas(engine) -> None:
     pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
     df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
 
@@ -101,26 +101,71 @@ def test_fillna_w_methods(pg_engine) -> None:
     check_sort_expected = check_sort_expected.dropna(subset=sort_by, how='all')
 
     check_sort_result = df.sort_values(by=sort_by, ascending=ascending)
-    check_sort_result = check_sort_result.dropna(subset=sort_by, how='all').to_pandas()
+    check_sort_result = check_sort_result.dropna(subset=sort_by, how='all')
 
     # check if sort performed in ffilna generates same order based on sortby
-    # ignores when all columns involkved in sort by are NULL (non-deterministic)
-    pd.testing.assert_frame_equal(check_sort_expected, check_sort_result, check_index_type=False, check_names=False)
+    # ignores when all columns involved in sort by are NULL (non-deterministic)
+    pd.testing.assert_frame_equal(
+        check_sort_expected, check_sort_result.to_pandas(), check_index_type=False, check_names=False,
+    )
+
+    fillna_check_ffill_expected = check_sort_expected.fillna(method='ffill')
+    fillna_check_ffill_result = check_sort_result.fillna(method='ffill')
+    pd.testing.assert_frame_equal(
+        fillna_check_ffill_expected,
+        fillna_check_ffill_result.to_pandas(),
+        check_index_type=False,
+        check_names=False,
+    )
+
+    fillna_check_bfill_expected = check_sort_expected.fillna(method='bfill')
+    fillna_check_bfill_result = check_sort_result.fillna(method='bfill')
+    pd.testing.assert_frame_equal(
+        fillna_check_bfill_expected,
+        fillna_check_bfill_result.to_pandas(),
+        check_index_type=False,
+        check_names=False,
+    )
+
+
+def test_fillna_w_methods(pg_engine) -> None:
+    engine = pg_engine  # TODO: BigQuery
+    pdf = pd.DataFrame(DATA, columns=list("ABCDEFG"))
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+
+    sort_by = ['A', 'B', 'C']
+    ascending = [False, True, False]
+
+    assert_equals_data(
+        df.sort_values(by=sort_by, ascending=ascending),
+        expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
+        expected_data=[
+            [1,    3,    4, None,    1,    1, None, datetime(2022, 1, 2)],
+            [5,    1, None, None, None, None,  'd', datetime(2022, 1, 5)],
+            [3, None,    2, None,    0, None,  'c',                 None],
+            [2, None,    3, None,    4, None,  'b',                 None],
+            [7, None, None,    1, None, None,  'f',                 None],
+            # last 3 rows are non-deterministic because A, B, C are all nulls
+            [ANY, None, None, None] + [ANY] * 4,
+            [ANY, None, None, None] + [ANY] * 4,
+            [ANY, None, None, None] + [ANY] * 4,
+        ],
+    )
 
     result_ffill = df.fillna(method='ffill', sort_by=sort_by, ascending=ascending)
-    result_ffill = result_ffill.sort_values(sort_by, ascending=ascending)
     assert_equals_data(
         result_ffill,
         expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
         expected_data=[
-            [3, None, 2, None, 0,  None, 'c',  None],
-            [2, None, 3, None, 4,  None, 'b',  None],
-            [0, None, 3, None, 4,  None, 'a',  datetime(2022, 1, 1)],
-            [4, None, 3, None, 4,  2,    'a',  datetime(2022, 1, 1)],
-            [6, None, 3, None, 4,  3,    'e',  datetime(2022, 1, 6)],
-            [7, None, 3, 1,    4,  3,    'f',  datetime(2022, 1, 6)],
-            [1, 3,    4, 1,    1,  1,    'f',  datetime(2022, 1, 2)],
-            [5, 1,    4, 1,    1,  1,    'd',  datetime(2022, 1, 5)],
+            [1,    3,    4, None,    1,    1, None, datetime(2022, 1, 2)],
+            [5,    1,    4, None,    1,    1,  'd', datetime(2022, 1, 5)],
+            [3,    1,    2, None,    0,    1,  'c', datetime(2022, 1, 5)],
+            [2,    1,    3, None,    4,    1,  'b', datetime(2022, 1, 5)],
+            [7,    1,    3,    1,    4,    1,  'f', datetime(2022, 1, 5)],
+            # last 3 rows are non-deterministic because A, B, C were initially all nulls
+            [ANY,  1,    3,    1] + [ANY] * 4,
+            [ANY,  1,    3,    1] + [ANY] * 4,
+            [ANY,  1,    3,    1] + [ANY] * 4,
         ],
     )
 
@@ -131,14 +176,15 @@ def test_fillna_w_methods(pg_engine) -> None:
         result_bfill,
         expected_columns=['_index_0', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
         expected_data=[
-            [3, 3, 2,    1,    0,    3,    'c', datetime(2022, 1, 6)],
-            [2, 3, 3,    1,    4,    3,    'b', datetime(2022, 1, 6)],
-            [1, 3, 4,    None, 1,    1,    'd', datetime(2022, 1, 2)],
-            [6, 3, 4,    1,    1,    3,    'e', datetime(2022, 1, 6)],
-            [0, 3, 4,    1,    1,    2,    'a', datetime(2022, 1, 1)],
-            [7, 3, 4,    1,    1,    1,    'f', datetime(2022, 1, 2)],
-            [4, 3, 4,    1,    1,    2,    'f', datetime(2022, 1, 2)],
-            [5, 1, None, None, None, None, 'd', datetime(2022, 1, 5)],
+            [1,    3,    4,    1,    1,    1,  'd', datetime(2022, 1, 2)],
+            [5,    1,    2,    1,    0,  ANY,  'd', datetime(2022, 1, 5)],
+            [3, None,    2,    1,    0,  ANY,  'c',                 ANY],
+            [2, None,    3,    1,    4,  ANY,  'b',                 ANY],
+            [7, None, None,    1,  ANY,  ANY,  'f',                 ANY],
+            # last 3 rows are non-deterministic because A, B, C are all nulls
+            [ANY, None, None, None] + [ANY] * 4,
+            [ANY, None, None, None] + [ANY] * 4,
+            [ANY, None, None, None] + [ANY] * 4,
         ],
     )
 
@@ -188,7 +234,7 @@ def test_fillna_errors(engine):
     with pytest.raises(ValueError, match=r'cannot specify both "method" and "value".'):
         df.fillna(value=0, method='ffill')
 
-    with pytest.raises(Exception, match=r'"random" is not a valid method.'):
+    with pytest.raises(Exception, match=r'"random" is not a valid propagation method.'):
         df.fillna(method='random')
 
     with pytest.raises(Exception, match=r'dataframe must be sorted'):

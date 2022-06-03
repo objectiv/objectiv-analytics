@@ -50,6 +50,7 @@ Level = Union[int, List[int], str, List[str]]
 class SortColumn(NamedTuple):
     expression: Expression
     asc: bool
+    nulls_last: bool = True
 
 
 class DtypeNamePair(NamedTuple):
@@ -1988,6 +1989,9 @@ class DataFrame:
             fmtstr = []
 
             for sc in self._order_by:
+                nulls_last_fmt = ''
+                if sc.nulls_last is not None:
+                    nulls_last_fmt = 'nulls {}'
                 fmt = f"{{}} {'asc' if sc.asc else 'desc'} nulls last"
                 if not sc.expression.has_multi_level_expressions:
                     exprs.append(sc.expression)
@@ -3021,14 +3025,10 @@ class DataFrame:
         if method and value is not None:
             raise ValueError('cannot specify both "method" and "value".')
 
-        if method and method not in ('ffill', 'pad', 'bfill', 'backfill'):
-            raise ValueError(f'"{method}" is not a valid method.')
-
-        if method in ('ffill', 'pad'):
-            df = df.ffill(sort_by=sort_by, ascending=ascending)
-
-        elif method in ('bfill', 'backfill'):
-            df = df.bfill(sort_by=sort_by, ascending=ascending)
+        if method:
+            from bach.operations.value_propagation import ValuePropagationMethod, ValuePropagation
+            p_method = ValuePropagationMethod.get_method(method)
+            df = ValuePropagation(df=df, method=p_method).propagate(sort_by, ascending)
 
         if value is not None:
             series_to_fill = list(value.keys()) if isinstance(value, dict) else self.data_columns
@@ -3061,48 +3061,9 @@ class DataFrame:
             If sort_by is non-deterministic, this operation might yield different results after
             performing other operations over the resultant dataframe.
         """
-        from bach.partitioning import Window, WindowFrameMode
-        from bach.series.series_numeric import SeriesInt64
-
-        df = self.copy()
-
-        if sort_by:
-            df = df.sort_values(by=sort_by, ascending=ascending)
-
-        if not sort_by and not df.order_by:
-            raise Exception('dataframe must be sorted in order to apply forward or backward fill.')
-
-        # create a partition column for each series to be filled
-        # this column contains the cumulative sum of the total amount of observed non-nullable values
-        # till the current row. Based on these values, NULL records can be grouped by the partition and
-        # be filled with the non-nullable value respective to the partition
-        # Example:
-        # |   A  | __partition_A | filled_A |
-        # |:----:|:-------------:|:--------:|
-        # |   1  |       1       |     1    |
-        # | NULL |       1       |     1    |
-        # | NULL |       1       |     1    |
-        # |   3  |       2       |     3    |
-        # | NULL |       2       |     3    |
-        # |   4  |       3       |     4    |
-        for series_name, series in self._data.items():
-            partition_name = f'__partition_{series.name}'
-            partition_expr = Expression.construct(f'case when {{}} is null then 0 else 1 end', series)
-
-            df[partition_name] = (
-                series.copy_override(expression=partition_expr, name=partition_name)
-                .copy_override_type(SeriesInt64)
-                .sum(partition=Window([], mode=WindowFrameMode.ROWS, order_by=df.order_by))
-            )
-        df.materialize(node_name='fillna_partitioning', inplace=True)
-
-        # fill gaps with the first_value per partition
-        for series_name in self.data_columns:
-            df[series_name] = df.all_series[series_name].window_first_value(
-                window=Window([df.all_series[f'__partition_{series_name}']], order_by=df.order_by),
-            )
-
-        return df.copy_override(series={s: df.all_series[s] for s in self.data_columns})
+        from bach.operations.value_propagation import ValuePropagation, ValuePropagationMethod
+        v_propagation = ValuePropagation(df=self, method=ValuePropagationMethod.FORWARD_FILL)
+        return v_propagation.propagate(sort_by=sort_by, ascending=ascending)
 
     def bfill(
         self,
@@ -3127,18 +3088,9 @@ class DataFrame:
             If sort_by is non-deterministic, this operation might yield different results after
             performing other operations over the resultant dataframe.
         """
-        df = self.copy()
-
-        if sort_by:
-            df = df.sort_values(by=sort_by, ascending=ascending)
-
-        main_order_by = copy(df._order_by)
-        # bfill is similar to ffill, the difference is that the order is reversed.
-        reverse_order_by = [
-            SortColumn(expression=ob.expression, asc=not ob.asc)
-            for ob in main_order_by
-        ]
-        return df.copy_override(order_by=reverse_order_by).ffill().copy_override(order_by=main_order_by)
+        from bach.operations.value_propagation import ValuePropagation, ValuePropagationMethod
+        v_propagation = ValuePropagation(df=self, method=ValuePropagationMethod.BACK_FILL)
+        return v_propagation.propagate(sort_by=sort_by, ascending=ascending)
 
     def _get_parsed_subset_of_data_columns(
         self, subset: Optional[Union[str, Sequence[str]]],
