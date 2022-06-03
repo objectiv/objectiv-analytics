@@ -48,8 +48,6 @@ _SUPPORTED_C_STANDARD_CODES = {
     '%s',  # EPOCH
     '%f',  # MICROSECOND
 
-    '%p',  # AM_OR_PM_UPPER
-    '%P',  # AM_OR_PM_LOWER
     '%z',  # UTC_OFFSET
     '%Z',  # TIME_ZONE_NAME
 
@@ -89,8 +87,6 @@ _C_STANDARD_CODES_X_POSTGRES_DATE_CODES = {
     "%M": "MI",
     "%S": "SS",
     "%f": "US",
-    "%p": "AM",
-    "%P": "am",
     "%z": "OF",
     "%Z": "TZ",
     "%R": "HH24:MI",
@@ -167,3 +163,15 @@ def parse_c_standard_code_to_postgres_code(date_format: str) -> str:
         )
 
     return new_date_format
+
+
+def parse_c_code_to_bigquery_code(date_format: str) -> str:
+    if '%S.%f' in date_format:
+        date_format = re.sub(r'%S\.%f', '%E6S', date_format)
+
+    if '%f' in date_format:
+        warnings.warn(
+            message=f'There are no equivalent codes for %f.',
+            category=UserWarning,
+        )
+    return date_format

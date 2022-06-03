@@ -93,6 +93,7 @@ def test_date_format(engine, recwarn):
     ]
     edge_cases = [
         '%Y-%%%m-%d', '%s', 'abc %Y def%', '"abc" %Y "def"%', '%H:%M:%S %f', '%H:%M:%S MS', 'HH24:MI:SS MS',
+        '%H:%M:%S.%f',
     ]
 
     for idx, fmt in enumerate(same_result_formats + edge_cases):
@@ -126,6 +127,7 @@ def test_date_format(engine, recwarn):
                 '00:00:00 000000', '11:28:36 388000',
                 '00:00:00 000', '11:28:36 388',
                 '00:00:00 000', '11:28:36 388',
+                '00:00:00.000000', '11:28:36.388000',
             ]
         ]
     else:
@@ -138,6 +140,7 @@ def test_date_format(engine, recwarn):
                 '%H:%M:%S %f', '11:28:36 %f',  # bq does not support microseconds format
                 '%H:%M:%S MS', '11:28:36 MS',  # bq hour codes don't work for dates
                 'HH24:MI:SS MS', 'HH24:MI:SS MS',
+                '%H:%M:%E6S', '11:28:36.388000',
             ]
         ]
 
