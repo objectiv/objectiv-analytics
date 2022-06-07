@@ -1,4 +1,3 @@
-const {execSync} = require("child_process");
 module.exports = {
   name: `plugin-engines-check`,
   factory: require => {
@@ -11,11 +10,11 @@ module.exports = {
     const { engines } = JSON.parse(data.toString());
     const { node, npm } = engines;
 
-    // Retrieve npm version
-    const npmVersion = execSync('npm -v').toString();
-
     // Retrieve node version
     const nodeVersion = process.version;
+
+    // Retrieve npm version
+    const npmVersion = execSync('npm -v').toString();
 
     return {
       default: {
