@@ -1,17 +1,24 @@
 import json
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Dict, Any, NamedTuple, Optional
 from uuid import UUID
 
 from bach import DataFrame
 from sql_models.util import is_postgres, is_bigquery
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
-from tests.functional.bach.test_data_and_utils import get_bt, run_query
+from tests.functional.bach.test_data_and_utils import run_query
+from tests.unit.bach.util import get_pandas_df
 
 from modelhub import ModelHub
 from tests_modelhub.data_and_utils.data_json_real import TEST_DATA_JSON_REAL, JSON_COLUMNS_REAL
 from tests_modelhub.data_and_utils.data_objectiv import TEST_DATA_OBJECTIV
+
+
+class DBParams(NamedTuple):
+    url: str
+    credentials: Optional[str]
+    table_name: str
 
 
 def _convert_moment_to_utc_time(moment: str) -> int:
@@ -20,11 +27,16 @@ def _convert_moment_to_utc_time(moment: str) -> int:
     return int(dt.timestamp() * 1e3)
 
 
-def get_bt_with_json_data_real() -> DataFrame:
-    bt = get_bt(TEST_DATA_JSON_REAL, JSON_COLUMNS_REAL, True)
-    bt['global_contexts'] = bt.global_contexts.astype('json')
-    bt['location_stack'] = bt.location_stack.astype('json')
-    return bt
+def get_df_with_json_data_real(db_params: DBParams) -> DataFrame:
+    engine = create_engine_from_db_params(db_params)
+    df = DataFrame.from_pandas(
+        engine=engine,
+        df=get_pandas_df(dataset=TEST_DATA_JSON_REAL, columns=JSON_COLUMNS_REAL),
+        convert_objects=True,
+    )
+    df['global_contexts'] = df.global_contexts.astype('json')
+    df['location_stack'] = df.location_stack.astype('json')
+    return df
 
 
 def get_objectiv_dataframe_test(db_params=None, time_aggregation=None):
@@ -74,7 +86,7 @@ def get_parsed_objectiv_data(engine):
     return parsed_data
 
 
-def create_engine_from_db_params(db_params) -> Engine:
+def create_engine_from_db_params(db_params: DBParams) -> Engine:
     if db_params.credentials:
         engine = create_engine(url=db_params.url, credentials_path=db_params.credentials)
     else:
