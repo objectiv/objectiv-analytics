@@ -183,7 +183,8 @@ def test_astype_to_json(engine, dtype):
             [0, {"a": "b"}],
             [1, {"_type": "SectionContext", "id": "home"}],
             [2, {"a": "b", "c": {"a": "c"}}],
-            [3, {"a": "b", "e": [{"a": "b"}, {"c": "d"}]}]
+            [3, {"a": "b", "e": [{"a": "b"}, {"c": "d"}]}],
+            [4, None]
         ],
         use_to_pandas=True
     )
@@ -194,7 +195,8 @@ def test_astype_to_json(engine, dtype):
             [0, [{"a": "b"}, {"c": "d"}]],
             [1, ["a", "b", "c", "d"]],
             [2, [{"_type": "a", "id": "b"}, {"_type": "c", "id": "d"}, {"_type": "e", "id": "f"}]],
-            [3, [{"_type": "WebDocumentContext", "id": "#document"}, {"_type": "SectionContext", "id": "home"}, {"_type": "SectionContext", "id": "top-10"}, {"_type": "ItemContext", "id": "5o7Wv5Q5ZE"}]]
+            [3, [{"_type": "WebDocumentContext", "id": "#document"}, {"_type": "SectionContext", "id": "home"}, {"_type": "SectionContext", "id": "top-10"}, {"_type": "ItemContext", "id": "5o7Wv5Q5ZE"}]],
+            [4, None]
         ],
         use_to_pandas=True
     )
@@ -205,7 +207,8 @@ def test_astype_to_json(engine, dtype):
             [0, {"a": "b"}],
             [1, ["a", "b", "c", "d"]],
             [2, {"a": "b", "c": {"a": "c"}}],
-            [3, [{"_type": "WebDocumentContext", "id": "#document"}, {"_type": "SectionContext", "id": "home"}, {"_type": "SectionContext", "id": "top-10"}, {"_type": "ItemContext", "id": "5o7Wv5Q5ZE"}]]
+            [3, [{"_type": "WebDocumentContext", "id": "#document"}, {"_type": "SectionContext", "id": "home"}, {"_type": "SectionContext", "id": "top-10"}, {"_type": "ItemContext", "id": "5o7Wv5Q5ZE"}]],
+            [4, None]
         ],
         use_to_pandas=True
     )

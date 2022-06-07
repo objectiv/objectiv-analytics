@@ -2,7 +2,8 @@
 Copyright 2021 Objectiv B.V.
 """
 import json
-from typing import Dict, Union, TYPE_CHECKING, Tuple, cast, Optional, List, Any
+from abc import abstractmethod
+from typing import Dict, Union, TYPE_CHECKING, Tuple, cast, Optional, List, Any, TypeVar, Generic
 
 from sqlalchemy.engine import Dialect
 
@@ -143,19 +144,14 @@ class SeriesJson(Series):
     }
     supported_value_types = (dict, list)
 
-    return_dtype = 'json'
-
     @property
-    def json(self):
+    def json(self) -> 'JsonAccessor':
         """
-        .. _json_accessor:
-
-        Get access to json operations via the class that's return through this accessor.
+        Get access to json operations via the class that's returned through this accessor.
         Use as `my_series.json.get_value()` or `my_series.json[:2]`
 
-        .. autoclass:: JsonPostgresAccessor
+        .. autoclass:: bach.series.series_json.JsonAccessor
             :members:
-            :special-members: __getitem__
 
         """
         if is_postgres(self.engine):
@@ -283,7 +279,6 @@ class SeriesJsonPostgres(SeriesJson):
     supported_db_dtype = {
         DBDialect.POSTGRES: 'json',
     }
-    return_dtype = 'json'
 
     def __init__(self,
                  engine,
@@ -308,6 +303,19 @@ class SeriesJsonPostgres(SeriesJson):
                          instance_dtype=instance_dtype,
                          **kwargs)
 
+    @property
+    def json(self) -> 'JsonAccessor':
+        """
+        Get access to json operations via the class that's returned through this accessor.
+        Use as `my_series.json.get_value()` or `my_series.json[:2]`
+
+        .. autoclass:: bach.series.series_json.JsonAccessor
+            :members:
+        """
+        json_series = self.astype('json')
+        assert isinstance(json_series, SeriesJson)  # help mypy
+        return JsonPostgresAccessor(series_object=json_series)
+
     def materialize(
             self,
             node_name='manual_materialize',
@@ -323,64 +331,86 @@ class SeriesJsonPostgres(SeriesJson):
         raise Exception(f'{self.__class__.__name__} cannot be materialized.')
 
 
-class JsonBigQueryAccessor:
+TSeriesJson = TypeVar('TSeriesJson', bound='SeriesJson')
+
+
+class JsonAccessor(Generic[TSeriesJson]):
     """
-    class with accessor methods to JSON type data columns on BigQuery.
+    Abstract class with accessor methods to JSON type data.
+
+    Database specific subclasses implement the abstract functions.
     """
-    def __init__(self, series_object: 'SeriesJson'):
+    def __init__(self, series_object: 'TSeriesJson'):
         self._series_object = series_object
 
-    def __getitem__(self, key: Union[str, int, slice]):
+    def __getitem__(self, key: Union[str, int, slice]) -> 'TSeriesJson':
         """
         Slice the JSON data in pythonic ways
         """
         # TODO: leverage instance_dtype information here, if we have that
         if isinstance(key, int):
-            return self.get_array_item(key)
+            return self._get_array_item(key)
 
         elif isinstance(key, str):
-            return self.get_value(key)
+            return self._get_dict_item(key)
 
         elif isinstance(key, slice):
-            if key.step:
-                raise NotImplementedError('slice steps not supported')
-            raise NotImplementedError()  # TODO
+            return self._get_array_slice(key)
 
         raise TypeError('Key should either be a string, integer, or slice.')
 
-    def get_array_item(self, key):
-        if key >= 0:
-            expression = Expression.construct(f'''JSON_QUERY({{}}, '$[{key}]')''', self._series_object)
-            return self._series_object.copy_override(expression=expression)
-        # case key <= 0
-        # BigQuery doesn't (yet) natively support this, so we emulate this.
-        array_len = self.get_array_length()
-        expr_offset = Expression.construct(f'OFFSET({{}} {key})', array_len)
-        expression = Expression.construct('JSON_EXTRACT_ARRAY({})[{}]', self._series_object, expr_offset)
-        return self._series_object.copy_override(expression=expression)
-
-    def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'SeriesJson']:
+    @abstractmethod
+    def _get_array_slice(self, key: slice) -> 'TSeriesJson':
         """
-        Select values from objects by key. This works only on scalar values! to get json objects use
-        __getitem__, that is, object['key']
+        Get items from toplevel array.
+
+        This assumes the top-level item in the json is an array. Will result in an exception (later on) if
+        that's not the case!
+
+        :param key: array-slice.
+        :returns: series with the selected values.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _get_array_item(self, key: int) -> 'TSeriesJson':
+        """
+        Get item from toplevel array.
+
+        This assumes the top-level item in the json is an array. Will result in an exception (later on) if
+        that's not the case!
+
+        :param key: the 0-based index. If negative this will count from the end of the array (1 based). The
+            index MUST exist in the array
+        :returns: series with the selected value.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _get_dict_item(self, key: str) -> 'TSeriesJson':
+        """
+        Get item from toplevel object by key.
+
+        This assumes the top-level item in the json is an object. Will result in an exception (later on) if
+        that's not the case!
+
+        :param key: the key to return the values for.
+        :returns: series with the selected value.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'TSeriesJson']:
+        """
+        Get item from toplevel object by key.
 
         :param key: the key to return the values for.
         :param as_str: if True, it returns a string Series, json otherwise.
         :returns: series with the selected object value.
         """
-        # TODO: ESCAPE KEY!
-        # note: escaping is function dependent. for JSON_VALUE[1]: 'If a JSON key uses invalid JSONPath
-        # characters, then you can escape those characters using double quotes.'
-        # [1] https://cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_value
-        assert '"' not in key
+        raise NotImplementedError()
 
-        expression = Expression.construct(f'''JSON_QUERY({{}}, '$."{key}"')''', self._series_object)
-
-        if not as_str:
-            return self._series_object.copy_override(expression=expression)
-        from bach.series import SeriesString
-        return self._series_object.copy_override(expression=expression).copy_override_type(SeriesString)
-
+    @abstractmethod
     def get_array_length(self) -> 'SeriesInt64':
         """
         Get the length of the toplevel array.
@@ -391,32 +421,128 @@ class JsonBigQueryAccessor:
         # Implementing a more generic __len__() function is not trivial as a json object can be (among
         # others) an array, a dict, or a string, all of which should be supported by a generic __len__().
         # So for now we have a dedicated len function for arrays.
+        raise NotImplementedError()
+
+
+class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
+    """
+    BigQuery specific implementation of JsonAccessor.
+    """
+
+    def _get_array_slice(self, key: slice) -> 'TSeriesJson':
+        """ See implementation in parent class :class:`JsonAccessor` """
+        if key.step:
+            raise NotImplementedError('slice steps not supported')
+
+        start_expression = self._get_slice_partial_expr(value=key.start, is_start=True)
+        stop_expression = self._get_slice_partial_expr(value=key.stop, is_start=False)
+
+        values_expression = Expression.construct(
+            "select val "
+            "from unnest(JSON_QUERY_ARRAY({}, '$')) val with offset as pos "
+            "where pos >= {} and pos < {} "
+            "order by pos",
+            self._series_object, start_expression, stop_expression
+        )
+        json_str_expression = Expression.construct(
+            "'[' || ARRAY_TO_STRING(ARRAY({}), ', ') || ']'",
+            values_expression
+        )
+        return self._series_object\
+            .copy_override(expression=json_str_expression)
+
+    def _get_slice_partial_expr(self, value: Optional[int], is_start: bool) -> Expression:
+        """
+        Return expression for either the lower bound or upper bound of a slice.
+
+        Assumes that self._series_object is an array!
+
+        :param value: slice.start or slice.stop
+        :param is_start: whether value is the slice.start (True) or slice.stop (False) value
+        :return: Expression that will evaluate to an integer that can be used to compare against positions
+                    in the array.
+        """
+        if value is not None and not isinstance(value, int):
+            raise TypeError(f'Slice value must be None or an integer, value: {value}')
+
+        if value is None:
+            if is_start:
+                # return index of first item in the array
+                return Expression.construct('0')
+            else:
+                # return index that is guaranteed to be beyond the last item in the array
+                max_int = 2 ** 63 - 1
+                return Expression.construct(f'{max_int}')
+        elif value >= 0:
+            return Expression.construct(f'{value}')
+        else:
+            array_len = self.get_array_length()
+            return Expression.construct(f'({{}} {value})', array_len)
+
+    def _get_array_item(self, key: int) -> 'TSeriesJson':
+        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        if key >= 0:
+            expression = Expression.construct(f'''JSON_QUERY({{}}, '$[{key}]')''', self._series_object)
+            return self._series_object.copy_override(expression=expression)
+        # case key < 0
+        # BigQuery doesn't (yet) natively support this, so we emulate this.
+        array_len = self.get_array_length()
+        expr_offset = Expression.construct(f'OFFSET({{}} {key})', array_len)
+        expression = Expression.construct('JSON_QUERY_ARRAY({})[{}]', self._series_object, expr_offset)
+        return self._series_object.copy_override(expression=expression)
+
+    def _get_dict_item(self, key: str) -> 'TSeriesJson':
+        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        return cast('TSeriesJson', self.get_value(key=key, as_str=False))
+
+    def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'TSeriesJson']:
+        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        # TODO: as_str is never used?
+        # Special characters are tricky. According to the latests jsonpath spec draft we should use the
+        # index selector [1] (e.g. `$['key with special characters']`). But BigQuery only supports the dot
+        # selector [2][3]. However BigQuery does allow us to quote the key when using the dot selector [4],
+        # which is not in the jsonpath draft spec. So we quote the key, and just raise an exception if
+        # anybody tries to use a key that contains a quote.
+        # [1] https://www.ietf.org/archive/id/draft-ietf-jsonpath-base-05.html#name-index-selector
+        # [2] https://www.ietf.org/archive/id/draft-ietf-jsonpath-base-05.html#name-dot-selector
+        # [3] https://cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#JSONPath_format
+        # [4] https://cloud.google.com/bigquery/docs/reference/standard-sql/json_functions
+        if '"' in key:
+            raise ValueError(f'key values containing double quotes are not supported. key: {key}')
+
+        json_expression = Expression.construct(
+            '''JSON_QUERY({}, '$."{}"')''',
+            self._series_object,
+            Expression.raw(key)
+        )
+
+        if not as_str:
+            return self._series_object.copy_override(expression=json_expression)
+        from bach.series import SeriesString
+        value_expression = Expression.construct(
+            '''JSON_VALUE({}, '$."{}"')''',
+            self._series_object,
+            Expression.raw(key)
+        )
+        expression = Expression.construct('COALESCE({}, {})', value_expression, json_expression)
+        return self._series_object.copy_override(expression=expression).copy_override_type(SeriesString)
+
+    def get_array_length(self) -> 'SeriesInt64':
+        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        # Implementing a more generic __len__() function is not trivial as a json object can be (among
+        # others) an array, a dict, or a string, all of which should be supported by a generic __len__().
+        # So for now we have a dedicated len function for arrays.
         from bach.series import SeriesInt64
-        expression = Expression.construct('ARRAY_LENGTH(JSON_EXTRACT_ARRAY({}))', self._series_object)
+        expression = Expression.construct('ARRAY_LENGTH(JSON_QUERY_ARRAY({}))', self._series_object)
         return self._series_object \
             .copy_override_type(SeriesInt64) \
             .copy_override(expression=expression)
 
 
-class JsonPostgresAccessor:
+class JsonPostgresAccessor(JsonAccessor, Generic[TSeriesJson]):
     """
-    class with accessor methods to SeriesJson data on Postgres.
+    Postgres specific implementation of JsonAccessor.
     """
-    def __init__(self, series_object: 'SeriesJson'):
-        self._series_object = series_object
-        self._return_dtype: Dtype = series_object.return_dtype
-
-    def __getitem__(self, key: Union[str, int, slice]):
-        """
-        Slice the JSON data in pythonic ways
-        """
-        if isinstance(key, int):
-            return self.get_array_item(key)
-        elif isinstance(key, str):
-            return self.get_value(key)
-        elif isinstance(key, slice):
-            return self.get_array_slice(key)
-        raise TypeError(f'key should be int or slice, actual type: {type(key)}')
 
     def _find_in_json_list(self, key: Union[str, Dict[str, str]]):
         if isinstance(key, (dict, str)):
@@ -428,7 +554,8 @@ class JsonPostgresAccessor:
         else:
             raise TypeError(f'key should be int or slice, actual type: {type(key)}')
 
-    def get_array_slice(self, key: slice):
+    def _get_array_slice(self, key: slice) -> 'TSeriesJson':
+        """ See implementation in parent class :class:`JsonAccessor` """
         expression_references = 0
         if key.step:
             raise NotImplementedError('slice steps not supported')
@@ -472,7 +599,6 @@ class JsonPostgresAccessor:
         expression_references += 1
         non_null_expression = f"coalesce({combined_expression}, '[]'::jsonb)"
         return self._series_object \
-            .copy_override_dtype(dtype=self._return_dtype) \
             .copy_override(
                 expression=Expression.construct(
                     non_null_expression,
@@ -480,38 +606,35 @@ class JsonPostgresAccessor:
                 )
             )
 
-    def get_array_item(self, key):
+    def _get_array_item(self, key: int) -> 'TSeriesJson':
+        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         return self._series_object \
-            .copy_override_dtype(dtype=self._return_dtype) \
             .copy_override(expression=Expression.construct(f'{{}}->{key}', self._series_object))
 
-    def get_value(self, key: str, as_str: bool = False):
-        """
-        Select values from objects by key. Same as using `.json[key]` on the json column.
+    def _get_dict_item(self, key: str) -> 'TSeriesJson':
+        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        return cast('TSeriesJson', self.get_value(key=key, as_str=False))
 
-        :param key: the key to return the values for.
-        :param as_str: if True, it returns a string Series, jsonb otherwise.
-        :returns: series with the selected object value.
-        """
+    def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'TSeriesJson']:
+        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+
+        if '"' in key:
+            raise ValueError(f'key values containing double quotes are not supported. key: {key}')
+
         return_as_string_operator = ''
-        return_dtype = self._return_dtype
         if as_str:
             return_as_string_operator = '>'
-            return_dtype = 'string'
         expression = Expression.construct(f"{{}}->{return_as_string_operator}{{}}",
                                           self._series_object,
                                           Expression.string_value(key))
-        return self._series_object\
-            .copy_override_dtype(dtype=return_dtype)\
-            .copy_override(expression=expression)
+        result = self._series_object.copy_override(expression=expression)
+        if as_str:
+            from bach.series import SeriesString
+            return result.copy_override_type(SeriesString)
+        return result
 
     def get_array_length(self) -> 'SeriesInt64':
-        """
-        Get the length of the toplevel array.
-
-        This assumes the top-level item in the json is an array. Will result in an exception (later on) if
-        that's not the case!
-        """
+        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         from bach.series import SeriesInt64
         expression = Expression.construct('jsonb_array_length({})', self._series_object)
         return self._series_object \

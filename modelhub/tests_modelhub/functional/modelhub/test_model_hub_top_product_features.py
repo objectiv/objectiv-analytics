@@ -8,18 +8,18 @@ from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 
-def test_top_used_product_features():
+def test_top_product_features():
     df, modelhub = get_objectiv_dataframe_test()
     initial_columns = df.data_columns
 
     # without location_stack
-    tdf = modelhub.aggregate.top_used_product_features(df)
+    tdf = modelhub.aggregate.top_product_features(df)
     assert len(tdf.index) == 3
 
     # index _application
     assert_equals_data(
-        tdf.index["_application"],
-        expected_columns=["_application"],
+        tdf.index['_application'],
+        expected_columns=['_application'],
         expected_data=[
             ['objectiv-docs'],
             ['objectiv-website'],
@@ -36,18 +36,18 @@ def test_top_used_product_features():
     )
 
     # index feature_nice_name
-    assert "_feature_nice_name" in tdf.index
+    assert '_feature_nice_name' in tdf.index
 
     # index event_type
-    assert set(tdf.index["event_type"].array) == {'ClickEvent'}
+    assert set(tdf.index['event_type'].array) == {'ClickEvent'}
 
     # data info
     assert list(tdf.data.keys()) == ['user_id_nunique']
-    assert set(tdf["user_id_nunique"].array) == {1}
+    assert set(tdf['user_id_nunique'].array) == {1}
 
     # with location_stack
     location_stack = df.location_stack.json[{'_type': 'LinkContext'}:]
-    tdf = modelhub.aggregate.top_used_product_features(df, location_stack)
+    tdf = modelhub.aggregate.top_product_features(df, location_stack)
 
     assert_equals_data(
         tdf,

@@ -1,20 +1,17 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-
-# Any import from modelhub initializes all the types, do not remove
 import pytest
-
-from modelhub import __version__
-from tests_modelhub.data_and_utils.utils import get_bt_with_json_data_real
+from modelhub import __version__  # Any import from modelhub initializes all the types, do not remove
+from tests_modelhub.data_and_utils.utils import get_df_with_json_data_real, DBParams
 from tests.functional.bach.test_data_and_utils import assert_equals_data
-pytestmark = [pytest.mark.skip_bigquery]  # get_bt_with_json_data_real should consider engine
 
 
-def test_get_real_data(db_params):
-    bt = get_bt_with_json_data_real()
+def test_get_real_data(db_params: DBParams):
+    bt = get_df_with_json_data_real(db_params)
     assert_equals_data(
         bt,
+        use_to_pandas=True,
         expected_columns=['_index_event_id', 'event_id', 'global_contexts', 'location_stack'],
         expected_data=[
             [1, 1, [{'id': 'rod-web-demo', '_type': 'ApplicationContext'}, {'id': 'http_context', '_type': 'HttpContext', 'referrer': 'https://rick.objectiv.io/', 'user_agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0', 'remote_address': '144.144.144.144'}, {'id': 'f84446c6-eb76-4458-8ef4-93ade596fd5b', '_type': 'CookieIdContext', 'cookie_id': 'f84446c6-eb76-4458-8ef4-93ade596fd5b'}], [{'id': '#document', 'url': 'https://rick.objectiv.io/', '_type': 'WebDocumentContext'}, {'id': 'home', '_type': 'SectionContext'}, {'id': 'yep', '_type': 'SectionContext'}, {'id': 'cc91EfoBh8A', '_type': 'SectionContext'}]],
@@ -26,8 +23,9 @@ def test_get_real_data(db_params):
     )
 
 
+@pytest.mark.skip_bigquery  # TODO: BigQuery
 def test_objectiv_stack_type(db_params):
-    bt = get_bt_with_json_data_real()
+    bt = get_df_with_json_data_real(db_params)
 
     bt['a'] = bt.global_contexts.astype('objectiv_global_context')
     bts = bt.a.objectiv.get_from_context_with_type_series("CookieIdContext", "cookie_id")
@@ -44,8 +42,9 @@ def test_objectiv_stack_type(db_params):
     )
 
 
+@pytest.mark.skip_bigquery  # TODO: BigQuery
 def test_objectiv_stack_type2(db_params):
-    bt = get_bt_with_json_data_real()
+    bt = get_df_with_json_data_real(db_params)
 
     bt['a'] = bt.global_contexts.astype('objectiv_global_context')
     bts = bt.a.global_contexts.user_agent
@@ -62,8 +61,9 @@ def test_objectiv_stack_type2(db_params):
     )
 
 
+@pytest.mark.skip_bigquery  # TODO: BigQuery
 def test_objectiv_stack_type3(db_params):
-    bt = get_bt_with_json_data_real()
+    bt = get_df_with_json_data_real(db_params)
 
     bt['b'] = bt.location_stack.astype('objectiv_location_stack')
     bts = bt.b.location_stack.navigation_features
@@ -80,8 +80,9 @@ def test_objectiv_stack_type3(db_params):
     )
 
 
+@pytest.mark.skip_bigquery  # TODO: BigQuery
 def test_objectiv_stack_type4(db_params):
-    bt = get_bt_with_json_data_real()
+    bt = get_df_with_json_data_real(db_params)
 
     bt['b'] = bt.location_stack.astype('objectiv_location_stack')
     bts = bt.b.location_stack.feature_stack
@@ -99,8 +100,9 @@ def test_objectiv_stack_type4(db_params):
     )
 
 
+@pytest.mark.skip_bigquery  # TODO: BigQuery
 def test_objectiv_stack_type5(db_params):
-    bt = get_bt_with_json_data_real()
+    bt = get_df_with_json_data_real(db_params)
 
     bt['b'] = bt.location_stack.astype('objectiv_location_stack')
     bts = bt.b.location_stack.nice_name
