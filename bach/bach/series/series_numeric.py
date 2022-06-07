@@ -15,7 +15,7 @@ from sql_models.constants import DBDialect
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
 
 if TYPE_CHECKING:
-    from bach.series import SeriesBoolean
+    from bach.series import SeriesBoolean, SeriesNumericInterval
 
 
 class SeriesAbstractNumeric(Series, ABC):
@@ -50,7 +50,7 @@ class SeriesAbstractNumeric(Series, ABC):
             expression=Expression.construct(f'round(cast({{}} as numeric), {decimals})', self)
         )
 
-    def cut(self, bins: int, right: bool = True) -> 'SeriesAbstractNumeric':
+    def cut(self, bins: int, right: bool = True) -> 'SeriesNumericInterval':
         """
         Segments values into bins.
 
@@ -60,7 +60,7 @@ class SeriesAbstractNumeric(Series, ABC):
         from bach.operations.cut import CutOperation
         return CutOperation(series=self, bins=bins, right=right)()
 
-    def qcut(self, q: Union[int, List[float]]) -> 'SeriesAbstractNumeric':
+    def qcut(self, q: Union[int, List[float]]) -> 'SeriesNumericInterval':
         """
         Segments values into equal-sized buckets based on rank or sample quantiles.
 

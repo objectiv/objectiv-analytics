@@ -210,23 +210,32 @@ class SeriesAbstractMultiLevel(Series, ABC):
         The returned Series will be similar to the Series given as base. In case a DataFrame is given,
         it can be used immediately with that frame.
         :param base:    The DataFrame or Series that the internal parameters are taken from
-        :param value:   Mapping between each level and constant. All levels must be present.
+        :param value:   None or a mapping between each level and constant. All levels must be present.
         :param name:    The name that it will be known by (only for representation)
         """
         if dtype is None:
             dtype = cls.dtype
         if (
-            not isinstance(value, dict)
-            or not all(level in value for level in cls.get_supported_level_dtypes().keys())
+            value is not None
+            and (
+                not isinstance(value, dict)
+                or not all(level in value for level in cls.get_supported_level_dtypes().keys())
+            )
         ):
             raise ValueError(f'value should contain mapping for each {cls.__name__} level')
 
         from bach.series.series import value_to_series
 
-        levels = {
-            level_name: value_to_series(base=base, value=level_value)
-            for level_name, level_value in value.items()
-        }
+        if value is not None:
+            levels = {
+                level_name: value_to_series(base=base, value=level_value)
+                for level_name, level_value in value.items()
+            }
+        else:
+            levels = {
+                level_name: value_to_series(base=base, value=None).astype(dtypes[0])
+                for level_name, dtypes in cls.get_supported_level_dtypes().items()
+            }
         result = cls.get_class_instance(
             engine=base.engine,
             base_node=base.base_node,
@@ -474,7 +483,14 @@ class SeriesNumericInterval(SeriesAbstractMultiLevel):
         else:
             raise DatabaseNotSupportedException(self.engine)
 
-        expr = Expression.construct(base_expr_stmt, self.lower, self.upper, self.bounds)
+        # should return null when all levels are null
+        expr = Expression.construct(
+            f'CASE WHEN {{}} THEN {base_expr_stmt} ELSE NULL END',
+            self.notnull(),
+            self.lower,
+            self.upper,
+            self.bounds,
+        )
         return Expression.construct_expr_as_name(expr, self.name)
 
     @staticmethod

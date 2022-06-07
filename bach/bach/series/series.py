@@ -1206,8 +1206,12 @@ class Series(ABC):
         raise NotImplementedError()
 
     # Comparator operations
-    def _comparator_operation(self, other: 'Series', comparator: str,
-                              other_dtypes: Tuple[str, ...] = ()) -> 'SeriesBoolean':
+    def _comparator_operation(
+        self,
+        other: Union['Series', AllSupportedLiteralTypes],
+        comparator: str,
+        other_dtypes: Tuple[str, ...] = ()
+    ) -> 'SeriesBoolean':
         if len(other_dtypes) == 0:
             raise TypeError(f'comparator {comparator} not supported for '
                             f'{self.__class__} and {other.__class__}')

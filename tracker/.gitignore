@@ -9,6 +9,9 @@
 !.yarn/sdks
 !.yarn/versions
 
+# NPM
+.npmrc
+
 # Dependencies
 node_modules/
 

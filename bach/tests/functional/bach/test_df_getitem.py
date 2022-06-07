@@ -3,7 +3,7 @@ Copyright 2021 Objectiv B.V.
 """
 import pytest
 
-from bach import DataFrame, Series
+from bach import DataFrame, Series, SeriesDict
 from sql_models.util import is_bigquery, is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data, df_to_list, \
     get_df_with_test_data
@@ -131,10 +131,10 @@ def test_get_item_mixed_groupby(engine):
     assert_equals_data(
         grouped_all_sum[grouped_sum > 50000],
         order_by='inhabitants_sum',
-        expected_columns=['municipality', '_index_skating_order_sum', 'inhabitants_sum', 'founding_sum'],
+        expected_columns=['municipality', 'inhabitants_sum', 'founding_sum'],
         expected_data=[
-            ['Súdwest-Fryslân', 31, 52965, 7864],
-            ['Leeuwarden', 1, 93485, 1285]
+            ['Súdwest-Fryslân', 52965, 7864],
+            ['Leeuwarden', 93485, 1285]
         ]
     )
 
@@ -142,10 +142,10 @@ def test_get_item_mixed_groupby(engine):
     assert_equals_data(
         grouped_all_sum[bt.founding < 1300],
         order_by='inhabitants_sum',
-        expected_columns=['municipality', '_index_skating_order_sum', 'inhabitants_sum', 'founding_sum'],
+        expected_columns=['municipality', 'inhabitants_sum', 'founding_sum'],
         expected_data=[
-            ['Súdwest-Fryslân', 14, 4885, 3554], ['Noardeast-Fryslân', 11, 12675, 1298],
-            ['Harlingen', 9, 14740, 1234], ['Leeuwarden', 1, 93485, 1285]
+            ['Súdwest-Fryslân', 4885, 3554], ['Noardeast-Fryslân', 12675, 1298],
+            ['Harlingen', 14740, 1234], ['Leeuwarden', 93485, 1285]
         ]
     )
 
@@ -153,9 +153,9 @@ def test_get_item_mixed_groupby(engine):
     assert_equals_data(
         grouped_all_sum[grouped_all_sum.index['municipality'] == 'Harlingen'],
         order_by='inhabitants_sum',
-        expected_columns=['municipality', '_index_skating_order_sum', 'inhabitants_sum', 'founding_sum'],
+        expected_columns=['municipality', 'inhabitants_sum', 'founding_sum'],
         expected_data=[
-            ['Harlingen', 9, 14740, 1234]
+            ['Harlingen', 14740, 1234]
         ]
     )
 
@@ -184,3 +184,21 @@ def test_get_item_mixed_groupby(engine):
     with pytest.raises(ValueError, match="Cannot apply Boolean series with a different base_node to DataFrame"):
         # todo do internal merge, similar to setting with different base nodes
         grouped_other[grouped_sum > grouped_other_sum]
+
+
+@pytest.mark.skip_postgres
+def test_get_item_w_dict_series(engine):
+    df = get_df_with_test_data(engine)[['city']]
+    struct = {
+        'a': 123,
+        'b': 'test',
+    }
+    dtype = {'a': 'int64', 'b': 'string'}
+    df['struct'] = SeriesDict.from_value(base=df, value=struct, name='struct', dtype=dtype)
+
+    result = df[df['city'] == 'Drylts']
+    assert_equals_data(
+        result,
+        expected_columns=['_index_skating_order', 'city', 'struct'],
+        expected_data=[[3, 'Drylts', struct]],
+    )

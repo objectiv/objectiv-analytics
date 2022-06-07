@@ -6,6 +6,7 @@ from decimal import Decimal
 from matplotlib.testing.decorators import check_figures_equal
 from psycopg2._range import NumericRange
 
+from sql_models.util import is_bigquery, is_postgres
 from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
 
 
@@ -13,8 +14,7 @@ from tests.functional.bach.test_data_and_utils import get_df_with_test_data, ass
 # For more information https://matplotlib.org/3.5.0/api/testing_api.html#module-matplotlib.testing
 
 @check_figures_equal(extensions=['png', 'pdf'])
-def test_plot_hist_basic(pg_engine, fig_test, fig_ref) -> None:
-    engine = pg_engine  # TODO: BigQuery
+def test_plot_hist_basic(engine, fig_test, fig_ref) -> None:
     bt = get_df_with_test_data(engine, full_data_set=False)
     pbt = bt.to_pandas()
 
@@ -26,42 +26,55 @@ def test_plot_hist_basic(pg_engine, fig_test, fig_ref) -> None:
     result_calc_bins = bt.plot._calculate_hist_frequencies(
         bins=10, numeric_columns=['skating_order', 'inhabitants', 'founding'],
     )
+    if is_postgres(engine):
+        bins_1 = NumericRange(lower=Decimal('1.'),  upper=Decimal('9349.4'), bounds='[]')
+        bins_2 = NumericRange(lower=Decimal('9349.4'),  upper=Decimal('18697.8'), bounds='(]')
+        bins_3 = NumericRange(lower=Decimal('18697.8'),  upper=Decimal('28046.2'), bounds='(]')
+        bins_4 = NumericRange(lower=Decimal('28046.2'),  upper=Decimal('37394.6'), bounds='(]')
+        bins_5 = NumericRange(lower=Decimal('37394.6'),  upper=Decimal('46743.'), bounds='(]')
+        bins_6 = NumericRange(lower=Decimal('46743.'),  upper=Decimal('56091.4'), bounds='(]')
+        bins_7 = NumericRange(lower=Decimal('56091.4'),  upper=Decimal('65439.8'), bounds='(]')
+        bins_8 = NumericRange(lower=Decimal('65439.8'),  upper=Decimal('74788.2'), bounds='(]')
+        bins_9 = NumericRange(lower=Decimal('74788.2'),  upper=Decimal('84136.6'), bounds='(]')
+        bins_10 = NumericRange(lower=Decimal('84136.6'),  upper=Decimal('93485.'), bounds='(]')
 
-    bin1 = NumericRange(Decimal('1'), Decimal('9349.4'), bounds='[]')
-    bin2 = NumericRange(Decimal('9349.4'), Decimal('18697.8'), bounds='(]')
-    bin3 = NumericRange(Decimal('18697.8'), Decimal('28046.2'), bounds='(]')
-    bin4 = NumericRange(Decimal('28046.2'), Decimal('37394.6'), bounds='(]')
-    bin5 = NumericRange(Decimal('37394.6'), Decimal('46743'), bounds='(]')
-    bin6 = NumericRange(Decimal('46743'), Decimal('56091.4'), bounds='(]')
-    bin7 = NumericRange(Decimal('56091.4'), Decimal('65439.8'), bounds='(]')
-    bin8 = NumericRange(Decimal('65439.8'), Decimal('74788.2'), bounds='(]')
-    bin9 = NumericRange(Decimal('74788.2'), Decimal('84136.6'), bounds='(]')
-    bin10 = NumericRange(Decimal('84136.6'), Decimal('93485'), bounds='(]')
+    elif is_bigquery(engine):
+        bins_1 = {'lower': 1.,  'upper': 9349.4, 'bounds': '[]'}
+        bins_2 = {'lower': 9349.4,  'upper': 18697.8, 'bounds': '(]'}
+        bins_3 = {'lower': 18697.8,  'upper': 28046.199999999997, 'bounds': '(]'}
+        bins_4 = {'lower': 28046.199999999997,  'upper': 37394.6, 'bounds': '(]'}
+        bins_5 = {'lower': 37394.6,  'upper': 46743., 'bounds': '(]'}
+        bins_6 = {'lower': 46743.,  'upper': 56091.399999999994, 'bounds': '(]'}
+        bins_7 = {'lower': 56091.399999999994,  'upper': 65439.799999999996, 'bounds': '(]'}
+        bins_8 = {'lower': 65439.799999999996,  'upper': 74788.2, 'bounds': '(]'}
+        bins_9 = {'lower': 74788.2,  'upper': 84136.59999999999, 'bounds': '(]'}
+        bins_10 = {'lower': 84136.59999999999, 'upper': 93485., 'bounds': '(]'}
+    else:
+        raise Exception()
 
     assert_equals_data(
         result_calc_bins,
-        expected_columns=['column_label', 'range', 'frequency'],
+        expected_columns=['column_label',  'frequency', 'range'],
         order_by=['column_label', 'range'],
         expected_data=[
-            ['empty_bins', bin2, 0],
-            ['empty_bins', bin3, 0],
-            ['empty_bins', bin5, 0],
-            ['empty_bins', bin6, 0],
-            ['empty_bins', bin7, 0],
-            ['empty_bins', bin8, 0],
-            ['empty_bins', bin9, 0],
-            ['founding', bin1, 3],
-            ['inhabitants', bin1, 1],
-            ['inhabitants', bin4, 1],
-            ['inhabitants', bin10, 1],
-            ['skating_order', bin1, 3],
-        ]
+            ['empty_bins', 0, bins_2],
+            ['empty_bins', 0, bins_3],
+            ['empty_bins', 0, bins_5],
+            ['empty_bins', 0, bins_6],
+            ['empty_bins', 0, bins_7],
+            ['empty_bins', 0, bins_8],
+            ['empty_bins', 0, bins_9],
+            ['founding',   3, bins_1],
+            ['inhabitants', 1, bins_1],
+            ['inhabitants', 1, bins_4],
+            ['inhabitants', 1, bins_10],
+            ['skating_order', 3, bins_1],
+        ],
     )
 
 
 @check_figures_equal(extensions=['png', 'pdf'])
-def test_plot_hist_bins(pg_engine, fig_test, fig_ref) -> None:
-    engine = pg_engine  # TODO: BigQuery
+def test_plot_hist_bins(engine, fig_test, fig_ref) -> None:
     bt = get_df_with_test_data(engine, full_data_set=True)[['inhabitants']]
     pbt = bt.to_pandas()
     bins = 5
@@ -74,23 +87,32 @@ def test_plot_hist_bins(pg_engine, fig_test, fig_ref) -> None:
     result_calc_bins = bt.plot._calculate_hist_frequencies(
         bins=5, numeric_columns=['inhabitants'],
     )
-
-    bin1 = NumericRange(Decimal('700'), Decimal('19257'), bounds='[]')
-    bin2 = NumericRange(Decimal('19257'), Decimal('37814'), bounds='(]')
-    bin3 = NumericRange(Decimal('37814'), Decimal('56371'), bounds='(]')
-    bin4 = NumericRange(Decimal('56371'), Decimal('74928'), bounds='(]')
-    bin5 = NumericRange(Decimal('74928'), Decimal('93485'), bounds='(]')
+    if is_postgres(engine):
+        bins_1 = NumericRange(lower=Decimal('700.'),  upper=Decimal('19257.'), bounds='[]')
+        bins_2 = NumericRange(lower=Decimal('19257.'),  upper=Decimal('37814.'), bounds='(]')
+        bins_3 = NumericRange(lower=Decimal('37814.'),  upper=Decimal('56371.'), bounds='(]')
+        bins_4 = NumericRange(lower=Decimal('56371.'),  upper=Decimal('74928.'), bounds='(]')
+        bins_5 = NumericRange(lower=Decimal('74928.'),  upper=Decimal('93485.'), bounds='(]')
+    elif is_bigquery(engine):
+        bins_1 = {'lower': 700., 'upper': 19257., 'bounds': '[]'}
+        bins_2 = {'lower': 19257., 'upper': 37814., 'bounds': '(]'}
+        bins_3 = {'lower': 37814., 'upper': 56371., 'bounds': '(]'}
+        bins_4 = {'lower': 56371., 'upper': 74928., 'bounds': '(]'}
+        bins_5 = {'lower': 74928., 'upper': 93485., 'bounds': '(]'}
+    else:
+        raise Exception()
 
     assert_equals_data(
         result_calc_bins,
-        expected_columns=['column_label', 'range', 'frequency'],
+        expected_columns=['column_label', 'frequency', 'range'],
         order_by=['column_label', 'range'],
         expected_data=[
-            ['empty_bins', bin3, 0],
-            ['empty_bins', bin4, 0],
-            ['inhabitants', bin1, 9],
-            ['inhabitants', bin2, 1],
-            ['inhabitants', bin5, 1],
-        ]
+            ['empty_bins', 0, bins_3],
+            ['empty_bins', 0, bins_4],
+            ['inhabitants', 9, bins_1],
+            ['inhabitants', 1, bins_2],
+            ['inhabitants', 1, bins_5],
+        ],
+        round_decimals=True,
     )
 

@@ -2,13 +2,16 @@
 Copyright 2021 Objectiv B.V.
 """
 
-# Any import from from modelhub initializes all the types, do not remove
+# Any import from modelhub initializes all the types, do not remove
+import pytest
+
 from modelhub import __version__
-from tests_modelhub.functional.modelhub.data_and_utils import get_bt_with_json_data_real
+from tests_modelhub.data_and_utils.utils import get_bt_with_json_data_real
 from tests.functional.bach.test_data_and_utils import assert_equals_data
+pytestmark = [pytest.mark.skip_bigquery]  # get_bt_with_json_data_real should consider engine
 
 
-def test_get_real_data():
+def test_get_real_data(db_params):
     bt = get_bt_with_json_data_real()
     assert_equals_data(
         bt,
@@ -23,7 +26,7 @@ def test_get_real_data():
     )
 
 
-def test_objectiv_stack_type():
+def test_objectiv_stack_type(db_params):
     bt = get_bt_with_json_data_real()
 
     bt['a'] = bt.global_contexts.astype('objectiv_global_context')
@@ -41,7 +44,7 @@ def test_objectiv_stack_type():
     )
 
 
-def test_objectiv_stack_type2():
+def test_objectiv_stack_type2(db_params):
     bt = get_bt_with_json_data_real()
 
     bt['a'] = bt.global_contexts.astype('objectiv_global_context')
@@ -59,7 +62,7 @@ def test_objectiv_stack_type2():
     )
 
 
-def test_objectiv_stack_type3():
+def test_objectiv_stack_type3(db_params):
     bt = get_bt_with_json_data_real()
 
     bt['b'] = bt.location_stack.astype('objectiv_location_stack')
@@ -68,16 +71,16 @@ def test_objectiv_stack_type3():
         bts,
         expected_columns=['_index_event_id', 'b'],
         expected_data=[
-            [1, None],
+            [1, []],
             [2, [{'id': 'navigation', '_type': 'NavigationContext', '_types': ['AbstractContext', 'AbstractLocationContext', 'NavigationContext', 'SectionContext']}]],
-            [3, None],
-            [4, None],
-            [5, None]
+            [3, []],
+            [4, []],
+            [5, []]
         ]
     )
 
 
-def test_objectiv_stack_type4():
+def test_objectiv_stack_type4(db_params):
     bt = get_bt_with_json_data_real()
 
     bt['b'] = bt.location_stack.astype('objectiv_location_stack')
@@ -96,7 +99,7 @@ def test_objectiv_stack_type4():
     )
 
 
-def test_objectiv_stack_type5():
+def test_objectiv_stack_type5(db_params):
     bt = get_bt_with_json_data_real()
 
     bt['b'] = bt.location_stack.astype('objectiv_location_stack')

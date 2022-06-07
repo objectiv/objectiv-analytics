@@ -60,6 +60,7 @@ class ConcatOperation(Generic[TDataFrameOrSeries]):
         gets the indexes of the final concatenated dataframe or series.
         All objects must have the same indexes, otherwise concatenation is not performed.
         """
+        from bach.series import SeriesAbstractMultiLevel
         if self.ignore_index:
             return {}
 
@@ -68,10 +69,14 @@ class ConcatOperation(Generic[TDataFrameOrSeries]):
 
         # all objects should have the same indexes
         for obj in self.objects:
-            if set(merged_indexes.keys()) != set(obj.index.keys()):
+            curr_obj_index = list(itertools.chain.from_iterable(
+                [idx] if not isinstance(idx, SeriesAbstractMultiLevel) else list(idx.levels.values())
+                for idx in obj.index.values()
+            ))
+            if set(merged_indexes.keys()) != {idx.name for idx in curr_obj_index}:
                 raise ValueError('concatenation with different index levels is not supported yet.')
 
-            if any(mi.dtype != oi.dtype for mi, oi in zip(merged_indexes.values(), obj.index.values())):
+            if any(mi.dtype != oi.dtype for mi, oi in zip(merged_indexes.values(), curr_obj_index)):
                 raise ValueError('concatenation with different index dtypes is not supported yet.')
 
         return merged_indexes
@@ -80,10 +85,15 @@ class ConcatOperation(Generic[TDataFrameOrSeries]):
         """
         merges all shared series and defines final dtype
         """
-
+        from bach.series import SeriesAbstractMultiLevel
         series_dtypes = defaultdict(set)
         for s in series:
-            series_dtypes[s.name].add(s.dtype)
+            if not isinstance(s, SeriesAbstractMultiLevel):
+                series_dtypes[s.name].add(s.dtype)
+                continue
+
+            for lvl in s.levels.values():
+                series_dtypes[lvl.name].add(lvl.dtype)
 
         series_names = series_dtypes.keys()
 
@@ -319,7 +329,7 @@ class SeriesConcatOperation(ConcatOperation[Series]):
 
         return ConcatSqlModel.get_instance(
             dialect=self.dialect,
-            columns=tuple('concatenated_series'),
+            columns=('concatenated_series', ),
             all_series_expressions=series_expressions,
             all_nodes=[series.base_node for series in objects],
             variables=variables,
