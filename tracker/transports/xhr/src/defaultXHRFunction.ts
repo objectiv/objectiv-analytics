@@ -39,7 +39,7 @@ export const defaultXHRFunction = ({
         resolve(xhr.response);
       } else {
         if (globalThis.objectiv) {
-          globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:XHRTransport｣ Failed`);
+          globalThis.objectiv.TrackerConsole.groupCollapsed(`%c｢objectiv:XHRTransport｣ Failed`, 'color:red');
           globalThis.objectiv.TrackerConsole.log(`Events:`);
           globalThis.objectiv.TrackerConsole.log(events);
           globalThis.objectiv.TrackerConsole.log(`Response: ${xhr}`);
@@ -51,7 +51,7 @@ export const defaultXHRFunction = ({
     };
     xhr.onerror = () => {
       if (globalThis.objectiv) {
-        globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:XHRTransport｣ Error`);
+        globalThis.objectiv.TrackerConsole.groupCollapsed(`%c｢objectiv:XHRTransport｣ Error`, 'color:red');
         globalThis.objectiv.TrackerConsole.log(`Events:`);
         globalThis.objectiv.TrackerConsole.log(events);
         globalThis.objectiv.TrackerConsole.groupEnd();

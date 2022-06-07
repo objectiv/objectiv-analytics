@@ -46,7 +46,7 @@ export const defaultFetchFunction = async ({
           resolve(response);
         } else {
           if (globalThis.objectiv) {
-            globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:FetchTransport｣ Failed`);
+            globalThis.objectiv.TrackerConsole.groupCollapsed(`%c｢objectiv:FetchTransport｣ Failed`, 'color:red');
             globalThis.objectiv.TrackerConsole.log(`Events:`);
             globalThis.objectiv.TrackerConsole.log(events);
             globalThis.objectiv.TrackerConsole.log(`Response: ${response}`);
@@ -58,7 +58,7 @@ export const defaultFetchFunction = async ({
       })
       .catch(() => {
         if (globalThis.objectiv) {
-          globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:FetchTransport｣ Error`);
+          globalThis.objectiv.TrackerConsole.groupCollapsed(`%c｢objectiv:FetchTransport｣ Error`, 'color:red');
           globalThis.objectiv.TrackerConsole.log(`Events:`);
           globalThis.objectiv.TrackerConsole.log(events);
           globalThis.objectiv.TrackerConsole.groupEnd();

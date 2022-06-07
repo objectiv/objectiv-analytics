@@ -118,7 +118,7 @@ export class TrackerTransportRetryAttempt implements TrackerTransportRetryAttemp
       })
       .catch((error) => {
         if (globalThis.objectiv) {
-          globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:TrackerTransportRetryAttempt｣ Failed`);
+          globalThis.objectiv.TrackerConsole.groupCollapsed(`%c｢objectiv:TrackerTransportRetryAttempt｣ Failed`, 'color:red');
           globalThis.objectiv.TrackerConsole.log(`Error:`);
           globalThis.objectiv.TrackerConsole.log(error);
           globalThis.objectiv.TrackerConsole.log(`Events:`);
@@ -150,7 +150,7 @@ export class TrackerTransportRetryAttempt implements TrackerTransportRetryAttemp
     this.attemptCount++;
 
     if (globalThis.objectiv) {
-      globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:TrackerTransportRetryAttempt｣ Retrying`);
+      globalThis.objectiv.TrackerConsole.groupCollapsed(`%c｢objectiv:TrackerTransportRetryAttempt｣ Retrying`, 'color:orange');
       globalThis.objectiv.TrackerConsole.log(`Attempt Count: ${this.attemptCount}`);
       globalThis.objectiv.TrackerConsole.log(`Waited: ${nextTimeoutMs}`);
       globalThis.objectiv.TrackerConsole.log(`Error:`);
