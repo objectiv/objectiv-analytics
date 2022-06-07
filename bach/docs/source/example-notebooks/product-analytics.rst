@@ -86,6 +86,7 @@ created series contains aggregated data, and it is not allowed to aggregate that
 
 Top used product features
 -------------------------
+Let's get the top used features in the product by our users, for that we can call the `top_product_features` function from the model hub. 
 
 .. code-block:: python
 
