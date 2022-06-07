@@ -49,8 +49,8 @@
     "test:ci": "jest --silent --ci --runInBand",
     "test:coverage": "jest --silent --coverage --runInBand",
     "check:dependencies": "npx depcheck",
-    "npm-publish": "shx rm -f .npmrc && npm publish --access=public --tag=$TAG",
-    "npm-publish:verdaccio": "shx cp ../../verdaccio/.npmrc .npmrc && npm publish --tag=$TAG && shx rm -f .npmrc"
+    "npm-publish": "npm publish --access=public --tag=$TAG",
+    "npm-publish:verdaccio": "npm publish --tag=$TAG"
   },
   "dependencies": {
     "@objectiv/tracker-react-core": "^0.0.20-0",
@@ -73,7 +73,6 @@
     "react-native-safe-area-context": "^4.1.2",
     "react-native-screens": "^3.13.1",
     "react-test-renderer": "^17.0.2",
-    "shx": "^0.3.3",
     "tsup": "^5.12.0",
     "typescript": "^4.6.2"
   },
