@@ -363,7 +363,7 @@ class JsonAccessor(Generic[TSeriesJson]):
             based). The index MUST exist in the array.
         This assumes the top-level item in the json is an array
 
-        If key is a slice, the this returns a slice from the json array.
+        If key is a slice, then this returns a slice from the json array.
         This assumes the top-level item in the json is an array
 
         If key is a string, then this returns an item from the json object. The item belonging to the given
@@ -387,7 +387,9 @@ class JsonAccessor(Generic[TSeriesJson]):
         Get item from toplevel object by key.
 
         :param key: the key to return the values for.
-        :param as_str: if True, it returns a string Series, json otherwise.
+        :param as_str: if True, it returns a string Series, json otherwise. Particular useful if the returned
+            value is in fact a string. In json the string will be represented as a quoted string, if this
+            field is set to true, the returned SeriesString will not have additional quotes.
         :returns: series with the selected object value.
         """
         return self._implementation.get_value(key=key, as_str=as_str)
