@@ -53,6 +53,7 @@ The monorepo is configured to allow for live development on any package without 
 - git
 - Node.js 12
 - Yarn
+- NPM 8.5
 
 ## Workspace commands
 

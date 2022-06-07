@@ -10,6 +10,10 @@
     "trackers/*",
     "transports/*"
   ],
+  "engines": {
+    "node": ">= 12",
+    "npm": ">= 8.5"
+  },
   "scripts": {
     "clear": "yarn exec make clean && yarn test --clearCache && yarn cache clean",
     "build-core": "yarn workspaces foreach --include @objectiv/developer-tools --include @objectiv/tracker-core --include @objectiv/tracker-react-core --verbose run build",
