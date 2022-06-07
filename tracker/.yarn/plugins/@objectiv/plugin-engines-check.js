@@ -14,7 +14,7 @@ module.exports = {
     const nodeVersion = process.version;
 
     // Retrieve npm version
-    const npmVersion = execSync('npm -v').toString();
+    const npmVersion = execSync('npm -v').toString().trim();
 
     return {
       default: {
