@@ -175,6 +175,7 @@ class Aggregate:
                              event_type: str = 'InteractiveEvent') -> bach.DataFrame:
         """
         Calculate the top used features in the product.
+
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param location_stack: the location stack
             - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column
