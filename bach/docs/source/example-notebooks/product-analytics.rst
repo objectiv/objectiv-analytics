@@ -85,7 +85,7 @@ created series contains aggregated data, and it is not allowed to aggregate that
     session_duration.materialize().quantile(q=[0.25, 0.50, 0.75]).head()
 
 Top used product features
------------------
+-------------------------
 
 .. code-block:: python
 
@@ -93,7 +93,7 @@ Top used product features
     top_product_features.head()
 
 Top used product areas
------------------------
+----------------------
 
 First we use the model hub to get the unique users per application, root location, feature, and event type.
 From this prepared dataset, we show the users for the home page first.
