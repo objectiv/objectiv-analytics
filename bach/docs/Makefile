@@ -24,6 +24,7 @@ clean:
 	find $(SOURCEDIR)/bach/api-reference/Series/ -type f -name '*.rst' -not -name index.rst -delete
 	rm -rf $(SOURCEDIR)/open-model-hub/models/**/modelhub.* # not the index
 	rm -rf $(SOURCEDIR)/open-model-hub/api-reference/**/modelhub.* # not the index
+	rm -rf $(SOURCEDIR)/open-model-hub/api-reference/**/**/modelhub.* # not the index
 
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) 0$(O)
 

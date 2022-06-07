@@ -357,3 +357,27 @@ def test_series_minmax_scale() -> None:
         expected_data=expected_data_default,
         round_decimals=True,
     )
+
+
+def test_exp(engine) -> None:
+    skating_order = get_df_with_test_data(engine, full_data_set=True)['skating_order']
+    result = skating_order.exp()
+
+    assert_equals_data(
+        result,
+        expected_columns=['_index_skating_order', 'skating_order'],
+        expected_data=[
+            [1, 2.718281828459045],
+            [2, 7.38905609893065],
+            [3, 20.085536923187668],
+            [4, 54.598150033144236],
+            [5, 148.4131591025766],
+            [6, 403.4287934927351],
+            [7, 1096.6331584284585],
+            [8, 2980.9579870417283],
+            [9, 8103.083927575384],
+            [10, 22026.465794806718],
+            [11, 59874.14171519782]
+        ],
+    )
+
