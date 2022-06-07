@@ -218,7 +218,7 @@ class Aggregate:
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param name: label of the conversion event.
         :param location_stack: the location stack
-        
+
             - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column
             - if None - the whole location stack is taken.
         :param event_type: event type. Must be a valid event_type
