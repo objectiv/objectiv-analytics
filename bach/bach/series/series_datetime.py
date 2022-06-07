@@ -53,26 +53,27 @@ class DateTimeOperation:
     def sql_format(self, format_str: str) -> SeriesString:
         """
         Allow formatting of this Series (to a string type).
-
         :param format_str: The format to apply to the date/time column.
-            This uses  1989 C standard format codes:
-            https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+            Currently, this uses Postgres' data format string syntax:
+            https://www.postgresql.org/docs/14/functions-formatting.html
 
         .. warning::
-           We recommend using :meth:`SeriesAbstractDateTime.dt.strftime` instead.
+           This method is deprecated, we recommend using :meth:`SeriesAbstractDateTime.dt.strftime` instead.
 
         .. code-block:: python
-
-            df['year'] = df.some_date_series.dt.sql_format('%Y')  # return year
-            df['date'] = df.some_date_series.dt.sql_format('%Y%m%d')  # return date
-
+            df['year'] = df.some_date_series.dt.sql_format('YYYY')  # return year
+            df['date'] = df.some_date_series.dt.sql_format('YYYYMMDD')  # return date
         :returns: a SeriesString containing the formatted date.
         """
         warnings.warn(
             'Call to deprecated method, we recommend to use SeriesAbstractDateTime.dt.strftime instead',
             category=DeprecationWarning,
         )
-        return self.strftime(format_str)
+
+        expression = Expression.construct('to_char({}, {})',
+                                          self._series, Expression.string_value(format_str))
+        str_series = self._series.copy_override_type(SeriesString).copy_override(expression=expression)
+        return str_series
 
     def strftime(self, format_str: str) -> SeriesString:
         """
