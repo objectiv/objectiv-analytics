@@ -4,7 +4,7 @@ Copyright 2021 Objectiv B.V.
 import argparse
 import json
 import sys
-from typing import List, Any, Dict, NamedTuple
+from typing import List, Any, Dict, NamedTuple, Set
 import uuid
 import re
 
@@ -152,12 +152,15 @@ def _validate_required_contexts(event_schema: EventSchema, event: EventData) -> 
     event_name = event['_type']
     global_contexts = event['global_contexts']
     location_stack = event['location_stack']
-    required_context_types = event_schema.get_all_required_contexts(event_name)
+    required_context_types: Set = event_schema.get_all_required_contexts_for_event(event_name)
     actual_types = set()
     for context in global_contexts:
         actual_types |= event_schema.get_all_parent_context_types(context['_type'])
     for context in location_stack:
         actual_types |= event_schema.get_all_parent_context_types(context['_type'])
+
+    for context in actual_types:
+        required_context_types |= event_schema.get_all_required_contexts_for_context(context)
 
     if not required_context_types.issubset(actual_types):
         error_info = ErrorInfo(

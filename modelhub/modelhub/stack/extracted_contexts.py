@@ -5,10 +5,9 @@ import operator
 from functools import reduce
 
 import bach
-from typing import Optional, Any, Mapping, Dict
+from typing import Optional, Any, Mapping, Dict, NamedTuple
 
 from bach.types import StructuredDtype
-from mypy.build import NamedTuple
 from sql_models.constants import DBDialect
 from sql_models.util import is_bigquery, is_postgres
 from sqlalchemy.engine import Engine
