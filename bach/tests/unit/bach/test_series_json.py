@@ -3,7 +3,7 @@ Copyright 2022 Objectiv B.V.
 """
 import pytest
 
-from bach.series.series_json import JsonBigQueryAccessor
+from bach.series.series_json import JsonBigQueryAccessorImpl
 from tests.unit.bach.util import get_fake_df
 
 
@@ -18,7 +18,7 @@ def test_bq_get_slice_partial_expr(dialect):
         data_names=['a'],
         dtype='json'
     )
-    jbqa = JsonBigQueryAccessor(df.a)
+    jbqa = JsonBigQueryAccessorImpl(df.a)
     assert jbqa._get_slice_partial_expr(None, True).to_sql(dialect) == '0'
     assert jbqa._get_slice_partial_expr(None, False).to_sql(dialect) == '9223372036854775807'
     assert jbqa._get_slice_partial_expr(5, False).to_sql(dialect) == '5'
