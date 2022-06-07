@@ -11,3 +11,5 @@ Json
 
 .. autosummary::
     :toctree: 
+
+    SeriesJson.json
