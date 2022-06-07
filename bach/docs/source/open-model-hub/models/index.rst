@@ -58,7 +58,8 @@ product analytics metrics. Always return aggregated data in some form from the
     unique_sessions
     session_duration
     frequency
-    top_used_product_features
+    top_product_features
+    top_product_features_before_conversion
 
 
 .. toctree::

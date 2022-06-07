@@ -47,7 +47,6 @@ class SeriesGlobalContexts(SeriesJson):
     Contexts.
     """
     dtype = 'objectiv_global_context'
-    return_dtype = dtype
 
     class GlobalContexts(ObjectivStack):
         @property
@@ -136,7 +135,6 @@ class SeriesLocationStack(SeriesJson):
     Stack.
     """
     dtype = 'objectiv_location_stack'
-    return_dtype = dtype
 
     class LocationStack(ObjectivStack):
         @property

@@ -86,32 +86,36 @@ created series contains aggregated data, and it is not allowed to aggregate that
 
 Top used product features
 -------------------------
+Let's get the top used features in the product by our users, for that we can call the `top_product_features` function from the model hub. 
 
 .. code-block:: python
 
-    top_product_features = modelhub.aggregate.top_used_product_features(df)
+    top_product_features = modelhub.aggregate.top_product_features(df)
     top_product_features.head()
 
-Most used product areas
------------------------
+Top used product areas
+----------------------
 
 First we use the model hub to get the unique users per application, root location, feature, and event type.
 From this prepared dataset, we show the users for the home page first.
 
 .. code-block:: python
 
-    most_interactions = modelhub.agg.unique_users(interactive_events, groupby=['application','root_location','feature_nice_name', 'event_type'])
-    most_interactions = most_interactions.reset_index()
+    # select only user actions, so stack_event_types must be a superset of ['InteractiveEvent']
+    interactive_events = df[df.stack_event_types >= ['InteractiveEvent']]
 
-    home_users = most_interactions[(most_interactions.application == 'objectiv-website') &
-                                   (most_interactions.root_location == 'home')]
+    top_interactions = modelhub.agg.unique_users(interactive_events, groupby=['application','root_location','feature_nice_name', 'event_type'])
+    top_interactions = top_interactions.reset_index()
+
+    home_users = top_interactions[(top_interactions.application == 'objectiv-website') &
+                                  (top_interactions.root_location == 'home')]
     home_users.sort_values('unique_users', ascending=False).head()
 
-From the same `most_interactions` object, we can select the top interactions for the 'docs' page.
+From the same `top_interactions` object, we can select the top interactions for the 'docs' page.
 
 .. code-block:: python
 
-    docs_users = most_interactions[most_interactions.application == 'objectiv-docs']
+    docs_users = top_interactions[top_interactions.application == 'objectiv-docs']
     docs_users.sort_values('unique_users', ascending=False).head()
 
 User origin
@@ -171,30 +175,24 @@ From where do users convert most?
                                                      groupby=['application', 'feature_nice_name', 'event_type'])
 
 
-We can calculate what users did _before_ converting by combining several models from the model hub.
+We can calculate what users did _before_ converting.
+
+.. code-block:: python
+
+    top_features_before_conversion = modelhub.agg.top_product_features_before_conversion(df)
+    top_features_before_conversion.head()
+
+At last we want to know how much time users that converted spent on our site before they converted.
 
 .. code-block:: python
 
     # label sessions with a conversion
-    df['converted_users'] = modelhub.map.conversions_counter(df, name='github_press')>=1
+    df['converted_users'] = modelhub.map.conversions_counter(df, name='github_press') >= 1
 
     # label hits where at that point in time, there are 0 conversions in the session
-    df['zero_conversions_at_moment'] = modelhub.map.conversions_in_time(df, 'github_press')==0
+    df['zero_conversions_at_moment'] = modelhub.map.conversions_in_time(df, 'github_press') == 0
 
     # filter on above created labels
     converted_users = df[(df.converted_users & df.zero_conversions_at_moment)]
-
-    # select only user interactions
-    converted_users_filtered = converted_users[converted_users.stack_event_types>=['InteractiveEvent']]
-
-    converted_users_features = modelhub.agg.unique_users(converted_users_filtered,
-                                                         groupby=['application',
-                                                                  'feature_nice_name',
-                                                                  'event_type'])
-
-At last we want to know how much time users that converted spent on our site before they converted. For this
-we reuse the object we created above.
-
-.. code-block:: python
 
     modelhub.aggregate.session_duration(converted_users, groupby=None).to_frame().head()
