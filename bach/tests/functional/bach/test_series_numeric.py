@@ -359,8 +359,8 @@ def test_series_minmax_scale() -> None:
     )
 
 
-def test_exp() -> None:
-    skating_order = get_bt_with_test_data(full_data_set=True)['skating_order']
+def test_exp(engine) -> None:
+    skating_order = get_df_with_test_data(engine, full_data_set=True)['skating_order']
     result = skating_order.exp()
 
     assert_equals_data(
