@@ -8,12 +8,12 @@ from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 
-def test_top_used_product_features():
+def test_top_product_features():
     df, modelhub = get_objectiv_dataframe_test()
     initial_columns = df.data_columns
 
     # without location_stack
-    tdf = modelhub.aggregate.top_used_product_features(df)
+    tdf = modelhub.aggregate.top_product_features(df)
     assert len(tdf.index) == 3
 
     # index _application
@@ -47,7 +47,7 @@ def test_top_used_product_features():
 
     # with location_stack
     location_stack = df.location_stack.json[{'_type': 'LinkContext'}:]
-    tdf = modelhub.aggregate.top_used_product_features(df, location_stack)
+    tdf = modelhub.aggregate.top_product_features(df, location_stack)
 
     assert_equals_data(
         tdf,

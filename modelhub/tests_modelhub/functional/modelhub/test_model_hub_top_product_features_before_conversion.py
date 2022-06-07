@@ -4,24 +4,30 @@ Copyright 2022 Objectiv B.V.
 
 # Any import from modelhub initializes all the types, do not remove
 from modelhub import __version__
+import pytest
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 
-def test_converted_users_features():
+def test_top_product_features_before_conversion():
     df, modelhub = get_objectiv_dataframe_test()
     initial_columns = df.data_columns
 
     event_type = 'ClickEvent'
+    name = 'clicks'
 
-    location_stack = df.location_stack.json[{'id': 'main'}:]
-    modelhub.add_conversion_event(location_stack=location_stack,
-                                  event_type=event_type,
-                                  name=None)
+    # name checks
+    modelhub.add_conversion_event(name=name,
+                                  event_type=event_type)
+    with pytest.raises(ValueError, match='Conversion event label is not provided.'):
+        modelhub.aggregate.top_product_features_before_conversion(df, name=None)
 
-    # without location_stack (the corner case)
-    modelhub.add_conversion_event(event_type=event_type)
-    cdf = modelhub.aggregate.converted_users_features(df)
+    with pytest.raises(KeyError, match='Key some_name is not labeled as a conversion'):
+        modelhub.aggregate.top_product_features_before_conversion(df, name='some_name')
+
+    # without location_stack
+    modelhub.add_conversion_event(event_type=event_type, name=name)
+    cdf = modelhub.aggregate.top_product_features_before_conversion(df, name=name)
 
     # index checks
     expected_index = ['_application', '_feature_nice_name', 'event_type']
@@ -36,8 +42,9 @@ def test_converted_users_features():
     # with location_stack
     location_stack = df.location_stack.json[{'id': 'main'}:]
     modelhub.add_conversion_event(location_stack=location_stack,
-                                  event_type=event_type)
-    cdf = modelhub.aggregate.converted_users_features(df)
+                                  event_type=event_type,
+                                  name=name)
+    cdf = modelhub.aggregate.top_product_features_before_conversion(df, name=name)
     assert len(cdf.index) == 3
 
     feature_name = 'Link: GitHub located at Web Document: #document => Section:' \

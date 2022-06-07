@@ -89,10 +89,10 @@ Top used product features
 
 .. code-block:: python
 
-    top_product_features = modelhub.aggregate.top_used_product_features(df)
+    top_product_features = modelhub.aggregate.top_product_features(df)
     top_product_features.head()
 
-Most used product areas
+Top used product areas
 -----------------------
 
 First we use the model hub to get the unique users per application, root location, feature, and event type.
@@ -103,18 +103,18 @@ From this prepared dataset, we show the users for the home page first.
     # select only user actions, so stack_event_types must be a superset of ['InteractiveEvent']
     interactive_events = df[df.stack_event_types >= ['InteractiveEvent']]
 
-    most_interactions = modelhub.agg.unique_users(interactive_events, groupby=['application','root_location','feature_nice_name', 'event_type'])
-    most_interactions = most_interactions.reset_index()
+    top_interactions = modelhub.agg.unique_users(interactive_events, groupby=['application','root_location','feature_nice_name', 'event_type'])
+    top_interactions = top_interactions.reset_index()
 
-    home_users = most_interactions[(most_interactions.application == 'objectiv-website') &
-                                   (most_interactions.root_location == 'home')]
+    home_users = top_interactions[(top_interactions.application == 'objectiv-website') &
+                                  (top_interactions.root_location == 'home')]
     home_users.sort_values('unique_users', ascending=False).head()
 
-From the same `most_interactions` object, we can select the top interactions for the 'docs' page.
+From the same `top_interactions` object, we can select the top interactions for the 'docs' page.
 
 .. code-block:: python
 
-    docs_users = most_interactions[most_interactions.application == 'objectiv-docs']
+    docs_users = top_interactions[top_interactions.application == 'objectiv-docs']
     docs_users.sort_values('unique_users', ascending=False).head()
 
 User origin
@@ -178,8 +178,8 @@ We can calculate what users did _before_ converting.
 
 .. code-block:: python
 
-    users_features_before_converting = modelhub.agg.converted_users_features(df)
-    users_features_before_converting.head()
+    top_features_before_conversion = modelhub.agg.top_product_features_before_conversion(df)
+    top_features_before_conversion.head()
 
 At last we want to know how much time users that converted spent on our site before they converted.
 

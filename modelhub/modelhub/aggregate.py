@@ -169,10 +169,10 @@ class Aggregate:
 
         return frequency.user_id_nunique
 
-    def top_used_product_features(self,
-                                  data: bach.DataFrame,
-                                  location_stack: 'SeriesLocationStack' = None,
-                                  event_type: str = 'InteractiveEvent') -> bach.DataFrame:
+    def top_product_features(self,
+                             data: bach.DataFrame,
+                             location_stack: 'SeriesLocationStack' = None,
+                             event_type: str = 'InteractiveEvent') -> bach.DataFrame:
         """
         Calculate the top used features in the product.
         :param data: :py:class:`bach.DataFrame` to apply the method on.
@@ -204,51 +204,45 @@ class Aggregate:
         users_feature = interactive_events.groupby(groupby_col).agg({'user_id': 'nunique'})
         return users_feature.sort_values('user_id_nunique', ascending=False)
 
-    def converted_users_features(self,
-                                 data: bach.DataFrame,
-                                 location_stack: 'SeriesLocationStack' = None,
-                                 conversion_label: str = '',
-                                 event_type: str = 'InteractiveEvent') -> bach.DataFrame:
+    def top_product_features_before_conversion(self,
+                                               data: bach.DataFrame,
+                                               name: str,
+                                               location_stack: 'SeriesLocationStack' = None,
+                                               event_type: str = 'InteractiveEvent') -> bach.DataFrame:
         """
         Calculates what users did before converting by
         combining several models from the model hub.
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
+        :param name: label of the conversion event.
         :param location_stack: the location stack
             - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column
             - if None - the whole location stack is taken.
         :param event_type: event type. Must be a valid event_type
             (either parent or child).
-        :param conversion_label: label of the conversion event.
-            If conversion_label value is not passed a label
-            from self._mh._conversion_events dict is assigned.
         :returns: bach DataFrame with results.
         """
 
         data = data.copy()
         self._mh._check_data_is_objectiv_data(data)
 
+        if not name:
+            raise ValueError('Conversion event label is not provided.')
+
         data['_application'] = data.global_contexts.gc.application
+
         if location_stack is not None:
             data['_feature_nice_name'] = location_stack.ls.nice_name
         else:
             data['_feature_nice_name'] = data.location_stack.ls.nice_name
 
-        # conversion label assignment in case it is missing
-        if not conversion_label:
-            _conversion_events = list(self._mh._conversion_events.keys())
-            if len(_conversion_events):
-                conversion_label = _conversion_events[0]
-            else:
-                raise ValueError('Conversion event label is not provided.')
-
         # label sessions with a conversion
         data['converted_users'] = self._mh.map.conversions_counter(data,
-                                                                   name=conversion_label) >= 1
+                                                                   name=name) >= 1
 
         # label hits where at that point in time, there are 0 conversions in the session
         data['zero_conversions_at_moment'] = self._mh.map.conversions_in_time(data,
-                                                                              conversion_label) == 0
+                                                                              name) == 0
 
         # filter on above created labels
         converted_users = data[(data.converted_users & data.zero_conversions_at_moment)]
