@@ -107,7 +107,7 @@ def get_schema_event_required_contexts(event_schema: EventSchema) -> SchemaDefin
     # which contexts it must have
     for event_type in event_schema.list_event_types():
         contexts_requirements = []
-        for context in event_schema.get_all_required_contexts(event_type):
+        for context in event_schema.get_all_required_contexts_for_event(event_type):
             # For each required context we add the below fragment, as part of all 'allOf' clause.
             # This will make sure that all required contexts are present. Note that it is not needed to
             # match the exact required context-type, it can also be a child of the required context-type.

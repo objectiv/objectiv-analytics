@@ -21,15 +21,18 @@ from modelhub.series import *
 # we need this to check the environment variables
 import os
 
-# check env for opt-out setting
-if os.environ.get('OBJECTIV_VERSION_CHECK_DISABLE', 'false') == 'false':
+
+def check_version():
+    # check env for opt-out setting
+    if os.environ.get('OBJECTIV_VERSION_CHECK_DISABLE', 'false') != 'false':
+        return
     try:
         # wrap the import in try/except to make sure we don't fail if there are missing imports
         import warnings
         import requests
         from bach import __version__ as bach_version
 
-        CHECK_URL = os.environ.get('OBJECTIV_VERSION_CHECK_URL',
+        check_url = os.environ.get('OBJECTIV_VERSION_CHECK_URL',
                                    'https://version-check.objectiv.io/check_version')
         packages = [
                 f'objectiv-bach:{bach_version}',
@@ -37,7 +40,7 @@ if os.environ.get('OBJECTIV_VERSION_CHECK_DISABLE', 'false') == 'false':
         ]
         data = '\n'.join(packages)
 
-        response = requests.post(CHECK_URL, data=data, timeout=5)
+        response = requests.post(check_url, data=data, timeout=5)
         lines = response.text
         for line in lines.split('\n'):
             items = line.split(':')
@@ -53,3 +56,6 @@ if os.environ.get('OBJECTIV_VERSION_CHECK_DISABLE', 'false') == 'false':
                     warnings.warn(category=Warning, message=message)
     except Exception as e:
         pass
+
+
+check_version()

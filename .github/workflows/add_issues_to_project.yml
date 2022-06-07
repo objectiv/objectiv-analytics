@@ -1,0 +1,20 @@
+name: Add opened Issues & PRs to the Development board project
+
+on:
+  issues:
+    types:
+      - opened
+      - transferred
+  pull_request:
+    types:
+      - opened
+      
+jobs:
+  add-to-project:
+    name: Add issue to project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/add-to-project@main
+        with:
+          project-url: https://github.com/orgs/objectiv/projects/4/
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
