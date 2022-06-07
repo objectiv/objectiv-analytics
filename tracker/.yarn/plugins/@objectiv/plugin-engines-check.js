@@ -9,12 +9,12 @@ module.exports = {
     function getRootPath() {
         return (function getRoot(dir) {
             try {
-                const isPkgJson = fs.accessSync(path.join(dir, './package.json'));
-                const is_node_modules = fs.accessSync(path.join(dir, './node_modules'));
+                const isMonorepoRoot = fs.accessSync(path.join(dir, '.yarn'));
             }
             catch (e) {
               if (dir === '/') {
-                throw new Error('Could not find root');
+                // This should never happen, just for sanity
+                throw new Error('Could not find monorepo root');
               }
               return getRoot(path.join(dir, '..'));
             }
