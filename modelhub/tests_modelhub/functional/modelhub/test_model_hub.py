@@ -3,6 +3,8 @@ Copyright 2021 Objectiv B.V.
 """
 
 # Any import from modelhub initializes all the types, do not remove
+from sql_models.util import is_postgres, is_bigquery
+
 from modelhub import __version__
 import pytest
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
@@ -124,11 +126,20 @@ def test_is_new_user(db_params):
     )
 
 
-@pytest.mark.skip_bigquery
 def test_add_conversion_event(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
+    engine = df.engine
 
-    location_stack = df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
+    if is_postgres(engine):
+        location_stack = df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
+    elif is_bigquery(engine):
+        location_stack_mask = (
+            (df.location_stack.json.get_value('_type', as_str=True) == 'LinkContext')
+            & (df.location_stack.json.get_value('id', as_str=True) == 'cta-repo-button')
+        )
+        location_stack = df.location_stack
+        location_stack = df.loc[location_stack_mask, 'location_stack']
+
     event_type = 'ClickEvent'
     conversion = 'github_clicks'
     modelhub.add_conversion_event(location_stack=location_stack,
@@ -189,7 +200,7 @@ def test_add_conversion_event(db_params):
     )
 
     # event_type not set
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
     modelhub.add_conversion_event(location_stack=location_stack, name='github_clicks')
     assert len(modelhub._conversion_events) == 1
     assert modelhub._conversion_events[conversion] == (location_stack, None)
