@@ -66,12 +66,12 @@ introduction examples are :ref:`here <bach_examples>`.
 .. toctree::
     :maxdepth: 1
 
-    logistic-regression
     machine-learning
     product-analytics
     user-intent
     feature-engineering
     modelhub-basics
     open-taxonomy
+    logistic-regression
     feature-importance
 
