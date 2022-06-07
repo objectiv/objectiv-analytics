@@ -11,11 +11,12 @@ from bach import DataFrame
 from bach.expression import Expression, quote_string, quote_identifier
 from bach.series import Series
 from bach.series import SeriesJson
-from bach.series.series_json import JsonPostgresAccessor
+from bach.series.series_json import JsonAccessor
 from bach.types import register_dtype
+from sql_models.util import is_postgres, DatabaseNotSupportedException
 
 
-class ObjectivStack(JsonPostgresAccessor):
+class ObjectivStack(JsonAccessor):
     def get_from_context_with_type_series(self, type: str, key: str, dtype='string'):
         """
         .. _get_from_context_with_type_series:
@@ -27,6 +28,12 @@ class ObjectivStack(JsonPostgresAccessor):
         :param dtype: the dtype of the series to return.
         :returns: a series of type `dtype`
         """
+        dialect = self._series_object.engine.dialect
+        if is_postgres(dialect):
+            return self._postgres_get_from_context_with_type_series(type, key, dtype)
+        raise DatabaseNotSupportedException(dialect)
+
+    def _postgres_get_from_context_with_type_series(self, type: str, key: str, dtype='string'):
         dialect = self._series_object.engine.dialect
         expression_str = f'''
         jsonb_path_query_first({{}},
