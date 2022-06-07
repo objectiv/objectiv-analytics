@@ -60,6 +60,7 @@ Aggregate
     unique_sessions
     session_duration
     frequency
+    top_used_product_features
 
 
 .. toctree::

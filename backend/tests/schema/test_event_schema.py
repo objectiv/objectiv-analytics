@@ -19,7 +19,7 @@ def test_create_schema_empty():
 def test_create_schema_extend():
     schema = EventSchema().get_extended_schema(_SIMPLE_BASE_SCHEMA)
     assert schema.list_event_types() == ['BaseEvent', 'Child2Event', 'ChildEvent', 'GrandChildEvent']
-    assert schema.list_context_types() == ['BaseContext', 'OtherContext']
+    assert schema.list_context_types() == ['AnotherContext', 'BaseContext', 'OtherContext']
     assert schema.version == {'test_schema': '1.0.0'}
 
 
@@ -29,7 +29,7 @@ def test_create_schema_extend_multiple():
         .get_extended_schema(_EXTENSION_TO_SIMPLE_BASE_SCHEMA)
     assert schema.list_event_types() == \
            ['BaseEvent', 'Child2Event', 'ChildEvent', 'GrandChildEvent', 'GreatGrandChildEvent']
-    assert schema.list_context_types() == ['BaseContext', 'ExtraContext', 'OtherContext']
+    assert schema.list_context_types() == ['AnotherContext', 'BaseContext', 'ExtraContext', 'OtherContext']
     expected_version = {
         'extension_to_test_schema': '0.5',
         'test_schema': '1.0.0'
@@ -115,7 +115,7 @@ def test_all_parent_event_types():
         assert schema.get_all_parent_event_types(event_type) == expected
 
 
-def test_all_required_contexts():
+def test_all_required_contexts_for_event():
     schema = _get_schema()
     event_to_contexts = {
         'BaseEvent':
@@ -128,12 +128,34 @@ def test_all_required_contexts():
             {'BaseContext', 'OtherContext', 'ExtraContext'},
     }
     for event_type, expected in event_to_contexts.items():
-        assert schema.get_all_required_contexts(event_type) == expected
+        assert schema.get_all_required_contexts_for_event(event_type) == expected
+
+
+def test_all_required_contexts_for_context():
+    schema = _get_schema()
+
+    context_to_contexts = {
+        'BaseContext':
+            {},
+        'AnotherContext':
+            {'OtherContext'}
+    }
+    # check for required contexts
+    for context_type, expected in context_to_contexts.items():
+        assert schema.get_all_required_contexts_for_context(context_type) == set(expected)
+
+    context_to_contexts = {
+        'AnotherContext':
+            {'AnotherContext', 'BaseContext'}
+    }
+    # check for required contexts
+    for context_type, expected in context_to_contexts.items():
+        assert schema.get_all_required_contexts_for_context(context_type) != expected
 
 
 def test_list_types():
     schema = _get_schema()
-    assert schema.list_context_types() == ['BaseContext', 'ExtraContext', 'OtherContext']
+    assert schema.list_context_types() == ['AnotherContext', 'BaseContext', 'ExtraContext', 'OtherContext']
 
 
 def test_all_parent_context_types():
@@ -141,7 +163,7 @@ def test_all_parent_context_types():
     # If we get a non-existing context we don't complain. Because in operation if we get more data (or
     # more contexts) than required then that's fine.
     # todo: check whether above is good idea. or should we put the leniency in another spot in the code?
-    assert schema.get_all_parent_context_types('X') == {'X'}
+    assert schema.get_all_parent_context_types('X') == ['X']
     assert schema.get_all_parent_context_types('BaseContext') == {'BaseContext'}
     assert schema.get_all_parent_context_types('OtherContext') == {'BaseContext', 'OtherContext'}
     assert schema.get_all_parent_context_types('ExtraContext') == \
@@ -152,7 +174,7 @@ def test_all_child_context_types():
     schema = _get_schema()
     assert schema.get_all_child_context_types('X') == set()
     assert schema.get_all_child_context_types('BaseContext') == \
-           {'BaseContext', 'OtherContext', 'ExtraContext'}
+           {'AnotherContext', 'BaseContext', 'OtherContext', 'ExtraContext'}
     assert schema.get_all_child_context_types('OtherContext') == {'ExtraContext', 'OtherContext'}
     assert schema.get_all_child_context_types('ExtraContext') == {'ExtraContext'}
 
@@ -241,7 +263,7 @@ _SIMPLE_BASE_SCHEMA = {
             "parents": ["ChildEvent", "Child2Event"],
             "requiresContext": [],
             "description": "test grand child event"
-        }
+        },
     },
     "contexts": {
         "BaseContext": {
@@ -270,6 +292,11 @@ _SIMPLE_BASE_SCHEMA = {
                     "optional": True
                 }
             }
+        },
+        "AnotherContext": {
+            "parents": ["BaseContext"],
+            "description": "another test context which requires OtherCOntext",
+            "requiresContext": ["OtherContext"]
         }
     }
 }

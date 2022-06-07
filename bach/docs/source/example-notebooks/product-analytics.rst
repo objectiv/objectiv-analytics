@@ -84,17 +84,13 @@ created series contains aggregated data, and it is not allowed to aggregate that
     session_duration = modelhub.aggregate.session_duration(df, groupby='session_id', exclude_bounces=False)
     session_duration.materialize().quantile(q=[0.25, 0.50, 0.75]).head()
 
-Top used features
+Top used product features
 -----------------
 
 .. code-block:: python
 
-    # select only user actions, so stack_event_types must be a superset of ['InteractiveEvent']
-    interactive_events = df[df.stack_event_types>=['InteractiveEvent']]
-
-    # users by feature
-    users_feature = interactive_events.groupby(['application', 'feature_nice_name', 'event_type']).agg({'user_id':'nunique'})
-    users_feature.sort_values('user_id_nunique', ascending=False).head()
+    top_product_features = modelhub.aggregate.top_used_product_features(df)
+    top_product_features.head()
 
 Most used product areas
 -----------------------

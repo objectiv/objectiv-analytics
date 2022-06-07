@@ -336,15 +336,7 @@ class JsonBigQueryAccessor:
         """
         # TODO: leverage instance_dtype information here, if we have that
         if isinstance(key, int):
-            if key >= 0:
-                expression = Expression.construct(f'''JSON_QUERY({{}}, '$[{key}]')''', self._series_object)
-                return self._series_object.copy_override(expression=expression)
-            # case key <= 0
-            # BigQuery doesn't (yet) natively support this, so we emulate this.
-            array_len = self.get_array_length()
-            expr_offset = Expression.construct(f'OFFSET({{}} {key})', array_len)
-            expression = Expression.construct('JSON_EXTRACT_ARRAY({})[{}]', self._series_object, expr_offset)
-            return self._series_object.copy_override(expression=expression)
+            return self.get_array_item(key)
 
         elif isinstance(key, str):
             return self.get_value(key)
@@ -355,6 +347,17 @@ class JsonBigQueryAccessor:
             raise NotImplementedError()  # TODO
 
         raise TypeError('Key should either be a string, integer, or slice.')
+
+    def get_array_item(self, key):
+        if key >= 0:
+            expression = Expression.construct(f'''JSON_QUERY({{}}, '$[{key}]')''', self._series_object)
+            return self._series_object.copy_override(expression=expression)
+        # case key <= 0
+        # BigQuery doesn't (yet) natively support this, so we emulate this.
+        array_len = self.get_array_length()
+        expr_offset = Expression.construct(f'OFFSET({{}} {key})', array_len)
+        expression = Expression.construct('JSON_EXTRACT_ARRAY({})[{}]', self._series_object, expr_offset)
+        return self._series_object.copy_override(expression=expression)
 
     def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'SeriesJson']:
         """
@@ -408,62 +411,11 @@ class JsonPostgresAccessor:
         Slice the JSON data in pythonic ways
         """
         if isinstance(key, int):
-            return self._series_object\
-                .copy_override_dtype(dtype=self._return_dtype)\
-                .copy_override(expression=Expression.construct(f'{{}}->{key}', self._series_object))
+            return self.get_array_item(key)
         elif isinstance(key, str):
             return self.get_value(key)
         elif isinstance(key, slice):
-            expression_references = 0
-            if key.step:
-                raise NotImplementedError('slice steps not supported')
-            if key.stop is not None:
-                negative_stop = ''
-                if isinstance(key.stop, int):
-                    if key.stop < 0:
-                        negative_stop = f'jsonb_array_length({{}})'
-                        expression_references += 1
-                    stop = f'{negative_stop} {key.stop} - 1'
-                elif isinstance(key.stop, (dict, str)):
-                    stop = self._find_in_json_list(key.stop)
-                    expression_references += 1
-                else:
-                    raise TypeError('cant')
-            if key.start is not None:
-                if isinstance(key.start, int):
-                    negative_start = ''
-                    if key.start < 0:
-                        negative_start = f'jsonb_array_length({{}})'
-                        expression_references += 1
-                    start = f'{negative_start} {key.start}'
-                elif isinstance(key.start, (dict, str)):
-                    start = self._find_in_json_list(key.start)
-                    expression_references += 1
-                else:
-                    raise TypeError('cant')
-                if key.stop is not None:
-                    where = f'between {start} and {stop}'
-                else:
-                    where = f'>= {start}'
-            else:
-                if key.stop is not None:
-                    where = f'<= {stop}'
-                else:
-                    # no start and no stop: we want to select all elements.
-                    where = 'is not null'  # should be true for all ordinalities.
-            combined_expression = f"""(select jsonb_agg(x.value)
-            from jsonb_array_elements({{}}) with ordinality x
-            where ordinality - 1 {where})"""
-            expression_references += 1
-            non_null_expression = f"coalesce({combined_expression}, '[]'::jsonb)"
-            return self._series_object\
-                .copy_override_dtype(dtype=self._return_dtype)\
-                .copy_override(
-                    expression=Expression.construct(
-                        non_null_expression,
-                        *([self._series_object] * expression_references)
-                    )
-                )
+            return self.get_array_slice(key)
         raise TypeError(f'key should be int or slice, actual type: {type(key)}')
 
     def _find_in_json_list(self, key: Union[str, Dict[str, str]]):
@@ -475,6 +427,63 @@ class JsonPostgresAccessor:
             return expression_str
         else:
             raise TypeError(f'key should be int or slice, actual type: {type(key)}')
+
+    def get_array_slice(self, key: slice):
+        expression_references = 0
+        if key.step:
+            raise NotImplementedError('slice steps not supported')
+        if key.stop is not None:
+            negative_stop = ''
+            if isinstance(key.stop, int):
+                if key.stop < 0:
+                    negative_stop = f'jsonb_array_length({{}})'
+                    expression_references += 1
+                stop = f'{negative_stop} {key.stop} - 1'
+            elif isinstance(key.stop, (dict, str)):
+                stop = self._find_in_json_list(key.stop)
+                expression_references += 1
+            else:
+                raise TypeError('cant')
+        if key.start is not None:
+            if isinstance(key.start, int):
+                negative_start = ''
+                if key.start < 0:
+                    negative_start = f'jsonb_array_length({{}})'
+                    expression_references += 1
+                start = f'{negative_start} {key.start}'
+            elif isinstance(key.start, (dict, str)):
+                start = self._find_in_json_list(key.start)
+                expression_references += 1
+            else:
+                raise TypeError('cant')
+            if key.stop is not None:
+                where = f'between {start} and {stop}'
+            else:
+                where = f'>= {start}'
+        else:
+            if key.stop is not None:
+                where = f'<= {stop}'
+            else:
+                # no start and no stop: we want to select all elements.
+                where = 'is not null'  # should be true for all ordinalities.
+        combined_expression = f"""(select jsonb_agg(x.value)
+        from jsonb_array_elements({{}}) with ordinality x
+        where ordinality - 1 {where})"""
+        expression_references += 1
+        non_null_expression = f"coalesce({combined_expression}, '[]'::jsonb)"
+        return self._series_object \
+            .copy_override_dtype(dtype=self._return_dtype) \
+            .copy_override(
+                expression=Expression.construct(
+                    non_null_expression,
+                    *([self._series_object] * expression_references)
+                )
+            )
+
+    def get_array_item(self, key):
+        return self._series_object \
+            .copy_override_dtype(dtype=self._return_dtype) \
+            .copy_override(expression=Expression.construct(f'{{}}->{key}', self._series_object))
 
     def get_value(self, key: str, as_str: bool = False):
         """
