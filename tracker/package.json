@@ -27,12 +27,15 @@
     "test:ci": "yarn workspaces foreach --parallel --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/testing-tools --exclude @objectiv/tracker-angular --verbose run test:ci",
     "test:coverage": "yarn workspaces foreach --parallel --exclude root --exclude @objectiv/schema --exclude @objectiv/utilities --exclude @objectiv/testing-tools --exclude @objectiv/tracker-angular --verbose run test:coverage",
     "check:dependencies": "yarn workspaces foreach --parallel --exclude root --exclude @objectiv/tracker-angular --verbose run check:dependencies",
-    "publish": "yarn workspaces foreach --exclude root --exclude @objectiv/utilities --exclude @objectiv/testing-tools --verbose run npm-publish",
-    "publish:verdaccio": "yarn workspaces foreach --exclude root --exclude @objectiv/utilities --exclude @objectiv/testing-tools --verbose run npm-publish:verdaccio",
+    "publish": "shx rm -f .npmrc && yarn workspaces foreach --exclude root --exclude @objectiv/utilities --exclude @objectiv/testing-tools --verbose run npm-publish",
+    "publish:verdaccio": "shx cp ./verdaccio/.npmrc .npmrc && yarn workspaces foreach --exclude root --exclude @objectiv/utilities --exclude @objectiv/testing-tools --verbose run npm-publish:verdaccio && shx rm -f .npmrc",
     "utils:generate": "yarn workspace @objectiv/utilities generate && yarn workspace @objectiv/developer-tools generate && yarn prettify:generated && yarn tsc:generated",
     "version:major": "yarn workspaces foreach --exclude root --verbose version major && rm -rf .yarn/versions",
     "version:minor": "yarn workspaces foreach --exclude root --verbose version minor && rm -rf .yarn/versions",
     "version:patch": "yarn workspaces foreach --exclude root --verbose version patch && rm -rf .yarn/versions",
     "version:prerelease": "yarn workspaces foreach --exclude root --verbose version prerelease && rm -rf .yarn/versions"
+  },
+  "devDependencies": {
+    "shx": "^0.3.4"
   }
 }

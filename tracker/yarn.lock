@@ -9580,6 +9580,8 @@ fsevents@~2.1.2:
 "root@workspace:.":
   version: 0.0.0-use.local
   resolution: "root@workspace:."
+  dependencies:
+    shx: ^0.3.4
   languageName: unknown
   linkType: soft
 

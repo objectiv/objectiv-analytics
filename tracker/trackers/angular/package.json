@@ -32,8 +32,8 @@
     "build": "ng-packagr -p ng-package.json",
     "prettify": "prettier --write .",
     "tsc": "tsc --noEmit",
-    "npm-publish": "shx rm -f .npmrc && npm publish --access=public --tag=$TAG",
-    "npm-publish:verdaccio": "shx cp ../../verdaccio/.npmrc .npmrc && npm publish --tag=$TAG && shx rm -f .npmrc"
+    "npm-publish": "npm publish --access=public --tag=$TAG",
+    "npm-publish:verdaccio": "npm publish --tag=$TAG"
   },
   "peerDependencies": {
     "@angular/common": "^9.0.0",
@@ -48,7 +48,6 @@
     "ng-packagr": "^9.0.0",
     "prettier": "^2.5.1",
     "rxjs": "~6.5.4",
-    "shx": "^0.3.4",
     "tslib": "^1.10.0",
     "typescript": "~3.8.3",
     "zone.js": "~0.10.2"
