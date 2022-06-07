@@ -29,6 +29,13 @@ export class PathContextFromURLPlugin implements TrackerPluginInterface {
    * Initializes validation rules.
    */
   initialize({ platform }: TrackerInterface): void {
+    if (!this.isUsable()) {
+      globalThis.objectiv?.TrackerConsole.error(
+        `｢objectiv:${this.pluginName}｣ Cannot initialize. Plugin is not usable (document: ${typeof document}).`
+      );
+      return;
+    }
+
     if (globalThis.objectiv) {
       this.validationRules = [
         globalThis.objectiv.makeGlobalContextValidationRule({
@@ -49,6 +56,13 @@ export class PathContextFromURLPlugin implements TrackerPluginInterface {
    * Generate a fresh PathContext before each TrackerEvent is handed over to the TrackerTransport.
    */
   enrich(contexts: Required<ContextsConfig>): void {
+    if (!this.isUsable()) {
+      globalThis.objectiv?.TrackerConsole.error(
+        `｢objectiv:${this.pluginName}｣ Cannot enrich. Plugin is not usable (document: ${typeof document}).`
+      );
+      return;
+    }
+
     const pathContext = makePathContext({
       id: document.location.href,
     });
@@ -59,15 +73,21 @@ export class PathContextFromURLPlugin implements TrackerPluginInterface {
    * If the Plugin is usable runs all validation rules.
    */
   validate(event: TrackerEvent): void {
-    if (this.isUsable()) {
-      if (!this.initialized) {
-        globalThis.objectiv?.TrackerConsole.error(
-          `｢objectiv:${this.pluginName}｣ Cannot validate. Make sure to initialize the plugin first.`
-        );
-        return;
-      }
-      this.validationRules.forEach((validationRule) => validationRule.validate(event));
+    if (!this.isUsable()) {
+      globalThis.objectiv?.TrackerConsole.error(
+        `｢objectiv:${this.pluginName}｣ Cannot validate. Plugin is not usable (document: ${typeof document}).`
+      );
+      return;
     }
+
+    if (!this.initialized) {
+      globalThis.objectiv?.TrackerConsole.error(
+        `｢objectiv:${this.pluginName}｣ Cannot validate. Make sure to initialize the plugin first.`
+      );
+      return;
+    }
+
+    this.validationRules.forEach((validationRule) => validationRule.validate(event));
   }
 
   /**

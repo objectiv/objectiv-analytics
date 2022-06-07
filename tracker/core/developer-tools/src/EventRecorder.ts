@@ -70,7 +70,7 @@ export const EventRecorder = new (class implements EventRecorderInterface {
   }
 
   /**
-   * Stores incoming TrackerEvents to globalThis.objectiv.recordedEvents
+   * Stores incoming TrackerEvents in state
    */
   async handle(...args: NonEmptyArray<TransportableEvent>): Promise<any> {
     if (!this.recording) {

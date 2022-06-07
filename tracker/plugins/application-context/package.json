@@ -1,20 +1,23 @@
 {
-  "name": "@objectiv/tracker-core",
+  "name": "@objectiv/plugin-application-context",
   "version": "0.0.20-0",
-  "description": "Core functionality for Objectiv JavaScript trackers",
+  "description": "Plugin for Objectiv trackers to automatically generate and attach ApplicationContext to all Events",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
   "keywords": [
     "objectiv",
     "tracking",
+    "web",
     "analytics",
     "events",
-    "taxonomy"
+    "taxonomy",
+    "plugin",
+    "application context"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/objectiv/objectiv-analytics.git",
-    "directory": "tracker/core/tracker"
+    "directory": "tracker/plugins/application-context"
   },
   "bugs": "https://github.com/objectiv/objectiv-analytics/issues",
   "contributors": [
@@ -40,7 +43,6 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --legacy-output --minify --dts --sourcemap --clean",
     "prettify": "prettier --write .",
-    "prettify:generated": "yarn prettier --write ./src/ContextFactories.ts ./src/ContextNames.ts ./src/EventFactories.ts",
     "tsc": "tsc --noEmit",
     "test": "jest --silent --runInBand",
     "test:ci": "jest --silent --ci --runInBand",
@@ -50,21 +52,17 @@
     "npm-publish:verdaccio": "npm publish --tag=$TAG"
   },
   "devDependencies": {
+    "@objectiv/developer-tools": "^0.0.20-0",
     "@objectiv/testing-tools": "^0.0.20-0",
     "@types/jest": "^27.4.1",
-    "@types/uuid": "^8.3.4",
     "jest": "^27.5.1",
     "jest-standard-reporter": "^2.0.0",
-    "mockdate": "^3.0.5",
     "prettier": "^2.5.1",
     "ts-jest": "^27.1.3",
     "tsup": "^5.12.0",
     "typescript": "^4.6.2"
   },
-  "dependencies": {
-    "@objectiv/developer-tools": "^0.0.20-0",
-    "@objectiv/plugin-application-context": "^0.0.20-0",
-    "@objectiv/schema": "^0.0.20-0",
-    "uuid": "^8.3.2"
+  "peerDependencies": {
+    "@objectiv/tracker-core": "^0.0.20-0"
   }
 }

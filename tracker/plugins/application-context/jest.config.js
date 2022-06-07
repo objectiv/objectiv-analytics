@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2022 Objectiv B.V.
+ * Copyright 2022 Objectiv B.V.
  */
 
 module.exports = {
@@ -13,5 +13,4 @@ module.exports = {
     '@objectiv/tracker-core': '<rootDir>../../core/tracker/src',
     '@objectiv/plugin-(.*)': '<rootDir>/../../plugins/$1/src',
   },
-  setupFilesAfterEnv: ['jest-extended/all'],
 };

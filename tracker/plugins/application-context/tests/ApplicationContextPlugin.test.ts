@@ -1,16 +1,10 @@
 /*
- * Copyright 2021-2022 Objectiv B.V.
+ * Copyright 2022 Objectiv B.V.
  */
 
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import {
-  ApplicationContextPlugin,
-  ContextsConfig,
-  generateUUID,
-  GlobalContextName,
-  Tracker,
-  TrackerEvent,
-} from '../src';
+import { ContextsConfig, generateUUID, GlobalContextName, Tracker, TrackerEvent } from '@objectiv/tracker-core';
+import { ApplicationContextPlugin } from '../src';
 
 require('@objectiv/developer-tools');
 globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);

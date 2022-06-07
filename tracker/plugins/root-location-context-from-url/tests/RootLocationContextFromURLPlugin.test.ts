@@ -11,7 +11,7 @@ globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation)
 
 describe('RootLocationContextFromURLPlugin', () => {
   beforeEach(() => {
-    jest.restoreAllMocks();
+    jest.resetAllMocks();
   });
 
   it('should add the RootLocationContext to the Event when `enrich` is executed by the Tracker', async () => {

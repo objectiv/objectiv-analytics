@@ -24,7 +24,7 @@ const testTracker = new Tracker({
 
 describe('PathContextFromURLPlugin', () => {
   beforeEach(() => {
-    jest.restoreAllMocks();
+    jest.resetAllMocks();
   });
 
   it('should TrackerConsole.error when calling `validate` before `initialize`', () => {

@@ -12,10 +12,10 @@ import {
   makePressEvent,
   makeRootLocationContext,
   makeSuccessEvent,
-  OpenTaxonomyValidationPlugin,
   Tracker,
   TrackerEvent,
-} from '../src';
+} from '@objectiv/tracker-core';
+import { OpenTaxonomyValidationPlugin } from '../src/OpenTaxonomyValidationPlugin';
 
 require('@objectiv/developer-tools');
 globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
@@ -32,13 +32,13 @@ describe('OpenTaxonomyValidationPlugin', () => {
   });
 
   it('should TrackerConsole.error when calling `validate` before `initialize`', () => {
-    const testOpenTaxonomyValidationPlugin = new OpenTaxonomyValidationPlugin();
+    OpenTaxonomyValidationPlugin.initialized = false;
     const validEvent = new TrackerEvent({
       _type: 'TestEvent',
       global_contexts: [makeApplicationContext({ id: 'test' })],
       location_stack: [makeRootLocationContext({ id: 'test' })],
     });
-    testOpenTaxonomyValidationPlugin.validate(validEvent);
+    OpenTaxonomyValidationPlugin.validate(validEvent);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
       '｢objectiv:OpenTaxonomyValidationPlugin｣ Cannot validate. Make sure to initialize the plugin first.'
     );
@@ -46,7 +46,6 @@ describe('OpenTaxonomyValidationPlugin', () => {
 
   describe(GlobalContextName.ApplicationContext, () => {
     it('should succeed', () => {
-      const testOpenTaxonomyValidationPlugin = new OpenTaxonomyValidationPlugin();
       const validEvent = new TrackerEvent({
         _type: 'TestEvent',
         global_contexts: [makeApplicationContext({ id: 'test' })],
@@ -55,14 +54,13 @@ describe('OpenTaxonomyValidationPlugin', () => {
 
       jest.resetAllMocks();
 
-      testOpenTaxonomyValidationPlugin.validate(validEvent);
+      OpenTaxonomyValidationPlugin.validate(validEvent);
 
       expect(MockConsoleImplementation.groupCollapsed).not.toHaveBeenCalled();
     });
 
     it('should fail when given TrackerEvent does not have ApplicationContext', () => {
-      const testOpenTaxonomyValidationPlugin = new OpenTaxonomyValidationPlugin();
-      testOpenTaxonomyValidationPlugin.initialize(coreTracker);
+      OpenTaxonomyValidationPlugin.initialize(coreTracker);
       const eventWithoutApplicationContext = new TrackerEvent({
         _type: 'TestEvent',
         location_stack: [makeRootLocationContext({ id: 'test' })],
@@ -70,7 +68,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
 
       jest.resetAllMocks();
 
-      testOpenTaxonomyValidationPlugin.validate(eventWithoutApplicationContext);
+      OpenTaxonomyValidationPlugin.validate(eventWithoutApplicationContext);
 
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenNthCalledWith(
@@ -82,8 +80,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
     });
 
     it('should fail when given TrackerEvent has multiple ApplicationContexts', () => {
-      const testOpenTaxonomyValidationPlugin = new OpenTaxonomyValidationPlugin();
-      testOpenTaxonomyValidationPlugin.initialize(coreTracker);
+      OpenTaxonomyValidationPlugin.initialize(coreTracker);
       const eventWithDuplicatedApplicationContext = new TrackerEvent({
         _type: 'TestEvent',
         global_contexts: [makeApplicationContext({ id: 'test' }), makeApplicationContext({ id: 'test' })],
@@ -92,7 +89,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
 
       jest.resetAllMocks();
 
-      testOpenTaxonomyValidationPlugin.validate(eventWithDuplicatedApplicationContext);
+      OpenTaxonomyValidationPlugin.validate(eventWithDuplicatedApplicationContext);
 
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenNthCalledWith(
@@ -106,8 +103,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
 
   describe(LocationContextName.RootLocationContext, () => {
     it('should succeed', () => {
-      const testOpenTaxonomyValidationPlugin = new OpenTaxonomyValidationPlugin();
-      testOpenTaxonomyValidationPlugin.initialize(coreTracker);
+      OpenTaxonomyValidationPlugin.initialize(coreTracker);
       const validEvent = new TrackerEvent({
         _type: 'TestEvent',
         location_stack: [makeRootLocationContext({ id: '/test' })],
@@ -116,14 +112,13 @@ describe('OpenTaxonomyValidationPlugin', () => {
 
       jest.resetAllMocks();
 
-      testOpenTaxonomyValidationPlugin.validate(validEvent);
+      OpenTaxonomyValidationPlugin.validate(validEvent);
 
       expect(MockConsoleImplementation.groupCollapsed).not.toHaveBeenCalled();
     });
 
     it('should allow non-interactive Events without RootLocationContext and PathContext', () => {
-      const testOpenTaxonomyValidationPlugin = new OpenTaxonomyValidationPlugin();
-      testOpenTaxonomyValidationPlugin.initialize(coreTracker);
+      OpenTaxonomyValidationPlugin.initialize(coreTracker);
       const eventWithoutRootLocationContext = new TrackerEvent(
         makeSuccessEvent({
           message: ' ok',
@@ -133,14 +128,13 @@ describe('OpenTaxonomyValidationPlugin', () => {
 
       jest.resetAllMocks();
 
-      testOpenTaxonomyValidationPlugin.validate(eventWithoutRootLocationContext);
+      OpenTaxonomyValidationPlugin.validate(eventWithoutRootLocationContext);
 
       expect(MockConsoleImplementation.groupCollapsed).not.toHaveBeenCalled();
     });
 
     it('should fail when given TrackerEvent does not have RootLocationContext', () => {
-      const testOpenTaxonomyValidationPlugin = new OpenTaxonomyValidationPlugin();
-      testOpenTaxonomyValidationPlugin.initialize(coreTracker);
+      OpenTaxonomyValidationPlugin.initialize(coreTracker);
       const eventWithoutRootLocationContext = new TrackerEvent(
         makePressEvent({
           global_contexts: [makeApplicationContext({ id: 'test' }), makePathContext({ id: '/path' })],
@@ -149,7 +143,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
 
       jest.resetAllMocks();
 
-      testOpenTaxonomyValidationPlugin.validate(eventWithoutRootLocationContext);
+      OpenTaxonomyValidationPlugin.validate(eventWithoutRootLocationContext);
 
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenNthCalledWith(
@@ -161,8 +155,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
     });
 
     it('should fail when given TrackerEvent has multiple RootLocationContexts', () => {
-      const testOpenTaxonomyValidationPlugin = new OpenTaxonomyValidationPlugin();
-      testOpenTaxonomyValidationPlugin.initialize(coreTracker);
+      OpenTaxonomyValidationPlugin.initialize(coreTracker);
       const eventWithDuplicatedRootLocationContext = new TrackerEvent(
         makePressEvent({
           location_stack: [makeRootLocationContext({ id: '/test' }), makeRootLocationContext({ id: '/test' })],
@@ -172,7 +165,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
 
       jest.resetAllMocks();
 
-      testOpenTaxonomyValidationPlugin.validate(eventWithDuplicatedRootLocationContext);
+      OpenTaxonomyValidationPlugin.validate(eventWithDuplicatedRootLocationContext);
 
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenNthCalledWith(
@@ -184,8 +177,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
     });
 
     it('should fail when given TrackerEvent has a RootLocationContext in the wrong position', () => {
-      const testOpenTaxonomyValidationPlugin = new OpenTaxonomyValidationPlugin();
-      testOpenTaxonomyValidationPlugin.initialize(coreTracker);
+      OpenTaxonomyValidationPlugin.initialize(coreTracker);
       const eventWithRootLocationContextInWrongPosition = new TrackerEvent(
         makePressEvent({
           location_stack: [makeContentContext({ id: 'content-id' }), makeRootLocationContext({ id: '/test' })],
@@ -195,7 +187,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
 
       jest.resetAllMocks();
 
-      testOpenTaxonomyValidationPlugin.validate(eventWithRootLocationContextInWrongPosition);
+      OpenTaxonomyValidationPlugin.validate(eventWithRootLocationContextInWrongPosition);
 
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenNthCalledWith(
@@ -220,13 +212,12 @@ describe('OpenTaxonomyValidationPlugin', () => {
     });
 
     it('should return silently when calling `validate` before `initialize`', () => {
-      const testOpenTaxonomyValidationPlugin = new OpenTaxonomyValidationPlugin();
       const validEvent = new TrackerEvent({
         _type: 'TestEvent',
         global_contexts: [makeApplicationContext({ id: 'test' })],
         location_stack: [makeRootLocationContext({ id: 'test' })],
       });
-      testOpenTaxonomyValidationPlugin.validate(validEvent);
+      OpenTaxonomyValidationPlugin.validate(validEvent);
       expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
     });
   });
