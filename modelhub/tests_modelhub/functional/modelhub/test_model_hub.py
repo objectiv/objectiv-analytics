@@ -3,12 +3,12 @@ Copyright 2021 Objectiv B.V.
 """
 
 # Any import from modelhub initializes all the types, do not remove
-from typing import Optional, Any, Dict
+from typing import Optional, Any, Dict, cast
 
 import bach
-from sql_models.util import is_postgres, is_bigquery
+from sql_models.util import is_postgres
 
-from modelhub import __version__
+from modelhub import __version__, SeriesLocationStack
 import pytest
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from tests.functional.bach.test_data_and_utils import assert_equals_data
@@ -16,7 +16,7 @@ from uuid import UUID
 
 # map
 def test_is_first_session(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
     s = modelhub.map.is_first_session(df)
 
@@ -131,21 +131,7 @@ def test_is_new_user(db_params):
 
 def test_add_conversion_event(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
-    engine = df.engine
-
-    if is_postgres(engine):
-        location_stack = df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
-    elif is_bigquery(engine):
-        # TODO: BigQuery remove when bach supports slicing with dicts
-        location_stack = _bq_get_series_json_sliced_with_dict(
-            df,
-            series_to_slice='location_stack',
-            start_slice={'_type': 'LinkContext', 'id': 'cta-repo-button'},
-            end_slice=None,
-        )
-    else:
-        raise Exception()
-
+    location_stack = _get_location_stack(df)
     event_type = 'ClickEvent'
     conversion = 'github_clicks'
     modelhub.add_conversion_event(location_stack=location_stack,
@@ -263,14 +249,15 @@ def test_add_conversion_event(db_params):
     )
 
 
-@pytest.mark.skip_bigquery
-def test_is_conversion_event(db_params): # TODO: Remove when bach supports json slicing for BigQuery
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+def test_is_conversion_event(db_params):
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
+    engine = df.engine
 
     # add conversion event
-    modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext',
-                                                                         'id': 'cta-repo-button'}:],
-                                  event_type='ClickEvent', name='github_clicks')
+    modelhub.add_conversion_event(
+        location_stack=_get_location_stack(df),
+        event_type='ClickEvent', name='github_clicks',
+    )
     s = modelhub.map.is_conversion_event(df, 'github_clicks')
 
     assert_equals_data(
@@ -315,12 +302,11 @@ def test_is_conversion_event(db_params): # TODO: Remove when bach supports json 
         modelhub.map.is_conversion_event(df, None)
 
 
-@pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
 def test_conversions_counter(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
     # add conversion event
-    modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
+    modelhub.add_conversion_event(location_stack=_get_location_stack(df),
                             event_type='ClickEvent',
                             name='github_clicks')
     s = modelhub.map.conversions_counter(df, 'github_clicks')
@@ -386,13 +372,11 @@ def test_conversions_counter(db_params):
     )
 
 
-@pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
 def test_conversions_in_time(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
-
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
     # add conversion event
     modelhub.add_conversion_event(
-        location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
+        location_stack=_get_location_stack(df),
         event_type='ClickEvent',
         name='github_clicks')
     s = modelhub.map.conversions_in_time(df, 'github_clicks')
@@ -432,12 +416,11 @@ def test_conversions_in_time(db_params):
     )
 
 
-@pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
 def test_pre_conversion_hit_number(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
     # add conversion event
-    modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
+    modelhub.add_conversion_event(location_stack=_get_location_stack(df),
                             event_type='ClickEvent',
                             name='github_clicks')
     s = modelhub.map.pre_conversion_hit_number(df, 'github_clicks')
@@ -526,7 +509,7 @@ def test_time_agg(db_params):
         convert_uuid=True,
     )
 
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m')
     s = modelhub.time_agg(df)
 
     assert_equals_data(
@@ -551,7 +534,7 @@ def test_time_agg(db_params):
     )
 
     df, modelhub = get_objectiv_dataframe_test(db_params)
-    s = modelhub.time_agg(df, time_aggregation='YYYY-MM-DD')
+    s = modelhub.time_agg(df, time_aggregation='%Y-%m-%d')
 
     assert_equals_data(
         s,
@@ -573,7 +556,7 @@ def test_time_agg(db_params):
         convert_uuid=True,
     )
 
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
     s = modelhub.time_agg(df, time_aggregation='YYYY')
 
     assert_equals_data(
@@ -598,7 +581,22 @@ def test_time_agg(db_params):
 
 
 # TODO: remove this after bach supports slicing with dicts
-def _bq_get_series_json_sliced_with_dict(
+def _get_location_stack(df: bach.DataFrame) -> SeriesLocationStack:
+    if is_postgres(df.engine):
+        return df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
+
+    return cast(
+        SeriesLocationStack,
+        _get_series_json_sliced_with_dict(
+            df=df,
+            series_to_slice='location_stack',
+            start_slice={'_type': 'LinkContext', 'id': 'cta-repo-button'},
+            end_slice=None
+        ),
+    )
+
+
+def _get_series_json_sliced_with_dict(
     df: bach.DataFrame,
     series_to_slice: str,
     start_slice: Optional[Dict[Any, Any]] = None,
