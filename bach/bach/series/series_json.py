@@ -494,15 +494,21 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
         if '"' in key:
             raise ValueError(f'key values containing double quotes are not supported. key: {key}')
 
-        expression = Expression.construct(
+        json_expression = Expression.construct(
             '''JSON_QUERY({}, '$."{}"')''',
             self._series_object,
             Expression.raw(key)
         )
 
         if not as_str:
-            return self._series_object.copy_override(expression=expression)
+            return self._series_object.copy_override(expression=json_expression)
         from bach.series import SeriesString
+        value_expression = Expression.construct(
+            '''JSON_VALUE({}, '$."{}"')''',
+            self._series_object,
+            Expression.raw(key)
+        )
+        expression = Expression.construct('COALESCE({}, {})', value_expression, json_expression)
         return self._series_object.copy_override(expression=expression).copy_override_type(SeriesString)
 
     def get_array_length(self) -> 'SeriesInt64':
