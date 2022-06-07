@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 GroupByType = Union[List[Union[str, bach.Series]], str, bach.Series, NotSet]
 ConversionEventDefinitionType = Tuple[Optional['SeriesLocationStack'], Optional[str]]
 
-TIME_DEFAULT_FORMAT = 'YYYY-MM-DD HH24:MI:SS.MS'
+TIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
 
 class ModelHub:
@@ -181,7 +181,7 @@ class ModelHub:
         """
 
         time_aggregation = self.time_aggregation if time_aggregation is None else time_aggregation
-        return data.moment.dt.sql_format(time_aggregation).copy_override(name='time_aggregation')
+        return data.moment.dt.strftime(time_aggregation).copy_override(name='time_aggregation')
 
     _metabase: Union[None, MetaBase] = None
 
