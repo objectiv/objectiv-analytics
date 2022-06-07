@@ -1,12 +1,29 @@
 module.exports = {
   name: `plugin-engines-check`,
   factory: require => {
-    const { execSync } = require("child_process");
-    const { readFileSync } = require('fs');
+    const child_process = require("child_process");
+    const fs = require('fs');
+    const path = require("path");
     const semver = require('semver');
 
+    function getRootPath() {
+        return (function getRoot(dir) {
+            try {
+                const isPkgJson = fs.accessSync(path.join(dir, './package.json'));
+                const is_node_modules = fs.accessSync(path.join(dir, './node_modules'));
+            }
+            catch (e) {
+              if (dir === '/') {
+                throw new Error('Could not find root');
+              }
+              return getRoot(path.join(dir, '..'));
+            }
+            return dir;
+        }(path.join(__dirname, '../..')));
+    }
+
     // Read `node` and `npm` engines from package.json
-    const data = readFileSync('package.json');
+    const data = fs.readFileSync(getRootPath() + '/package.json');
     const { engines } = JSON.parse(data.toString());
     const { node, npm } = engines;
 
@@ -14,7 +31,7 @@ module.exports = {
     const nodeVersion = process.version;
 
     // Retrieve npm version
-    const npmVersion = execSync('npm -v').toString().trim();
+    const npmVersion = child_process.execSync('npm -v').toString().trim();
 
     return {
       default: {
