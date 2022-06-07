@@ -98,12 +98,8 @@ def test_sort_values_parameters(engine):
 
 
 @pytest.mark.parametrize(
-    "ascending",  [
-        *[list(perm) for perm in itertools.permutations([True, False, False])],
-        *[list(perm) for perm in itertools.permutations([True, True, False])],
-        [True, True, True],
-        [False, False, False],
-    ]
+    "ascending",  # generate all eight possible combinations of True/False for three parameters
+    [list(asc) for asc in itertools.product((True, False), (True, False), (True, False))]
 )
 def test_sorting_df_against_pandas(dataframes_sort, ascending) -> None:
     pdf, df = dataframes_sort
