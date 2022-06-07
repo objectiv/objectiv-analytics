@@ -13,7 +13,7 @@ from bach.series import Series
 from bach.series import SeriesJson
 from bach.series.series_json import JsonAccessor
 from bach.types import register_dtype
-from sql_models.util import is_postgres, DatabaseNotSupportedException
+from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery
 
 
 class ObjectivStack(JsonAccessor):
@@ -31,6 +31,8 @@ class ObjectivStack(JsonAccessor):
         dialect = self._series_object.engine.dialect
         if is_postgres(dialect):
             return self._postgres_get_from_context_with_type_series(type, key, dtype)
+        if is_bigquery(dialect):
+            return self._bigquery_get_from_context_with_type_series(type, key, dtype)
         raise DatabaseNotSupportedException(dialect)
 
     def _postgres_get_from_context_with_type_series(self, type: str, key: str, dtype='string'):
@@ -45,6 +47,21 @@ class ObjectivStack(JsonAccessor):
             Expression.string_value(key)
         )
         return self._series_object.copy_override_dtype(dtype).copy_override(expression=expression)
+
+    def _bigquery_get_from_context_with_type_series(self, type: str, key: str, dtype='string'):
+        select_ctx_expression = Expression.construct(
+            '''(
+              select first_value(ctx) over (order by pos)
+              from unnest(json_query_array({}, '$')) as ctx with offset as pos
+              where json_value(ctx, '$."_type"') = {}
+            )''',
+            self._series_object,
+            Expression.string_value(type)
+        )
+        ctx_series = self._series_object.copy_override(expression=select_ctx_expression)
+        as_str = dtype == 'string'
+        value_series = ctx_series.json.get_value(key=key, as_str=as_str)
+        return value_series.copy_override_dtype(dtype)
 
 
 @register_dtype(value_types=[], override_registered_types=True)
