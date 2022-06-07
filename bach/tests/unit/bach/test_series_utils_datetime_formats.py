@@ -1,6 +1,7 @@
-import pytest
-
-from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code
+"""
+Copyright 2022 Objectiv B.V.
+"""
+from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, parse_c_code_to_bigquery_code
 
 
 def test_parse_c_standard_code_to_postgres_code(recwarn):
@@ -44,3 +45,12 @@ def test_parse_c_standard_code_to_postgres_code_warning(recwarn):
     result = recwarn[0]
     assert issubclass(result.category, UserWarning)
     assert str(result.message) == "There are no equivalent codes for ['%%', '%s', '%t']."
+
+
+def test_parse_c_code_to_bigquery_code(recwarn):
+    assert parse_c_code_to_bigquery_code('%H:%M:%S.%f') == '%H:%M:%E6S'
+    assert parse_c_code_to_bigquery_code('%H:%M:%S.%f %f %S.%f') == '%H:%M:%E6S %f %E6S'
+    assert len(recwarn) == 1
+    result = recwarn[0]
+    assert issubclass(result.category, UserWarning)
+    assert str(result.message) == "There are no equivalent codes for %f."

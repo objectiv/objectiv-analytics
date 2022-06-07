@@ -15,7 +15,8 @@ from bach import DataFrame
 from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64
 from bach.expression import Expression
 from bach.series.series import WrappedPartition, ToPandasInfo
-from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code
+from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
+    parse_c_code_to_bigquery_code
 from bach.types import DtypeOrAlias, StructuredDtype
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
@@ -98,9 +99,10 @@ class DateTimeOperation:
         elif is_bigquery(engine):
             # BQ uses C Standard Codes
             # https://cloud.google.com/bigquery/docs/reference/standard-sql/format-elements#format_elements_date_time
+            parsed_format_str = parse_c_code_to_bigquery_code(format_str)
             expression = Expression.construct(
                 'format_date({}, {})',
-                Expression.string_value(format_str),
+                Expression.string_value(parsed_format_str),
                 self._series,
             )
         else:
