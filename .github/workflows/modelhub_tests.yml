@@ -70,4 +70,4 @@ jobs:
       - name: Functional tests
         run: |
           cd modelhub
-          pytest tests_modelhub/functional/  -W error::DeprecationWarning
+          pytest tests_modelhub/functional/  -W error::DeprecationWarning -W ignore::DeprecationWarning:bach.series.series_datetime
