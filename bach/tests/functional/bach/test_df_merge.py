@@ -8,7 +8,6 @@ import pytest
 
 from bach import DataFrame
 
-from sql_models.util import is_bigquery
 from tests.functional.bach.test_data_and_utils import (
     get_df_with_test_data, get_df_with_food_data,
     assert_equals_data, get_df_with_railway_data,
@@ -346,14 +345,9 @@ def test_merge_outer_join(engine):
         [2, 6, 2, 'Snits', 'Sneek', 2],
         [2, 7, 2, 'Snits', 'Sneek Noord', 2],
         [3, None, 3, 'Drylts', None, None],
+        [None, 4, None, None, 'Leeuwarden', 4]
     ]
 
-    # bigquery by default when sorting returns nulls first
-    # todo: support nulls first in sort_values and sort_index
-    if is_bigquery(engine):
-        expected_data = [[None, 4, None, None, 'Leeuwarden', 4]] + expected_data
-    else:
-        expected_data.append([None, 4, None, None, 'Leeuwarden', 4])
     assert_equals_data(
         result,
         expected_columns=[
