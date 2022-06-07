@@ -24,7 +24,6 @@ Category 4 and 5 are for functionality that we explicitly not support on some da
 Category 4, and 5 are the exception, these need to be marked with the `skip_postgres` or `skip_bigquery` marks.
 """
 import os
-from typing import NamedTuple, Optional
 
 import bach
 import pytest
@@ -33,16 +32,10 @@ from _pytest.python import Metafunc
 from _pytest.config.argparsing import Parser
 from sql_models.constants import DBDialect
 from sqlalchemy import create_engine
-from tests_modelhub.data_and_utils.utils import setup_db
+from tests_modelhub.data_and_utils.utils import setup_db, DBParams
 
 MARK_SKIP_POSTGRES = 'skip_postgres'
 MARK_SKIP_BIGQUERY = 'skip_bigquery'
-
-
-class DBParams(NamedTuple):
-    url: str
-    credentials: Optional[str]
-    table_name: str
 
 
 @pytest.fixture(autouse=True, scope='session')

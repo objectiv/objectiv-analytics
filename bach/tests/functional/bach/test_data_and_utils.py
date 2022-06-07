@@ -114,7 +114,12 @@ TEST_DATA_JSON = [
      ' {"_type":"SectionContext","id":"home"},'
      ' {"_type":"SectionContext","id":"top-10"},'
      ' {"_type":"ItemContext","id":"5o7Wv5Q5ZE"}]'
-     ]
+     ],
+    [4,
+     None,
+     None,
+     None
+     ],
 ]
 JSON_COLUMNS = ['row', 'dict_column', 'list_column', 'mixed_column']
 JSON_INDEX_AND_COLUMNS = ['_row_id'] + JSON_COLUMNS
