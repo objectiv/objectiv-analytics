@@ -8,11 +8,13 @@
 ==============
 Open model hub
 ==============
+The open model hub is a toolkit that contains functions and models that can be applied on data collected with 
+Objectiv’s Tracker. There are three types of functions/models: 
+1. Helper functions. These helper functions simplify manipulating and analyzing the data. 
+2. Aggregation models. These models consist of a combination of Bach instructions that run some of the more common data analyses or product analytics metrics. 
+3. Machine learning models.
 
-Data collected with Objectiv's Tracker and stored in an SQL database can be analyzed in a Jupyter notebook 
-with the **open model hub**. The open model hub is a growing collection of open-source, free to use data 
-models that you can take, combine and run for product analysis and exploration. It includes models for a wide 
-range of typical product analytics use cases.
+All models are open-source, free to use, and can be combined to build advanced compound models with little effort. The open model hub is powered by :ref:`Bach <bach>`: Objectiv's data modeling library. 
 
 If you want to use the open model hub, install the package from Pypi as follows:
 
