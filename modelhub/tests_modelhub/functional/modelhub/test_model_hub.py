@@ -11,7 +11,7 @@ from uuid import UUID
 
 # map
 def test_is_first_session(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
     s = modelhub.map.is_first_session(df)
 
@@ -55,9 +55,8 @@ def test_is_first_session(db_params):
     )
 
 
-@pytest.mark.skip_bigquery
 def test_is_new_user(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
     s = modelhub.map.is_new_user(df)
 
@@ -101,7 +100,7 @@ def test_is_new_user(db_params):
         convert_uuid=True,
     )
 
-    s = modelhub.map.is_new_user(df, time_aggregation='YYYY-MM')
+    s = modelhub.map.is_new_user(df, time_aggregation='%Y-%m')
 
     assert_equals_data(
         s,
@@ -127,7 +126,7 @@ def test_is_new_user(db_params):
 
 @pytest.mark.skip_bigquery
 def test_add_conversion_event(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
     location_stack = df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
     event_type = 'ClickEvent'
@@ -190,7 +189,7 @@ def test_add_conversion_event(db_params):
     )
 
     # event_type not set
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
     modelhub.add_conversion_event(location_stack=location_stack, name='github_clicks')
     assert len(modelhub._conversion_events) == 1
     assert modelhub._conversion_events[conversion] == (location_stack, None)
@@ -249,7 +248,7 @@ def test_add_conversion_event(db_params):
 
 @pytest.mark.skip_bigquery
 def test_is_conversion_event(db_params): # TODO: Remove when bach supports json slicing for BigQuery
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
     # add conversion event
     modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext',
@@ -301,7 +300,7 @@ def test_is_conversion_event(db_params): # TODO: Remove when bach supports json 
 
 @pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
 def test_conversions_counter(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
     # add conversion event
     modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
@@ -372,7 +371,7 @@ def test_conversions_counter(db_params):
 
 @pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
 def test_conversions_in_time(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
     # add conversion event
     modelhub.add_conversion_event(
@@ -418,7 +417,7 @@ def test_conversions_in_time(db_params):
 
 @pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
 def test_pre_conversion_hit_number(db_params):
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
     # add conversion event
     modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
@@ -484,7 +483,6 @@ def test_pre_conversion_hit_number(db_params):
     )
 
 
-@pytest.mark.skip_bigquery
 def test_time_agg(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params)
     s = modelhub.time_agg(df)
@@ -493,24 +491,24 @@ def test_time_agg(db_params):
         s,
         expected_columns=['event_id', 'time_aggregation'],
         expected_data=[
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), '2021-11-30 10:23:36.287'],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac302'), '2021-11-30 10:23:36.290'],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), '2021-11-30 10:23:36.291'],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac304'), '2021-11-30 10:23:36.267'],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac305'), '2021-12-01 10:23:36.276'],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac306'), '2021-12-01 10:23:36.279'],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac307'), '2021-12-02 10:23:36.281'],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac308'), '2021-12-02 10:23:36.281'],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac309'), '2021-12-02 14:23:36.282'],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac310'), '2021-12-03 10:23:36.283'],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), '2021-11-29 10:23:36.286'],
-            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), '2021-11-29 10:23:36.287']
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac301'), '2021-11-30 10:23:36.287000'],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac302'), '2021-11-30 10:23:36.290000'],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac303'), '2021-11-30 10:23:36.291000'],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac304'), '2021-11-30 10:23:36.267000'],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac305'), '2021-12-01 10:23:36.276000'],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac306'), '2021-12-01 10:23:36.279000'],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac307'), '2021-12-02 10:23:36.281000'],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac308'), '2021-12-02 10:23:36.281000'],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac309'), '2021-12-02 14:23:36.282000'],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac310'), '2021-12-03 10:23:36.283000'],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac311'), '2021-11-29 10:23:36.286000'],
+            [UUID('12b55ed5-4295-4fc1-bf1f-88d64d1ac312'), '2021-11-29 10:23:36.287000']
         ],
         order_by='event_id',
         convert_uuid=True,
     )
 
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m')
     s = modelhub.time_agg(df)
 
     assert_equals_data(
@@ -535,7 +533,7 @@ def test_time_agg(db_params):
     )
 
     df, modelhub = get_objectiv_dataframe_test(db_params)
-    s = modelhub.time_agg(df, time_aggregation='YYYY-MM-DD')
+    s = modelhub.time_agg(df, time_aggregation='%Y-%m-%d')
 
     assert_equals_data(
         s,
@@ -557,8 +555,8 @@ def test_time_agg(db_params):
         convert_uuid=True,
     )
 
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
-    s = modelhub.time_agg(df, time_aggregation='YYYY')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
+    s = modelhub.time_agg(df, time_aggregation='%Y')
 
     assert_equals_data(
         s,

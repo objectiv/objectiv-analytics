@@ -36,7 +36,7 @@ def test_no_grouping(db_params, exclude_bounces, expected_data):
 
 def test_time_aggregation_in_df(db_params):
     # using time_aggregation (and default groupby: mh.time_agg(df, ))
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
     s = modelhub.aggregate.session_duration(df)
 
     assert_equals_data(
@@ -52,7 +52,7 @@ def test_time_aggregation_in_df(db_params):
 def test_overriding_time_aggregation_in(db_params):
     # overriding time_aggregation
     df, modelhub = get_objectiv_dataframe_test(db_params)
-    bts = modelhub.aggregate.session_duration(df, groupby=modelhub.time_agg(df, 'YYYY-MM'))
+    bts = modelhub.aggregate.session_duration(df, groupby=modelhub.time_agg(df, '%Y-%m'))
 
     assert_equals_data(
         bts,
@@ -61,7 +61,7 @@ def test_overriding_time_aggregation_in(db_params):
             ['2021-12', datetime.timedelta(microseconds=3000)]]
     )
 
-    bts = modelhub.aggregate.session_duration(df, groupby=modelhub.time_agg(df, 'YYYY-MM'), method='sum')
+    bts = modelhub.aggregate.session_duration(df, groupby=modelhub.time_agg(df, '%Y-%m'), method='sum')
 
     assert_equals_data(
         bts,
@@ -72,7 +72,7 @@ def test_overriding_time_aggregation_in(db_params):
 
 def test_groupby(db_params):
     # group by other columns
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
     s = modelhub.aggregate.session_duration(df, groupby='event_type')
 
     assert_equals_data(
@@ -83,8 +83,8 @@ def test_groupby(db_params):
 
 def test_groupby_incl_time_agg(db_params):
     # group by other columns (as series), including time_agg
-    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='YYYY-MM-DD')
-    s = modelhub.aggregate.session_duration(df, groupby=[modelhub.time_agg(df, 'YYYY-MM'), df.session_id])
+    df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
+    s = modelhub.aggregate.session_duration(df, groupby=[modelhub.time_agg(df, '%Y-%m'), df.session_id])
 
     assert_equals_data(
         s,
