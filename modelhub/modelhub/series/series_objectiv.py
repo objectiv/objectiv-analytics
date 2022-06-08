@@ -252,13 +252,16 @@ class SeriesLocationStack(SeriesJson):
             return series
 
         @property
-        def nice_name(self) -> 'SeriesJson':
+        def nice_name(self) -> 'SeriesString':
             """
             .. _ls_nice_name:
 
             Returns a nice name for the location stack. This is a human readable name for the data in the
             feature stack.
             """
+            if is_bigquery(self._series_object.engine):
+                # TODO: This is temporary, just so that we have something
+                return self._series_object.json[0].json.get_value('_type', as_str=True) + ' TODO'
             expression = Expression.construct(
                 f"""(
                 select array_to_string(
