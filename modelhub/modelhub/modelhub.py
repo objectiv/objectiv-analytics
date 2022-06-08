@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 GroupByType = Union[List[Union[str, bach.Series]], str, bach.Series, NotSet]
 ConversionEventDefinitionType = Tuple[Optional['SeriesLocationStack'], Optional[str]]
 
-TIME_DEFAULT_FORMAT = 'YYYY-MM-DD HH24:MI:SS.MS'
+TIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
 
 class ModelHub:
@@ -175,14 +175,14 @@ class ModelHub:
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param time_aggregation: if None, it uses :py:attr:`time_aggregation` set from the
-            ModelHub. Use any template for aggregation from:
-            https://www.postgresql.org/docs/14/functions-formatting.html
-            ie. ``time_aggregation=='YYYY-MM-DD'`` aggregates by date.
+            ModelHub. Use any template for aggregation based on 1989 C standard format codes:
+            https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+            ie. ``time_aggregation=='%Y-%m-%d'`` aggregates by date.
         :returns: SeriesString.
         """
 
         time_aggregation = self.time_aggregation if time_aggregation is None else time_aggregation
-        return data.moment.dt.sql_format(time_aggregation).copy_override(name='time_aggregation')
+        return data.moment.dt.strftime(time_aggregation).copy_override(name='time_aggregation')
 
     _metabase: Union[None, MetaBase] = None
 
