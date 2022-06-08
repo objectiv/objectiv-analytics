@@ -11,6 +11,7 @@ from sqlalchemy.engine import Engine
 
 from modelhub.aggregate import Aggregate
 from modelhub.map import Map
+from modelhub.models.logistic_regression import LogisticRegression
 from modelhub.series.series_objectiv import MetaBase
 from sql_models.constants import NotSet
 
@@ -174,9 +175,9 @@ class ModelHub:
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param time_aggregation: if None, it uses :py:attr:`time_aggregation` set from the
-            ModelHub. Use any template for aggregation from:
-            https://www.postgresql.org/docs/14/functions-formatting.html
-            ie. ``time_aggregation=='YYYY-MM-DD'`` aggregates by date.
+            ModelHub. Use any template for aggregation based on 1989 C standard format codes:
+            https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+            ie. ``time_aggregation=='%Y-%m-%d'`` aggregates by date.
         :returns: SeriesString.
         """
 
@@ -237,3 +238,13 @@ class ModelHub:
 
         """
         return Aggregate(self)
+
+    def get_logistic_regression(self, *args, **kwargs) -> LogisticRegression:
+        """
+        Return an instance of the :py:class:`LogisticRegression` from the model hub.
+
+        All parameters passed to this function are passed to the constructor of the LogisticRegression
+        model.
+        """
+
+        return LogisticRegression(*args, **kwargs)

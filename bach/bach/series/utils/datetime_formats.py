@@ -128,16 +128,13 @@ def parse_c_standard_code_to_postgres_code(date_format: str) -> str:
     """
 
     codes_base_pattern = '|'.join(_SUPPORTED_C_STANDARD_CODES)
-    grouped_codes_matches = re.findall(pattern=rf"(?P<codes>({codes_base_pattern})+)", string=date_format)
+    grouped_codes_matches = re.findall(pattern=rf"(?P<codes>(?:{codes_base_pattern})+)", string=date_format)
     if not grouped_codes_matches:
         # return it as a literal
         date_format = date_format.replace('"', r'\"')
         return f'"{date_format}"'
 
-    # regex used in findall has 2 groups, we are interested in the first group
-    # Here we get all unique groups of continuous c-codes, sorted by largest to smaller
-    # this way we avoid replacing nested groups
-    tokenized_c_codes = sorted({tokens for tokens, _ in grouped_codes_matches}, key=len, reverse=True)
+    tokenized_c_codes = sorted(set(grouped_codes_matches), key=len, reverse=True)
     unsupported_c_codes = set()
     single_c_code_regex = re.compile(rf'{codes_base_pattern}')
 
