@@ -415,7 +415,6 @@ def test_conversions_in_time(db_params):
     )
 
 
-@pytest.mark.skip_bigquery
 def test_pre_conversion_hit_number(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
