@@ -53,7 +53,7 @@ class DateTimeOperation:
     def sql_format(self, format_str: str) -> SeriesString:
         """
         Allow formatting of this Series (to a string type).
-        
+
         :param format_str: The format to apply to the date/time column.
             Currently, this uses Postgres' data format string syntax:
             https://www.postgresql.org/docs/14/functions-formatting.html
@@ -62,7 +62,7 @@ class DateTimeOperation:
             This method is deprecated, we recommend using :meth:`SeriesAbstractDateTime.dt.strftime` instead.
 
         .. code-block:: python
-        
+
             df['year'] = df.some_date_series.dt.sql_format('YYYY')  # return year
             df['date'] = df.some_date_series.dt.sql_format('YYYYMMDD')  # return date
 
