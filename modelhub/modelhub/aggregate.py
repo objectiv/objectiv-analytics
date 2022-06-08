@@ -123,6 +123,7 @@ class Aggregate:
 
             - if not_set it defaults to using :py:attr:`ModelHub.time_agg`.
             - if None it aggregates over all data.
+        :param exclude_bounces: if True only session durations greater than 0 will be considered
         :param method: 'mean' or 'sum'
         :returns: series with results.
         """
