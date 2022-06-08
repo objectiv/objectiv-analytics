@@ -243,14 +243,14 @@ def test_json_getitem_slice(engine, dtype):
 
 
 # tests below are for functions kind of specific to the objectiv (location) stack
-def test_json_getitem_query(pg_engine, dtype):
-    # TODO: BigQuery
-    bt = get_df_with_json_data(engine=pg_engine, dtype=dtype)
+def test_json_getitem_query(engine, dtype):
+    bt = get_df_with_json_data(engine=engine, dtype=dtype)
     # if dict is contained in any of the dicts in the json list, the first index of the first match is
     # returned to the slice.
     bts = bt.list_column.json[{"_type": "SectionContext"}: ]
     assert_equals_data(
         bts,
+        use_to_pandas=True,
         expected_columns=['_index_row', 'list_column'],
         expected_data=[
             [0, []],
@@ -261,33 +261,38 @@ def test_json_getitem_query(pg_engine, dtype):
             [4, []]
         ]
     )
+
+@pytest.mark.skip_postgres
+def test_json_same_start_end_slicing(engine, dtype):
+    # TODO: Postgres is generating wrong results, it is considering end of slicing as inclusive
+    bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bts = bt.list_column.json[1:{"id": "d"}]
     assert_equals_data(
         bts,
+        use_to_pandas=True,
         expected_columns=['_index_row', 'list_column'],
         expected_data=[
             [0, []],
             [1, []],
-            [2, [{"_type": "c", "id": "d"}]],
+            [2, []],
             [3, []],
             [4, []]
         ]
     )
+
     bts = bt.list_column.json[{'_type': 'a'}: {'id': 'd'}]
     assert_equals_data(
         bts,
+        use_to_pandas=True,
         expected_columns=['_index_row', 'list_column'],
         expected_data=[
             [0, []],
             [1, []],
-            [2, [{"_type": "a", "id": "b"}, {"_type": "c", "id": "d"}]],
+            [2, [{"_type": "a", "id": "b"}]],
             [3, []],
             [4, []]
         ]
     )
-
-    # TODO needs to_pandas() test
-
 
 def test_json_get_array_length(engine, dtype):
     df = get_df_with_json_data(engine=engine, dtype=dtype)
