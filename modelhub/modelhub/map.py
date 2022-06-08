@@ -214,10 +214,12 @@ class Map:
         ).groupby(partition).window()
 
         # number all rows except where __is_converted is NULL and _conversions == 0
-        pre_conversion_hits['pre_conversion_hit_number'] = pre_conversion_hits.session_hit_number.\
-            window_row_number(window)
         pch_mask = (pre_conversion_hits['__is_converted']) & (pre_conversion_hits['__conversions'] == 0)
+        pre_conversion_hits['pre_conversion_hit_number'] = 1
         pre_conversion_hits.loc[~pch_mask, 'pre_conversion_hit_number'] = None
-        pre_conversion_hits = pre_conversion_hits.materialize()
-
-        return pre_conversion_hits['pre_conversion_hit_number'].copy_override_type(bach.SeriesInt64)
+        pre_conversion_hit_number = (
+            pre_conversion_hits['pre_conversion_hit_number']
+            .astype('int64').copy_override_type(bach.SeriesInt64)  # None is parsed as string
+        )
+        pre_conversion_hit_number = pre_conversion_hit_number.sum(window)
+        return pre_conversion_hit_number.materialize().copy_override_type(bach.SeriesInt64)
