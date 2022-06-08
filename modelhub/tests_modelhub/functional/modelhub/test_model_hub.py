@@ -3,12 +3,7 @@ Copyright 2021 Objectiv B.V.
 """
 
 # Any import from modelhub initializes all the types, do not remove
-from typing import Optional, Any, Dict, cast
-
-import bach
-from sql_models.util import is_postgres
-
-from modelhub import __version__, SeriesLocationStack
+from modelhub import __version__
 import pytest
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from tests.functional.bach.test_data_and_utils import assert_equals_data
@@ -131,6 +126,7 @@ def test_is_new_user(db_params):
 
 def test_add_conversion_event(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
+
     location_stack = df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
     event_type = 'ClickEvent'
     conversion = 'github_clicks'
@@ -253,10 +249,9 @@ def test_is_conversion_event(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
     # add conversion event
-    modelhub.add_conversion_event(
-        location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
-        event_type='ClickEvent', name='github_clicks',
-    )
+    modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext',
+                                                                         'id': 'cta-repo-button'}:],
+                                  event_type='ClickEvent', name='github_clicks')
     s = modelhub.map.is_conversion_event(df, 'github_clicks')
 
     assert_equals_data(
@@ -373,6 +368,7 @@ def test_conversions_counter(db_params):
 
 def test_conversions_in_time(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
+
     # add conversion event
     modelhub.add_conversion_event(
         location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
