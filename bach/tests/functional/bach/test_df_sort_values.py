@@ -1,7 +1,35 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+import itertools
+from typing import Tuple
+
+import pandas as pd
+import pytest
+
+from bach import DataFrame
 from tests.functional.bach.test_data_and_utils import assert_equals_data, df_to_list, get_df_with_test_data
+
+
+@pytest.fixture
+def dataframes_sort(engine) -> Tuple[pd.DataFrame, DataFrame]:
+    pdf = pd.DataFrame(
+        [
+            [None, 1,        2],
+            [None, None,     3],
+            [None, 4,     None],
+            [1,    4,        5],
+            [None, None,  None],
+            [None, 2,        3],
+            [1,    None,  None],
+            [1,    None,     2],
+            [1,       2,  None],
+        ],
+        columns=['A', 'B', 'C']
+    )
+    df = DataFrame.from_pandas(engine, pdf, convert_objects=True).reset_index(drop=True)
+
+    return pdf, df
 
 
 def test_sort_values_basic(engine):
@@ -67,3 +95,15 @@ def test_sort_values_parameters(engine):
                               'founding'],
             expected_data=df_to_list(bt.to_pandas().sort_values(**kwargs))
         )
+
+
+@pytest.mark.parametrize(
+    "ascending",  # generate all eight possible combinations of True/False for three parameters
+    [list(asc) for asc in itertools.product((True, False), (True, False), (True, False))]
+)
+def test_sorting_df_against_pandas(dataframes_sort, ascending) -> None:
+    pdf, df = dataframes_sort
+    sort_by = ['A', 'B', 'C']
+    expected = pdf.sort_values(by=sort_by, ascending=ascending).reset_index(drop=True)
+    result = df.sort_values(by=sort_by, ascending=ascending).to_pandas()
+    pd.testing.assert_frame_equal(expected, result)

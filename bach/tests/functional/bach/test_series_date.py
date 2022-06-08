@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from bach import SeriesDate, DataFrame
-from sql_models.util import is_postgres
+from sql_models.util import is_postgres, is_bigquery
 from tests.functional.bach.test_data_and_utils import assert_equals_data,\
     assert_postgres_type, get_df_with_test_data, get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
@@ -88,64 +88,50 @@ def test_date_format(engine, recwarn):
     pdf = pd.DataFrame({'timestamp_series': [timestamp], 'date_series': [date]})
     df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).reset_index(drop=True)
 
-    same_result_formats = [
-        '%Y', '%g%Y', '%Y-%m-%d', '%Y%m%d-%Y%m-%m%d-%d', '%Y%m-%d%d',  '%Y%Y%Y'
-    ]
-    edge_cases = [
-        '%Y-%%%m-%d', '%s', 'abc %Y def%', '"abc" %Y "def"%', '%H:%M:%S %f', '%H:%M:%S MS', 'HH24:MI:SS MS',
+    all_formats = [
+        'Year: %Y',
+        '%Y', '%g%Y', '%Y-%m-%d', '%Y%m%d-%Y%m-%m%d-%d', '%Y%m-%d%d',  '%Y%Y%Y',
+        '%Y-%%%m-%d', 'abc %Y def%', '"abc" %Y "def"%', 'HH24:MI:SS MS',
         '%H:%M:%S.%f',
     ]
 
-    for idx, fmt in enumerate(same_result_formats + edge_cases):
+    for idx, fmt in enumerate(all_formats):
         df[f'date_f{idx}'] = df['date_series'].dt.strftime(fmt)
         df[f'timestamp_f{idx}'] = df['timestamp_series'].dt.strftime(fmt)
 
-    amount_of_srf_cols = (len(same_result_formats) + 1) * 2
-    expected_columns = df.columns[2:amount_of_srf_cols]
+    expected_columns = df.columns[2:]
+
+    if is_postgres(engine):
+        percentage_format_date = '2022-%%01-01'  # %% is not supported for pg
+        percentage_format_timestamp = '2021-%%05-03'
+        date_hour_format = '00:00:00.000000'
+    elif is_bigquery(engine):
+        percentage_format_date = '2022-%01-01'
+        percentage_format_timestamp = '2021-%05-03'
+        date_hour_format = '%H:%M:%E6S'  # bq will not consider the format for date values
+    else:
+        raise Exception()
+
     assert_equals_data(
         df[expected_columns],
         expected_columns=expected_columns,
         expected_data=[
             [
+                'Year: 2022', 'Year: 2021',
                 '2022', '2021',
                 '212022', '212021',
                 '2022-01-01', '2021-05-03',
                 '20220101-202201-0101-01', '20210503-202105-0503-03',
                 '202201-0101', '202105-0303',
                 '202220222022', '202120212021',
-            ]
-        ]
-    )
-
-    if is_postgres(engine):
-        expected_data = [
-            [
-                '2022-%%01-01', '2021-%%05-03',
-                '%s', '%s',  # there is no code for epoch
-                'aad 2022 7ef%', 'aad 2021 2ef%',  # bc is era indicator, d is day of week in PG
-                'abc 2022 def%', 'abc 2021 def%',  # skipping arbitrary text
-                '00:00:00 000000', '11:28:36 388000',
-                '00:00:00 000', '11:28:36 388',
-                '00:00:00 000', '11:28:36 388',
-                '00:00:00.000000', '11:28:36.388000',
-            ]
-        ]
-    else:
-        expected_data = [
-            [
-                '2022-%01-01', '2021-%05-03',
-                '%s', '1620041316',
+                percentage_format_date, percentage_format_timestamp,
                 'abc 2022 def%', 'abc 2021 def%',
                 '"abc" 2022 "def"%', '"abc" 2021 "def"%',
-                '%H:%M:%S %f', '11:28:36 %f',  # bq does not support microseconds format
-                '%H:%M:%S MS', '11:28:36 MS',  # bq hour codes don't work for dates
                 'HH24:MI:SS MS', 'HH24:MI:SS MS',
-                '%H:%M:%E6S', '11:28:36.388000',
-            ]
-        ]
-
-    expected_columns = df.columns[amount_of_srf_cols:]
-    assert_equals_data(df[expected_columns], expected_columns=expected_columns, expected_data=expected_data)
+                date_hour_format, '11:28:36.388000',
+            ],
+        ],
+    )
 
 
 @pytest.mark.skip_bigquery

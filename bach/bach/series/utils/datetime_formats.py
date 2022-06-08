@@ -107,14 +107,16 @@ def parse_c_standard_code_to_postgres_code(date_format: str) -> str:
             replacing occurrences of other groups (e.g %Y%m occurs in %Y%m%d, but both are different groups):
                 ['%Y%m%d', '%Y%m', '%d']
 
-        Step 2: For each group
-                                                               '%Y%m%d'             %Y%m'      '%d'
-            1) Get individual codes                       ['%Y', '%m', '%d']   ['%Y', '%m']   ['%d']
-            2) Replace with respective Postgres Code     ['YYYY', 'MM', 'DD'] ['YYYY', 'MM']  ['DD']
-            3) Recreate group (joined by ")                 'YYYY"MM"DD'        'YYYY"MM'      'DD'
-            4) Replace all original group occurrences
-               in original date_format string               'YYYY""MM-YYYY""MM-YYYY""MM""DD-DD'
-               with result from previous step
+        Step 2: Split initial dateformat by c-code groups
+
+        Step 3: For token from previous step:
+            If token is not a supported c-code, then treat the token as a literal and quote it.
+                (e.g Year: -> "Year:")
+            else:
+                1) Get individual codes from token
+                2) Replace each code with respective Postgres Code
+                3) Recreate group by joining all results from previous step with an empty literal.
+                    (e.g %Y%m%d -> YYYY""MM""DD
 
     .. note:: We use double quotes to force TO_CHAR interpret an empty string as literals, this way
             continuous date codes yield the correct value as intended
@@ -126,21 +128,31 @@ def parse_c_standard_code_to_postgres_code(date_format: str) -> str:
     """
 
     codes_base_pattern = '|'.join(_SUPPORTED_C_STANDARD_CODES)
-    grouped_codes_matches = re.findall(pattern=rf"(?P<codes>({codes_base_pattern})+)", string=date_format)
+    grouped_codes_matches = re.findall(pattern=rf"(?P<codes>(?:{codes_base_pattern})+)", string=date_format)
     if not grouped_codes_matches:
-        return date_format
+        # return it as a literal
+        date_format = date_format.replace('"', r'\"')
+        return f'"{date_format}"'
 
-    # regex used in findall has 2 groups, we are interested in the first group
-    # Here we get all unique groups of continuous c-codes, sorted by largest to smaller
-    # this way we avoid replacing nested groups
-    tokenized_c_codes = sorted({tokens for tokens, _ in grouped_codes_matches}, key=len, reverse=True)
+    tokenized_c_codes = sorted(set(grouped_codes_matches), key=len, reverse=True)
     unsupported_c_codes = set()
     single_c_code_regex = re.compile(rf'{codes_base_pattern}')
 
-    new_date_format = date_format
-    for grouped_c_codes in tokenized_c_codes:
+    new_date_format_tokens = []
+    all_tokens = re.split(pattern=rf"({'|'.join(tokenized_c_codes)})", string=date_format)
+    for token in all_tokens:
+        # empty space
+        if not token:
+            continue
+
+        # is a literal
+        if token not in tokenized_c_codes:
+            formatted_literal = token.replace('"', r'\"')
+            new_date_format_tokens.append(f'"{formatted_literal}"')
+            continue
+
         # get individual codes from the group
-        codes_to_replace = single_c_code_regex.findall(grouped_c_codes)
+        codes_to_replace = single_c_code_regex.findall(token)
         replaced_codes = []
         for to_repl_code in codes_to_replace:
             if to_repl_code not in _C_STANDARD_CODES_X_POSTGRES_DATE_CODES:
@@ -151,10 +163,7 @@ def parse_c_standard_code_to_postgres_code(date_format: str) -> str:
             # get correspondent postgres code
             replaced_codes.append(_C_STANDARD_CODES_X_POSTGRES_DATE_CODES[to_repl_code])
 
-        # replace all group occurrences
-        new_date_format = re.sub(
-            pattern=rf'({grouped_c_codes})', repl='""'.join(replaced_codes), string=new_date_format,
-        )
+        new_date_format_tokens.append('""'.join(replaced_codes))
 
     if unsupported_c_codes:
         warnings.warn(
@@ -162,10 +171,13 @@ def parse_c_standard_code_to_postgres_code(date_format: str) -> str:
             category=UserWarning,
         )
 
-    return new_date_format
+    return ''.join(new_date_format_tokens)
 
 
 def parse_c_code_to_bigquery_code(date_format: str) -> str:
+    """
+    Replaces all '%S.%f' with '%E6S', since BigQuery does not support microseconds c-code.
+    """
     if '%S.%f' in date_format:
         date_format = re.sub(r'%S\.%f', '%E6S', date_format)
 
