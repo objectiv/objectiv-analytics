@@ -99,9 +99,10 @@ class ObjectivStack(JsonAccessor, Generic[TSeriesJson]):
 
     def _bigquery_filter_keys_of_dicts(self, keys: List[str]) -> 'TSeriesJson':
         json_object_str_expressions = []
-        # We build a string that rebuilds the json object, with only the fields in keys.
-        # unfortunately BigQuery has no way (yet) to turn a struct into a json string, so we have to do raw
-        # string building to get a json.
+        # We unnest the json-array, and then for every json object in the array we build a copy of that
+        # json object, but with only the keys that are listed in the `keys` variable.
+        # Unfortunately BigQuery has no way (yet) to turn a struct into a json string, so we have to do raw
+        # string building to get json objects.
         for i, key in enumerate(keys):
             if '"' in key:
                 raise ValueError(f'key values containing double quotes are not supported. key: {key}')
