@@ -31,8 +31,9 @@ The open model hub is a growing collection of open-source, free to use data mode
 combine and run for product analysis and exploration. It includes models for a wide range of typical product
 analytics use cases. The source is available for all models and you're free to make any changes to them.
 
-The model hub has two main type of functions: :ref:`models_reference_mapping` and 
-:ref:`models_reference_aggregation`.
+The model hub has two main type of functions: 
+:doc:`helper functions <../open-model-hub/models/helper-functions/index>` and 
+:doc:`aggregation <../open-model-hub/models/aggregation/index>`.
 
 - `map` functions always return a series with the same shape and index as the DataFrame they are applied to.
   This ensures they can be added as a column to that DataFrame. `map` functions that return SeriesBoolean can

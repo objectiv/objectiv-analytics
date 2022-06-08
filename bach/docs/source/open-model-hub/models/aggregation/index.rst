@@ -1,9 +1,10 @@
 .. _models_reference_aggregation:
 
+.. frontmatterposition:: 2
 
-=========
-Aggregate
-=========
+===========
+Aggregation
+===========
 
 .. currentmodule:: modelhub
 

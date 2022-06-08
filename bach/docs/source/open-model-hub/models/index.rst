@@ -30,7 +30,7 @@ accessor from a model hub instance.
 .. currentmodule:: modelhub.Map
 
 .. autosummary::
-    :toctree: Map
+    :toctree: helper-functions
 
     is_first_session
     is_new_user
@@ -43,7 +43,7 @@ accessor from a model hub instance.
 .. toctree::
     :hidden:
 
-    Map/index
+    helper-functions/index
 
 
 .. currentmodule:: modelhub.Aggregate
@@ -56,7 +56,7 @@ product analytics metrics. Always return aggregated data in some form from the
 :attr:`aggregate <modelhub.ModelHub.aggregate>` accessor from a model hub instance.
 
 .. autosummary::
-    :toctree: Aggregate
+    :toctree: aggregation
 
     unique_users
     unique_sessions
@@ -69,9 +69,22 @@ product analytics metrics. Always return aggregated data in some form from the
 .. toctree::
     :hidden:
 
-    Aggregate/index
+    aggregation/index
+
+
+.. currentmodule:: modelhub
 
 Machine learning models
 -----------------------
 
-Currently we support  :ref:`logistic regression <modelhub_reference_logistic_regression>` directly on Bach DataFrames and Series.
+Currently we support  :ref:`logistic regression <modelhub_reference_logistic_regression>` directly on Bach 
+DataFrames and Series.
+
+.. autosummary::
+    :toctree: machine-learning/LogisticRegression
+
+
+.. toctree::
+    :hidden:
+
+    machine-learning/index

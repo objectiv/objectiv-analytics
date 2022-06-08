@@ -1,9 +1,10 @@
 .. _models_reference_mapping:
 
+.. frontmatterposition:: 1
 
-===
-Map
-===
+================
+Helper functions
+================
 
 .. currentmodule:: modelhub
 
