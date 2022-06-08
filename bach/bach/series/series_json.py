@@ -2,6 +2,8 @@
 Copyright 2021 Objectiv B.V.
 """
 import json
+import operator
+from functools import reduce
 from abc import abstractmethod
 from typing import Dict, Union, TYPE_CHECKING, Tuple, cast, Optional, List, Any, TypeVar, Generic
 
@@ -451,7 +453,11 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
         return self._series_object\
             .copy_override(expression=json_str_expression)
 
-    def _get_slice_partial_expr(self, value: Optional[int], is_start: bool) -> Expression:
+    def _get_slice_partial_expr(
+        self,
+        value: Optional[Union[Dict[str, str], int]],
+        is_start: bool,
+    ) -> Expression:
         """
         Return expression for either the lower bound or upper bound of a slice.
 
@@ -462,6 +468,9 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
         :return: Expression that will evaluate to an integer that can be used to compare against positions
                     in the array.
         """
+        if isinstance(value, dict):
+            return self._find_in_json_list(value, is_start)
+
         if value is not None and not isinstance(value, int):
             raise TypeError(f'Slice value must be None or an integer, value: {value}')
 
@@ -478,6 +487,36 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
         else:
             array_len = self.get_array_length()
             return Expression.construct(f'({{}} {value})', array_len)
+
+    def _find_in_json_list(self, filtering_slice: Dict[str, str], is_start: bool):
+        """
+        Return expression for the position of the element that contains the filtering values
+
+        Assumes that self._series_object is an array and each element is a json!
+
+        :param filtering_slice: dictionary containing the keys and values to use on filter.
+        :param is_start: whether value is the slice.start (True) or slice.stop (False) value. If true,
+            the first element containing the values is returned, otherwise the last.
+        :return: Expression that gets the position of the element based on the slicing filters.
+        """
+        if not isinstance(filtering_slice, dict):
+            raise TypeError(f'key should be a dict, actual type: {type(filtering_slice)}')
+
+        # this way we can reuse code from the accesor without duplicating
+        element_json = self._series_object.copy_override(
+            expression=Expression.construct('element'),
+        )
+
+        all_filters = [
+            element_json.json.get_value(filter_key, as_str=True) == str(filter_value)
+            for filter_key, filter_value in filtering_slice.items()
+        ]
+        slicing_mask = reduce(operator.and_, all_filters)
+        fmt = (
+            f"(select {'min' if is_start else 'max'}(case when {{}} then pos end) "
+            f"from unnest(JSON_QUERY_ARRAY({{}}, '$')) element with offset as pos)"
+        )
+        return Expression.construct(fmt, slicing_mask, self._series_object)
 
     def _get_array_item(self, key: int) -> 'TSeriesJson':
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
