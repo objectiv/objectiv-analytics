@@ -1,7 +1,7 @@
 import pytest
 
 from tests.functional.bach.test_data_and_utils import assert_equals_data, \
-    get_bt_with_railway_data, get_df_with_test_data, get_df_with_railway_data
+    get_df_with_test_data, get_df_with_railway_data
 
 
 def test_sort_index_basic(engine):

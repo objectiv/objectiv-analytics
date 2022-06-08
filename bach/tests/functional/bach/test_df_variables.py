@@ -7,7 +7,7 @@ from bach.dataframe import DtypeNamePair, DefinedVariable, DataFrame
 from sql_models.model import CustomSqlModelBuilder
 from sql_models.util import is_bigquery, is_postgres
 from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data, \
-    get_df_with_food_data, get_bt_with_test_data
+    get_df_with_food_data
 
 
 def test_variable_happy_path(engine):
@@ -247,8 +247,8 @@ def test_get_all_variable_usage(engine):
     ]
 
 
-def test_variable_escaping():
-    df = get_bt_with_test_data()[['city']]
+def test_variable_escaping(engine):
+    df = get_df_with_test_data(engine)[['city']]
     df = df[df['city'] == 'Ljouwert']
 
     weird_value = ' %(test)s %%  ? {test} {{test2}} {{{test3}}} {{}"test"{}\'test\'\'"'

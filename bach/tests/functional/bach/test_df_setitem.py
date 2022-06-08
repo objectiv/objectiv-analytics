@@ -9,9 +9,9 @@ import numpy as np
 
 from bach import SeriesInt64, SeriesString, SeriesFloat64, SeriesDate, SeriesTimestamp, \
     SeriesTime, SeriesTimedelta, Series, SeriesJson, SeriesBoolean
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_postgres_type, \
-    assert_equals_data, CITIES_INDEX_AND_COLUMNS, get_bt_with_railway_data, get_df_with_test_data, \
-    get_df_with_railway_data
+from sql_models.util import is_bigquery
+from tests.functional.bach.test_data_and_utils import assert_postgres_type, assert_equals_data, \
+    CITIES_INDEX_AND_COLUMNS,  get_df_with_test_data, get_df_with_railway_data
 
 
 def check_set_const(engine, constants: List[Any], expected_series: Type[Series], expected_pg_db_type: str):
@@ -115,8 +115,8 @@ def test_set_const_json(engine):
     check_set_const(engine, constants, SeriesJson, expected_pg_db_type='jsonb')
 
 
-def test_set_const_int_from_series():
-    bt = get_bt_with_test_data()[['founding']]
+def test_set_const_int_from_series(engine):
+    bt = get_df_with_test_data(engine)[['founding']]
     max_df = bt.groupby()[['founding']].sum()
     max_series = max_df['founding_sum']
     max_value = max_series.value
@@ -137,8 +137,8 @@ def test_set_const_int_from_series():
     assert bt.max_founding == bt['max_founding']
 
 
-def test_set_series_column():
-    bt = get_bt_with_test_data()
+def test_set_series_column(engine):
+    bt = get_df_with_test_data(engine)
     bt['duplicated_column'] = bt['founding']
     assert_postgres_type(bt['duplicated_column'], 'bigint', SeriesInt64)
     assert_equals_data(
@@ -155,12 +155,16 @@ def test_set_series_column():
     )
     assert bt.duplicated_column == bt['duplicated_column']
 
-    bt['spaces in column'] = bt['founding']
+    spaced_col_name = 'spaces in column'
+    if is_bigquery(engine):
+        # BigQuery doesn't support spaces in column names. So we don't test that functionality on that engine
+        spaced_col_name = 'spaces_in_column'
+    bt[spaced_col_name] = bt['founding']
     assert_equals_data(
         bt,
         expected_columns=[
             '_index_skating_order',  # index
-            'skating_order', 'city', 'municipality', 'inhabitants', 'founding', 'duplicated_column', 'spaces in column'
+            'skating_order', 'city', 'municipality', 'inhabitants', 'founding', 'duplicated_column', spaced_col_name
         ],
         expected_data=[
             [1, 1, 'Ljouwert', 'Leeuwarden', 93485, 1285, 1285, 1285],
@@ -175,7 +179,7 @@ def test_set_series_column():
         filtered_bt,
         expected_columns=[
             '_index_skating_order',  # index
-            'skating_order', 'city', 'municipality', 'inhabitants', 'founding', 'duplicated_column', 'spaces in column', 'town'
+            'skating_order', 'city', 'municipality', 'inhabitants', 'founding', 'duplicated_column', spaced_col_name, 'town'
         ],
         expected_data=[
             [1, 1, 'Ljouwert', 'Leeuwarden', 93485, 1285, 1285, 1285, 'Ljouwert']
@@ -184,8 +188,8 @@ def test_set_series_column():
     assert filtered_bt.town == filtered_bt['town']
 
 
-def test_set_multiple():
-    bt = get_bt_with_test_data()
+def test_set_multiple(engine):
+    bt = get_df_with_test_data(engine)
     bt['duplicated_column'] = bt['founding']
     bt['alternative_sport'] = 'keatsen'
     bt['leet'] = 1337
@@ -203,8 +207,8 @@ def test_set_multiple():
     assert bt.leet == bt['leet']
 
 
-def test_set_existing():
-    bt = get_bt_with_test_data()
+def test_set_existing(engine):
+    bt = get_df_with_test_data(engine)
     bt['city'] = bt['founding']
     assert_postgres_type(bt['city'], 'bigint', SeriesInt64)
     assert_equals_data(
@@ -412,8 +416,8 @@ def test_set_series_single_value(engine):
     )
 
 
-def test_set_pandas_series():
-    bt = get_bt_with_test_data()
+def test_set_pandas_series(engine):
+    bt = get_df_with_test_data(engine)
     pandas_series = bt['founding'].to_pandas()
     bt['duplicated_column'] = pandas_series
     assert_postgres_type(bt['duplicated_column'], 'bigint', SeriesInt64)
@@ -431,8 +435,8 @@ def test_set_pandas_series():
     )
 
 
-def test_set_pandas_series_different_shape():
-    bt = get_bt_with_test_data()
+def test_set_pandas_series_different_shape(engine):
+    bt = get_df_with_test_data(engine)
     pandas_series = bt['founding'].to_pandas()[1:]
     bt['duplicated_column'] = pandas_series
     assert_postgres_type(bt['duplicated_column'], 'bigint', SeriesInt64)
@@ -450,9 +454,9 @@ def test_set_pandas_series_different_shape():
     )
 
 
-def test_set_pandas_series_different_shape_and_name():
-    bt = get_bt_with_test_data()
-    bt2 = get_bt_with_railway_data()  # has more rows and different name index
+def test_set_pandas_series_different_shape_and_name(engine):
+    bt = get_df_with_test_data(engine)
+    bt2 = get_df_with_railway_data(engine)  # has more rows and different name index
     pandas_series = bt2['town'].to_pandas()
     bt['the_town'] = pandas_series
     assert_postgres_type(bt['the_town'], 'text', SeriesString)

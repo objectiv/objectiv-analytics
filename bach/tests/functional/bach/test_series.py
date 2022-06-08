@@ -10,7 +10,7 @@ from bach.expression import Expression
 from sql_models.util import is_postgres, is_bigquery
 from tests.functional.bach.test_data_and_utils import (
     get_df_with_test_data, assert_equals_data, df_to_list,
-    get_df_with_railway_data, get_df_with_food_data, get_bt_with_test_data, get_bt_with_food_data
+    get_df_with_railway_data, get_df_with_food_data, get_bt_with_test_data
 )
 
 
@@ -730,9 +730,9 @@ def test__set_item_with_merge_different_dtypes() -> None:
         bt['inhabitants'] + bt2['inhabitants']
 
 
-def test__set_item_with_merge_w_group_shared_name() -> None:
-    bt = get_bt_with_test_data(full_data_set=True)
-    mt = get_bt_with_food_data()
+def test__set_item_with_merge_w_group_shared_name(engine) -> None:
+    bt = get_df_with_test_data(engine, full_data_set=True)
+    mt = get_df_with_food_data(engine)
     mt['inhabitants'] = mt.skating_order
 
     max_bt_inh = bt.groupby('skating_order').inhabitants.max()
