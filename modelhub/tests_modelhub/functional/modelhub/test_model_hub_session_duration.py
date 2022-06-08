@@ -3,12 +3,14 @@ Copyright 2021 Objectiv B.V.
 """
 
 # Any import from modelhub initializes all the types, do not remove
+import pandas
+from sql_models.util import is_bigquery
+
 from modelhub import __version__
 import pytest
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 import datetime
-pytestmark = [pytest.mark.skip_bigquery]  # TODO: BigQuery
 
 
 def test_defaults(db_params):
@@ -19,20 +21,21 @@ def test_defaults(db_params):
     # with standard time_aggregation, all sessions are bounces
     assert len(s.to_numpy()) == 0
 
+
 @pytest.mark.parametrize("exclude_bounces,expected_data", [
-    (True, [[datetime.timedelta(microseconds=2667)]]),
-    (False, [[datetime.timedelta(microseconds=1143)]])
+    (True, [[pandas.Timedelta(microseconds=2667)]]),
+    (False, [[pandas.Timedelta(microseconds=1143)]])
 ])
 def test_no_grouping(db_params, exclude_bounces, expected_data):
     # not grouping to anything
     df, modelhub = get_objectiv_dataframe_test(db_params)
     s = modelhub.aggregate.session_duration(df, groupby=None, exclude_bounces=exclude_bounces)
-
     assert_equals_data(
         s,
         expected_columns=['session_duration'],
-        expected_data=expected_data
+        expected_data=expected_data,
     )
+
 
 def test_time_aggregation_in_df(db_params):
     # using time_aggregation (and default groupby: mh.time_agg(df, ))

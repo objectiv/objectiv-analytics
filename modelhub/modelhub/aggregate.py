@@ -142,10 +142,10 @@ class Aggregate:
 
         gdata = self._check_groupby(data=data, groupby=new_groupby)
         session_duration = gdata.aggregate({'moment': ['min', 'max']})
-        session_duration['session_duration'] = session_duration['moment_max']-session_duration['moment_min']
+        session_duration['session_duration'] = session_duration['moment_max'] - session_duration['moment_min']
 
         if exclude_bounces:
-            session_duration = session_duration[(session_duration['session_duration'] > '0')]
+            session_duration = session_duration[(session_duration['session_duration'].dt.total_seconds > 0)]
 
         if method not in ['sum', 'mean']:
             raise ValueError("only 'sum and 'mean' are supported for `method`")
