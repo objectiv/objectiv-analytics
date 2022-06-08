@@ -415,15 +415,21 @@ def test_cube_basics(pg_engine):
     )
 
 
-def test_rollup_basics(pg_engine):
-    # TODO: BigQuery
-    bt = get_df_with_test_data(pg_engine, full_data_set=False)
-    engine = bt.engine
+def test_rollup_basics(engine):
+    bt = get_df_with_test_data(engine, full_data_set=False)
 
     btr = bt.rollup(['municipality', 'city'])
     assert(isinstance(btr.group_by, Rollup))
-    assert(btr.group_by.get_group_by_column_expression().to_sql(engine.dialect)
-           == 'rollup ("municipality", "city")')
+
+    result_expression = btr.group_by.get_group_by_column_expression().to_sql(engine.dialect)
+
+    if is_postgres(engine):
+        expected_expression = 'rollup ("municipality", "city")'
+    elif is_bigquery(engine):
+        expected_expression = 'rollup (`municipality`, `city`)'
+    else:
+        raise Exception()
+    assert result_expression == expected_expression
 
     result_bt = btr[['inhabitants']].sum()
     # no materialization has taken place yet.
