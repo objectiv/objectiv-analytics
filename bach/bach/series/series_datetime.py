@@ -2,6 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 import datetime
+import warnings
 from abc import ABC
 from enum import Enum
 from typing import Union, cast, List, Tuple, Optional, Any
@@ -14,9 +15,11 @@ from bach import DataFrame
 from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64
 from bach.expression import Expression
 from bach.series.series import WrappedPartition, ToPandasInfo
+from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
+    parse_c_code_to_bigquery_code
 from bach.types import DtypeOrAlias, StructuredDtype
 from sql_models.constants import DBDialect
-from sql_models.util import is_postgres, is_bigquery
+from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
 
 
 class DatePart(str, Enum):
@@ -50,20 +53,62 @@ class DateTimeOperation:
     def sql_format(self, format_str: str) -> SeriesString:
         """
         Allow formatting of this Series (to a string type).
-
         :param format_str: The format to apply to the date/time column.
             Currently, this uses Postgres' data format string syntax:
             https://www.postgresql.org/docs/14/functions-formatting.html
 
-        .. code-block:: python
+        .. warning::
+           This method is deprecated, we recommend using :meth:`SeriesAbstractDateTime.dt.strftime` instead.
 
+        .. code-block:: python
             df['year'] = df.some_date_series.dt.sql_format('YYYY')  # return year
             df['date'] = df.some_date_series.dt.sql_format('YYYYMMDD')  # return date
+        :returns: a SeriesString containing the formatted date.
+        """
+        warnings.warn(
+            'Call to deprecated method, we recommend to use SeriesAbstractDateTime.dt.strftime instead',
+            category=DeprecationWarning,
+        )
+
+        expression = Expression.construct('to_char({}, {})',
+                                          self._series, Expression.string_value(format_str))
+        str_series = self._series.copy_override_type(SeriesString).copy_override(expression=expression)
+        return str_series
+
+    def strftime(self, format_str: str) -> SeriesString:
+        """
+        Allow formatting of this Series (to a string type).
+
+        :param format_str: The format to apply to the date/time column.
+            This uses  1989 C standard format codes:
+            https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+
+        .. code-block:: python
+
+            df['year'] = df.some_date_series.dt.sql_format('%Y')  # return year
+            df['date'] = df.some_date_series.dt.sql_format('%Y%m%d')  # return date
 
         :returns: a SeriesString containing the formatted date.
         """
-        expression = Expression.construct('to_char({}, {})',
-                                          self._series, Expression.string_value(format_str))
+        engine = self._series.engine
+
+        if is_postgres(engine):
+            parsed_format_str = parse_c_standard_code_to_postgres_code(format_str)
+            expression = Expression.construct(
+                'to_char({}, {})', self._series, Expression.string_value(parsed_format_str),
+            )
+        elif is_bigquery(engine):
+            # BQ uses C Standard Codes
+            # https://cloud.google.com/bigquery/docs/reference/standard-sql/format-elements#format_elements_date_time
+            parsed_format_str = parse_c_code_to_bigquery_code(format_str)
+            expression = Expression.construct(
+                'format_date({}, {})',
+                Expression.string_value(parsed_format_str),
+                self._series,
+            )
+        else:
+            raise DatabaseNotSupportedException(engine)
+
         str_series = self._series.copy_override_type(SeriesString).copy_override(expression=expression)
         return str_series
 

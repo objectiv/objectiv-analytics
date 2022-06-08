@@ -3,12 +3,16 @@ Copyright 2021 Objectiv B.V.
 """
 import datetime
 
+import pandas as pd
 import pytest
 
-from bach import SeriesDate
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_bt_with_food_data, \
+from bach import SeriesDate, DataFrame
+from sql_models.util import is_postgres, is_bigquery
+from tests.functional.bach.test_data_and_utils import assert_equals_data,\
     assert_postgres_type, get_df_with_test_data, get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
+
+from bach.series.utils.datetime_formats import _C_STANDARD_CODES_X_POSTGRES_DATE_CODES
 
 
 @pytest.mark.parametrize("asstring", [True, False])
@@ -77,28 +81,77 @@ def test_date_comparator(asstring: bool, engine):
     )
 
 
-def test_date_format():
-    mt = get_bt_with_food_data()[['moment', 'date']]
+def test_date_format(engine, recwarn):
+    timestamp = datetime.datetime(2021, 5, 3, 11, 28, 36, 388000)
+    date = datetime.date(2022, 1, 1)
 
-    mt['date'] = mt['date'].astype('date')
+    pdf = pd.DataFrame({'timestamp_series': [timestamp], 'date_series': [date]})
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).reset_index(drop=True)
 
-    assert mt['moment'].dtype == 'timestamp'
-    assert mt['date'].dtype == 'date'
+    all_formats = [
+        'Year: %Y',
+        '%Y', '%g%Y', '%Y-%m-%d', '%Y%m%d-%Y%m-%m%d-%d', '%Y%m-%d%d',  '%Y%Y%Y',
+        '%Y-%%%m-%d', 'abc %Y def%', '"abc" %Y "def"%', 'HH24:MI:SS MS',
+        '%H:%M:%S.%f',
+    ]
 
-    assert mt['moment'].dt.sql_format('YYYY').dtype == 'string'
+    for idx, fmt in enumerate(all_formats):
+        df[f'date_f{idx}'] = df['date_series'].dt.strftime(fmt)
+        df[f'timestamp_f{idx}'] = df['timestamp_series'].dt.strftime(fmt)
 
-    mt['fyyyy'] = mt['moment'].dt.sql_format('YYYY')
-    mt['fday'] = mt['date'].dt.sql_format('Day')
+    expected_columns = df.columns[2:]
+
+    if is_postgres(engine):
+        percentage_format_date = '2022-%%01-01'  # %% is not supported for pg
+        percentage_format_timestamp = '2021-%%05-03'
+        date_hour_format = '00:00:00.000000'
+    elif is_bigquery(engine):
+        percentage_format_date = '2022-%01-01'
+        percentage_format_timestamp = '2021-%05-03'
+        date_hour_format = '%H:%M:%E6S'  # bq will not consider the format for date values
+    else:
+        raise Exception()
 
     assert_equals_data(
-        mt[['fyyyy', 'fday']],
-        expected_columns=['_index_skating_order', 'fyyyy', 'fday'],
+        df[expected_columns],
+        expected_columns=expected_columns,
         expected_data=[
-            [1, '2021', 'Monday   '],
-            [2, '2021', 'Tuesday  '],
-            [4, '2022', 'Tuesday  ']
-        ]
+            [
+                'Year: 2022', 'Year: 2021',
+                '2022', '2021',
+                '212022', '212021',
+                '2022-01-01', '2021-05-03',
+                '20220101-202201-0101-01', '20210503-202105-0503-03',
+                '202201-0101', '202105-0303',
+                '202220222022', '202120212021',
+                percentage_format_date, percentage_format_timestamp,
+                'abc 2022 def%', 'abc 2021 def%',
+                '"abc" 2022 "def"%', '"abc" 2021 "def"%',
+                'HH24:MI:SS MS', 'HH24:MI:SS MS',
+                date_hour_format, '11:28:36.388000',
+            ],
+        ],
     )
+
+
+@pytest.mark.skip_bigquery
+def test_date_format_all_supported_pg_codes(engine):
+    timestamp = datetime.datetime(2021, 5, 3, 11, 28, 36, 388000, tzinfo=datetime.timezone.utc)
+    pdf = pd.DataFrame({'timestamp_series': [timestamp]})
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True).reset_index(drop=True)
+
+    for c_code in _C_STANDARD_CODES_X_POSTGRES_DATE_CODES.keys():
+        # strrftime does not support quarter, and currently we are not considering timezone info
+        if c_code in ('%Q', '%z', '%Z'):
+            continue
+
+        df[c_code] = df['timestamp_series'].dt.strftime(c_code)
+        pdf[c_code] = pdf['timestamp_series'].dt.strftime(c_code)
+
+    pdf['%w'] = (pdf['%w'].astype(int) + 1).astype(str)  # weekday number starts from 1 in Postgres
+    # datetime divides year by 100 and truncates integral part, postgres considers '2001' as start of 21st century
+    pdf['%C'] = '21'
+    pd.testing.assert_frame_equal(pdf, df.to_pandas(), check_dtype=False)
 
 
 def test_date_arithmetic(pg_engine):
