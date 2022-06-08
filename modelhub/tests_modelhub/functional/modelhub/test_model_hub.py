@@ -131,7 +131,7 @@ def test_is_new_user(db_params):
 
 def test_add_conversion_event(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
-    location_stack = _get_location_stack(df)
+    location_stack = df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
     event_type = 'ClickEvent'
     conversion = 'github_clicks'
     modelhub.add_conversion_event(location_stack=location_stack,
@@ -254,7 +254,7 @@ def test_is_conversion_event(db_params):
 
     # add conversion event
     modelhub.add_conversion_event(
-        location_stack=_get_location_stack(df),
+        location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
         event_type='ClickEvent', name='github_clicks',
     )
     s = modelhub.map.is_conversion_event(df, 'github_clicks')
@@ -305,7 +305,7 @@ def test_conversions_counter(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
     # add conversion event
-    modelhub.add_conversion_event(location_stack=_get_location_stack(df),
+    modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
                             event_type='ClickEvent',
                             name='github_clicks')
     s = modelhub.map.conversions_counter(df, 'github_clicks')
@@ -375,7 +375,7 @@ def test_conversions_in_time(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
     # add conversion event
     modelhub.add_conversion_event(
-        location_stack=_get_location_stack(df),
+        location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
         event_type='ClickEvent',
         name='github_clicks')
     s = modelhub.map.conversions_in_time(df, 'github_clicks')
@@ -419,7 +419,7 @@ def test_pre_conversion_hit_number(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
     # add conversion event
-    modelhub.add_conversion_event(location_stack=_get_location_stack(df),
+    modelhub.add_conversion_event(location_stack=df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:],
                             event_type='ClickEvent',
                             name='github_clicks')
     s = modelhub.map.pre_conversion_hit_number(df, 'github_clicks')
@@ -576,68 +576,3 @@ def test_time_agg(db_params):
         order_by='event_id',
         convert_uuid=True,
     )
-
-
-# TODO: remove this after bach supports slicing with dicts
-def _get_location_stack(df: bach.DataFrame) -> SeriesLocationStack:
-    if is_postgres(df.engine):
-        return df.location_stack.json[{'_type': 'LinkContext', 'id': 'cta-repo-button'}:]
-
-    return cast(
-        SeriesLocationStack,
-        _get_series_json_sliced_with_dict(
-            df=df,
-            series_to_slice='location_stack',
-            start_slice={'_type': 'LinkContext', 'id': 'cta-repo-button'},
-            end_slice=None
-        ),
-    )
-
-
-def _get_series_json_sliced_with_dict(
-    df: bach.DataFrame,
-    series_to_slice: str,
-    start_slice: Optional[Dict[Any, Any]] = None,
-    end_slice: Optional[Dict[Any, Any]] = None
-):
-    def _get_mask(slice_filter):
-        filters = [
-            f"JSON_QUERY(element, '$.\"{e_key}\"') = '\"{e_value}\"'"
-            for e_key, e_value in slice_filter.items()
-        ]
-        return ' AND '.join(filters)
-
-    if start_slice:
-        start_expression = bach.expression.Expression.construct(
-            (
-                f'(select min(case when {_get_mask(start_slice)} then pos else NULL end)'
-                f'from unnest(JSON_QUERY_ARRAY({{}})) element with offset as pos)'
-            ),
-            df[series_to_slice]
-        )
-    else:
-        start_expression = bach.expression.Expression.construct('0')
-
-    if end_slice:
-        stop_expression = bach.expression.Expression.construct(
-            (
-                f'(select max(case when {_get_mask(end_slice)} then pos else NULL end)'
-                f'from unnest(JSON_QUERY_ARRAY({{}})) element with offset as pos)'
-            ),
-            df[series_to_slice]
-        )
-    else:
-        stop_expression = bach.expression.Expression.construct(f'{ 2 ** 63 - 1}')
-
-    values_expression = bach.expression.Expression.construct(
-        "select val "
-        "from unnest(JSON_QUERY_ARRAY({}, '$')) val with offset as pos "
-        "where pos >= {} and pos < {} "
-        "order by pos",
-        df[series_to_slice], start_expression, stop_expression
-    )
-    json_str_expression = bach.expression.Expression.construct(
-        "'[' || ARRAY_TO_STRING(ARRAY({}), ', ') || ']'",
-        values_expression
-    )
-    return df[series_to_slice].copy_override(expression=json_str_expression)
