@@ -61,7 +61,7 @@ describe('getElementLocationStack', () => {
     const applicationId = 'app';
     const endpoint = 'http://test';
     const plugins: TrackerPluginInterface[] = [new PathContextFromURLPlugin()];
-    const tracker = new BrowserTracker({ applicationId, endpoint, plugins });
+    const tracker = new BrowserTracker({ applicationId, endpoint, plugins, trackRootLocationContextFromURL: false });
 
     const expectedPathsByElement: [TaggableElement, string][] = [
       [mainSection, 'Content:main'],
@@ -87,7 +87,13 @@ describe('getElementLocationStack', () => {
     const endpoint = 'http://test';
     const location_stack: LocationStack = [makeContentContext({ id: 'root' })];
     const plugins: TrackerPluginInterface[] = [new PathContextFromURLPlugin()];
-    const tracker = new BrowserTracker({ applicationId, endpoint, plugins, location_stack });
+    const tracker = new BrowserTracker({
+      applicationId,
+      endpoint,
+      plugins,
+      location_stack,
+      trackRootLocationContextFromURL: false,
+    });
 
     const expectedPathsByElement: [TaggableElement, string][] = [
       [mainSection, 'Content:root / Content:main'],

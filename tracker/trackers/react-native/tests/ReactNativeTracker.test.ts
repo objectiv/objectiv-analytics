@@ -2,8 +2,15 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { RootLocationContextFromURLPlugin } from '@objectiv/plugin-root-location-context-from-url';
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { GlobalContextName, TrackerEvent, TrackerQueue, TrackerTransportRetry } from '@objectiv/tracker-core';
+import {
+  GlobalContextName,
+  TrackerEvent,
+  TrackerPlugins,
+  TrackerQueue,
+  TrackerTransportRetry,
+} from '@objectiv/tracker-core';
 import { DebugTransport } from '@objectiv/transport-debug';
 import { defaultFetchFunction, FetchTransport } from '@objectiv/transport-fetch';
 import fetchMock from 'jest-fetch-mock';
@@ -113,6 +120,42 @@ describe('ReactNativeTracker', () => {
           expect.objectContaining({ pluginName: 'TestPlugin' }),
         ])
       );
+    });
+
+    it('should allow customizing a plugin, without affecting the existing ones', () => {
+      const testTracker = new ReactNativeTracker({
+        applicationId: 'app-id',
+        endpoint: 'localhost',
+        plugins: [
+          new RootLocationContextFromURLPlugin({
+            idFactoryFunction: () => 'test',
+          }),
+        ],
+      });
+      expect(testTracker).toBeInstanceOf(ReactNativeTracker);
+      expect(testTracker.plugins?.plugins).toEqual([
+        expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
+        expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
+        expect.objectContaining({ pluginName: 'RootLocationContextFromURLPlugin' }),
+      ]);
+    });
+
+    it('should allow customizing the plugin set', () => {
+      const testTracker = new ReactNativeTracker({
+        applicationId: 'app-id',
+        endpoint: 'localhost',
+      });
+      const trackerClone = new ReactNativeTracker({
+        applicationId: 'app-id',
+        endpoint: 'localhost',
+        plugins: new TrackerPlugins({ tracker: testTracker, plugins: testTracker.plugins.plugins }),
+      });
+
+      expect(trackerClone).toBeInstanceOf(ReactNativeTracker);
+      expect(trackerClone.plugins?.plugins).toEqual([
+        expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
+        expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
+      ]);
     });
   });
 
