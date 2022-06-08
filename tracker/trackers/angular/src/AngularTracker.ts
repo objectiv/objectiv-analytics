@@ -10,7 +10,7 @@ import {
   makeBrowserTrackerDefaultQueue,
   makeBrowserTrackerDefaultTransport,
   Tracker,
-  TrackerConfig, TrackerPluginInterface,
+  TrackerConfig,
 } from '@objectiv/tracker-browser';
 import { TrackerPlatform } from '@objectiv/tracker-core';
 
