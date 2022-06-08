@@ -360,14 +360,14 @@ class JsonAccessor(Generic[TSeriesJson]):
 
         If key is an integer, then this returns an item from the json array.
         The key is treated as a 0-based index. If negative this will count from the end of the array (one
-            based). The index MUST exist in the array.
+            based). If the index does not exists this will render None/NULL.
         This assumes the top-level item in the json is an array
 
         If key is a slice, then this returns a slice from the json array.
         This assumes the top-level item in the json is an array
 
         If key is a string, then this returns an item from the json object. The item belonging to the given
-            key is returned.
+            key is returned, or None/NULL if not found.
         This assumes the top-level item in the json is an object
         """
         # TODO: leverage instance_dtype information here, if we have that
