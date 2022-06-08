@@ -11,7 +11,7 @@ Logistic Regression
 The open model hub supports logistic regression on Bach data objects. A logistic regression model can be fitted, values can be predicted and results can be tested directly on the full data set in the database. Note that for fitting the model data is extracted from the database under the hood.
 
 This example is also available in a `notebook
-<https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/modelhub-logistic-regression.ipynb>`_
+<https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/model-hub-logistic-regression.ipynb>`_
 to run on your own data or use our
 `quickstart
 <https://objectiv.io/docs/home/quickstart-guide/>`_ to try it out with demo data in 5 minutes.
