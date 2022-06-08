@@ -174,9 +174,9 @@ class ModelHub:
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param time_aggregation: if None, it uses :py:attr:`time_aggregation` set from the
-            ModelHub. Use any template for aggregation from:
-            https://www.postgresql.org/docs/14/functions-formatting.html
-            ie. ``time_aggregation=='YYYY-MM-DD'`` aggregates by date.
+            ModelHub. Use any template for aggregation based on 1989 C standard format codes:
+            https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+            ie. ``time_aggregation=='%Y-%m-%d'`` aggregates by date.
         :returns: SeriesString.
         """
 
