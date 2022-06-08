@@ -10,7 +10,7 @@ import {
   makeBrowserTrackerDefaultQueue,
   makeBrowserTrackerDefaultTransport,
   Tracker,
-  TrackerConfig,
+  TrackerConfig, TrackerPluginInterface,
 } from '@objectiv/tracker-browser';
 import { TrackerPlatform } from '@objectiv/tracker-core';
 
@@ -48,7 +48,8 @@ export class AngularTracker extends Tracker {
 
     // Configure to use provided `plugins` or automatically create a Plugins instance with some sensible web defaults
     if (isPluginsArray(trackerConfig.plugins) || trackerConfig.plugins === undefined) {
-      config.plugins = [...makeBrowserTrackerDefaultPluginsList(trackerConfig), ...(trackerConfig.plugins ?? [])];
+      const customPlugins = isPluginsArray(trackerConfig.plugins) ? trackerConfig.plugins : [];
+      config.plugins = [...makeBrowserTrackerDefaultPluginsList(trackerConfig), ...customPlugins];
     } else {
       config.plugins = trackerConfig.plugins;
     }
