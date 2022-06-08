@@ -71,6 +71,6 @@ introduction examples are :ref:`here <bach_examples>`.
     user-intent
     feature-engineering
     modelhub-basics
-    open-taxonomy
     feature-importance
-
+    open-taxonomy
+    logistic-regression

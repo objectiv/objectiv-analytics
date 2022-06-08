@@ -11,6 +11,7 @@ from sqlalchemy.engine import Engine
 
 from modelhub.aggregate import Aggregate
 from modelhub.map import Map
+from modelhub.models.logistic_regression import LogisticRegression
 from modelhub.series.series_objectiv import MetaBase
 from sql_models.constants import NotSet
 
@@ -237,3 +238,13 @@ class ModelHub:
 
         """
         return Aggregate(self)
+
+    def get_logistic_regression(self, *args, **kwargs) -> LogisticRegression:
+        """
+        Return an instance of the :py:class:`LogisticRegression` from the model hub.
+
+        All parameters passed to this function are passed to the constructor of the LogisticRegression
+        model.
+        """
+
+        return LogisticRegression(*args, **kwargs)
