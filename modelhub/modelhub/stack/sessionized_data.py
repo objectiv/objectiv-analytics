@@ -43,7 +43,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
 
     def __init__(self, engine: Engine, table_name: str, session_gap_seconds: int):
         super().__init__(engine, table_name)
-        self.session_gap_seconds = session_gap_seconds
+        self._session_gap_seconds = session_gap_seconds
 
     def _get_pipeline_result(self, **kwargs) -> bach.DataFrame:
         # initial data is the result from ExtractedContextsPipeline
@@ -66,9 +66,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
         )
 
         # calculate series that are needed for the final result
-        sessionized_df = self._calculate_base_session_series(
-            context_df, session_gap_seconds=self.session_gap_seconds,
-        )
+        sessionized_df = self._calculate_base_session_series(context_df)
 
         # adds required objectiv session series
         sessionized_df = self._calculate_objectiv_session_series(sessionized_df)
@@ -98,7 +96,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
             if col in sessionized_columns
         }
 
-    def _calculate_base_session_series(self, df: bach.DataFrame, session_gap_seconds: int) -> bach.DataFrame:
+    def _calculate_base_session_series(self, df: bach.DataFrame) -> bach.DataFrame:
         """
         Calculates each series required for calculating the final sessionized series.
 
@@ -113,7 +111,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
         """
         sessionized_df = df.copy()
 
-        is_session_start_series = self._calculate_session_start(sessionized_df, self.session_gap_seconds)
+        is_session_start_series = self._calculate_session_start(sessionized_df, self._session_gap_seconds)
         sessionized_df[is_session_start_series.name] = is_session_start_series
         # materialize since rest of series are dependant and it uses a window function
         sessionized_df = sessionized_df.materialize(node_name='session_starts')

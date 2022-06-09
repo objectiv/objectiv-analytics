@@ -197,7 +197,7 @@ def test_calculate_base_session_series(db_params) -> None:
 
     tz_info = datetime.timezone.utc if is_bigquery(engine) else None
 
-    result = pipeline._calculate_base_session_series(context_df, _SESSION_GAP_SECONDS)
+    result = pipeline._calculate_base_session_series(context_df)
     assert_equals_data(
         result,
         expected_columns=[
