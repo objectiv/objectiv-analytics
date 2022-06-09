@@ -23,6 +23,7 @@ GroupByType = Union[List[Union[str, bach.Series]], str, bach.Series, NotSet]
 ConversionEventDefinitionType = Tuple[Optional['SeriesLocationStack'], Optional[str]]
 
 TIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
+SESSION_GAP_DEFAULT_SECONDS = 1800
 
 
 class ModelHub:
@@ -142,6 +143,7 @@ class ModelHub:
             start_date=start_date,
             end_date=end_date,
             table_name=table_name,
+            session_gap_seconds=SESSION_GAP_DEFAULT_SECONDS,
         )
 
         # sessionized data returns both series as bach.SeriesJson.

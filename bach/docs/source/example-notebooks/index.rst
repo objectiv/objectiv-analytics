@@ -47,7 +47,7 @@ In the example we assume that the data collected with Objectiv's tracker is stor
 
     from modelhub import ModelHub
     # instantiate the model hub
-    modelhub = ModelHub(time_aggregation='YYYY-MM-DD')
+    modelhub = ModelHub(time_aggregation='%Y-%m-%d')
     # get the Bach DataFrame with Objectiv data
     df = modelhub.get_objectiv_dataframe(db_url='postgresql://objectiv:@localhost:5432/objectiv',
                                          start_date='2022-03-01',
