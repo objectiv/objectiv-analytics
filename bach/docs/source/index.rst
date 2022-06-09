@@ -23,8 +23,9 @@ model on without any cleaning or transformation.
 
 ### The open model hub
 
-The open model hub consists of pre-built models and operations that you can combine to build advanced 
-compound models with little effort. The open model hub is powered by Bach, our python-based modeling library.
+The open model hub is a toolkit that contains functions and models that can be applied on data collected with 
+Objectiv’s Tracker. They can be combined to build advanced compound models with little effort. The open model 
+hub is powered by Bach, our python-based modeling library.
 
 :doc:`Learn more about the open model hub <open-model-hub/index>`
 
