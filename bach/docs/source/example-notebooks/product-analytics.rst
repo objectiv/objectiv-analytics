@@ -147,7 +147,7 @@ First we define a conversion event in the Objectiv DataFrame.
 
 .. code-block:: python
 
-    # Create a columns that extract all location stacks that lead to our github
+    # create a column that extracts all location stacks that lead to our github
     df['github_press'] = df.location_stack.json[{'id': 'objectiv-on-github', '_type': 'LinkContext'}:]
     df.loc[df.location_stack.json[{'id': 'github', '_type': 'LinkContext'}:]!=[],'github_press'] = df.location_stack
 
