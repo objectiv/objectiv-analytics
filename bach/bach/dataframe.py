@@ -3023,9 +3023,8 @@ class DataFrame:
             raise ValueError('cannot specify both "method" and "value".')
 
         if method:
-            from bach.operations.value_propagation import ValuePropagationMethod, ValuePropagation
-            p_method = ValuePropagationMethod.get_method(method)
-            df = ValuePropagation(df=df, method=p_method).propagate(sort_by, ascending)
+            from bach.operations.value_propagation import ValuePropagation
+            df = ValuePropagation(df=df, method=method).propagate(sort_by, ascending)
 
         if value is not None:
             series_to_fill = list(value.keys()) if isinstance(value, dict) else self.data_columns
@@ -3058,8 +3057,8 @@ class DataFrame:
             If sort_by is non-deterministic, this operation might yield different results after
             performing other operations over the resultant dataframe.
         """
-        from bach.operations.value_propagation import ValuePropagation, ValuePropagationMethod
-        v_propagation = ValuePropagation(df=self, method=ValuePropagationMethod.FORWARD_FILL)
+        from bach.operations.value_propagation import ValuePropagation
+        v_propagation = ValuePropagation(df=self, method='ffill')
         return v_propagation.propagate(sort_by=sort_by, ascending=ascending)
 
     def bfill(
@@ -3085,8 +3084,8 @@ class DataFrame:
             If sort_by is non-deterministic, this operation might yield different results after
             performing other operations over the resultant dataframe.
         """
-        from bach.operations.value_propagation import ValuePropagation, ValuePropagationMethod
-        v_propagation = ValuePropagation(df=self, method=ValuePropagationMethod.BACK_FILL)
+        from bach.operations.value_propagation import ValuePropagation
+        v_propagation = ValuePropagation(df=self, method='bfill')
         return v_propagation.propagate(sort_by=sort_by, ascending=ascending)
 
     def _get_parsed_subset_of_data_columns(

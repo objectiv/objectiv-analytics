@@ -42,14 +42,14 @@ class ValuePropagation:
         of observed non-nullable values in the series.
     4. Group the series to be filled by its partition and assign the first value.
     """
-    ROW_NUMBER_SERIES_NAME = '_row_number'
+    ROW_NUMBER_SERIES_NAME = '__row_number'
 
-    def __init__(self, df: DataFrame, method: ValuePropagationMethod):
+    def __init__(self, df: DataFrame, method: str):
         self._df = df
-        self._method = method
+        vp_method = ValuePropagationMethod.get_method(method)
         self._row_sorting = {
             'by': self.ROW_NUMBER_SERIES_NAME,
-            'ascending': method == ValuePropagationMethod.FORWARD_FILL,
+            'ascending': vp_method == ValuePropagationMethod.FORWARD_FILL,
         }
 
     def propagate(
@@ -60,7 +60,7 @@ class ValuePropagation:
         if sort_by:
             df = df.sort_values(by=sort_by, ascending=ascending)
 
-        if not df._order_by:
+        if not df.order_by:
             raise Exception('dataframe must be sorted in order to apply forward or backward fill.')
 
         # Number each sorted row this way we avoid issues when sorting NULL values
