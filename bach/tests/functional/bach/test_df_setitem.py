@@ -157,37 +157,36 @@ def test_set_series_column(engine):
     )
     assert bt.duplicated_column == bt['duplicated_column']
 
-    spaced_col_name = 'spaces in column'
-    if is_bigquery(engine):
-        # BigQuery doesn't support spaces in column names. So we don't test that functionality on that engine
-        spaced_col_name = 'spaces_in_column'
-    bt[spaced_col_name] = bt['founding']
-    assert_equals_data(
-        bt,
-        expected_columns=[
-            '_index_skating_order',  # index
-            'skating_order', 'city', 'municipality', 'inhabitants', 'founding', 'duplicated_column', spaced_col_name
-        ],
-        expected_data=[
-            [1, 1, 'Ljouwert', 'Leeuwarden', 93485, 1285, 1285, 1285],
-            [2, 2, 'Snits', 'Súdwest-Fryslân', 33520, 1456, 1456, 1456],
-            [3, 3, 'Drylts', 'Súdwest-Fryslân', 3055, 1268, 1268, 1268],
-        ]
-    )
-
     filtered_bt = bt[bt['city'] == 'Ljouwert']
     filtered_bt['town'] = filtered_bt['city']
     assert_equals_data(
         filtered_bt,
         expected_columns=[
             '_index_skating_order',  # index
-            'skating_order', 'city', 'municipality', 'inhabitants', 'founding', 'duplicated_column', spaced_col_name, 'town'
+            'skating_order', 'city', 'municipality', 'inhabitants', 'founding', 'duplicated_column', 'town'
         ],
         expected_data=[
-            [1, 1, 'Ljouwert', 'Leeuwarden', 93485, 1285, 1285, 1285, 'Ljouwert']
+            [1, 1, 'Ljouwert', 'Leeuwarden', 93485, 1285, 1285, 'Ljouwert']
         ]
     )
     assert filtered_bt.town == filtered_bt['town']
+
+@pytest.mark.skip_bigquery("Bigquery doesn't support spaces in column names")
+def test_set_series_column_name_with_spaces(engine):
+    bt = get_df_with_test_data(engine)
+    bt['spaces in column'] = bt['founding']
+    assert_equals_data(
+        bt,
+        expected_columns=[
+            '_index_skating_order',  # index
+            'skating_order', 'city', 'municipality', 'inhabitants', 'founding', 'spaces in column'
+        ],
+        expected_data=[
+            [1, 1, 'Ljouwert', 'Leeuwarden', 93485, 1285, 1285],
+            [2, 2, 'Snits', 'Súdwest-Fryslân', 33520, 1456, 1456],
+            [3, 3, 'Drylts', 'Súdwest-Fryslân', 3055, 1268, 1268],
+        ]
+    )
 
 
 def test_set_multiple(engine):
