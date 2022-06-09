@@ -1,13 +1,14 @@
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data, \
+    get_bt_with_test_data
 import numpy as np
 
 
-def test_standard_scale() -> None:
+def test_standard_scale(engine) -> None:
     numerical_cols = ['skating_order', 'inhabitants', 'founding']
     all_cols = ['city'] + numerical_cols
-    bt = get_bt_with_test_data(full_data_set=True)[all_cols]
+    bt = get_df_with_test_data(engine, full_data_set=True)[all_cols]
 
     pdf = bt.to_pandas()
 

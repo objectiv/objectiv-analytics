@@ -6,12 +6,12 @@ The test below are to prevent regressions in the escaping logic.
 We use(d) format() in multiple places, which means `{` and `}` need to be escaped at times.
 The pandas.read_sql_query() function that uses '%' for placeholders, which means all `%` need to be escaped.
 """
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data
 
 
-def test_format_injection_simple():
+def test_format_injection_simple(engine):
     # We use(d) format() in multiple places, this test is to prevent regressions in correct escaping
-    bt1 = get_bt_with_test_data()[['city']]
+    bt1 = get_df_with_test_data(engine)[['city']]
     bt1['city'] = bt1['city'] + ' {{test}}'
     assert_equals_data(
         bt1,
@@ -25,8 +25,8 @@ def test_format_injection_simple():
     )
 
 
-def test_format_injection_more():
-    bt2 = get_bt_with_test_data()[['city']]
+def test_format_injection_more(engine):
+    bt2 = get_df_with_test_data(engine)[['city']]
     bt2['city'] = bt2['city'] + ' {test} {{test2}} {{{test3}}} {{}{}'
     assert_equals_data(
         bt2,
@@ -40,11 +40,11 @@ def test_format_injection_more():
     )
 
 
-def test_format_injection_merge():
+def test_format_injection_merge(engine):
     # We use(d) format() in multiple places, this test is to prevent regressions in correct escaping
-    bt1 = get_bt_with_test_data()[['city']]
+    bt1 = get_df_with_test_data(engine)[['city']]
     bt1['city'] = bt1['city'] + ' {{test}}'
-    bt2 = get_bt_with_test_data()[['city']]
+    bt2 = get_df_with_test_data(engine)[['city']]
     bt2['city'] = bt2['city'] + ' {test} {{test2}} {{{test3}}} {{}{}'
     bt = bt1.merge(bt2, on='_index_skating_order')
     assert_equals_data(
@@ -59,9 +59,9 @@ def test_format_injection_merge():
     )
 
 
-def test_percentage_injection():
+def test_percentage_injection(engine):
     # We use(d) format() in multiple places, this test is to prevent regressions in correct escaping
-    bt = get_bt_with_test_data()[['city']]
+    bt = get_df_with_test_data(engine)[['city']]
     bt['city'] = bt['city'] + ' %(test)s %%  ?'
     print(bt.engine)
     assert_equals_data(
