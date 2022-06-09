@@ -51,7 +51,7 @@ jobs:
         with:
           # This path is specific to Ubuntu
           path: ~/.cache/pip
-          key: pip-${{ matrix.python-version }}-${{ hashFiles('modelhub/requirements.txt', 'modelhub/requirements-dev.txt') }}
+          key: pip-${{ matrix.python-version }}-${{ hashFiles('modelhub/requirements.txt', 'modelhub/requirements-dev.txt', 'bach/requirements-bigquery.txt') }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
