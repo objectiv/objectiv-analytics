@@ -216,3 +216,122 @@ class Map:
         data['pre_conversion_hit_number'] = pre_conversion_hits['pre_conversion_hit_number']
 
         return data.pre_conversion_hit_number
+
+    def retention_rate(self,
+                       data: bach.DataFrame,
+                       time_format: str = '%Y%m',
+                       event_type: str = 'PressEvent',
+                       calculate_percentage=True,
+                       display=True) -> bach.DataFrame:
+
+        """
+        Calculates the retention rate. It finds the percentage of users who have been active in a given time period,
+        compared to the total number of users. The "active user" is the user who made transactions that we are
+        interested in (e.g. signed up for a product/service) in that time period.
+
+        Users are divided into mutually exclusive cohorts, which are then tracked over time.
+        The retention rate is calculated as a function of time separately for each cohort.
+        In our case users are assigned to a cohort based on when they made their first action
+        that we are interested in.
+
+        Returns the retention rate dataframe, it represents users retained across cohorts:
+            - index value represents the cohort
+            - columns represent the number of given date format (default value - months) since the current cohort
+
+        :param data: :py:class:`bach.DataFrame` to apply the method on.
+        :param time_format: can be week, month, etc. For more formats look to TODO where?
+        :param event_type: the event that we are interested in. Must be a valid event_type (either parent or child).
+        :param calculate_percentage: calculate percentage TODO.
+        :param display: if display==True visualize the retention rate as a heat map
+        :returns: retention rate bach DataFrame.
+        """
+
+        self._mh._check_data_is_objectiv_data(data)
+
+        data = data.copy()
+
+        #  filtering data with the event that we are interested in
+        columns = ['user_id', 'day']
+        data = data[data['event_type'] == event_type][columns]
+
+        if time_format == '%Y%m%d':
+            data['cohort'] = data.day.dt.strftime(time_format).astype('timestamp')
+        else:
+            data['cohort'] = data.day.dt.strftime(time_format).astype(dtype=int)
+        data['cohort_year'] = data.day.dt.strftime('%Y').astype(dtype=int)
+        data['cohort_month'] = data.day.dt.strftime('%m').astype(dtype=int)
+        data['timestamp'] = data.day.dt.strftime('%Y%m%d').astype('timestamp')
+
+        # get the first cohort
+        cohorts = data.groupby('user_id')['cohort'].min().reset_index()
+        cohorts = cohorts.rename(columns={'cohort': 'first_cohort'})
+
+        # add first cohort to our data DataFrame
+        data = data.merge(cohorts, on='user_id', how='left')
+
+        # year
+        # first_cohort column is SeriesInt64 type
+        data['first_cohort_year'] = data['first_cohort'].astype(dtype=str)
+        data['first_cohort_year'] = data['first_cohort_year'].str[:4].astype(dtype=int)
+        data['cohort_year_diff'] = data['cohort_year'] - data['first_cohort_year']
+        # month
+        data['first_cohort_month'] = data['first_cohort'].astype(dtype=str).str[4:6].astype(dtype=int)
+        data['cohort_month_diff'] = data['cohort_month'] - data['first_cohort_month']
+
+        # cohort distance - the amount of year/months/days (depending on time_format)
+        # between the current event and the first event from the user
+        if time_format == '%Y':
+            data['cohort_distance'] = data['cohort_year_diff']
+        elif time_format == '%Y%m':
+            n_months = 12
+            data['cohort_distance'] = data['cohort_year_diff'] * n_months + data['cohort_month_diff']
+        else:
+            data['cohort_distance'] = data['cohort'] - data['first_cohort']
+            data['cohort_distance'] = data['cohort_distance'].astype(dtype=str)
+            data['first_cohort'] = data['first_cohort'].dt.strftime('%Y-%m-%d')
+
+        retention_rate = data.groupby(['first_cohort',
+                                       'cohort_distance']).agg({'user_id': 'nunique'}).unstack(level='cohort_distance')
+
+        # renaming columns: removing string attached after unstacking
+        # need to split the column name string because in case of time_format='%Y%m%d'
+        # we have "n days" string, where n - is number of the days.
+        column_name_map = {col: col.replace('__user_id_nunique', '').split()[0]
+                           for col in retention_rate.columns}
+        retention_rate = retention_rate.rename(columns=column_name_map)
+
+        # if days are used the first cohort name is '00:00:00', need to rename it to 0
+        if '00:00:00' in retention_rate.columns:
+            retention_rate = retention_rate.rename(columns={'00:00:00': '0'})
+
+        # 'sort' with column names (numerical sorting, even though the columns are strings)
+        columns = [str(j) for j in sorted([int(i) for i in retention_rate.columns])]
+        retention_rate = retention_rate[columns]
+
+        # TODO fix it
+        if calculate_percentage:
+            for col in columns:
+                retention_rate[col] /= retention_rate[columns[0]]
+
+        if display:
+            import matplotlib.pyplot as plt
+            import seaborn as sns
+            fig, ax = plt.subplots(figsize=(20, 8))
+            sns.heatmap(retention_rate.to_pandas(), annot=True, square=True, linewidths=.5,
+                        cmap=sns.cubehelix_palette(rot=-.4), ax=ax)
+            plt.title('Cohort Analysis')
+
+            if time_format == '%Y%m%d':
+                x_sub_title = 'Days'
+            elif time_format == '%Y%m':
+                x_sub_title = 'Months'
+            elif time_format == '%Y':
+                x_sub_title = 'Years'
+            else:
+                x_sub_title = 'Days'
+            plt.xlabel(f'{x_sub_title} After First Event')
+            plt.ylabel('First Event Cohort')
+            plt.show()
+
+        return retention_rate
+
