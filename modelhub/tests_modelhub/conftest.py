@@ -34,6 +34,15 @@ from sql_models.constants import DBDialect
 from sqlalchemy import create_engine
 from tests_modelhub.data_and_utils.utils import setup_db, DBParams
 
+
+DB_PG_TEST_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
+DB_BQ_TEST_URL = os.environ.get('OBJ_DB_BQ_TEST_URL', 'bigquery://objectiv-snowplow-test-2/modelhub_test')
+DB_BQ_CREDENTIALS_PATH = os.environ.get(
+    'OBJ_DB_BQ_CREDENTIALS_PATH',
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + '/.secrets/bach-big-query-testing.json'
+)
+
+
 MARK_SKIP_POSTGRES = 'skip_postgres'
 MARK_SKIP_BIGQUERY = 'skip_bigquery'
 
@@ -100,7 +109,7 @@ def pytest_generate_tests(metafunc: Metafunc):
 
 def _get_postgres_db_params() -> DBParams:
     return DBParams(
-        url=os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv'),
+        url=DB_PG_TEST_URL,
         credentials=None,
         table_name='objectiv_data',
     )
@@ -108,10 +117,7 @@ def _get_postgres_db_params() -> DBParams:
 
 def _get_bigquery_db_params() -> DBParams:
     return DBParams(
-        url=os.environ.get('OBJ_DB_BQ_TEST_URL', 'bigquery://objectiv-snowplow-test-2/modelhub_test'),
-        credentials=os.environ.get(
-            'OBJ_DB_BQ_CREDENTIALS_PATH',
-            os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + '/.secrets/bach-big-query-testing.json'
-        ),
+        url=DB_BQ_TEST_URL,
+        credentials=DB_BQ_CREDENTIALS_PATH,
         table_name='events',
     )
