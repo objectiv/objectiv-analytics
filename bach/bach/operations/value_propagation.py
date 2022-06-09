@@ -25,9 +25,9 @@ class ValuePropagation:
     """
     In order to instantiate this class you should provide the following params:
     df: a DataFrame containing all series to be filled by value propagation
-    method: a ValuePropagationMethod to be used.
-        - FORWARD_FILL: Fill missing values by propagating the last non-nullable value in each series.
-        - BACK_FILL: Fill missing values by using the next non-nullable value in each series.
+    method: a string identifying the ValuePropagationMethod to be used.
+        - 'ffill' or 'pad': Fill missing values by propagating the last non-nullable value in each series.
+        - 'bfill' or 'backfill: Fill missing values by using the next non-nullable value in each series.
     returns a new DataFrame with filled missing values.
 
     Steps of how values are propagated:
