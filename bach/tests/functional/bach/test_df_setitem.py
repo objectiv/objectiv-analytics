@@ -3,9 +3,11 @@ Copyright 2021 Objectiv B.V.
 """
 import datetime
 from typing import Type, Any, List
-import pytest
 
+import pandas
+import pytest
 import numpy as np
+from pandas.core.indexes.numeric import Int64Index
 
 from bach import SeriesInt64, SeriesString, SeriesFloat64, SeriesDate, SeriesTimestamp, \
     SeriesTime, SeriesTimedelta, Series, SeriesJson, SeriesBoolean
@@ -456,8 +458,11 @@ def test_set_pandas_series_different_shape(engine):
 
 def test_set_pandas_series_different_shape_and_name(engine):
     bt = get_df_with_test_data(engine)
-    bt2 = get_df_with_railway_data(engine)  # has more rows and different name index
-    pandas_series = bt2['town'].to_pandas()
+    # Create a series with more rows and a differently named index.
+    pandas_series = pandas.Series(
+        data=['Drylts', 'It Hearrenfean', 'It Hearrenfean', 'Ljouwert', 'Ljouwert', 'Snits', 'Snits'],
+        index=Int64Index([1, 2, 3, 4, 5, 6, 7], dtype='int64', name='_index_station_id')
+    )
     bt['the_town'] = pandas_series
     assert_postgres_type(bt['the_town'], 'text', SeriesString)
     assert_equals_data(
