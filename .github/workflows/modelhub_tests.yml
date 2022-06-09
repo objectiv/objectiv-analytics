@@ -77,7 +77,7 @@ jobs:
       - name: Install BQ dependencies
         run: |
           cd modelhub
-          # We don't an equivalent requirement-bigquery.txt in modelhub, as the requirements should be the
+          # We don't have an equivalent requirement-bigquery.txt in modelhub, as the requirements should be the
           # same as for Bach
           pip install -r ../bach/requirements-bigquery.txt
       - name: Setup GCP Credentials
