@@ -73,7 +73,7 @@ jobs:
       - name: Functional tests
         run: |
           cd modelhub
-          pytest tests_modelhub/functional/
+          pytest -n 4 --dist loadgroup tests_modelhub/functional/
       - name: Install BQ dependencies
         run: |
           cd modelhub
@@ -91,4 +91,4 @@ jobs:
       - name: Functional tests ALL
         run: |
           cd modelhub
-          pytest --all tests_modelhub/functional/
+          pytest --all -n 4 --dist loadgroup tests_modelhub/functional/
