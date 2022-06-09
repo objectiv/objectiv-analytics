@@ -35,6 +35,9 @@ jobs:
     env:
       # tell tests to use the above defined postgres service
       OBJ_DB_PG_TEST_URL: 'postgresql://objectiv:no_password_set@localhost:5432/objectiv'
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      # Just the path to a temp file, the actual secret is fully contained in the env var above.
+      OBJ_DB_BQ_CREDENTIALS_PATH: './sa.json'
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -48,7 +51,7 @@ jobs:
         with:
           # This path is specific to Ubuntu
           path: ~/.cache/pip
-          key: pip-${{ matrix.python-version }}-${{ hashFiles('modelhub/requirements.txt', 'modelhub/requirements-dev.txt') }}
+          key: pip-${{ matrix.python-version }}-${{ hashFiles('modelhub/requirements.txt', 'modelhub/requirements-dev.txt', 'bach/requirements-bigquery.txt') }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -66,8 +69,26 @@ jobs:
       - name: Unit tests
         run: |
           cd modelhub
-          pytest tests_modelhub/unit/  -W error::DeprecationWarning
+          pytest tests_modelhub/unit/
       - name: Functional tests
         run: |
           cd modelhub
-          pytest tests_modelhub/functional/  -W error::DeprecationWarning -W ignore::DeprecationWarning:bach.series.series_datetime
+          pytest -n 4 --dist loadgroup tests_modelhub/functional/
+      - name: Install BQ dependencies
+        run: |
+          cd modelhub
+          # We don't have an equivalent requirement-bigquery.txt in modelhub, as the requirements should be the
+          # same as for Bach
+          pip install -r ../bach/requirements-bigquery.txt
+      - name: Setup GCP Credentials
+        run: |
+          cd modelhub
+          echo $GCP_SERVICE_ACCOUNT > $OBJ_DB_BQ_CREDENTIALS_PATH
+      - name: Unit tests ALL
+        run: |
+          cd modelhub
+          pytest --all tests_modelhub/unit/
+      - name: Functional tests ALL
+        run: |
+          cd modelhub
+          pytest --all -n 4 --dist loadgroup tests_modelhub/functional/

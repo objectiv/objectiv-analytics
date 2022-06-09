@@ -4,8 +4,7 @@ Copyright 2021 Objectiv B.V.
 import pandas as pd
 
 from bach import Series, SeriesString, DataFrame
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data, \
-    get_df_with_test_data
+from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
 def test_from_value(engine):

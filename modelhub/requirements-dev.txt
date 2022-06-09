@@ -1,6 +1,13 @@
-pytest==6.2.5
-pytest-env
 mypy==0.910
 pycodestyle==2.7.0
-types-requests
 
+# Tests runners
+pytest==6.2.5
+pytest-env
+
+# Used for multi-process testing, and communication between these processes
+pytest-xdist==2.5.0
+filelock==3.7.1
+
+# Types used by mypy
+types-requests
