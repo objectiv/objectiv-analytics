@@ -40,7 +40,12 @@ class SessionizedDataPipeline(BaseDataPipeline):
         - all context and sessionized series defined in ObjectivSupportedColumns
         - correct dtypes for both context and sessionized series
     """
-    def _get_pipeline_result(self, session_gap_seconds=180, **kwargs) -> bach.DataFrame:
+
+    def __init__(self, engine: Engine, table_name: str, session_gap_seconds: int):
+        super().__init__(engine, table_name)
+        self._session_gap_seconds = session_gap_seconds
+
+    def _get_pipeline_result(self, **kwargs) -> bach.DataFrame:
         # initial data is the result from ExtractedContextsPipeline
         context_df = get_extracted_contexts_df(
             engine=self._engine, table_name=self._table_name, set_index=False, **kwargs,
@@ -61,9 +66,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
         )
 
         # calculate series that are needed for the final result
-        sessionized_df = self._calculate_base_session_series(
-            context_df, session_gap_seconds=session_gap_seconds,
-        )
+        sessionized_df = self._calculate_base_session_series(context_df)
 
         # adds required objectiv session series
         sessionized_df = self._calculate_objectiv_session_series(sessionized_df)
@@ -93,7 +96,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
             if col in sessionized_columns
         }
 
-    def _calculate_base_session_series(self, df: bach.DataFrame, session_gap_seconds: int) -> bach.DataFrame:
+    def _calculate_base_session_series(self, df: bach.DataFrame) -> bach.DataFrame:
         """
         Calculates each series required for calculating the final sessionized series.
 
@@ -108,7 +111,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
         """
         sessionized_df = df.copy()
 
-        is_session_start_series = self._calculate_session_start(sessionized_df, session_gap_seconds)
+        is_session_start_series = self._calculate_session_start(sessionized_df, self._session_gap_seconds)
         sessionized_df[is_session_start_series.name] = is_session_start_series
         # materialize since rest of series are dependant and it uses a window function
         sessionized_df = sessionized_df.materialize(node_name='session_starts')
@@ -256,16 +259,19 @@ class SessionizedDataPipeline(BaseDataPipeline):
         ).copy_override_type(bach.SeriesInt64)
 
 
-def get_sessionized_data(engine: Engine, table_name: str, set_index: bool = True, **kwargs) -> bach.DataFrame:
+def get_sessionized_data(engine: Engine, table_name: str, session_gap_seconds: int,
+                         set_index: bool = True, **kwargs) -> bach.DataFrame:
     """
     Gets context and sessionized data from pipeline.
     :param engine: db connection
     :param table_name: table from where to extract data
     :param set_index: set index series for final dataframe
+    :param session_gap_seconds: the session gap in seconds
 
     returns a bach DataFrame
     """
-    pipeline = SessionizedDataPipeline(engine=engine, table_name=table_name)
+    pipeline = SessionizedDataPipeline(engine=engine, table_name=table_name,
+                                       session_gap_seconds=session_gap_seconds)
     result = pipeline(**kwargs)
     if set_index:
         indexes = list(ObjectivSupportedColumns.get_index_columns())
