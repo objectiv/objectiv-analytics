@@ -156,11 +156,7 @@ class SeriesJson(Series):
             :members:
 
         """
-        if is_postgres(self.engine):
-            return JsonPostgresAccessor(series_object=self)
-        if is_bigquery(self.engine):
-            return JsonBigQueryAccessor(series_object=self)
-        raise DatabaseNotSupportedException(self.engine)
+        return JsonAccessor(series_object=self)
 
     @property
     def elements(self):
@@ -316,7 +312,7 @@ class SeriesJsonPostgres(SeriesJson):
         """
         json_series = self.astype('json')
         assert isinstance(json_series, SeriesJson)  # help mypy
-        return JsonPostgresAccessor(series_object=json_series)
+        return json_series.json
 
     def materialize(
             self,
@@ -338,81 +334,68 @@ TSeriesJson = TypeVar('TSeriesJson', bound='SeriesJson')
 
 class JsonAccessor(Generic[TSeriesJson]):
     """
-    Abstract class with accessor methods to JSON type data.
-
-    Database specific subclasses implement the abstract functions.
+    Class with accessor methods to JSON type data.
     """
+
+    # We have different implementations for different databases. This class is a facade, that will call the
+    # actual implementing class based on the used database engine.
+    # Having this facade (instead of having subclasses per engine) makes it possible to have classes inherit
+    # from this class.
+
     def __init__(self, series_object: 'TSeriesJson'):
         self._series_object = series_object
 
+        # _implementation implements the actual functionality.
+        engine = self._series_object.engine
+        self._implementation: Union[JsonPostgresAccessorImpl, JsonBigQueryAccessorImpl]
+        if is_postgres(engine):
+            self._implementation = JsonPostgresAccessorImpl(series_object)
+        elif is_bigquery(engine):
+            self._implementation = JsonBigQueryAccessorImpl(series_object)
+        else:
+            raise DatabaseNotSupportedException(engine)
+
     def __getitem__(self, key: Union[str, int, slice]) -> 'TSeriesJson':
         """
-        Slice the JSON data in pythonic ways
+        Get item(s) from the JSON data in pythonic ways.
+        The way item(s) are looked up depends on the type of key.
+
+        If key is an integer, then this returns an item from the json array.
+        The key is treated as a 0-based index. If negative this will count from the end of the array (one
+            based). If the index does not exists this will render None/NULL.
+        This assumes the top-level item in the json is an array
+
+        If key is a slice, then this returns a slice from the json array.
+        This assumes the top-level item in the json is an array
+
+        If key is a string, then this returns an item from the json object. The item belonging to the given
+            key is returned, or None/NULL if not found.
+        This assumes the top-level item in the json is an object
         """
         # TODO: leverage instance_dtype information here, if we have that
         if isinstance(key, int):
-            return self._get_array_item(key)
+            return self._implementation.get_array_item(key)
 
         elif isinstance(key, str):
-            return self._get_dict_item(key)
+            return self._implementation.get_dict_item(key)
 
         elif isinstance(key, slice):
-            return self._get_array_slice(key)
+            return self._implementation.get_array_slice(key)
 
         raise TypeError('Key should either be a string, integer, or slice.')
 
-    @abstractmethod
-    def _get_array_slice(self, key: slice) -> 'TSeriesJson':
-        """
-        Get items from toplevel array.
-
-        This assumes the top-level item in the json is an array. Will result in an exception (later on) if
-        that's not the case!
-
-        :param key: array-slice.
-        :returns: series with the selected values.
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def _get_array_item(self, key: int) -> 'TSeriesJson':
-        """
-        Get item from toplevel array.
-
-        This assumes the top-level item in the json is an array. Will result in an exception (later on) if
-        that's not the case!
-
-        :param key: the 0-based index. If negative this will count from the end of the array (1 based). The
-            index MUST exist in the array
-        :returns: series with the selected value.
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def _get_dict_item(self, key: str) -> 'TSeriesJson':
-        """
-        Get item from toplevel object by key.
-
-        This assumes the top-level item in the json is an object. Will result in an exception (later on) if
-        that's not the case!
-
-        :param key: the key to return the values for.
-        :returns: series with the selected value.
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
     def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'TSeriesJson']:
         """
         Get item from toplevel object by key.
 
         :param key: the key to return the values for.
-        :param as_str: if True, it returns a string Series, json otherwise.
+        :param as_str: if True, it returns a string Series, json otherwise. Particular useful if the returned
+            value is in fact a string. In json the string will be represented as a quoted string, if this
+            field is set to true, the returned SeriesString will not have additional quotes.
         :returns: series with the selected object value.
         """
-        raise NotImplementedError()
+        return self._implementation.get_value(key=key, as_str=as_str)
 
-    @abstractmethod
     def get_array_length(self) -> 'SeriesInt64':
         """
         Get the length of the toplevel array.
@@ -423,15 +406,18 @@ class JsonAccessor(Generic[TSeriesJson]):
         # Implementing a more generic __len__() function is not trivial as a json object can be (among
         # others) an array, a dict, or a string, all of which should be supported by a generic __len__().
         # So for now we have a dedicated len function for arrays.
-        raise NotImplementedError()
+        return self._implementation.get_array_length()
 
 
-class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
+class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
     """
-    BigQuery specific implementation of JsonAccessor.
+    BigQuery specific implementation of JsonAccessor functions.
     """
 
-    def _get_array_slice(self, key: slice) -> 'TSeriesJson':
+    def __init__(self, series_object: 'TSeriesJson'):
+        self._series_object = series_object
+
+    def get_array_slice(self, key: slice) -> 'TSeriesJson':
         """ See implementation in parent class :class:`JsonAccessor` """
         if key.step:
             raise NotImplementedError('slice steps not supported')
@@ -502,7 +488,8 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
         if not isinstance(filtering_slice, dict):
             raise TypeError(f'key should be a dict, actual type: {type(filtering_slice)}')
 
-        # this way we can reuse code from the accesor without duplicating
+        # this way we can reuse code from the accesor without duplicating.
+        # 'element' will filled by iterating over the json array in the query below.
         element_json = self._series_object.copy_override(
             expression=Expression.construct('element'),
         )
@@ -518,7 +505,7 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
         )
         return Expression.construct(fmt, slicing_mask, self._series_object)
 
-    def _get_array_item(self, key: int) -> 'TSeriesJson':
+    def get_array_item(self, key: int) -> 'TSeriesJson':
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         if key >= 0:
             expression = Expression.construct(f'''JSON_QUERY({{}}, '$[{key}]')''', self._series_object)
@@ -530,7 +517,7 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
         expression = Expression.construct('JSON_QUERY_ARRAY({})[{}]', self._series_object, expr_offset)
         return self._series_object.copy_override(expression=expression)
 
-    def _get_dict_item(self, key: str) -> 'TSeriesJson':
+    def get_dict_item(self, key: str) -> 'TSeriesJson':
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         return cast('TSeriesJson', self.get_value(key=key, as_str=False))
 
@@ -578,10 +565,13 @@ class JsonBigQueryAccessor(JsonAccessor, Generic[TSeriesJson]):
             .copy_override(expression=expression)
 
 
-class JsonPostgresAccessor(JsonAccessor, Generic[TSeriesJson]):
+class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
     """
-    Postgres specific implementation of JsonAccessor.
+    Postgres specific implementation of JsonAccessor functions.
     """
+
+    def __init__(self, series_object: 'TSeriesJson'):
+        self._series_object = series_object
 
     def _find_in_json_list(self, key: Union[str, Dict[str, str]]):
         if isinstance(key, (dict, str)):
@@ -593,7 +583,7 @@ class JsonPostgresAccessor(JsonAccessor, Generic[TSeriesJson]):
         else:
             raise TypeError(f'key should be int or slice, actual type: {type(key)}')
 
-    def _get_array_slice(self, key: slice) -> 'TSeriesJson':
+    def get_array_slice(self, key: slice) -> 'TSeriesJson':
         """ See implementation in parent class :class:`JsonAccessor` """
         expression_references = 0
         if key.step:
@@ -645,12 +635,12 @@ class JsonPostgresAccessor(JsonAccessor, Generic[TSeriesJson]):
                 )
             )
 
-    def _get_array_item(self, key: int) -> 'TSeriesJson':
+    def get_array_item(self, key: int) -> 'TSeriesJson':
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         return self._series_object \
             .copy_override(expression=Expression.construct(f'{{}}->{key}', self._series_object))
 
-    def _get_dict_item(self, key: str) -> 'TSeriesJson':
+    def get_dict_item(self, key: str) -> 'TSeriesJson':
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
         return cast('TSeriesJson', self.get_value(key=key, as_str=False))
 
