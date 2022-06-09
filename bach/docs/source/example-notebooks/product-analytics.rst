@@ -147,9 +147,12 @@ First we define a conversion event in the Objectiv DataFrame.
 
 .. code-block:: python
 
-    modelhub.add_conversion_event(location_stack=df.location_stack.json[{'id': 'objectiv-on-github',
-                                                                         '_type': 'LinkContext'}:].fillna(
-                                                 df.location_stack.json[{'id': 'github', '_type': 'LinkContext'}:]),
+    # Create a columns that extract all location stacks that lead to our github
+    df['github_press'] = df.location_stack.json[{'id': 'objectiv-on-github', '_type': 'LinkContext'}:]
+    df.loc[df.location_stack.json[{'id': 'github', '_type': 'LinkContext'}:]!=[],'github_press'] = df.location_stack
+
+    # define which events to use as conversion events
+    modelhub.add_conversion_event(location_stack=df.github_press,
                                   event_type='PressEvent',
                                   name='github_press')
 
