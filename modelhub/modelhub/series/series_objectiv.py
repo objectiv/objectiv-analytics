@@ -9,7 +9,7 @@ from typing import List, Generic, TypeVar
 import requests
 
 from bach import DataFrame, Series, SeriesString, SeriesJson
-from bach.expression import Expression, quote_string, quote_identifier
+from bach.expression import Expression, quote_string, quote_identifier, join_expressions
 from bach.series.series_json import JsonAccessor
 from bach.types import register_dtype
 from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery
@@ -106,19 +106,24 @@ class ObjectivStack(JsonAccessor, Generic[TSeriesJson]):
         for i, key in enumerate(keys):
             if '"' in key:
                 raise ValueError(f'key values containing double quotes are not supported. key: {key}')
-            key_expr = Expression.construct('{}', Expression.string_value(json.dumps(key)))
-            colon_expr = Expression.string_value(': ')
-            val_expr = Expression.construct('''JSON_QUERY(item, '$."{}"')''', Expression.raw(key))
+            # Each iteration we build an expression of this form (the comma is skipped on the 1st iteration):
+            #       , "key": value
+            # This gives a combined expression of the form:
+            #       "key1": value1, "key2": value2, ..., "keyN": valueN
+            # However, we have to build the json as a raw string. So all the individual parts are strings,
+            # which we then add to a list. The items in that list will then become the arguments to a sql
+            # concat() function call, which then creates one combined string of the form that we intend.
             comma_expr = Expression.string_value(', ')
+            key_expr = Expression.string_value(json.dumps(key))
+            colon_expr = Expression.string_value(': ')
+            value_expr = Expression.construct('''JSON_QUERY(item, '$."{}"')''', Expression.raw(key))
+            if i > 0:
+                json_object_str_expressions.append(comma_expr)
             json_object_str_expressions.append(key_expr)
             json_object_str_expressions.append(colon_expr)
-            json_object_str_expressions.append(val_expr)
-            if i < (len(keys) - 1):
-                json_object_str_expressions.append(comma_expr)
-        json_object_key_values_expr = Expression.construct(
-            ', '.join('{}' for _ in json_object_str_expressions),
-            *json_object_str_expressions
-        )
+            json_object_str_expressions.append(value_expr)
+
+        json_object_key_values_expr = join_expressions(json_object_str_expressions)
         # Here we build the json object as a string by concatenating all earlier key-value and comma
         # expressions.
         json_object_expr = Expression.construct(
