@@ -9,6 +9,7 @@ import pytest
 from tests.functional.bach.test_data_and_utils import get_df_with_test_data
 from tests_modelhub.functional.modelhub.logistic_regression_test_utils import TestLR
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params
+pytestmark = [pytest.mark.skip_bigquery]  # TODO: BigQuery
 
 
 def test_fitted_model(db_params):
