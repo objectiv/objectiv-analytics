@@ -20,10 +20,9 @@ If you want to use Bach, install the package from PyPI as follows:
 
     pip install objectiv-bach
 
-To get a taste of what you can do with Objectiv Bach, There is also a `demo </docs/home/quickstart-guide>`_ 
-available that enables you to run the full Objectiv pipeline on your local machine. It includes our website 
-as a demo app, a Jupyter Notebook environment with working models and a Metabase environment to output data 
-to.
+To get a taste of what you can do with Objectiv Bach, there's also a `demo </docs/home/quickstart-guide>`_ 
+that enables you to run the full Objectiv pipeline on your local machine. It includes our website as a demo 
+app, a Jupyter Notebook environment with working models and a Metabase environment to output data to.
 
 .. toctree::
     :hidden:
