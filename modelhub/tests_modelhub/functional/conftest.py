@@ -42,7 +42,7 @@ def setup_postgres_db(request: SubRequest, tmp_path_factory: TempPathFactory, wo
 
     root_tmp_dir = tmp_path_factory.getbasetemp().parent  # get the temp directory shared by all workers
     is_done_path: Path = root_tmp_dir / "setup_database_is_done.txt"
-    lock_path: Path = root_tmp_dir / "setup_database.lcok"
+    lock_path: Path = root_tmp_dir / "setup_database.lock"
     lock = FileLock(str(lock_path))
     with lock:
         if not is_done_path.is_file():
