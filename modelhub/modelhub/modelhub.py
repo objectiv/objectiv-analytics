@@ -135,6 +135,7 @@ class ModelHub:
             start_date=start_date,
             end_date=end_date,
             table_name=table_name,
+            session_gap_seconds=1800,
         )
 
         # sessionized data returns both series as bach.SeriesJson.

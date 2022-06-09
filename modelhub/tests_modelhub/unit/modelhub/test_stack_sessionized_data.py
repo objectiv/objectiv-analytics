@@ -25,7 +25,7 @@ def patch_extracted_contexts_validations(monkeypatch):
 def test_convert_dtypes(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
 
-    pipeline = SessionizedDataPipeline(engine, db_params.table_name)
+    pipeline = SessionizedDataPipeline(engine, db_params.table_name, session_gap_seconds=1)
 
     pdf = pd.DataFrame({'session_id': ['1'], 'session_hit_number': ['2']})
     df = bach.DataFrame.from_pandas(
