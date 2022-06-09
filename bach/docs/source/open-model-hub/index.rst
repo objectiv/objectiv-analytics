@@ -16,7 +16,7 @@ Objectiv’s Tracker. There are three types of functions/models:
 
 All models are open-source, free to use, and can be combined to build advanced compound models with little effort. The open model hub is powered by :ref:`Bach <bach>`: Objectiv's data modeling library. 
 
-If you want to use the open model hub, install the package from Pypi as follows:
+If you want to use the open model hub, install the package from PyPI as follows:
 
 .. code-block:: console
 
