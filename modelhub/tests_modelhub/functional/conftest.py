@@ -43,8 +43,9 @@ def setup_postgres_db(request: SubRequest, tmp_path_factory: TempPathFactory, wo
     root_tmp_dir = tmp_path_factory.getbasetemp().parent  # get the temp directory shared by all workers
     is_done_path: Path = root_tmp_dir / "setup_database_is_done.txt"
     lock_path: Path = root_tmp_dir / "setup_database.lock"
-    # try to get lock, give up after 10 seconds. If other processes hasn't setup database in 10 seconds
-    # something is likely wrong. Better to fail than to wait forever.
+
+    # Try to get lock, but give up after 10 seconds. If another process is still busy setting up the database
+    # after 10 seconds, then something is likely wrong. Better to fail than to wait forever.
     lock = FileLock(str(lock_path), timeout=10)
     with lock:
         if not is_done_path.is_file():
