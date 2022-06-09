@@ -23,7 +23,9 @@ def setup_postgres_db(request: SubRequest, tmp_path_factory: TempPathFactory, wo
     When running in a scenario with multiple test processes, this will use a filelock to ensure the database
     get created only once.
     """
-    if not request.session.config.getoption("all") and not request.session.config.getoption("postgres"):
+    # use same logic as tests_modelhub.conftest.pytest_generate_tests()
+    testing_pg = not request.session.config.getoption("big_query")
+    if not testing_pg:
         return
 
     if worker_id == 'master':
@@ -47,9 +49,6 @@ def setup_postgres_db(request: SubRequest, tmp_path_factory: TempPathFactory, wo
             # We got the lock, but the file does not yet exist, so we are the first process
             _real_setup_postgres_db()
             is_done_path.write_text('done')
-            print("\n\nDB CREATED\n\n")
-        else:
-            print("\n\nDB READY\n\n")
         # else case: We got the lock, but the is_done_path file already exists, indicating we don't have to
         # do anything.
 
