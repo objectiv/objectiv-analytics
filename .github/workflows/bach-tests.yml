@@ -71,7 +71,7 @@ jobs:
       - name: Unit tests postgres
         run: |
           cd bach
-          pytest -n 4 --dist loadgroup --postgres tests/unit
+          pytest --postgres tests/unit
       - name: Functional tests postgres
         run: |
           cd bach
@@ -87,7 +87,7 @@ jobs:
       - name: Unit tests ALL
         run: |
           cd bach
-          pytest -n 4 --dist loadgroup --all tests/unit
+          pytest --all tests/unit
       - name: Functional tests ALL
         run: |
           cd bach
