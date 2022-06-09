@@ -56,13 +56,13 @@ the results in your notebook.
 Unique users
 ------------
 The `daily_users` uses the `time_aggregation` as set when the model hub was instantiated. In this case
-`time_aggregation` was set to 'YYYY-MM-DD', so the aggregation is daily. For `monthly_users`, the
+`time_aggregation` was set to '%Y-%m-%d', so the aggregation is daily. For `monthly_users`, the
 default time_aggregation is overridden by using a different `groupby`.
 
 .. code-block:: python
 
     daily_users = modelhub.aggregate.unique_users(df)
-    montly_users = modelhub.aggregate.unique_users(df, groupby=modelhub.time_agg(df, 'YYYY-MM'))
+    montly_users = modelhub.aggregate.unique_users(df, groupby=modelhub.time_agg(df, '%Y-%m'))
     users_root = modelhub.aggregate.unique_users(df, groupby=['application', 'root_location'])
 
 User time spent
@@ -73,8 +73,8 @@ average time spent per root location per month.
 .. code-block:: python
 
     duration_daily = modelhub.aggregate.session_duration(df)
-    duration_monthly = modelhub.aggregate.session_duration(df, groupby=modelhub.time_agg(df, 'YYYY-MM'))
-    duration_root_month = modelhub.aggregate.session_duration(df, groupby=['root_location', modelhub.time_agg(df, 'YYYY-MM')])
+    duration_monthly = modelhub.aggregate.session_duration(df, groupby=modelhub.time_agg(df, '%Y-%m'))
+    duration_root_month = modelhub.aggregate.session_duration(df, groupby=['root_location', modelhub.time_agg(df, '%Y-%m')])
 
 This example shows the quartiles of time spent. Materialization is needed because the expression of the
 created series contains aggregated data, and it is not allowed to aggregate that.
