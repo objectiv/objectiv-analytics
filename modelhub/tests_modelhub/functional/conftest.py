@@ -33,7 +33,7 @@ def setup_postgres_db(request: SubRequest, tmp_path_factory: TempPathFactory, wo
         _real_setup_postgres_db()
         return
 
-    # We are running with multiple workers. Make sure only one worker calls _actually_setup_postgres_db()
+    # We are running with multiple workers. Make sure only one worker calls _real_setup_postgres_db()
     # Use a FileLock, as advised by the pytest-xdist docs [1]
     # [1] https://pypi.org/project/pytest-xdist/#making-session-scoped-fixtures-execute-only-once
     # Basic idea is that we'll use a lock file to make sure only one process at a time is in the critical
