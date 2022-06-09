@@ -202,16 +202,17 @@ class Map:
         required_series = [partition, 'session_id', 'session_hit_number', '__conversions']
         data = data[required_series]
 
-        window = data.groupby(partition).window(start_boundary=None, end_boundary=None)
+        # sort all windows by session id and hit number
+        sort_by = ['session_id', 'session_hit_number']
+
+        window = data.sort_values(sort_by).groupby(partition).window()
         max_number_of_conversions = data['__conversions'].max(window)
         data['__is_converted'] = True
         data.loc[max_number_of_conversions == 0, '__is_converted'] = False
 
         pre_conversion_hits = data.materialize()
 
-        window = pre_conversion_hits.sort_values(
-            ['session_id', 'session_hit_number'], ascending=False,
-        ).groupby(partition).window()
+        window = pre_conversion_hits.sort_values(sort_by, ascending=False).groupby(partition).window()
 
         # number all rows except where __is_converted is NULL and _conversions == 0
         pch_mask = (pre_conversion_hits['__is_converted']) & (pre_conversion_hits['__conversions'] == 0)
