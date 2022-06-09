@@ -205,7 +205,7 @@ class Map:
         # sort all windows by session id and hit number
         sort_by = ['session_id', 'session_hit_number']
 
-        window = data.sort_values(sort_by).groupby(partition).window()
+        window = data.sort_values(sort_by, ascending=False).groupby(partition).window()
         max_number_of_conversions = data['__conversions'].max(window)
         data['__is_converted'] = True
         data.loc[max_number_of_conversions == 0, '__is_converted'] = False
