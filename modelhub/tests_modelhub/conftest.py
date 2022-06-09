@@ -25,14 +25,9 @@ Category 4, and 5 are the exception, these need to be marked with the `skip_post
 """
 import os
 
-import bach
-import pytest
-from _pytest.fixtures import SubRequest
 from _pytest.python import Metafunc
 from _pytest.config.argparsing import Parser
-from sql_models.constants import DBDialect
-from sqlalchemy import create_engine
-from tests_modelhub.data_and_utils.utils import setup_db, DBParams
+from tests_modelhub.data_and_utils.utils import DBParams
 
 
 DB_PG_TEST_URL = os.environ.get('OBJ_DB_PG_TEST_URL', 'postgresql://objectiv:@localhost:5432/objectiv')
@@ -45,30 +40,6 @@ DB_BQ_CREDENTIALS_PATH = os.environ.get(
 
 MARK_SKIP_POSTGRES = 'skip_postgres'
 MARK_SKIP_BIGQUERY = 'skip_bigquery'
-
-
-@pytest.fixture(autouse=True, scope='session')
-def setup_postgres_db(request: SubRequest) -> None:
-    """
-    Helper for creating postgres database used by all functional tests. Only created if it is required
-    to run tests against Postgres.
-    """
-    if request.session.config.getoption("big_query"):
-        return
-
-    db_params = _get_postgres_db_params()
-    engine = create_engine(url=db_params.url)
-    setup_db(
-        engine,
-        table_name=db_params.table_name,
-        columns={
-            'event_id': bach.SeriesUuid.supported_db_dtype[DBDialect.POSTGRES],
-            'day': bach.SeriesDate.supported_db_dtype[DBDialect.POSTGRES],
-            'moment': bach.SeriesTimestamp.supported_db_dtype[DBDialect.POSTGRES],
-            'cookie_id': bach.SeriesUuid.supported_db_dtype[DBDialect.POSTGRES],
-            'value': bach.SeriesJson.supported_db_dtype[DBDialect.POSTGRES],
-        },
-    )
 
 
 def pytest_addoption(parser: Parser):
@@ -98,7 +69,7 @@ def pytest_generate_tests(metafunc: Metafunc):
     testing_bq = metafunc.config.getoption("all") or metafunc.config.getoption("big_query")
 
     if testing_pg and not skip_postgres:
-        db_params.append(_get_postgres_db_params())
+        db_params.append(get_postgres_db_params())
 
     if testing_bq and not skip_bigquery:
         db_params.append(_get_bigquery_db_params())
@@ -107,7 +78,10 @@ def pytest_generate_tests(metafunc: Metafunc):
         metafunc.parametrize("db_params", db_params)
 
 
-def _get_postgres_db_params() -> DBParams:
+def get_postgres_db_params() -> DBParams:
+    """
+    Get Postgres DBParams. Never call this function from a test, always use the 'db_params' fixture.
+    """
     return DBParams(
         url=DB_PG_TEST_URL,
         credentials=None,
