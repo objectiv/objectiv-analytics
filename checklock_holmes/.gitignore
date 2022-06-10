@@ -4,6 +4,7 @@ result_images/
 *.egg-info/
 *.pyc
 __pycache__
+.secrets
 
 # Environments
 .env
@@ -14,7 +15,8 @@ ENV/
 env.bak/
 venv.bak/
 
-# generated scripts for notebooks
+# generated scripts and issues for notebooks
+github_nb_issues/
 .notebook_scripts
 
 # mypy stuff

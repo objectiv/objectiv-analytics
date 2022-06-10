@@ -3,7 +3,7 @@ from typing import Dict
 from pydantic import BaseSettings
 
 from checklock_holmes.models.env_models import BaseDBEnvModel, BigQueryEnvModel
-from checklock_holmes.utils.constants import SupportedEngine
+from checklock_holmes.utils.supported_engines import SupportedEngine
 
 
 class Settings(BaseSettings):
@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     bq_db: BigQueryEnvModel
 
     class Config:
-        env_file = '.env'
+        env_file = './.env'
         env_file_enconding = 'utf-8'
         env_nested_delimiter = '__'
 
