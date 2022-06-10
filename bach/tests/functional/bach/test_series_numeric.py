@@ -9,9 +9,7 @@ from sqlalchemy.engine import Engine
 
 from bach import DataFrame
 from sql_models.util import is_postgres, is_bigquery
-from tests.functional.bach.test_data_and_utils import (
-    assert_equals_data, get_df_with_test_data, get_bt_with_test_data
-)
+from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
 def helper_test_simple_arithmetic(engine: Engine, a: Union[int, float], b: Union[int, float]):
@@ -300,8 +298,8 @@ def test_series_qcut(engine) -> None:
             np.testing.assert_almost_equal(exp.right, float(res.right), decimal=2)
 
 
-def test_series_scale() -> None:
-    inhabitants = get_bt_with_test_data(full_data_set=True)['inhabitants']
+def test_series_scale(engine) -> None:
+    inhabitants = get_df_with_test_data(engine, full_data_set=True)['inhabitants']
     result = inhabitants.scale()
 
     inhbt_values = inhabitants.to_numpy()
@@ -330,8 +328,8 @@ def test_series_scale() -> None:
     )
 
 
-def test_series_minmax_scale() -> None:
-    inhabitants = get_bt_with_test_data(full_data_set=True)['inhabitants']
+def test_series_minmax_scale(engine) -> None:
+    inhabitants = get_df_with_test_data(engine, full_data_set=True)['inhabitants']
     result = inhabitants.minmax_scale()
 
     min_inh = 700

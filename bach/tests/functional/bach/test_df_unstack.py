@@ -1,6 +1,7 @@
 import pytest
 
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data
+from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data, \
+    get_df_with_test_data
 
 
 def test_basic_unstack() -> None:
@@ -81,8 +82,8 @@ def test_unstack_level() -> None:
         bt.unstack(level='random')
 
 
-def test_df_unstack_w_none():
-    bt = get_bt_with_test_data(full_data_set=True)
+def test_df_unstack_w_none(engine):
+    bt = get_df_with_test_data(engine, full_data_set=True)
     bt['municipality_none'] = bt[bt.skating_order < 10].municipality
     stacked_bt = bt.groupby(['city', 'municipality_none']).inhabitants.sum()
 
