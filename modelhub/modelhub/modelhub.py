@@ -119,9 +119,9 @@ class ModelHub:
             'postgresql://objectiv:@localhost:5432/objectiv' will be used.
         :param table_name: the name of the sql table where the data is stored.
         :param start_date: first date for which data is loaded to the DataFrame. If None, data is loaded from
-            the first date in the sql table. Format as 'YYYY-MM-DD'.
+            the first date in the sql table. Format as '%Y-%m-%d'.
         :param end_date: last date for which data is loaded to the DataFrame. If None, data is loaded up to
-            and including the last date in the sql table. Format as 'YYYY-MM-DD'.
+            and including the last date in the sql table. Format as '%Y-%m-%d'.
 
         :param bq_credentials_path: path for BigQuery credentials. If db_url is for BigQuery engine, this
             parameter is required.
