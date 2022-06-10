@@ -53,7 +53,7 @@ product analytics metrics. Always return aggregated data in some form from the
 
 Most of the model hub helper functions and aggregation models take `data` as their first argument: this is
 the DataFrame with the Objectiv data to apply the model to. For an example of a machine learning model look
-at the :doc:`logistic regression example <logistic-regression>`
+at the :doc:`logistic regression example <logistic-regression>`.
 
 The next examples demonstrate how to use the model hub by showcasing a selection of the models from the model hub.
 
