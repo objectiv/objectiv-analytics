@@ -1,4 +1,6 @@
 # templates
+from termcolor import colored
+
 GTIHUB_ISSUE_DATE_STR_FORMAT = '%Y%m%d_%H%M%S'
 GITHUB_ISSUE_FILENAME_TEMPLATE = 'github_issue_{date_str}.md'
 GITHUB_ISSUE_TEMPLATE = """
@@ -13,7 +15,7 @@ Failing code:
 {failing_code}
 ```
 
-Raised exception: 
+Raised exception:
 {exception}
 """
 
@@ -41,3 +43,13 @@ NOTEBOOK_EXTENSION = 'ipynb'
 NOTEBOOK_NAME_REGEX_PATTERN = rf'(.*/)?(?P<nb_name>.+)(\.{NOTEBOOK_EXTENSION})'
 DEFAULT_NOTEBOOKS_DIR = f'../notebooks/*.{NOTEBOOK_EXTENSION}'
 DEFAULT_GITHUB_ISSUES_DIR = 'github_nb_issues'
+
+
+# check results
+REPORT_HEADERS = ['notebook', 'engine', 'status', 'failing cell', 'elapsed_time (seconds)']
+SUCCESS_CHECK_MESSAGE = colored('Successful checks: {success_checks} ({perc_success}%)', 'green')
+FAILED_CHECK_MESSAGE = colored('Failed checks: {failed_checks} ({perc_failed}%)', 'red')
+MORE_INFORMATION_MESSAGE = (
+    'For more information about failed checks, please see: '
+    f"{colored('{github_issue_file}', 'blue')} file."
+)

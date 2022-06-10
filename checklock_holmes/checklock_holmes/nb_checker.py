@@ -1,14 +1,19 @@
 import json
 import re
+import time
 from dataclasses import dataclass, field
 from functools import cached_property
 from typing import Any, Dict, List
 
-from checklock_holmes.models.nb_checker_models import CellError, NoteBookCheck, NoteBookMetadata
-from checklock_holmes.utils.constants import (SET_ENV_VARIABLE_TEMPLATE,
-                                              WRAPPED_CODE_TEMPLATE, NB_SCRIPT_TO_STORE_TEMPLATE)
-from checklock_holmes.utils.supported_engines import SupportedEngine
+from checklock_holmes.models.nb_checker_models import (
+    CellError, NoteBookCheck, NoteBookMetadata
+)
 from checklock_holmes.settings import settings
+from checklock_holmes.utils.constants import (
+    NB_SCRIPT_TO_STORE_TEMPLATE, SET_ENV_VARIABLE_TEMPLATE,
+    WRAPPED_CODE_TEMPLATE
+)
+from checklock_holmes.utils.supported_engines import SupportedEngine
 
 _DEFAULT_ENV_VARIABLES = {
     'OBJECTIV_VERSION_CHECK_DISABLE': 'true'
@@ -32,10 +37,13 @@ class NoteBookChecker:
     def check_notebook(self, engine: SupportedEngine) -> NoteBookCheck:
         wrapped_script = self.get_script(engine, is_execution=True)
         completed = True
+
+        start_time = time.time()
         try:
             exec(wrapped_script)
         except Exception:
             completed = False
+        end_time = time.time()
 
         error = self._errors.get(engine)
         return NoteBookCheck(
@@ -43,7 +51,8 @@ class NoteBookChecker:
             engine=engine,
             completed=completed,
             error=error,
-            failing_block=''.join(self.cells[error.number]['source']) if error else None
+            failing_block=''.join(self.cells[error.number]['source']) if error else None,
+            elapsed_time=end_time-start_time,
         )
 
     @staticmethod
@@ -75,7 +84,7 @@ class NoteBookChecker:
             formatted_blocks.append(formatted_block)
 
         nb_script = '\n\n'.join(formatted_blocks)
-        if not is_execution:
+        if not is_execution and self.metadata.name:
             nb_script = NB_SCRIPT_TO_STORE_TEMPLATE.format(
                 notebook=re.sub(r'(-|\s)+', '_', self.metadata.name),
                 script=nb_script.strip(),

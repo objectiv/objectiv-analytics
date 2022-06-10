@@ -1,14 +1,18 @@
 from datetime import datetime
-from typing import Optional
+from typing import List
+
+from tabulate import tabulate
 
 from checklock_holmes.models.nb_checker_models import NoteBookCheck
-from checklock_holmes.utils.constants import GITHUB_ISSUE_TEMPLATE, GITHUB_ISSUE_FILENAME_TEMPLATE, \
-    GTIHUB_ISSUE_DATE_STR_FORMAT, NOTEBOOK_EXTENSION
+from checklock_holmes.utils import constants
 
 
 def store_github_issue(nb_check: NoteBookCheck, github_issues_file: str) -> None:
-    issue_md = GITHUB_ISSUE_TEMPLATE.format(
-        notebook=f'{nb_check.metadata.name}.{NOTEBOOK_EXTENSION}',
+    if not nb_check.error:
+        raise Exception('Cannot create issue for a check with no errors.')
+
+    issue_md = constants.GITHUB_ISSUE_TEMPLATE.format(
+        notebook=f'{nb_check.metadata.name}.{constants.NOTEBOOK_EXTENSION}',
         engine=nb_check.engine,
         cell_number=nb_check.error.number,
         failing_code=nb_check.failing_block,
@@ -20,11 +24,43 @@ def store_github_issue(nb_check: NoteBookCheck, github_issues_file: str) -> None
 
 def get_github_issue_filename() -> str:
     current_check_time = datetime.now()
-    return GITHUB_ISSUE_FILENAME_TEMPLATE.format(
-        date_str=current_check_time.strftime(GTIHUB_ISSUE_DATE_STR_FORMAT)
+    return constants.GITHUB_ISSUE_FILENAME_TEMPLATE.format(
+        date_str=current_check_time.strftime(constants.GTIHUB_ISSUE_DATE_STR_FORMAT)
     )
 
 
 def store_nb_script(nb_scripts_path: str, script: str) -> None:
     with open(nb_scripts_path, 'w') as file:
         file.write(script)
+
+
+def display_check_results(nb_checks: List[NoteBookCheck], github_files_path: str) -> None:
+    data_to_show = []
+    failed_checks = 0
+    success_checks = 0
+
+    for check in nb_checks:
+        data_to_show.append([
+            check.metadata.name,
+            check.engine,
+            'success' if check.completed else 'failed',
+            check.error.number if check.error else '',
+            check.elapsed_time,
+        ])
+        if check.error:
+            failed_checks += 1
+        else:
+            success_checks += 1
+
+    print(tabulate(data_to_show, headers=constants.REPORT_HEADERS, tablefmt="simple", floatfmt=".4f"))
+
+    if success_checks:
+        perc_success = round(success_checks/len(nb_checks) * 100, 2)
+        print(constants.SUCCESS_CHECK_MESSAGE.format(
+            success_checks=success_checks, perc_success=perc_success,
+        ))
+
+    if failed_checks:
+        perc_failed = round(failed_checks/len(nb_checks) * 100, 2)
+        print(constants.FAILED_CHECK_MESSAGE.format(failed_checks=failed_checks, perc_failed=perc_failed))
+        print(constants.MORE_INFORMATION_MESSAGE.format(github_issue_file=github_files_path))

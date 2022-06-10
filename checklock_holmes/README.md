@@ -95,3 +95,8 @@ python main.py -e bigquery --nb ../notebooks/basic-user-intent.ipynb --nb ../not
 ```bash
 python main.py --dump_nb_scripts_dir=.notebook_scripts
 ```
+
+5. Running checks and stop on the first failed check
+```bash
+python main.py -x 
+```

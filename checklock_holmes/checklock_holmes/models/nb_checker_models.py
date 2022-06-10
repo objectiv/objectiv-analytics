@@ -1,11 +1,13 @@
 import glob
 import os
 import re
-from typing import Optional, List, Union, Dict
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, validator
 
-from checklock_holmes.utils.constants import NOTEBOOK_EXTENSION, NOTEBOOK_NAME_REGEX_PATTERN
+from checklock_holmes.utils.constants import (
+    NOTEBOOK_EXTENSION, NOTEBOOK_NAME_REGEX_PATTERN
+)
 from checklock_holmes.utils.supported_engines import SupportedEngine
 
 
@@ -59,9 +61,12 @@ class NoteBookMetadata(BaseModel):
     name: Optional[str]
 
     @validator('name', always=True)
-    def _process_name(cls, val: Optional[str], values: Dict[str, Optional[str]]) -> str:
-        path = values.get('path')
-        return re.compile(NOTEBOOK_NAME_REGEX_PATTERN).match(path).group('nb_name')
+    def _process_name(cls, val: Optional[str], values: Dict[str, str]) -> str:
+        path = values['path']
+        match = re.compile(NOTEBOOK_NAME_REGEX_PATTERN).match(path)
+        if not match:
+            raise Exception(f'Cannot get notebook name from {path} path.')
+        return match.group('nb_name')
 
 
 class NoteBookCheck(BaseModel):
@@ -70,3 +75,4 @@ class NoteBookCheck(BaseModel):
     engine: str
     error: Optional[CellError]
     failing_block: Optional[str]
+    elapsed_time: float
