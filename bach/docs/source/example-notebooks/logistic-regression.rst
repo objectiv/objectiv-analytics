@@ -19,8 +19,8 @@ to run on your own data or use our
 At first we have to install the open model hub and instantiate the Objectiv DataFrame object. See
 :ref:`getting_started_with_objectiv` for more info on this.
 
-Creating a feature set
-----------------------
+Creating a feature set to predict user behavior
+-----------------------------------------------
 Data collected with Objectiv's tracker is `well-structured & consistent <https://objectiv.io/docs/taxonomy>`_, which makes it ideal for various machine learning applications. Machine learning models can be applied directly without cleaning, transformations or using complex tooling.
 
 In this example, we show how you can predict user behavior with the supported logistic regression model. Examples of predictions that you can create:
