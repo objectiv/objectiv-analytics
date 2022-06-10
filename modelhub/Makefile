@@ -3,7 +3,7 @@
 tests:
 	mypy modelhub
 	pycodestyle modelhub
-	pytest tests_modelhub
+	pytest -n 4 --dist loadgroup tests_modelhub/unit tests_modelhub/functional tests_modelhub
 
 tests-bigquery:
 # Similar to `tests`, but tests that can run against multiple databases will be run against BigQuery instead
@@ -11,7 +11,7 @@ tests-bigquery:
 # against Postgres
 	mypy modelhub
 	pycodestyle modelhub
-	pytest --big-query tests_modelhub
+	pytest --all -n 8 --dist loadgroup --big-query tests_modelhub
 
 
 tests-all:
@@ -20,4 +20,4 @@ tests-all:
 # run against Postgres
 	mypy modelhub
 	pycodestyle modelhub
-	pytest --all tests_modelhub
+	pytest --all -n 8 --dist loadgroup tests_modelhub

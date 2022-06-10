@@ -55,7 +55,7 @@ Calculating the unique users is one of the basic models in the model hub. As it 
 
 Using `map` with the model hub & combining models
 -------------------------------------------------
-This example shows how you use map to label users as a new user. This uses *time_aggregation*. As *time_aggregation* was set to 'YYYY-MM-DD' it means all hits are labeled as new for the entire day in which the user had its first session.
+This example shows how you use map to label users as a new user. This uses *time_aggregation*. As *time_aggregation* was set to '%Y-%m-%d' it means all hits are labeled as new for the entire day in which the user had its first session.
 
 .. code-block:: python
 
@@ -101,7 +101,7 @@ In this example we calculate the number of users that were new in a month and al
 
 .. code-block:: python
 
-    df['is_new_user_month'] = modelhub.map.is_new_user(df, time_aggregation = 'YYYY-MM')
+    df['is_new_user_month'] = modelhub.map.is_new_user(df, time_aggregation = '%Y-%m')
     df['is_twice_converted'] = modelhub.map.conversions_in_time(df, name='quickstart_presses')==2
     modelhub.aggregate.unique_users(df[df.is_new_user_month & df.is_twice_converted]).head()
 

@@ -6,7 +6,7 @@ import math
 from unittest.mock import ANY
 
 from bach import SeriesFloat64
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data
+from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 from tests.functional.bach.test_series_numeric import helper_test_simple_arithmetic
 
 
@@ -19,7 +19,7 @@ def test_from_value(engine):
     f = float('-infinity')
     g = None
 
-    bt = get_bt_with_test_data()[['city']]
+    bt = get_df_with_test_data(engine)[['city']]
     bt['a'] = a
     bt['b'] = b
     bt['c'] = c

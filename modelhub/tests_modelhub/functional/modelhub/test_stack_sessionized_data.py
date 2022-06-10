@@ -57,7 +57,8 @@ _FAKE_SESSIONIZED_DATA = [
 
 def _get_sessionized_data_pipeline(db_params) -> SessionizedDataPipeline:
     engine = create_engine_from_db_params(db_params)
-    return SessionizedDataPipeline(engine=engine, table_name=db_params.table_name)
+    return SessionizedDataPipeline(engine=engine, table_name=db_params.table_name,
+                                   session_gap_seconds=_SESSION_GAP_SECONDS)
 
 
 def test_get_pipeline_result(db_params, monkeypatch) -> None:
@@ -82,7 +83,7 @@ def test_get_pipeline_result(db_params, monkeypatch) -> None:
         lambda *args, **kwargs: context_df,
     )
 
-    result = pipeline._get_pipeline_result()
+    result = pipeline._get_pipeline_result(session_gap_seconds=_SESSION_GAP_SECONDS)
 
     assert_equals_data(
         result,
@@ -196,7 +197,7 @@ def test_calculate_base_session_series(db_params) -> None:
 
     tz_info = datetime.timezone.utc if is_bigquery(engine) else None
 
-    result = pipeline._calculate_base_session_series(context_df, _SESSION_GAP_SECONDS)
+    result = pipeline._calculate_base_session_series(context_df)
     assert_equals_data(
         result,
         expected_columns=[
@@ -255,7 +256,8 @@ def test_calculate_objectiv_session_series(db_params) -> None:
 def test_get_sessionized_data_df(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
 
-    result = get_sessionized_data(engine=engine, table_name=db_params.table_name)
+    result = get_sessionized_data(engine=engine, table_name=db_params.table_name,
+                                  session_gap_seconds=_SESSION_GAP_SECONDS)
     result = result.sort_index()
 
     expected = get_expected_context_pandas_df(engine)
@@ -264,6 +266,7 @@ def test_get_sessionized_data_df(db_params) -> None:
     expected = expected.set_index('event_id')
     pd.testing.assert_frame_equal(expected, result.to_pandas())
 
-    result = get_sessionized_data(engine=engine, table_name=db_params.table_name, set_index=False)
+    result = get_sessionized_data(engine=engine, table_name=db_params.table_name,
+                                  session_gap_seconds=_SESSION_GAP_SECONDS, set_index=False)
     assert 'event_id' not in result.index
     assert 'event_id' in result.data
