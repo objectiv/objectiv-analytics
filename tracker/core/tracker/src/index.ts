@@ -14,7 +14,6 @@ export * from './ContextFactories';
 export * from './ContextNames';
 export * from './ContextValidationRules';
 export * from './EventFactories';
-export * from './EventRecorderInterface';
 export * from './helpers';
 export * from './LocationTreeInterface';
 export * from './Tracker';

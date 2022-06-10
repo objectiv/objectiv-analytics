@@ -20,7 +20,6 @@ import { ReactTracker } from '../src/';
 
 require('@objectiv/developer-tools');
 globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
-globalThis.objectiv?.EventRecorder.configure({ enabled: false });
 
 describe('ReactTracker', () => {
   beforeEach(() => {
