@@ -1,5 +1,13 @@
+install_env_bach:
+	pip install -e ../bach
+
+install_env_modelhub:
+	pip install -e ../modelhub
+
 requirements:
 	pip install -r requirements.txt
+
+requirements-env: requirements install_env_bach install_env_modelhub
 
 isort:
 	isort .

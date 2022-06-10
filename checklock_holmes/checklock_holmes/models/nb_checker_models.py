@@ -1,4 +1,5 @@
 import glob
+import os
 import re
 from typing import Optional, List, Union, Dict
 
@@ -11,6 +12,11 @@ from checklock_holmes.utils.supported_engines import SupportedEngine
 class CellError(BaseModel):
     number: int
     exc: str
+
+
+def _check_dir(dir_name: Optional[str]) -> None:
+    if dir_name and not os.path.exists(dir_name):
+        os.makedirs(dir_name)
 
 
 class NoteBookCheckSettings(BaseModel):
@@ -36,6 +42,16 @@ class NoteBookCheckSettings(BaseModel):
                 processed_nb_to_check.append(nb_file)
 
         return processed_nb_to_check
+
+    @validator('github_issues_dir')
+    def _check_gh_dir(cls, dir: str) -> str:
+        _check_dir(dir)
+        return dir
+
+    @validator('dump_nb_scripts_dir')
+    def _check_nb_scripts_dir(cls, dir: str) -> str:
+        _check_dir(dir)
+        return dir
 
 
 class NoteBookMetadata(BaseModel):

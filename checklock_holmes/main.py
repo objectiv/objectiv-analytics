@@ -15,7 +15,7 @@ from docopt import docopt
 from checklock_holmes.models.nb_checker_models import NoteBookCheckSettings, NoteBookMetadata
 from checklock_holmes.nb_checker import NoteBookChecker
 from checklock_holmes.utils.constants import DEFAULT_NOTEBOOKS_DIR, DEFAULT_GITHUB_ISSUES_DIR
-from checklock_holmes.utils.helpers import get_github_issue_filename, store_github_issue
+from checklock_holmes.utils.helpers import get_github_issue_filename, store_github_issue, store_nb_script
 from checklock_holmes.utils.supported_engines import SupportedEngine
 
 
@@ -30,14 +30,14 @@ def check_notebooks(check_settings: NoteBookCheckSettings) -> None:
 
             if nb_check.error:
                 store_github_issue(nb_check, github_issues_file_path)
-                break
+
+            if check_settings.dump_nb_scripts_dir:
+                script_path = f'{check_settings.dump_nb_scripts_dir}/{nb_checker.metadata.name}_{engine}.py'
+                store_nb_script(script_path, nb_checker.get_script(engine, is_execution=False))
 
             checks.append(nb_check)
 
-        break
-        if check_settings.dump_nb_scripts_dir:
-            ...
-
+    pe
 
 if __name__ == '__main__':
     cli_docstring = __doc__.format(

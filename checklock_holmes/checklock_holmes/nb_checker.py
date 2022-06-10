@@ -1,13 +1,18 @@
 import json
+import re
 from dataclasses import dataclass, field
 from functools import cached_property
 from typing import Any, Dict, List
 
 from checklock_holmes.models.nb_checker_models import CellError, NoteBookCheck, NoteBookMetadata
 from checklock_holmes.utils.constants import (SET_ENV_VARIABLE_TEMPLATE,
-                                              WRAPPED_CODE_TEMPLATE)
+                                              WRAPPED_CODE_TEMPLATE, NB_SCRIPT_TO_STORE_TEMPLATE)
 from checklock_holmes.utils.supported_engines import SupportedEngine
 from checklock_holmes.settings import settings
+
+_DEFAULT_ENV_VARIABLES = {
+    'OBJECTIV_VERSION_CHECK_DISABLE': 'true'
+}
 
 
 @dataclass
@@ -54,7 +59,7 @@ class NoteBookChecker:
             exc=f'{exc.__class__.__name__}: {exc.args[0][:self.MAX_LOG_EXCEPTION_MESSAGE]}...'
         )
 
-    def get_script(self, engine, is_execution: bool = True) -> str:
+    def get_script(self, engine: SupportedEngine, is_execution: bool = True) -> str:
         formatted_blocks = []
         for cell_num, cell_metadata in enumerate(self.cells):
             if cell_metadata['cell_type'] != 'code':
@@ -65,18 +70,23 @@ class NoteBookChecker:
                     cell_num, engine, source=cell_metadata['source'],
                 )
             else:
-                formatted_block = f'# CELL {cell_num}\n' + ''.join(cell_metadata['source'])
+                formatted_block = f'    # CELL {cell_num}\n    ' + '    '.join(cell_metadata['source'])
 
             formatted_blocks.append(formatted_block)
 
         nb_script = '\n\n'.join(formatted_blocks)
+        if not is_execution:
+            nb_script = NB_SCRIPT_TO_STORE_TEMPLATE.format(
+                notebook=re.sub(r'(-|\s)+', '_', self.metadata.name),
+                script=nb_script.strip(),
+            )
 
-        env_setup_bloc = self._get_env_setup_block(engine)
-        return f'{env_setup_bloc}\n\n{nb_script}'
+        return f'{self._get_env_setup_block(engine)}\n\n{nb_script}'
 
     @staticmethod
     def _get_env_setup_block(engine: SupportedEngine) -> str:
         env_variables = settings.get_env_variables(engine)
+        env_variables.update(_DEFAULT_ENV_VARIABLES)
         env_variables_stmt = '\n'.join(
             [
                 SET_ENV_VARIABLE_TEMPLATE.format(

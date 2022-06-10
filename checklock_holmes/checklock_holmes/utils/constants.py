@@ -1,5 +1,5 @@
 # templates
-GTIHUB_ISSUE_DATE_STR_FORMAT = '%Y%m%s_%H%M%S'
+GTIHUB_ISSUE_DATE_STR_FORMAT = '%Y%m%d_%H%M%S'
 GITHUB_ISSUE_FILENAME_TEMPLATE = 'github_issue_{date_str}.md'
 GITHUB_ISSUE_TEMPLATE = """
 **[Notebook: {engine}]** {notebook} failing.
@@ -23,6 +23,15 @@ try:
 except Exception as e:
     {error_log_stmt}
     raise e
+"""
+
+NB_SCRIPT_TO_STORE_TEMPLATE = """
+def {notebook}():
+    {script}
+
+
+if __name__ == '__main__':
+    {notebook}()
 """
 
 SET_ENV_VARIABLE_TEMPLATE = 'os.environ["{env_var_name}"] = "{env_var_value}"'

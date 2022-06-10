@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from checklock_holmes.models.nb_checker_models import NoteBookCheck
 from checklock_holmes.utils.constants import GITHUB_ISSUE_TEMPLATE, GITHUB_ISSUE_FILENAME_TEMPLATE, \
@@ -22,3 +23,8 @@ def get_github_issue_filename() -> str:
     return GITHUB_ISSUE_FILENAME_TEMPLATE.format(
         date_str=current_check_time.strftime(GTIHUB_ISSUE_DATE_STR_FORMAT)
     )
+
+
+def store_nb_script(nb_scripts_path: str, script: str) -> None:
+    with open(nb_scripts_path, 'w') as file:
+        file.write(script)
