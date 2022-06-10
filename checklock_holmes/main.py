@@ -1,14 +1,14 @@
 """CHECKLOCK HOLMES CLI
 Usage:
-    main.py [--engine=<engine>...] [--nb=<file>...] [--gh_issues_dir=<ghi>] [--dump_nb_scripts=<nbs_dir>]
+    main.py [-e | --engine=<engine>...] [--nb=<file>...] [--gh_issues_dir=<ghi>] [--dump_nb_scripts_dir=<nbs_dir>]
     main.py -h | --help
 
 Options:
-    -h --help                   Show this screen.
-    --engine=<engine>           Engines to run checks. Current supported engines: [{supported_engines}] [default: all]
-    --nb=<file>                 Notebooks to be checked [default: {default_nb_dir}]
-    --gh_issues_dir=<ghi>       Directory for logging github issues [default: {default_github_issues_dir}]
-    -dump_nb_scripts<nbs_dir>   Directory where to dump notebook scripts
+    -h --help                       Show this screen.
+    -e --engine=<engine>...         Engines to run checks. Current supported engines: [{supported_engines}] [default: all]
+    --nb=<file>...                  Notebooks to be checked [default: {default_nb_dir}]
+    --gh_issues_dir=<ghi>           Directory for logging github issues [default: {default_github_issues_dir}]
+    --dump_nb_scripts_dir<nbs_dir>  Directory where to dump notebook scripts
 """
 from docopt import docopt
 
@@ -37,7 +37,6 @@ def check_notebooks(check_settings: NoteBookCheckSettings) -> None:
 
             checks.append(nb_check)
 
-    pe
 
 if __name__ == '__main__':
     cli_docstring = __doc__.format(
@@ -46,11 +45,11 @@ if __name__ == '__main__':
         default_github_issues_dir=DEFAULT_GITHUB_ISSUES_DIR,
     )
     arguments = docopt(cli_docstring, help=True, options_first=False)
-
+    print(arguments)
     nb_check_settings = NoteBookCheckSettings(
         engines_to_check=arguments['--engine'],
         github_issues_dir=arguments['--gh_issues_dir'],
-        dump_nb_scripts_dir=arguments['--dump_nb_scripts'],
+        dump_nb_scripts_dir=arguments['--dump_nb_scripts_dir'],
         notebooks_to_check=arguments['--nb'],
     )
     check_notebooks(nb_check_settings)
