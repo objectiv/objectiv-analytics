@@ -46,7 +46,7 @@ class ModelHub:
     * Aggregation models return aggregated data in some form from the DataFrame. The aggregation models can be
       accessed with the :py:attr:`agg` or :py:attr:`aggregate` accessor from a model hub instance.
     * Machine learning models can be instantiated from the modelhub directly using the model's name,
-      i.e. : :py:meth:`get_logistic_regression`
+      i.e. : :py:meth:`get_logistic_regression`.
     """
     def __init__(self,
                  time_aggregation: str = TIME_DEFAULT_FORMAT):
