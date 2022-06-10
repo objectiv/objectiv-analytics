@@ -217,34 +217,46 @@ class Map:
 
         return data.pre_conversion_hit_number
 
-    def retention_rate(self,
-                       data: bach.DataFrame,
-                       time_format: str = '%Y%m',
-                       event_type: str = 'PressEvent',
-                       calculate_percentage=True,
-                       display=True) -> bach.DataFrame:
+    def retention_matrix(self,
+                         data: bach.DataFrame,
+                         time_period: str = 'monthly',
+                         event_type: str = 'PressEvent',
+                         percentage=False,
+                         display=True) -> bach.DataFrame:
 
         """
-        Calculates the retention rate. It finds the percentage of users who have been active in a given time period,
-        compared to the total number of users. The "active user" is the user who made transactions that we are
-        interested in (e.g. signed up for a product/service) in that time period.
+        It finds the number of users in a given cohort who are active at a given time period,
+        where time is computed with respect to the beginning of each cohort.
+
+        The "active user" is the user who made transactions that we are interested in
+        (e.g. signed up for a product/service) in that time period.
 
         Users are divided into mutually exclusive cohorts, which are then tracked over time.
-        The retention rate is calculated as a function of time separately for each cohort.
         In our case users are assigned to a cohort based on when they made their first action
         that we are interested in.
 
-        Returns the retention rate dataframe, it represents users retained across cohorts:
+        Returns the retention matrix dataframe, it represents users retained across cohorts:
             - index value represents the cohort
-            - columns represent the number of given date format (default value - months) since the current cohort
+            - columns represent the number of given date period (default - monthly) since the current cohort
+            - values represent number of unique active users of a given cohort
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param time_format: can be week, month, etc. For more formats look to TODO where?
+        :param time_period: can be 'daily', 'monthly' or 'yearly'.
         :param event_type: the event that we are interested in. Must be a valid event_type (either parent or child).
-        :param calculate_percentage: calculate percentage TODO.
-        :param display: if display==True visualize the retention rate as a heat map
-        :returns: retention rate bach DataFrame.
+        :param percentage: if True calculate percentage with respect to the number of a users in the cohort,
+            otherwise it leaves the absolute values.
+        :param display: if display==True visualize the retention matrix as a heat map
+        :returns: retention matrix bach DataFrame.
         """
+
+        available_formats = {
+            'daily': '%Y%m%d',
+            'monthly': '%Y%m',
+            'yearly': '%Y',
+        }
+        time_format = available_formats.get(time_period)
+        if time_format is None:
+            raise ValueError(f'{time_period} for time_period is not available.')
 
         self._mh._check_data_is_objectiv_data(data)
 
@@ -282,43 +294,48 @@ class Map:
         # between the current event and the first event from the user
         if time_format == '%Y':
             data['cohort_distance'] = data['cohort_year_diff']
+            data['first_cohort'] = data['first_cohort'].astype(dtype=str)
         elif time_format == '%Y%m':
             n_months = 12
             data['cohort_distance'] = data['cohort_year_diff'] * n_months + data['cohort_month_diff']
+            data['first_cohort'] = data['first_cohort'].astype(dtype=str)
+            data['first_cohort'] = data['first_cohort'].str[:4] + '-' + data['first_cohort'].str[4:]
         else:
             data['cohort_distance'] = data['cohort'] - data['first_cohort']
             data['cohort_distance'] = data['cohort_distance'].astype(dtype=str)
-            data['first_cohort'] = data['first_cohort'].dt.strftime('%Y-%m-%d')
+            data['first_cohort'] = data['first_cohort'].dt.strftime('%Y-%m-%d').astype(dtype=str)
 
-        retention_rate = data.groupby(['first_cohort',
-                                       'cohort_distance']).agg({'user_id': 'nunique'}).unstack(level='cohort_distance')
+        retention_matrix = data.groupby(['first_cohort',
+                                         'cohort_distance']).agg({'user_id': 'nunique'}).unstack(
+            level='cohort_distance')
 
         # renaming columns: removing string attached after unstacking
         # need to split the column name string because in case of time_format='%Y%m%d'
         # we have "n days" string, where n - is number of the days.
         column_name_map = {col: col.replace('__user_id_nunique', '').split()[0]
-                           for col in retention_rate.columns}
-        retention_rate = retention_rate.rename(columns=column_name_map)
+                           for col in retention_matrix.columns}
+        retention_matrix = retention_matrix.rename(columns=column_name_map)
 
         # if days are used the first cohort name is '00:00:00', need to rename it to 0
-        if '00:00:00' in retention_rate.columns:
-            retention_rate = retention_rate.rename(columns={'00:00:00': '0'})
+        if '00:00:00' in retention_matrix.columns:
+            retention_matrix = retention_matrix.rename(columns={'00:00:00': '0'})
 
         # 'sort' with column names (numerical sorting, even though the columns are strings)
-        columns = [str(j) for j in sorted([int(i) for i in retention_rate.columns])]
-        retention_rate = retention_rate[columns]
+        columns = [str(j) for j in sorted([int(i) for i in retention_matrix.columns])]
+        retention_matrix = retention_matrix[columns]
 
-        # TODO fix it
-        if calculate_percentage:
+        if percentage:
+            first_column = retention_matrix[columns[0]]
             for col in columns:
-                retention_rate[col] /= retention_rate[columns[0]]
+                retention_matrix[col] /= first_column
 
         if display:
             import matplotlib.pyplot as plt
             import seaborn as sns
             fig, ax = plt.subplots(figsize=(20, 8))
-            sns.heatmap(retention_rate.to_pandas(), annot=True, square=True, linewidths=.5,
-                        cmap=sns.cubehelix_palette(rot=-.4), ax=ax)
+            fmt = '.1%' if percentage else ''
+            sns.heatmap(retention_matrix.to_pandas(), annot=True, square=True, ax=ax,
+                        linewidths=.5, cmap=sns.cubehelix_palette(rot=-.4), fmt=fmt)
             plt.title('Cohort Analysis')
 
             if time_format == '%Y%m%d':
@@ -333,5 +350,5 @@ class Map:
             plt.ylabel('First Event Cohort')
             plt.show()
 
-        return retention_rate
+        return retention_matrix
 
