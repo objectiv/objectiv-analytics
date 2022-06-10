@@ -6,6 +6,12 @@
 Helper functions
 ================
 
+Helper functions always return a series with the same shape and index as the
+:class:`DataFrame <bach.DataFrame>` they are applied to. This ensures they can be added as a column to that
+DataFrame. Helper functions that return :class:`SeriesBoolean <bach.SeriesBoolean>` can be used to filter
+the data. The helper functions can be accessed with the :attr:`map <modelhub.ModelHub.map>` accessor from a 
+model hub instance.
+
 .. currentmodule:: modelhub
 
 .. autoclass:: Map

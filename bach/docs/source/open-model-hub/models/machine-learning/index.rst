@@ -6,13 +6,13 @@
 Machine Learning
 ================
 
-Currently we support  :ref:`logistic regression <modelhub_reference_logistic_regression>` directly on Bach 
-DataFrames and Series.
+Currently we support :class:`LogisticRegression <modelhub.LogisticRegression>` directly on Bach DataFrames 
+and Series.
 
 .. currentmodule:: modelhub
 
-.. toctree::
-    :hidden:
-    :maxdepth: 7
+.. autosummary::
+    :template: autosummary/class_short.rst
+    :toctree: LogisticRegression
 
-    LogisticRegression/index
+    LogisticRegression
