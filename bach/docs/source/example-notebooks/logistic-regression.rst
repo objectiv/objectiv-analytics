@@ -21,6 +21,17 @@ At first we have to install the open model hub and instantiate the Objectiv Data
 
 Creating a feature set
 ----------------------
+Data collected with Objectiv's tracker is `well-structured & consistent <https://objectiv.io/docs/taxonomy>`_, which makes it ideal for various machine learning applications. Machine learning models can be applied directly without cleaning, transformations or using complex tooling.
+
+In this example, we show how you can predict user behavior with the supported logistic regression model. Examples of predictions that you can create:
+
+- Will a user convert?
+- Will a user start using a specific product feature or area?
+- Will a user have a long active session duration?
+
+For simple demonstration purposes, we will predict if users on our own `website <https://www.objectiv.io>`_ will reach the `modeling section of our docs <https://objectiv.io/docs/modeling/>`_, by looking at interactions that users have with all the other main sections of our website.
+
+
 We create a data set that counts the number of clicks per user in each section of our website. We obtain
 the main sections by extracting the `root location
 <https://objectiv.io/docs/taxonomy/reference/location-contexts/RootLocationContext/>`_ from the location
