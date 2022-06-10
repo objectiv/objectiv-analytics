@@ -6,18 +6,19 @@ from functools import cached_property
 from typing import Any, Dict, List
 
 from checklock_holmes.models.nb_checker_models import (
-    CellError, NoteBookCheck, NoteBookMetadata
+    CellError, CellTiming, NoteBookCheck, NoteBookMetadata
 )
 from checklock_holmes.settings import settings
 from checklock_holmes.utils.constants import (
     NB_SCRIPT_TO_STORE_TEMPLATE, SET_ENV_VARIABLE_TEMPLATE,
-    WRAPPED_CODE_TEMPLATE
+    TIMING_CELL_CODE_TEMPLATE, WRAPPED_CODE_TEMPLATE
 )
 from checklock_holmes.utils.supported_engines import SupportedEngine
 
 _DEFAULT_ENV_VARIABLES = {
     'OBJECTIV_VERSION_CHECK_DISABLE': 'true'
 }
+_IGNORE_MARKDOWN_SQL_DISPLAYS = True
 
 
 @dataclass
@@ -25,8 +26,10 @@ class NoteBookChecker:
     MAX_LOG_EXCEPTION_MESSAGE = 500
 
     metadata: NoteBookMetadata
+    display_cell_timing: bool
 
     _errors: Dict[SupportedEngine, CellError] = field(default_factory=dict, init=False)
+    _cell_timings: List[CellTiming] = field(default_factory=list, init=False)
 
     @cached_property
     def cells(self) -> List[Dict[str, Any]]:
@@ -35,13 +38,14 @@ class NoteBookChecker:
             return nb_data.get('cells')
 
     def check_notebook(self, engine: SupportedEngine) -> NoteBookCheck:
+        self._cell_timings = []
         wrapped_script = self.get_script(engine, is_execution=True)
         completed = True
 
         start_time = time.time()
         try:
             exec(wrapped_script)
-        except Exception:
+        except Exception as exc:
             completed = False
         end_time = time.time()
 
@@ -52,20 +56,36 @@ class NoteBookChecker:
             completed=completed,
             error=error,
             failing_block=''.join(self.cells[error.number]['source']) if error else None,
-            elapsed_time=end_time-start_time,
+            elapsed_time=end_time - start_time,
+            elapsed_time_per_cell=self._cell_timings,
         )
 
     @staticmethod
-    def _log_wrapped_cell_code(cell_number: int, engine: str, source: List[str]) -> str:
-        return WRAPPED_CODE_TEMPLATE.format(
+    def _time_wrapped_cel_code(cell_number: int, code: str) -> str:
+        return TIMING_CELL_CODE_TEMPLATE.format(
+            code_to_time=code,
+            timing_stmt=f'self._log_cell_timing({cell_number}, elapsed_time)'
+        )
+
+    def _log_wrapped_cell_code(self, cell_number: int, engine: str, source: List[str]) -> str:
+        code = WRAPPED_CODE_TEMPLATE.format(
             code_to_wrap='    '.join(source),
             error_log_stmt=f'self._log_error({cell_number}, \"{engine}\",  e)',
         )
+        if self.display_cell_timing:
+            code = self._time_wrapped_cel_code(cell_number, code)
+
+        return code
 
     def _log_error(self, cell_number: int, engine: SupportedEngine,  exc: Exception):
         self._errors[engine] = CellError(
             number=cell_number,
             exc=f'{exc.__class__.__name__}: {exc.args[0][:self.MAX_LOG_EXCEPTION_MESSAGE]}...'
+        )
+
+    def _log_cell_timing(self, cell_number: int, elapsed_time: int) -> None:
+        self._cell_timings.append(
+            CellTiming(number=cell_number, time=elapsed_time)
         )
 
     def get_script(self, engine: SupportedEngine, is_execution: bool = True) -> str:
@@ -78,6 +98,10 @@ class NoteBookChecker:
                 formatted_block = self._log_wrapped_cell_code(
                     cell_num, engine, source=cell_metadata['source'],
                 )
+                # avoid printing on console
+                if _IGNORE_MARKDOWN_SQL_DISPLAYS and 'display_sql_as_markdown(' in formatted_block:
+                    continue
+
             else:
                 formatted_block = f'    # CELL {cell_num}\n    ' + '    '.join(cell_metadata['source'])
 

@@ -1,6 +1,6 @@
 # dev and styling
 pydantic==1.9.1
-pydantic[dotenv]
+python-dotenv
 isort==5.10.1
 mypy==0.961
 pycodestyle==2.8.0

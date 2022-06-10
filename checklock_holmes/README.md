@@ -52,7 +52,7 @@ Now that you have everything ready for checks, you can start running the cli-too
 If you want to know how to use it, just run:
 
 ```bash
-python main.py --help
+python checklock-holmes.py --help
 ```
 
 This will show all supported options:
@@ -71,32 +71,32 @@ This will show all supported options:
 1. Running checks only for bigquery
 
 ```bash
-python main.py --engine bigquery
+python checklock-holmes.py --engine bigquery
 ```
 
 ```bash
-python main.py -e bigquery
+python checklock-holmes.py -e bigquery
 ```
 
 2. Running checks only for multiple engines
 
 ```bash
-python main.py -e bigquery -e postgres
+python checklock-holmes.py -e bigquery -e postgres
 ```
 
 3. Running checks for bigquery and specific notebooks
 
 ```bash
-python main.py -e bigquery --nb ../notebooks/basic-user-intent.ipynb --nb ../notebooks/basic-product-analytics.ipynb
+python checklock-holmes.py -e bigquery --nb ../notebooks/basic-user-intent.ipynb --nb ../notebooks/basic-product-analytics.ipynb
 ```
 
 4. Running checks and storing notebook scripts
 
 ```bash
-python main.py --dump_nb_scripts_dir=.notebook_scripts
+python checklock-holmes.py --dump_nb_scripts_dir=.notebook_scripts
 ```
 
 5. Running checks and stop on the first failed check
 ```bash
-python main.py -x 
+python checklock-holmes.py -x 
 ```

@@ -2,13 +2,17 @@ from typing import Dict
 
 from pydantic import BaseSettings
 
-from checklock_holmes.models.env_models import BaseDBEnvModel, BigQueryEnvModel
+from checklock_holmes.models.env_models import (
+    DEFAULT_METABASE_ENV, BaseDBEnvModel, BigQueryEnvModel, MetaBaseEnvModel
+)
 from checklock_holmes.utils.supported_engines import SupportedEngine
 
 
 class Settings(BaseSettings):
     pg_db: BaseDBEnvModel
     bq_db: BigQueryEnvModel
+
+    metabase: MetaBaseEnvModel = DEFAULT_METABASE_ENV
 
     class Config:
         env_file = './.env'
@@ -23,7 +27,10 @@ class Settings(BaseSettings):
         }
 
     def get_env_variables(self, engine: SupportedEngine) -> Dict[str, str]:
-        return self._engine_env_var_mapping[engine].dict()
+        return {
+            **self._engine_env_var_mapping[engine].dict(),
+            **self.metabase.dict(),
+        }
 
 
 settings = Settings()

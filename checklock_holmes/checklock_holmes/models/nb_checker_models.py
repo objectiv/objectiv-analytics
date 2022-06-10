@@ -16,6 +16,11 @@ class CellError(BaseModel):
     exc: str
 
 
+class CellTiming(BaseModel):
+    number: int
+    time: float
+
+
 def _check_dir(dir_name: Optional[str]) -> None:
     if dir_name and not os.path.exists(dir_name):
         os.makedirs(dir_name)
@@ -26,6 +31,7 @@ class NoteBookCheckSettings(BaseModel):
     notebooks_to_check: List[str]
     github_issues_dir: str
     dump_nb_scripts_dir: Optional[str] = None
+    display_cell_timing: bool = False
 
     @validator('engines_to_check')
     def _process_engines_to_check(cls, engines_to_check: List[str]) -> List[SupportedEngine]:
@@ -76,3 +82,4 @@ class NoteBookCheck(BaseModel):
     error: Optional[CellError]
     failing_block: Optional[str]
     elapsed_time: float
+    elapsed_time_per_cell: List[CellTiming]

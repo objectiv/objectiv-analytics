@@ -21,7 +21,7 @@ mypy:
 check-dev: requirements isort pycodestyle mypy
 
 checklock-inspection:
-	python main.py --engine=all
+	python checklock_holmes.py --engine=all
 
 checklock-inspection-bigquery:
-	python main.py --engine=bigquery
+	python checklock_holmes.py --engine=bigquery

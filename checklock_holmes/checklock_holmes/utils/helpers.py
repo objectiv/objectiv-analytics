@@ -34,25 +34,36 @@ def store_nb_script(nb_scripts_path: str, script: str) -> None:
         file.write(script)
 
 
-def display_check_results(nb_checks: List[NoteBookCheck], github_files_path: str) -> None:
+def display_check_results(
+    nb_checks: List[NoteBookCheck],
+    github_files_path: str,
+    display_cell_timings: bool,
+) -> None:
     data_to_show = []
     failed_checks = 0
     success_checks = 0
 
+    headers = constants.REPORT_HEADERS.copy()
+    if display_cell_timings:
+        headers.append(constants.ELAPSED_TIME_CELL_HEADER)
+
     for check in nb_checks:
-        data_to_show.append([
+        row = [
             check.metadata.name,
             check.engine,
             'success' if check.completed else 'failed',
             check.error.number if check.error else '',
             check.elapsed_time,
-        ])
+        ]
+        if display_cell_timings:
+            row.append('\n'.join(f'#{ct.number} - {ct.time}' for ct in check.elapsed_time_per_cell))
+        data_to_show.append(row)
         if check.error:
             failed_checks += 1
         else:
             success_checks += 1
 
-    print(tabulate(data_to_show, headers=constants.REPORT_HEADERS, tablefmt="simple", floatfmt=".4f"))
+    print(tabulate(data_to_show, headers=headers, tablefmt="simple", floatfmt=".4f"))
 
     if success_checks:
         perc_success = round(success_checks/len(nb_checks) * 100, 2)

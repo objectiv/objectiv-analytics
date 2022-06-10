@@ -1,7 +1,7 @@
 """CHECKLOCK HOLMES CLI
 Usage:
-    main.py [-x | --exitfirst] [-e | --engine=<engine>...] [--nb=<file>...] [--gh_issues_dir=<ghi>] [--dump_nb_scripts_dir=<nbs_dir>]
-    main.py -h | --help
+    checklock-holmes.py [-x | --exitfirst] [-e | --engine=<engine>...] [--nb=<file>...] [--gh_issues_dir=<ghi>] [--dump_nb_scripts_dir=<nbs_dir>] [-t | --timeit]
+    checklock-holmes.py -h | --help
 
 Options:
     -h --help                       Show this screen.
@@ -10,6 +10,7 @@ Options:
     --nb=<file>...                  Notebooks to be checked [default: {default_nb_dir}].
     --gh_issues_dir=<ghi>           Directory for logging github issues [default: {default_github_issues_dir}].
     --dump_nb_scripts_dir<nbs_dir>  Directory where to dump notebook scripts.
+    -t --timeit                     Time each cell
 """
 from docopt import docopt
 from tqdm import tqdm
@@ -38,16 +39,19 @@ def check_notebooks(check_settings: NoteBookCheckSettings, exit_on_fail: bool) -
     with tqdm(total=total_checks) as pbar:
         for nb in check_settings.notebooks_to_check:
             nb_metadata = NoteBookMetadata(path=nb)
-            nb_checker = NoteBookChecker(metadata=nb_metadata)
+            nb_checker = NoteBookChecker(
+                metadata=nb_metadata, display_cell_timing=check_settings.display_cell_timing,
+            )
             for engine in check_settings.engines_to_check:
                 pbar.set_description(f'Starting {engine} checks for {nb_metadata.name}.{NOTEBOOK_EXTENSION}...')
-                nb_check = nb_checker.check_notebook(engine)
-                checks.append(nb_check)
-                pbar.update()
 
                 if check_settings.dump_nb_scripts_dir:
                     script_path = f'{check_settings.dump_nb_scripts_dir}/{nb_checker.metadata.name}_{engine}.py'
                     store_nb_script(script_path, nb_checker.get_script(engine, is_execution=False))
+
+                nb_check = nb_checker.check_notebook(engine)
+                checks.append(nb_check)
+                pbar.update()
 
                 if nb_check.error:
                     store_github_issue(nb_check, github_issues_file_path)
@@ -59,7 +63,11 @@ def check_notebooks(check_settings: NoteBookCheckSettings, exit_on_fail: bool) -
                 pbar.update(total_checks)
                 break
 
-    display_check_results(checks, github_issues_file_path)
+    display_check_results(
+        nb_checks=checks,
+        github_files_path=github_issues_file_path,
+        display_cell_timings=check_settings.display_cell_timing,
+    )
 
 
 if __name__ == '__main__':
@@ -74,5 +82,6 @@ if __name__ == '__main__':
         github_issues_dir=arguments['--gh_issues_dir'],
         dump_nb_scripts_dir=arguments['--dump_nb_scripts_dir'],
         notebooks_to_check=arguments['--nb'],
+        display_cell_timing=arguments['--timeit']
     )
     check_notebooks(nb_check_settings, exit_on_fail=arguments['--exitfirst'])
