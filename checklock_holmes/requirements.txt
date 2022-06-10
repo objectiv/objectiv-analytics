@@ -1,0 +1,12 @@
+# dev and styling
+pydantic
+pydantic[dotenv]
+isort==5.10.1
+mypy
+pycodestyle==2.8.0
+
+# notebooks bach and modelhub requirements
+../bach
+../modelhub
+-r ../notebooks/requirements.txt
+-r ../bach/requirements-bigquery.txt

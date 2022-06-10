@@ -1,4 +1,0 @@
-sqlalchemy-bigquery
-psycopg2-binary
-google-cloud-bigquery-storage
-pyarrow

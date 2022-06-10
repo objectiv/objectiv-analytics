@@ -1,0 +1,21 @@
+build/
+dist/
+result_images/
+*.egg-info/
+*.pyc
+__pycache__
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# generated scripts for notebooks
+.notebook_scripts
+
+# mypy stuff
+.mypy_cache
