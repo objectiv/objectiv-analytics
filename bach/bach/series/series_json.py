@@ -505,8 +505,8 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
         if not as_str:
             return self._series_object.copy_override(expression=json_expression)
         from bach.series import SeriesString
-        # if accessed value is a json, this will return NULL since JSON_VALUE
-        # is used only for scalars
+        # JSON_QUERY will return a string containing valid json. i.e. if the queried value is a string, then
+        # it will be quoted. Here we remove the quotes
         value_expression = Expression.construct(
             f'REGEXP_REPLACE({{}}, {{}}, {{}})',
             json_expression,
