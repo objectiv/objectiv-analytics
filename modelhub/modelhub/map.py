@@ -225,15 +225,14 @@ class Map:
                          display=True) -> bach.DataFrame:
 
         """
-        It finds the number of users in a given cohort who are active at a given time period,
-        where time is computed with respect to the beginning of each cohort.
+        It finds the number of users in a given cohort who are active at a given time
+        period, where time is computed with respect to the beginning of each cohort.
 
-        The "active user" is the user who made transactions that we are interested in
-        (e.g. signed up for a product/service) in that time period.
+        The "active user" is the user who converted in that time period.
 
-        Users are divided into mutually exclusive cohorts, which are then tracked over time.
-        In our case users are assigned to a cohort based on when they made their first action
-        that we are interested in.
+        Users are divided into mutually exclusive cohorts, which are then
+        tracked over time. In our case users are assigned to a cohort based on
+        when they made their first conversion event.
 
         Returns the retention matrix dataframe, it represents users retained across cohorts:
             - index value represents the cohort
@@ -242,9 +241,9 @@ class Map:
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param time_period: can be 'daily', 'monthly' or 'yearly'.
-        :param event_type: the event that we are interested in. Must be a valid event_type (either parent or child).
-        :param percentage: if True calculate percentage with respect to the number of a users in the cohort,
-            otherwise it leaves the absolute values.
+        :param event_type: the conversion event. Must be a valid event_type (either parent or child).
+        :param percentage: if True calculate percentage with respect to the number of a users
+            in the cohort, otherwise it leaves the absolute values.
         :param display: if display==True visualize the retention matrix as a heat map
         :returns: retention matrix bach DataFrame.
         """
@@ -256,13 +255,13 @@ class Map:
         }
         time_format = available_formats.get(time_period)
         if time_format is None:
-            raise ValueError(f'{time_period} for time_period is not available.')
+            raise ValueError(f'{time_period} time_period is not available.')
 
         self._mh._check_data_is_objectiv_data(data)
 
         data = data.copy()
 
-        #  filtering data with the event that we are interested in
+        # filtering data with the event that we are interested in
         columns = ['user_id', 'day']
         data = data[data['event_type'] == event_type][columns]
 
@@ -328,6 +327,9 @@ class Map:
             first_column = retention_matrix[columns[0]]
             for col in columns:
                 retention_matrix[col] /= first_column
+        else:
+            for col in columns:
+                retention_matrix[col] = retention_matrix[col].astype(dtype=int)
 
         if display:
             import matplotlib.pyplot as plt
