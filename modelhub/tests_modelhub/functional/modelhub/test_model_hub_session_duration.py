@@ -3,9 +3,8 @@ Copyright 2021 Objectiv B.V.
 """
 
 # Any import from modelhub initializes all the types, do not remove
-from sql_models.util import is_bigquery
-
 from modelhub import __version__
+import pytest
 from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 import datetime
@@ -20,31 +19,14 @@ def test_defaults(db_params):
     assert len(s.to_numpy()) == 0
 
 
-def test_no_grouping_excluded_bounces(db_params):
+@pytest.mark.parametrize("exclude_bounces,expected_data", [
+    (True, [[datetime.timedelta(microseconds=2667)]]),
+    (False, [[datetime.timedelta(microseconds=1143)]])
+])
+def test_no_grouping(db_params, exclude_bounces, expected_data):
     # not grouping to anything
     df, modelhub = get_objectiv_dataframe_test(db_params)
-    s = modelhub.aggregate.session_duration(df, groupby=None, exclude_bounces=True)
-    expected_data = [[datetime.timedelta(microseconds=2667)]]
-    if is_bigquery(df.engine):
-        # BQ does not rounds nanoprecision, just truncates it
-        expected_data = [[datetime.timedelta(microseconds=2666)]]
-
-    assert_equals_data(
-        s,
-        expected_columns=['session_duration'],
-        expected_data=expected_data,
-        use_to_pandas=True,
-    )
-
-
-def test_no_grouping_without_excluded_bounces(db_params):
-    # not grouping to anything
-    df, modelhub = get_objectiv_dataframe_test(db_params)
-    s = modelhub.aggregate.session_duration(df, groupby=None, exclude_bounces=False)
-    expected_data = [[datetime.timedelta(microseconds=1143)]]
-    if is_bigquery(df.engine):
-        # BQ does not rounds nanoprecision, just truncates it
-        expected_data = [[datetime.timedelta(microseconds=1142)]]
+    s = modelhub.aggregate.session_duration(df, groupby=None, exclude_bounces=exclude_bounces)
 
     assert_equals_data(
         s,
@@ -103,15 +85,11 @@ def test_groupby(db_params):
     # group by other columns
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
     s = modelhub.aggregate.session_duration(df, groupby='event_type')
-    expected_session_duration = datetime.timedelta(microseconds=2667)
-    if is_bigquery(df.engine):
-        # BQ does not rounds nanoprecision, just truncates it
-        expected_session_duration = datetime.timedelta(microseconds=2666)
 
     assert_equals_data(
         s,
         expected_columns=['event_type', 'session_duration'],
-        expected_data=[['ClickEvent', expected_session_duration]],
+        expected_data=[['ClickEvent', datetime.timedelta(microseconds=2667)]],
         use_to_pandas=True,
     )
 

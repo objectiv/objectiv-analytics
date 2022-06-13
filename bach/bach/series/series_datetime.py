@@ -13,7 +13,7 @@ from sqlalchemy.engine import Dialect
 
 from bach import DataFrame
 from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64
-from bach.expression import Expression
+from bach.expression import Expression, join_expressions
 from bach.series.series import WrappedPartition, ToPandasInfo
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
     parse_c_code_to_bigquery_code
@@ -523,6 +523,12 @@ class SeriesTimedelta(SeriesAbstractDateTime):
     }
     supported_value_types = (datetime.timedelta, numpy.timedelta64, str)
 
+    # https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#interval_type
+    _BQ_INTERVAL_FORMAT = '%d-%d %d %d:%d:%d.%06.0f'
+    _BQ_SUPPORTED_INTERVAL_PARTS = [
+        'YEAR', 'MONTH', 'DAY', 'HOUR', 'MINUTE', 'SECOND'
+    ]
+
     @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
@@ -620,7 +626,12 @@ class SeriesTimedelta(SeriesAbstractDateTime):
             skipna=skipna,
             min_count=min_count
         )
-        return cast('SeriesTimedelta', result)
+        result = result.copy_override_type(SeriesTimedelta)
+
+        if is_bigquery(self.engine):
+            result = self._remove_nano_precision_bigquery(result)
+
+        return result
 
     def mean(self, partition: WrappedPartition = None, skipna: bool = True) -> 'SeriesTimedelta':
         """
@@ -631,7 +642,52 @@ class SeriesTimedelta(SeriesAbstractDateTime):
             expression='avg',
             skipna=skipna
         )
-        return cast('SeriesTimedelta', result)
+        result = result.copy_override_type(SeriesTimedelta)
+
+        if is_bigquery(self.engine):
+            result = self._remove_nano_precision_bigquery(result)
+
+        return result
+
+    def _remove_nano_precision_bigquery(self, series: 'SeriesTimedelta') -> 'SeriesTimedelta':
+        """
+        Helper function that removes nano-precision from intervals.
+        """
+        # aggregating intervals by average might generate a result with
+        # nano-precision, which is not supported by BigQuery TimeStamps
+        # therefore we need to make sure we always generate values up to
+        # microseconds precision
+        # https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#timestamp_type
+        all_extracted_parts_expr = [
+            Expression.construct(f'EXTRACT({date_part} FROM {{}})', series)
+            for date_part in self._BQ_SUPPORTED_INTERVAL_PARTS
+        ]
+        # convert nanoseconds to microseconds
+        all_extracted_parts_expr.append(
+            Expression.construct(f'EXTRACT(NANOSECOND FROM {{}}) / 1000', series)
+        )
+        format_arguments_expr = join_expressions(all_extracted_parts_expr)
+
+        # All parts will create a string with following format
+        # '%d-%d %d %d:%d:%d.%06.0f'
+        # where the first 6 digits are date parts from YEAR to SECOND
+        # Format specifier %06.0f will format fractional part of seconds with maximum width of 6 digits
+        # for example:
+        # nanoseconds = 1142857, converting them into microseconds is 1142.857
+        # when applying string formatting, the value will be rounded into 1143 (.0 precision)
+        # and will be left padded by 2 leading zeros: 001143 (0 flag and 6 minimum width)
+        # for more information:
+        # https://cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#format_string
+        format_expr = Expression.construct(
+            f'format({{}}, {{}})',
+            Expression.string_value(self._BQ_INTERVAL_FORMAT),
+            format_arguments_expr,
+        )
+        return series.copy_override(
+            expression=self.dtype_to_expression(
+                self.engine, source_dtype='string', expression=format_expr,
+            )
+        )
 
     def quantile(
         self, partition: WrappedPartition = None, q: Union[float, List[float]] = 0.5,
