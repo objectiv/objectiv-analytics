@@ -124,6 +124,7 @@ def test_is_new_user(db_params):
     )
 
 
+@pytest.mark.skip_bigquery
 def test_add_conversion_event(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
@@ -245,7 +246,8 @@ def test_add_conversion_event(db_params):
     )
 
 
-def test_is_conversion_event(db_params):
+@pytest.mark.skip_bigquery
+def test_is_conversion_event(db_params): # TODO: Remove when bach supports json slicing for BigQuery
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
     # add conversion event
@@ -296,6 +298,7 @@ def test_is_conversion_event(db_params):
         modelhub.map.is_conversion_event(df, None)
 
 
+@pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
 def test_conversions_counter(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
@@ -366,6 +369,7 @@ def test_conversions_counter(db_params):
     )
 
 
+@pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
 def test_conversions_in_time(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
@@ -411,6 +415,7 @@ def test_conversions_in_time(db_params):
     )
 
 
+@pytest.mark.skip_bigquery  # TODO: Remove when bach supports json slicing for BigQuery
 def test_pre_conversion_hit_number(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params, time_aggregation='%Y-%m-%d')
 
