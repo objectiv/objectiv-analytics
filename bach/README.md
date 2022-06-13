@@ -84,7 +84,7 @@ values
 
 After setting up your tables, run the following command:
 ```bash
-make tests-big-query
+make tests-bigquery
 ```
 
 ### Running tests for all databases
