@@ -8,7 +8,7 @@ import pandas as pd
 
 from bach import DataFrame
 from tests.functional.bach.test_data_and_utils import assert_equals_data, \
-    get_bt_with_test_data, get_df_with_test_data, get_df_with_food_data
+    get_df_with_test_data, get_df_with_food_data
 from tests.functional.bach.test_series_timestamp import types_plus_min
 
 

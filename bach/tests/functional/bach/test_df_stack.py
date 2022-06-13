@@ -1,11 +1,10 @@
 import pandas as pd
-import pytest
 
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data
+from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
-def test_stack() -> None:
-    bt = get_bt_with_test_data(full_data_set=True)[['city', 'municipality', 'inhabitants']]
+def test_stack(engine) -> None:
+    bt = get_df_with_test_data(engine, full_data_set=True)[['city', 'municipality', 'inhabitants']]
     bt = bt.groupby(['municipality', 'city'])['inhabitants'].sum()
 
     unstacked_bt = bt.unstack()
@@ -63,8 +62,8 @@ def test_stack() -> None:
     )
 
 
-def test_stack_diff_types() -> None:
-    bt = get_bt_with_test_data(full_data_set=False)[['city', 'inhabitants']]
+def test_stack_diff_types(engine) -> None:
+    bt = get_df_with_test_data(engine, full_data_set=False)[['city', 'inhabitants']]
     pbt = bt.to_pandas()
 
     result = bt.stack().sort_index()

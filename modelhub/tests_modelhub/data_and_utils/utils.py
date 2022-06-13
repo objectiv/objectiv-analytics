@@ -3,7 +3,9 @@ from datetime import datetime, timezone
 from typing import Dict, Any, NamedTuple, Optional
 from uuid import UUID
 
+import bach
 from bach import DataFrame
+from sql_models.constants import DBDialect
 from sql_models.util import is_postgres, is_bigquery
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
@@ -95,7 +97,14 @@ def create_engine_from_db_params(db_params: DBParams) -> Engine:
     return engine
 
 
-def setup_db(engine: Engine, table_name: str, columns: Dict[str, Any]):
+def setup_db(engine: Engine, table_name: str):
+    columns = {
+        'event_id': bach.SeriesUuid.supported_db_dtype[DBDialect.POSTGRES],
+        'day': bach.SeriesDate.supported_db_dtype[DBDialect.POSTGRES],
+        'moment': bach.SeriesTimestamp.supported_db_dtype[DBDialect.POSTGRES],
+        'cookie_id': bach.SeriesUuid.supported_db_dtype[DBDialect.POSTGRES],
+        'value': bach.SeriesJson.supported_db_dtype[DBDialect.POSTGRES],
+    }
     _prep_db_table(engine, table_name=table_name, columns=columns)
     _insert_records_in_db(engine, table_name=table_name, columns=columns)
 
