@@ -103,3 +103,19 @@ def test_retention_rate():
         ],
         use_to_pandas=True,
     )
+
+    # event_type
+    data = modelhub.map.retention_matrix(df,
+                                         time_period='yearly',
+                                         event_type=None,
+                                         percentage=False,
+                                         display=False)
+
+    assert_equals_data(
+        data,
+        expected_columns=['first_cohort', '0'],
+        expected_data=[
+            ['2021', 4],
+        ],
+        use_to_pandas=True,
+    )
