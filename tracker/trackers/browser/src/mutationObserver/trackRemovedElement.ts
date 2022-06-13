@@ -2,9 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { TrackerElementLocations } from '@objectiv/tracker-core';
 import { BrowserTracker } from '../BrowserTracker';
 import { isTaggedElement } from '../common/guards/isTaggedElement';
+import { parseLocationContext } from '../common/parsers/parseLocationContext';
 import { parseTrackVisibility } from '../common/parsers/parseTrackVisibility';
 import { trackerErrorHandler } from '../common/trackerErrorHandler';
 import { GuardableElement } from '../definitions/GuardableElement';
@@ -32,7 +32,9 @@ export const trackRemovedElement = (element: GuardableElement, tracker: BrowserT
       }
 
       // Remove this element from TrackerState - this will allow it to re-render
-      TrackerElementLocations.delete(element.getAttribute(TaggingAttribute.elementId));
+      if (globalThis.objectiv) {
+        globalThis.objectiv.LocationTree.remove(parseLocationContext(element.getAttribute(TaggingAttribute.context)));
+      }
     }
   } catch (error) {
     trackerErrorHandler(error);

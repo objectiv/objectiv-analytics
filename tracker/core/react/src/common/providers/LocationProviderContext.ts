@@ -2,8 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { LocationStack } from '@objectiv/tracker-core';
 import { createContext } from 'react';
-import { LocationStack } from '../../types';
 
 /**
  * LocationProviderContext state holds a LocationStack of LocationContexts.

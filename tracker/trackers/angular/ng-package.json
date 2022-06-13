@@ -3,6 +3,7 @@
   "lib": {
     "entryFile": "src/index.ts",
     "umdModuleIds": {
+      "@objectiv/tracker-core": "objectivTrackerCore",
       "@objectiv/tracker-browser": "objectivTrackerBrowser"
     }
   }

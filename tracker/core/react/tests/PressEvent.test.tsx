@@ -5,7 +5,7 @@
 import { LocationContextName, makeContentContext, makePressEvent, Tracker } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
-import { trackPressEvent, TrackingContextProvider, usePressEventTracker } from '../src';
+import { TrackingContextProvider, trackPressEvent, usePressEventTracker } from '../src';
 
 describe('PressEvent', () => {
   beforeEach(() => {

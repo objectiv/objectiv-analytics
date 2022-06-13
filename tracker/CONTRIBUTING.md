@@ -21,12 +21,14 @@ This is a complete list of the currently available packages.
 
 | Name                                             | Type      | Path                                     | Links                                                                |
 |--------------------------------------------------|-----------|------------------------------------------|----------------------------------------------------------------------|
+| @objectiv/developer-tools                        | core      | /core/developer-tools                    | [README](/tracker/core/developer-tools/README.md)                    |
 | @objectiv/schema                                 | core      | /core/schema                             | [README](/tracker/core/schema/README.md)                             |
 | @objectiv/tracker-core                           | core      | /core/tracker                            | [README](/tracker/core/tracker/README.md)                            |
 | @objectiv/tracker-react-core                     | core      | /core/react                              | [README](/tracker/core/react/README.md)                              |
 | @objectiv/testing-tools                          | core      | /core/testing-tools                      | [README](/tracker/core/testing-tools/README.md)                      |
 | @objectiv/utilities                              | core      | /core/utilities                          | [README](/tracker/core/utilities/README.md)                          |
 | @objectiv/http-context                           | plugin    | /plugins/http-context                    | [README](/tracker/plugins/http-context/README.md)                    | 
+| @objectiv/plugin-application-context             | plugin    | /plugins/application-context             | [README](/tracker/plugins/application-context/README.md)             |
 | @objectiv/plugin-path-context-from-url           | plugin    | /plugins/path-context-from-url           | [README](/tracker/plugins/path-context-from-url/README.md)           |
 | @objectiv/plugin-react-navigation                | plugin    | /plugins/react-navigation                | [README](/tracker/plugins/react-navigation/README.md)                |
 | @objectiv/plugin-react-router-tracked-components | plugin    | /plugins/react-router-tracked-components | [README](/tracker/plugins/react-router-tracked-components/README.md) |
@@ -52,6 +54,7 @@ The monorepo is configured to allow for live development on any package without 
 - git
 - Node.js 12
 - Yarn
+- NPM 8.5
 
 ## Workspace commands
 
@@ -183,24 +186,27 @@ Coverage output will be produced in a `/coverage` folder under each package.
 Builds all packages.
 Build output will be produced in a `/dist` folder under each package.
 
-### `yarn publish`
+### `TAG=<latest|next> yarn publish`
 Publishes all public packages to NPM.
 > **Note**:  
 > To publish a single package the command name is `npm-publish` to avoid conflicting with the default command 
 > 
-> Example: `yarn workspace @objectiv/tracker-core npm-publish`
+> Example: `TAG=next yarn workspace @objectiv/tracker-core npm-publish`
 
-### `yarn publish:verdaccio`
+### `TAG=<latest|next> yarn publish:verdaccio`
 Publishes all public packages to a Local Verdaccio instance.
 > **Note**:  
 > To publish a single package the command name is `npm-publish:verdaccio` to avoid conflicting with the default command
 >
-> Example: `yarn workspace @objectiv/tracker-core npm-publish:verdaccio`
+> Example: `TAG=next yarn workspace @objectiv/tracker-core npm-publish:verdaccio`
 
 ### `yarn utils:generate`
 Runs the generator utility. This will generate:
 - The @objectiv/schema package TypeScript definitions from the OSF
 - The Context and Event factories in @objectiv/tracker-core package from the @objectiv/schema 
+- The ContextErrorMessages in @objectiv/developer-tools package 
+- Yarn prettify for all generated files
+- TypeScript for all generated files
 
 ## Versioning  commands
  - [Release Workflow Documentation](https://yarnpkg.com/features/release-workflow)
@@ -219,6 +225,15 @@ Executes the release strategy and bumps versions accordingly
 
 ### `yarn version:patch`
 Patches all packages right away, without using version release strategies
+
+### `yarn version:minor`
+Bumps the minor of all packages right away, without using version release strategies
+
+### `yarn version:major`
+Bumps the major of all packages right away, without using version release strategies
+
+### `yarn version:prerelease`
+Patches all packages and either adds or increment the prerelease postfix right away, without using version release strategies
 
 ## Troubleshooting
 

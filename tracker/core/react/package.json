@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/tracker-react-core",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "Objectiv tracker core module for React trackers",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
@@ -47,11 +47,12 @@
     "test:ci": "jest --silent --ci --runInBand",
     "test:coverage": "jest --silent --coverage --runInBand",
     "check:dependencies": "npx depcheck",
-    "npm-publish": "shx rm -f .npmrc && npm publish --access=public",
-    "npm-publish:verdaccio": "shx cp ../../verdaccio/.npmrc .npmrc && npm publish && shx rm -f .npmrc"
+    "npm-publish": "npm publish --access=public --tag=$TAG",
+    "npm-publish:verdaccio": "npm publish --tag=$TAG"
   },
   "devDependencies": {
-    "@objectiv/testing-tools": "^0.0.19",
+    "@objectiv/developer-tools": "^0.0.20",
+    "@objectiv/testing-tools": "^0.0.20",
     "@testing-library/react": "^12.1.4",
     "@testing-library/react-hooks": "^7.0.2",
     "@types/jest": "^27.4.1",
@@ -61,13 +62,13 @@
     "prettier": "^2.5.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "shx": "^0.3.4",
     "ts-jest": "^27.1.3",
     "tsup": "^5.12.0",
     "typescript": "^4.6.2"
   },
   "dependencies": {
-    "@objectiv/tracker-core": "~0.0.19",
+    "@objectiv/schema": "^0.0.20",
+    "@objectiv/tracker-core": "~0.0.20",
     "fast-deep-equal": "^3.1.3"
   },
   "peerDependencies": {

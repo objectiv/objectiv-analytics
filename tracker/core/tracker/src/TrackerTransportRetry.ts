@@ -3,7 +3,6 @@
  */
 
 import { NonEmptyArray } from './helpers';
-import { TrackerConsole } from './TrackerConsole';
 import { TrackerTransportInterface, TransportableEvent } from './TrackerTransportInterface';
 import { TrackerTransportRetryAttempt } from './TrackerTransportRetryAttempt';
 
@@ -76,14 +75,16 @@ export class TrackerTransportRetry implements TrackerTransportInterface {
       throw new Error('minTimeoutMs cannot be bigger than maxTimeoutMs');
     }
 
-    TrackerConsole.groupCollapsed(`｢objectiv:${this.transportName}｣ Initialized`);
-    TrackerConsole.log(`Transport: ${this.transport.transportName}`);
-    TrackerConsole.log(`Max Attempts: ${this.maxAttempts}`);
-    TrackerConsole.log(`Max Retry (ms): ${this.maxRetryMs}`);
-    TrackerConsole.log(`Min Timeout (ms): ${this.minTimeoutMs}`);
-    TrackerConsole.log(`Max Timeout (ms): ${this.maxTimeoutMs}`);
-    TrackerConsole.log(`Retry Factor: ${this.retryFactor}`);
-    TrackerConsole.groupEnd();
+    if (globalThis.objectiv) {
+      globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:${this.transportName}｣ Initialized`);
+      globalThis.objectiv.TrackerConsole.log(`Transport: ${this.transport.transportName}`);
+      globalThis.objectiv.TrackerConsole.log(`Max Attempts: ${this.maxAttempts}`);
+      globalThis.objectiv.TrackerConsole.log(`Max Retry (ms): ${this.maxRetryMs}`);
+      globalThis.objectiv.TrackerConsole.log(`Min Timeout (ms): ${this.minTimeoutMs}`);
+      globalThis.objectiv.TrackerConsole.log(`Max Timeout (ms): ${this.maxTimeoutMs}`);
+      globalThis.objectiv.TrackerConsole.log(`Retry Factor: ${this.retryFactor}`);
+      globalThis.objectiv.TrackerConsole.groupEnd();
+    }
   }
 
   /**

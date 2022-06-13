@@ -2,8 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { TrackerElementLocations } from '@objectiv/tracker-core';
 import { isTaggedElement } from '../common/guards/isTaggedElement';
+import { parseLocationContext } from '../common/parsers/parseLocationContext';
 import { trackerErrorHandler } from '../common/trackerErrorHandler';
 import { TaggingAttribute } from '../definitions/TaggingAttribute';
 import { getTracker } from '../getTracker';
@@ -39,8 +39,13 @@ export const makeMutationCallback = (): MutationCallback => {
       // Track DOM changes
       mutationsList.forEach(({ addedNodes, removedNodes, target, attributeName, oldValue }) => {
         // Element ID change for programmatically instrumented elements - keep TrackerState in sync
-        if (attributeName === TaggingAttribute.elementId && oldValue) {
-          TrackerElementLocations.delete(oldValue);
+        if (globalThis.objectiv && attributeName === TaggingAttribute.elementId && oldValue) {
+          const element = document.querySelector(`[${TaggingAttribute.elementId}='${oldValue}']`);
+          if (element) {
+            globalThis.objectiv.LocationTree.remove(
+              parseLocationContext(element.getAttribute(TaggingAttribute.context))
+            );
+          }
         }
 
         // New DOM nodes mutation: attach event listeners to all Tagged Elements and track visibility:visible events

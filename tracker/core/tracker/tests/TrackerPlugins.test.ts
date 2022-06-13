@@ -3,9 +3,10 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { Tracker, TrackerConsole, TrackerEvent, TrackerPluginInterface, TrackerPlugins } from '../src';
+import { Tracker, TrackerEvent, TrackerPluginInterface, TrackerPlugins } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('Plugin', () => {
   beforeEach(() => {
@@ -334,5 +335,39 @@ describe('Plugin', () => {
     expect(pluginA.enrich).toHaveBeenCalledWith(testEvent);
     expect(pluginB.enrich).not.toHaveBeenCalled();
     expect(pluginC.enrich).toHaveBeenCalledWith(testEvent);
+  });
+
+  describe('Without developer tools', () => {
+    let objectivGlobal = globalThis.objectiv;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      globalThis.objectiv = undefined;
+    });
+
+    afterEach(() => {
+      globalThis.objectiv = objectivGlobal;
+    });
+
+    it('should add plugins without logging', () => {
+      const pluginA = { pluginName: 'test-pluginA', isUsable: () => true, initialize: jest.fn() };
+      const pluginB = { pluginName: 'test-pluginB', isUsable: () => true };
+      const testPlugins = new TrackerPlugins({ tracker, plugins: [] });
+      jest.resetAllMocks();
+      testPlugins.add(pluginA);
+      expect(pluginA.initialize).toHaveBeenCalledTimes(1);
+      testPlugins.add(pluginB);
+      expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
+    });
+
+    it('should remove plugins without logging', () => {
+      const pluginA = { pluginName: 'test-pluginA', isUsable: () => true };
+      const pluginB = { pluginName: 'test-pluginB', isUsable: () => true };
+      const pluginC = { pluginName: 'test-pluginC', isUsable: () => true };
+      const testPlugins = new TrackerPlugins({ tracker, plugins: [pluginA, pluginB, pluginC] });
+      jest.resetAllMocks();
+      testPlugins.remove('test-pluginB');
+      expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
+    });
   });
 });

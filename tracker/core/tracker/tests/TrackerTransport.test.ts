@@ -13,7 +13,6 @@ import {
   generateUUID,
   makeTransportSendError,
   Tracker,
-  TrackerConsole,
   TrackerEvent,
   TrackerTransportGroup,
   TrackerTransportRetry,
@@ -28,7 +27,8 @@ const testContexts: ContextsConfig = {
 };
 const testEvent = new TrackerEvent({ _type: testEventName, ...testContexts });
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackerTransportSwitch', () => {
   beforeEach(() => {

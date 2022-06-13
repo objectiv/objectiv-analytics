@@ -4,9 +4,7 @@
 
 import {
   GlobalContextName,
-  GlobalContextValidationRule,
   makeHttpContext,
-  TrackerConsole,
   TrackerEvent,
   TrackerInterface,
   TrackerPluginInterface,
@@ -19,42 +17,67 @@ import {
  */
 export class HttpContextPlugin implements TrackerPluginInterface {
   readonly pluginName = `HttpContextPlugin`;
-  readonly validationRules: TrackerValidationRuleInterface[];
+  validationRules: TrackerValidationRuleInterface[] = [];
+  initialized: boolean = false;
 
   /**
-   * The constructor is responsible for initializing validation rules.
+   * Generates an HttpContext and initializes validation rules.
    */
-  constructor() {
-    this.validationRules = [
-      new GlobalContextValidationRule({
-        logPrefix: this.pluginName,
-        contextName: GlobalContextName.HttpContext,
-        once: true,
-      }),
-    ];
+  initialize({ global_contexts, platform }: TrackerInterface): void {
+    if (!this.isUsable()) {
+      globalThis.objectiv?.TrackerConsole.error(
+        `｢objectiv:${
+          this.pluginName
+        }｣ Cannot initialize. Plugin is not usable (document: ${typeof document}, navigator: ${typeof navigator}).`
+      );
+      return;
+    }
 
-    TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
-  }
+    if (globalThis.objectiv) {
+      this.validationRules = [
+        globalThis.objectiv.makeGlobalContextValidationRule({
+          platform,
+          logPrefix: this.pluginName,
+          contextName: GlobalContextName.HttpContext,
+          once: true,
+        }),
+      ];
+    }
 
-  /**
-   * Generate an HttpContext.
-   */
-  initialize(tracker: TrackerInterface): void {
     const httpContext = makeHttpContext({
       id: 'http_context',
       referrer: document.referrer ?? '',
       user_agent: navigator.userAgent ?? '',
     });
-    tracker.global_contexts.push(httpContext);
+
+    global_contexts.push(httpContext);
+
+    this.initialized = true;
+
+    globalThis.objectiv?.TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
   }
 
   /**
    * If the Plugin is usable runs all validation rules.
    */
   validate(event: TrackerEvent): void {
-    if (this.isUsable()) {
-      this.validationRules.forEach((validationRule) => validationRule.validate(event));
+    if (!this.isUsable()) {
+      globalThis.objectiv?.TrackerConsole.error(
+        `｢objectiv:${
+          this.pluginName
+        }｣ Cannot validate. Plugin is not usable (document: ${typeof document}, navigator: ${typeof navigator}).`
+      );
+      return;
     }
+
+    if (!this.initialized) {
+      globalThis.objectiv?.TrackerConsole.error(
+        `｢objectiv:${this.pluginName}｣ Cannot validate. Make sure to initialize the plugin first.`
+      );
+      return;
+    }
+
+    this.validationRules.forEach((validationRule) => validationRule.validate(event));
   }
 
   /**

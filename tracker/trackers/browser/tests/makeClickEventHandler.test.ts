@@ -7,7 +7,6 @@ import {
   generateUUID,
   LocationContextName,
   makePressEvent,
-  TrackerConsole,
   TrackerQueue,
   TrackerQueueMemoryStore,
 } from '@objectiv/tracker-core';
@@ -15,7 +14,8 @@ import { BrowserTracker, getTracker, getTrackerRepository, makeTracker, trackPre
 import { makeClickEventHandler } from '../src/mutationObserver/makeClickEventHandler';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('makeClickEventHandler', () => {
   beforeEach(() => {
