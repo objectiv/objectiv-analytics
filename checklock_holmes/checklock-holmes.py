@@ -51,7 +51,7 @@ def check_notebooks(check_settings: NoteBookCheckSettings, exit_on_fail: bool) -
 
                 nb_check = nb_checker.check_notebook(engine)
                 checks.append(nb_check)
-                pbar.update()
+                pbar.update(1)
 
                 if nb_check.error:
                     store_github_issue(nb_check, github_issues_file_path)
@@ -60,7 +60,6 @@ def check_notebooks(check_settings: NoteBookCheckSettings, exit_on_fail: bool) -
                         break
 
             if stop_checks:
-                pbar.update(total_checks)
                 break
 
     display_check_results(
