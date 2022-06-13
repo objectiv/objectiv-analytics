@@ -21,7 +21,6 @@ import {
   makePressEvent,
   makeSuccessEvent,
   makeVisibleEvent,
-  TrackerConsole,
 } from '@objectiv/tracker-core';
 import {
   BrowserTracker,
@@ -48,7 +47,8 @@ import {
 } from '../src';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('trackEvent', () => {
   const testElement = document.createElement('div');
@@ -410,7 +410,7 @@ describe('trackEvent', () => {
       parameters
     );
 
-    trackEvent({ ...parameters, onError: TrackerConsole.error });
+    trackEvent({ ...parameters, onError: MockConsoleImplementation.error });
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(4);
     expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
       4,

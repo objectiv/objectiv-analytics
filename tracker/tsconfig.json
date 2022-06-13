@@ -35,6 +35,7 @@
 
     /* Tell the compiler how to resolve our own modules relatively to `baseUrl` */
     "paths": {
+      "@objectiv/developer-tools": ["core/developer-tools/src"],
       "@objectiv/testing-tools": ["core/testing-tools/src"],
       "@objectiv/schema": ["core/schema/src"],
       "@objectiv/plugin-*": ["plugins/*/src"],

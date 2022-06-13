@@ -3,10 +3,11 @@
  */
 
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { makePressableContext, TrackerConsole } from '@objectiv/tracker-core';
-import { isTaggedElement, processTagChildrenElement, tagPressable, tagContent, TaggingAttribute } from '../src';
+import { makePressableContext } from '@objectiv/tracker-core';
+import { isTaggedElement, processTagChildrenElement, tagContent, TaggingAttribute, tagPressable } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('processChildrenTrackingElement', () => {
   beforeEach(() => {

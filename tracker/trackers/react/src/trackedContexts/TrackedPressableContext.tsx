@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { getLocationPath, makeIdFromString, TrackerConsole } from '@objectiv/tracker-core';
+import { makeIdFromString } from '@objectiv/tracker-core';
 import {
   makeTitleFromChildren,
   PressableContextWrapper,
@@ -17,11 +17,14 @@ import { TrackedPressableContextProps } from '../types';
  * Automatically tracks PressEvent when the given Component receives an `onClick` SyntheticEvent.
  */
 export const TrackedPressableContext = React.forwardRef<HTMLElement, TrackedPressableContextProps>((props, ref) => {
-  const { Component, id, title, forwardId = false, forwardTitle = false, ...otherProps } = props;
+  const { Component, id, title, forwardId = false, forwardTitle = false, normalizeId = true, ...otherProps } = props;
 
   // Attempt to auto-detect `id` for LinkContext by looking at either the `title` or `children` props.
   const pressableTitle = title ?? makeTitleFromChildren(props.children);
-  const pressableId = id ?? makeIdFromString(pressableTitle);
+  let pressableId: string | null = id ?? pressableTitle;
+  if (normalizeId) {
+    pressableId = makeIdFromString(pressableId);
+  }
 
   // Prepare new Component props
   const componentProps = {
@@ -32,11 +35,14 @@ export const TrackedPressableContext = React.forwardRef<HTMLElement, TrackedPres
   };
 
   // If we couldn't generate an `id`, log the issue and return an untracked Component.
-  const locationPath = getLocationPath(useLocationStack());
+  const locationStack = useLocationStack();
   if (!pressableId) {
-    TrackerConsole.error(
-      `｢objectiv｣ Could not generate a valid id for PressableContext @ ${locationPath}. Please provide either the \`title\` or the \`id\` property manually.`
-    );
+    if (globalThis.objectiv) {
+      const locationPath = globalThis.objectiv.getLocationPath(locationStack);
+      globalThis.objectiv.TrackerConsole.error(
+        `｢objectiv｣ Could not generate a valid id for PressableContext @ ${locationPath}. Please provide either the \`title\` or the \`id\` property manually.`
+      );
+    }
     return React.createElement(Component, componentProps);
   }
 

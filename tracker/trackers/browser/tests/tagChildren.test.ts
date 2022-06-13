@@ -3,17 +3,10 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import {
-  parseTagChildren,
-  stringifyTagChildren,
-  tagChild,
-  tagChildren,
-  tagContent,
-  TaggingAttribute,
-  TrackerConsole,
-} from '../src';
+import { parseTagChildren, stringifyTagChildren, tagChild, tagChildren, tagContent, TaggingAttribute } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('tagChild and tagChildren', () => {
   beforeEach(() => {

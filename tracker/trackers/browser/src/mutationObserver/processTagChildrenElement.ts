@@ -2,12 +2,12 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ValidChildrenTaggingQuery } from '@objectiv/tracker-browser';
 import { isTagChildrenElement } from '../common/guards/isTagChildrenElement';
 import { parseTagChildren } from '../common/parsers/parseTagChildren';
 import { trackerErrorHandler } from '../common/trackerErrorHandler';
 import { TaggedElement } from '../definitions/TaggedElement';
 import { TaggingAttribute } from '../definitions/TaggingAttribute';
+import { ValidChildrenTaggingQuery } from '../definitions/ValidChildrenTaggingQuery';
 
 /**
  * Check if Element is a ChildrenTaggingElement. If so:

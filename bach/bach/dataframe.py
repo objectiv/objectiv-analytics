@@ -2476,21 +2476,31 @@ class DataFrame:
                 index={},
                 group_by=initial_series.group_by,
             )
-            if len(quantiles) == 1:
-                return quantile_df
 
-            # a hack in order to avoid calling quantile_df.materialized().
-            # Currently doing quantile['quantile'] = qt
-            # will raise some errors since the expression is not an instance of AggregateFunctionExpression
-            quantile_df['quantile'] = initial_series\
-                .copy_override_dtype(dtype='float64')\
-                .copy_override(expression=AggregateFunctionExpression.construct(fmt=f'{qt}'))
+            if quantile_df.group_by:
+                # materialize the dataframe since we need to add the label for the quantile
+                quantile_df = quantile_df.materialize()
+
+            quantile_df['quantile'] = qt
             all_quantile_dfs.append(quantile_df)
 
-        from bach.operations.concat import DataFrameConcatOperation
-        result = DataFrameConcatOperation(objects=all_quantile_dfs, ignore_index=True)()
-        # q column should be in the index when calculating multiple quantiles
-        return result.set_index('quantile')
+        final_index = 'quantile'
+
+        if len(quantiles) == 1:
+            # if only one quantile was calculated, then we don't need to add the label on the index
+            result = all_quantile_dfs[0]
+            result = result[[col for col in result.data_columns if col != final_index]]
+        else:
+            from bach.operations.concat import DataFrameConcatOperation
+            result = DataFrameConcatOperation(objects=all_quantile_dfs, ignore_index=True)()
+            # q column should be in the index when calculating multiple quantiles
+            result = result.set_index('quantile')
+
+        if is_bigquery(result.engine):
+            # BigQuery returns quantile per row, need to apply distinct
+            result = result.materialize(node_name='bq_quantile', distinct=True)
+
+        return result
 
     def nunique(self, axis=1, skipna=True, **kwargs):
         """

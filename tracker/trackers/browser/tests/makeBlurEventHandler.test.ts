@@ -3,12 +3,13 @@
  */
 
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateUUID, LocationContextName, makeInputChangeEvent, TrackerConsole } from '@objectiv/tracker-core';
+import { generateUUID, LocationContextName, makeInputChangeEvent } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker } from '../src/';
 import { makeBlurEventHandler } from '../src/mutationObserver/makeBlurEventHandler';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('makeBlurEventHandler', () => {
   beforeEach(() => {

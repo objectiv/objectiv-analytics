@@ -3,7 +3,7 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { GlobalContextName, LocationContextName, TrackerConsole } from '@objectiv/tracker-core';
+import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import {
   ContentContextWrapper,
   ObjectivProvider,
@@ -22,7 +22,8 @@ type TestParamList = {
   DestinationScreen: { parameter: number };
 };
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedLink', () => {
   beforeEach(() => {
@@ -327,5 +328,45 @@ describe('TrackedLink', () => {
         ],
       })
     );
+  });
+
+  describe('Without developer tools', () => {
+    let objectivGlobal = globalThis.objectiv;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      globalThis.objectiv = undefined;
+    });
+
+    afterEach(() => {
+      globalThis.objectiv = objectivGlobal;
+    });
+
+    it('should fail silently if an id cannot be automatically generated', () => {
+      const tracker = new ReactNativeTracker({ applicationId: 'app-id', transport: spyTransport });
+
+      const Stack = createStackNavigator();
+      const HomeScreen = () => (
+        <ContentContextWrapper id="content">
+          <TrackedLink to="/HomeScreen">🏡</TrackedLink>
+        </ContentContextWrapper>
+      );
+      const DestinationScreen = () => <>yup</>;
+      const navigationContainerRef = createNavigationContainerRef();
+      render(
+        <NavigationContainer ref={navigationContainerRef}>
+          <ObjectivProvider tracker={tracker}>
+            <RootLocationContextWrapper id="root">
+              <Stack.Navigator>
+                <Stack.Screen name="HomeScreen" component={HomeScreen} />
+                <Stack.Screen name="DestinationScreen" component={DestinationScreen} />
+              </Stack.Navigator>
+            </RootLocationContextWrapper>
+          </ObjectivProvider>
+        </NavigationContainer>
+      );
+
+      expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
+    });
   });
 });

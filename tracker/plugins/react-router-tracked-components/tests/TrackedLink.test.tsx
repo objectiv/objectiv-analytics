@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { SpyTransport } from '@objectiv/testing-tools';
+import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
 import { LocationContextName, Tracker } from '@objectiv/tracker-core';
 import {
   ObjectivProvider,
@@ -14,6 +14,9 @@ import { fireEvent, getByTestId, render, waitFor } from '@testing-library/react'
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { TrackedLink, TrackedLinkProps } from '../src';
+
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedLink', () => {
   const spyTransport = { transportName: 'SpyTransport', handle: jest.fn(), isUsable: () => true };
@@ -111,9 +114,7 @@ describe('TrackedLink', () => {
     });
   });
 
-  it('should console.error if an id cannot be automatically generated', () => {
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-
+  it('should TrackerConsole.error if an id cannot be automatically generated', () => {
     render(
       <BrowserRouter>
         <ObjectivProvider tracker={tracker}>
@@ -126,8 +127,8 @@ describe('TrackedLink', () => {
       </BrowserRouter>
     );
 
-    expect(console.error).toHaveBeenCalledTimes(1);
-    expect(console.error).toHaveBeenCalledWith(
+    expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
+    expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
       '｢objectiv｣ Could not generate id for LinkContext @ RootLocation:root / Content:content. Either add the `title` prop or specify an id manually via the  `id` option of the `objectiv` prop.'
     );
   });

@@ -31,16 +31,29 @@ The open model hub is a growing collection of open-source, free to use data mode
 combine and run for product analysis and exploration. It includes models for a wide range of typical product
 analytics use cases. The source is available for all models and you're free to make any changes to them.
 
-The model hub has two main type of functions: :ref:`models_reference_mapping` and 
-:ref:`models_reference_aggregation`.
+The model hub has three types of functions/models:
+1. :doc:`Helper functions <../open-model-hub/models/helper-functions/index>`. These helper functions
+simplify manipulating and
+analyzing the data.
+2. :doc:`Aggregation models <../open-model-hub/models/aggregation/index>`. These models consist of a
+combination of Bach
+instructions that run some of the more common data analyses or product analytics metrics.
+3. :doc:`Machine learning models <../open-model-hub/models/machine-learning/index>`.
 
-- `map` functions always return a series with the same shape and index as the DataFrame they are applied to.
-  This ensures they can be added as a column to that DataFrame. `map` functions that return SeriesBoolean can
-  be used with to filter the data.
-- `aggregate` fuctions return aggregated data in some form from the DataFrame. Can also be accessed with
-  `agg`.
+Helper functions always return a series with the same shape and index as the
+:class:`DataFrame <bach.DataFrame>` they are applied to. This ensures they can be added as a column to that
+DataFrame. Helper functions that return :class:`SeriesBoolean <bach.SeriesBoolean>` can be used to filter
+the data. The helper functions can be accessed with the :attr:`map <modelhub.ModelHub.map>` accessor from a
+model hub instance.
 
-Most of the model hub models take `data` as their first argument: this is the DataFrame with the Objectiv data to apply the model to.
+Aggregation models perform multiple Bach instructions that run some of the more common data analyses or
+product analytics metrics. Always return aggregated data in some form from the
+:class:`DataFrame <bach.DataFrame>` the model is applied to. Aggregation models can be accessed with the
+:attr:`aggregate <modelhub.ModelHub.aggregate>` accessor from a model hub instance.
+
+Most of the model hub helper functions and aggregation models take `data` as their first argument: this is
+the DataFrame with the Objectiv data to apply the model to. For an example of a machine learning model look
+at the :doc:`logistic regression example <logistic-regression>`.
 
 The next examples demonstrate how to use the model hub by showcasing a selection of the models from the model hub.
 
@@ -95,7 +108,8 @@ Results from aggregation models can be used together if they share the same inde
 
 Using multiple model hub filters
 --------------------------------
-The model hub's map results can be combined and reused. In this example we set two `map` model results as a column to the original DataFrame and use them both to filter the data and apply an aggregation model.
+The model hub's map results can be combined and reused. In this example we set two helper function's results
+as a column to the original DataFrame and use them both to filter the data and apply an aggregation model.
 In this example we calculate the number of users that were new in a month and also that converted twice on a day.
 
 .. code-block:: python

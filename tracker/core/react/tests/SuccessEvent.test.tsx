@@ -5,7 +5,7 @@
 import { LocationContextName, makeContentContext, makeSuccessEvent, Tracker } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
-import { trackSuccessEvent, TrackingContextProvider, useSuccessEventTracker } from '../src';
+import { TrackingContextProvider, trackSuccessEvent, useSuccessEventTracker } from '../src';
 
 describe('SuccessEvent', () => {
   beforeEach(() => {
@@ -35,8 +35,8 @@ describe('SuccessEvent', () => {
     const tracker = new Tracker({ applicationId: 'app-id', transport: spyTransport });
 
     const Component = () => {
-      const trackSuccessEvent = useSuccessEventTracker({ message: 'ok' });
-      trackSuccessEvent();
+      const trackSuccessEvent = useSuccessEventTracker();
+      trackSuccessEvent({ message: 'ok' });
 
       return <>Component triggering SuccessEvent</>;
     };
@@ -60,11 +60,10 @@ describe('SuccessEvent', () => {
 
     const Component = () => {
       const trackSuccessEvent = useSuccessEventTracker({
-        message: 'ok',
         tracker: customTracker,
         locationStack: [makeContentContext({ id: 'override' })],
       });
-      trackSuccessEvent();
+      trackSuccessEvent({ message: 'ok' });
 
       return <>Component triggering SuccessEvent</>;
     };
