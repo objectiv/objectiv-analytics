@@ -542,7 +542,7 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
             .copy_override(expression=expression)
 
     def array_contains(self, item: Union['Series', AllSupportedLiteralTypes]) -> 'SeriesBoolean':
-        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        """ For documentation, see implementation in class :class:`JsonAccessor` """
         # Implementing __ge__ for BigQuery, since @> operator is not supported, we need to
         # simulate it by verifying if all searched items exist in the array.
         # all items are converted into string by using json.dumps
