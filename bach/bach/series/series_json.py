@@ -505,13 +505,17 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
         if not as_str:
             return self._series_object.copy_override(expression=json_expression)
         from bach.series import SeriesString
+        # if accessed value is a json, this will return NULL since JSON_VALUE
+        # is used only for scalars
         value_expression = Expression.construct(
-            '''JSON_VALUE({}, '$."{}"')''',
-            self._series_object,
-            Expression.raw(key)
+            f'REGEXP_REPLACE({{}}, {{}}, {{}})',
+            json_expression,
+            Expression.raw('r\'(^"|"$)\''),
+            Expression.string_value(''),
         )
-        expression = Expression.construct('COALESCE({}, {})', value_expression, json_expression)
-        return self._series_object.copy_override(expression=expression).copy_override_type(SeriesString)
+        return self._series_object.copy_override(
+            expression=value_expression
+        ).copy_override_type(SeriesString)
 
     def get_array_length(self) -> 'SeriesInt64':
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
