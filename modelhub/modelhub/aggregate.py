@@ -9,7 +9,7 @@ from bach.series import Series
 from sql_models.constants import NotSet, not_set
 from typing import List, Union, TYPE_CHECKING
 
-from modelhub.utils import use_only_required_objectiv_series
+from modelhub.util import use_only_required_objectiv_series
 
 if TYPE_CHECKING:
     from modelhub import ModelHub
@@ -58,8 +58,6 @@ class Aggregate:
                              groupby: Union[List[Union[str, Series]], str, Series],
                              column: str,
                              name: str):
-
-        self._mh._check_data_is_objectiv_data(data)
 
         data = self._check_groupby(data=data,
                                    groupby=groupby,

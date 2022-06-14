@@ -1,9 +1,11 @@
 import inspect
+import itertools
 from enum import Enum
 from functools import wraps
-from typing import Callable, List, Union, Optional, TYPE_CHECKING, Tuple, Any
+from typing import List, Union, Optional, TYPE_CHECKING, Protocol
 
 import bach
+from sql_models.constants import not_set
 
 from modelhub.stack.util import ObjectivSupportedColumns
 
@@ -11,7 +13,8 @@ if TYPE_CHECKING:
     from modelhub import Map, Aggregate
 
 
-class MapCalculatedSeriesFunc(str, Enum):
+class SupportedAggregationFunctions(str, Enum):
+    # Map
     IS_FIRST_SESSION = 'is_first_session'
     IS_NEW_USER = 'is_new_user'
     IS_CONVERSION_EVENT = 'is_conversion_event'
@@ -19,78 +22,92 @@ class MapCalculatedSeriesFunc(str, Enum):
     CONVERSIONS_IN_TIME = 'conversions_in_time'
     PRE_CONVERSION_HIT_NUMBER = 'pre_conversion_hit_number'
 
-    def get_func_dependencies(self) -> List['MapCalculatedSeriesFunc']:
-        if self == MapCalculatedSeriesFunc.CONVERSIONS_COUNTER:
-            # conversions_counter is dependent to conversions_in_time
-            # and also on conversions_in_time dependencies
-            return [
-                MapCalculatedSeriesFunc.CONVERSIONS_IN_TIME,
-                MapCalculatedSeriesFunc.IS_CONVERSION_EVENT,
-            ]
-
-        if self == MapCalculatedSeriesFunc.CONVERSIONS_IN_TIME:
-            # conversions_in_time is dependent to is_conversion_event
-            return [MapCalculatedSeriesFunc.IS_CONVERSION_EVENT]
-
-        return []
-
-
-class AggregateCalculatedSeriesFunc(str, Enum):
+    # Aggregate
     UNIQUE_USERS = 'unique_users'
     UNIQUE_SESSIONS = 'unique_sessions'
-    SESSION_DURATION = 'sesison_duration'
+    SESSION_DURATION = 'session_duration'
     FREQUENCY = 'frequency'
     TOP_PRODUCT_FEATURES = 'top_product_features'
     TOP_PRODUCT_FEATURES_BEFORE_CONVERSION = 'top_product_features_before_conversion'
 
-    def get_func_dependencies(self) -> List['MapCalculatedSeriesFunc']:
+    def get_func_dependencies(self) -> List['SupportedAggregationFunctions']:
+        if self == SupportedAggregationFunctions.CONVERSIONS_COUNTER:
+            return [
+                SupportedAggregationFunctions.CONVERSIONS_IN_TIME,
+            ]
+
+        if self == SupportedAggregationFunctions.CONVERSIONS_IN_TIME:
+            return [SupportedAggregationFunctions.IS_CONVERSION_EVENT]
+
+        if self == SupportedAggregationFunctions.TOP_PRODUCT_FEATURES_BEFORE_CONVERSION:
+            return [
+                SupportedAggregationFunctions.CONVERSIONS_COUNTER,
+                SupportedAggregationFunctions.CONVERSIONS_IN_TIME,
+            ]
+
+        if self == SupportedAggregationFunctions.PRE_CONVERSION_HIT_NUMBER:
+            return [
+                SupportedAggregationFunctions.CONVERSIONS_IN_TIME,
+            ]
+
         return []
 
 
-_REQUIRED_OBJECTIV_SERIES_PER_MAP_FUNC = {
-    MapCalculatedSeriesFunc.IS_FIRST_SESSION: [
+_REQUIRED_OBJECTIV_SERIES_PER_AGG_FUNC = {
+    SupportedAggregationFunctions.IS_FIRST_SESSION: [
         ObjectivSupportedColumns.USER_ID, ObjectivSupportedColumns.SESSION_ID,
     ],
-    MapCalculatedSeriesFunc.IS_NEW_USER: [
+    SupportedAggregationFunctions.IS_NEW_USER: [
         ObjectivSupportedColumns.SESSION_ID,
         ObjectivSupportedColumns.USER_ID,
         ObjectivSupportedColumns.MOMENT,
     ],
-    MapCalculatedSeriesFunc.IS_CONVERSION_EVENT: [ObjectivSupportedColumns.EVENT_TYPE],
-    MapCalculatedSeriesFunc.CONVERSIONS_COUNTER: [ObjectivSupportedColumns.SESSION_ID],
-    MapCalculatedSeriesFunc.CONVERSIONS_IN_TIME: [
+    SupportedAggregationFunctions.IS_CONVERSION_EVENT: [ObjectivSupportedColumns.EVENT_TYPE],
+    SupportedAggregationFunctions.CONVERSIONS_COUNTER: [ObjectivSupportedColumns.SESSION_ID],
+    SupportedAggregationFunctions.CONVERSIONS_IN_TIME: [
         ObjectivSupportedColumns.SESSION_ID, ObjectivSupportedColumns.MOMENT,
     ],
-    MapCalculatedSeriesFunc.PRE_CONVERSION_HIT_NUMBER: [
+    SupportedAggregationFunctions.PRE_CONVERSION_HIT_NUMBER: [
       ObjectivSupportedColumns.SESSION_ID, ObjectivSupportedColumns.SESSION_HIT_NUMBER,
     ],
-}
 
-_REQUIRED_OBJECTIV_SERIES_PER_AGGREGATE_FUNC = {
-    AggregateCalculatedSeriesFunc.UNIQUE_USERS: [
+    SupportedAggregationFunctions.UNIQUE_USERS: [
         ObjectivSupportedColumns.USER_ID, ObjectivSupportedColumns.MOMENT,
     ],
-    AggregateCalculatedSeriesFunc.UNIQUE_SESSIONS: [
+    SupportedAggregationFunctions.UNIQUE_SESSIONS: [
         ObjectivSupportedColumns.SESSION_ID, ObjectivSupportedColumns.MOMENT,
     ],
-    AggregateCalculatedSeriesFunc.SESSION_DURATION: [
+    SupportedAggregationFunctions.SESSION_DURATION: [
         ObjectivSupportedColumns.SESSION_ID, ObjectivSupportedColumns.MOMENT,
     ],
-    AggregateCalculatedSeriesFunc.FREQUENCY: [
+    SupportedAggregationFunctions.FREQUENCY: [
         ObjectivSupportedColumns.USER_ID, ObjectivSupportedColumns.SESSION_ID,
     ],
-    AggregateCalculatedSeriesFunc.TOP_PRODUCT_FEATURES: [
+    SupportedAggregationFunctions.TOP_PRODUCT_FEATURES: [
         ObjectivSupportedColumns.GLOBAL_CONTEXTS,
         ObjectivSupportedColumns.LOCATION_STACK,
         ObjectivSupportedColumns.USER_ID,
+        ObjectivSupportedColumns.STACK_EVENT_TYPES,
+        ObjectivSupportedColumns.EVENT_TYPE,
     ],
-    AggregateCalculatedSeriesFunc.TOP_PRODUCT_FEATURES_BEFORE_CONVERSION: [
+    SupportedAggregationFunctions.TOP_PRODUCT_FEATURES_BEFORE_CONVERSION: [
         ObjectivSupportedColumns.GLOBAL_CONTEXTS,
         ObjectivSupportedColumns.LOCATION_STACK,
+        ObjectivSupportedColumns.USER_ID,
+        ObjectivSupportedColumns.STACK_EVENT_TYPES,
     ],
 }
 
-CALCULATED_FUNC_TYPE = Callable[[Union['Map', 'Aggregate'], bach.DataFrame, Tuple[Any, ...]], bach.Series]
+
+class CalculatedFuncType(Protocol):
+    @property
+    def __name__(self) -> str:
+        ...
+
+    def __call__(
+        self, _self: Union['Map', 'Aggregate'], data: bach.DataFrame, *args, **kwargs
+    ) -> bach.Series:
+        ...
 
 
 def use_only_required_objectiv_series(include_series_from_params: Optional[List[str]] = None):
@@ -111,7 +128,7 @@ def use_only_required_objectiv_series(include_series_from_params: Optional[List[
         does not perform any optimization over this scenario, therefore ModelHub must be in charge
         of ensuring the final query contains only the columns needed for all calculations.
     """
-    def check_objectiv_data_decorator(func: CALCULATED_FUNC_TYPE):
+    def check_objectiv_data_decorator(func: CalculatedFuncType):
         @wraps(func)
         def wrapped_function(
             _self: Union['Map', 'Aggregate'],
@@ -120,9 +137,7 @@ def use_only_required_objectiv_series(include_series_from_params: Optional[List[
             **kwargs,
         ) -> bach.Series:
             from modelhub.stack.util import check_objectiv_dataframe
-            columns_to_check = [
-                col.value for col in _get_required_objectiv_series(func.__name__)
-            ]
+            columns_to_check = _get_required_objectiv_series(func.__name__)
             check_objectiv_dataframe(
                 df=data,
                 columns_to_check=columns_to_check,
@@ -131,7 +146,9 @@ def use_only_required_objectiv_series(include_series_from_params: Optional[List[
                 with_md_dtypes=True,
             )
 
-            extra_series = _get_extra_series_to_include_from_params(func, data, include_series_from_params,)
+            extra_series = _get_extra_series_to_include_from_params(
+                func, data, include_series_from_params, *args, **kwargs,
+            )
             series_to_include = list(set(columns_to_check) | set(extra_series))
             data = data[series_to_include]
             return func(_self, data, *args, **kwargs)
@@ -141,37 +158,34 @@ def use_only_required_objectiv_series(include_series_from_params: Optional[List[
     return check_objectiv_data_decorator
 
 
-def _get_required_objectiv_series(func_name: str) -> List[ObjectivSupportedColumns]:
+def _get_required_objectiv_series(func_name: str) -> List[str]:
     """
     Helper for use_only_required_objectiv_series decorator. Will return all required
     ObjectivSupportedColumns by the caller. If the caller's name is not registered under
-    AggregateCalculatedSeriesFunc or MapCalculatedSeriesFunc it will raise an error.
+    SupportedAggregationFunctions, then all supported objectiv columns will be required.
 
     returns list of caller's required objectiv columns
     """
-    if any(agg_func.value == func_name for agg_func in AggregateCalculatedSeriesFunc):
-        series_func = AggregateCalculatedSeriesFunc(func_name)
-        required_obj_series = _REQUIRED_OBJECTIV_SERIES_PER_AGGREGATE_FUNC[series_func]
-    elif any(map_func.value == func_name for map_func in MapCalculatedSeriesFunc):
-        series_func = MapCalculatedSeriesFunc(func_name)
-        required_obj_series = _REQUIRED_OBJECTIV_SERIES_PER_MAP_FUNC[series_func]
-    else:
-        raise Exception(
-            f'{func_name} does not exist in '
-            'AggregateCalculatedSeries or MapCalculatedSeries. Please define it.'
-        )
+    if not any(agg_func.value == func_name for agg_func in SupportedAggregationFunctions):
+        # return all objectiv columns if the caller is not registered as supported
+        return ObjectivSupportedColumns.get_data_columns()
 
-    func_dependencies = series_func.get_func_dependencies()
+    supported_agg_func = SupportedAggregationFunctions(func_name)
+    required_obj_series = [
+        col.value for col in _REQUIRED_OBJECTIV_SERIES_PER_AGG_FUNC[supported_agg_func]
+    ]
+    func_dependencies = supported_agg_func.get_func_dependencies()
     if func_dependencies:
-        required_obj_series += [
+        required_obj_series += list(itertools.chain.from_iterable([
             _get_required_objectiv_series(dep_calc_series.value)
             for dep_calc_series in func_dependencies
-        ]
+        ]))
+
     return required_obj_series
 
 
 def _get_extra_series_to_include_from_params(
-    caller: CALCULATED_FUNC_TYPE,
+    caller: CalculatedFuncType,
     data: bach.DataFrame,
     include_series_from_params: Optional[List[str]] = None,
     *args,
@@ -185,6 +199,7 @@ def _get_extra_series_to_include_from_params(
 
     returns a list of series names
     """
+    from modelhub.aggregate import GroupByType
     if not include_series_from_params:
         return []
 
@@ -196,22 +211,24 @@ def _get_extra_series_to_include_from_params(
         if keyword_series_incl not in valid_parameters:
             raise Exception(f'{keyword_series_incl} does not exist in signature for {caller.__name__}.')
 
-        param = signature.parameters.get(keyword_series_incl)
+        param = signature.parameters[keyword_series_incl]
         param_index = valid_parameters.index(keyword_series_incl) - 2
-        if param.annotation != str:
+        if param.annotation not in (str, GroupByType):
             raise Exception(f'{keyword_series_incl} must be str type.')
 
         if keyword_series_incl in kwargs:
-            series_name = kwargs[keyword_series_incl]
+            series_value = kwargs[keyword_series_incl]
         else:
-            series_name = args[param_index] if len(args) > param_index else param.default
+            series_value = args[param_index] if len(args) > param_index else param.default
 
-        if series_name is None:
-            continue
+        series_to_check = series_value if isinstance(series_value, list) else [series_value]
+        for series in series_to_check:
+            # ignore if it's None, not_set or a Series
+            if series is None or isinstance(series, bach.Series) or series == not_set:
+                continue
 
-        if series_name not in data.data_columns:
-            raise ValueError(f'{series_name} does not exist in objectiv dataframe.')
+            if series not in data.data_columns:
+                raise ValueError(f'{series} does not exist in objectiv dataframe.')
 
-        extra_series.append(series_name)
+            extra_series.append(series)
     return extra_series
-

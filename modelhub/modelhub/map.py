@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from sql_models.util import is_bigquery
 
-from modelhub.utils import use_only_required_objectiv_series
+from modelhub.util import use_only_required_objectiv_series
 
 if TYPE_CHECKING:
     from modelhub import ModelHub
