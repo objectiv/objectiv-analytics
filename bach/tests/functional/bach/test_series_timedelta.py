@@ -5,6 +5,7 @@ import datetime
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from bach import DataFrame
 from tests.functional.bach.test_data_and_utils import assert_equals_data, \
@@ -214,4 +215,34 @@ def test_timedelta_dt_components(engine) -> None:
 
     pd.testing.assert_frame_equal(expected, result, check_names=False)
 
+
+@pytest.mark.skip_postgres
+def test_mean_bigquery_remove_nano_precision(engine) -> None:
+    pdf = pd.DataFrame(
+        {
+            'timedelta': [
+                pd.Timedelta(microseconds=0),
+                pd.Timedelta(microseconds=0),
+                pd.Timedelta(microseconds=0),
+                pd.Timedelta(microseconds=0),
+                pd.Timedelta(microseconds=3000),
+                pd.Timedelta(microseconds=1000),
+                pd.Timedelta(microseconds=4000),
+            ]
+        }
+    )
+    df = DataFrame.from_pandas(engine, pdf, convert_objects=True)
+
+    pandas_timedelta_mean = pdf.mean()
+    assert pandas_timedelta_mean.dt.nanoseconds.values[0] > 0
+
+    expected = pandas_timedelta_mean.dt.round(freq='us').values[0]
+    result = df['timedelta'].mean().reset_index(drop=True)
+
+    assert_equals_data(
+        result,
+        expected_columns=['timedelta'],
+        expected_data=[[expected]],
+        use_to_pandas=True,
+    )
 

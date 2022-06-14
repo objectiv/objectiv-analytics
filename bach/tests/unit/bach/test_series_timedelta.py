@@ -2,6 +2,8 @@
 Copyright 2022 Objectiv B.V.
 """
 from datetime import timedelta
+
+import pandas as pd
 from numpy import timedelta64
 
 from bach import SeriesTimedelta
@@ -19,6 +21,7 @@ def test_supported_value_to_literal(dialect):
     assert_call(timedelta(days=-5, seconds=1234, microseconds=1234),    'P-5DT0H20M34.001234S')
     assert_call(timedelta(days=365, seconds=1234, microseconds=1234),   'P365DT0H20M34.001234S')
     assert_call(timedelta(days=50_000, seconds=123, microseconds=9),    'P50000DT0H2M3.000009S')
+    assert_call(pd.Timedelta(nanoseconds=123456789), 'P0DT0H0M0.123457S')
 
     assert_call(timedelta64(1234, 's'),                                                   'P0DT0H20M34S')
     assert_call(timedelta64(1234, 's') + timedelta64(1234, 'us'),                         'P0DT0H20M34.001234S')

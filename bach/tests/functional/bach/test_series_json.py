@@ -69,10 +69,42 @@ def test_json_get_single_value(engine, dtype):
     assert a == {'a': 'b', 'c': {'a': 'c'}}
 
 
+# TODO: __le__ for BigQuery
+def test_json_compare_lists__ge__(engine, dtype):
+    bt = get_df_with_json_data(engine=engine, dtype=dtype)
+    bts = bt.list_column >= [{"c": "d"}]
+    assert_equals_data(
+        bts,
+        expected_columns=['_index_row', 'list_column'],
+        expected_data=[
+            [0, True],
+            [1, False],
+            [2, False],
+            [3, False],
+            [4, None]
+        ]
+    )
+
+    bts = bt.list_column >= ['b', 'c']
+    assert_equals_data(
+        bts,
+        expected_columns=['_index_row', 'list_column'],
+        expected_data=[
+            [0, False],
+            [1, True],
+            [2, False],
+            [3, False],
+            [4, None]
+        ]
+    )
+
+
 @pytest.mark.skip_bigquery
 def test_json_compare(engine, dtype):
     # These less-than-or-equals compares check that the left hand is contained in the right hand, on
     # Postgres. On` BigQuery we cannot support this, so we skip this function for BQ on purpose.
+    # BigQuery can only search when the top-level is an array
+    # therefore searching is a dict is a "superset" of another dict is not possible
     # TODO: maybe get rid of the Postgres support too?
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bts = {"a": "b"} <= bt.mixed_column
@@ -243,9 +275,8 @@ def test_json_getitem_slice(engine, dtype):
 
 
 # tests below are for functions kind of specific to the objectiv (location) stack
-def test_json_getitem_query(pg_engine, dtype):
-    # TODO: BigQuery
-    bt = get_df_with_json_data(engine=pg_engine, dtype=dtype)
+def test_json_getitem_query(engine, dtype):
+    bt = get_df_with_json_data(engine=engine, dtype=dtype)
     # if dict is contained in any of the dicts in the json list, the first index of the first match is
     # returned to the slice.
     bts = bt.list_column.json[{"_type": "SectionContext"}: ]
@@ -259,7 +290,8 @@ def test_json_getitem_query(pg_engine, dtype):
             [3, [{"_type": "SectionContext", "id": "home"}, {"_type": "SectionContext", "id": "top-10"},
                  {"_type": "ItemContext", "id": "5o7Wv5Q5ZE"}]],
             [4, []]
-        ]
+        ],
+        use_to_pandas=True,
     )
     bts = bt.list_column.json[1:{"id": "d"}]
     assert_equals_data(
@@ -271,7 +303,8 @@ def test_json_getitem_query(pg_engine, dtype):
             [2, [{"_type": "c", "id": "d"}]],
             [3, []],
             [4, []]
-        ]
+        ],
+        use_to_pandas=True,
     )
     bts = bt.list_column.json[{'_type': 'a'}: {'id': 'd'}]
     assert_equals_data(
@@ -283,10 +316,9 @@ def test_json_getitem_query(pg_engine, dtype):
             [2, [{"_type": "a", "id": "b"}, {"_type": "c", "id": "d"}]],
             [3, []],
             [4, []]
-        ]
+        ],
+        use_to_pandas=True,
     )
-
-    # TODO needs to_pandas() test
 
 
 def test_json_get_array_length(engine, dtype):

@@ -7,6 +7,7 @@ from bach.expression import Expression
 from bach.partitioning import WindowFrameBoundary, WindowFrameMode
 from typing import TYPE_CHECKING
 
+from sql_models.util import is_bigquery
 
 if TYPE_CHECKING:
     from modelhub import ModelHub
@@ -15,7 +16,6 @@ if TYPE_CHECKING:
 class Map:
     """
     Methods in this class can be used to map data in a DataFrame with Objectiv data to series values.
-
     Always returns Series with same index as the DataFrame the method is applied to, so the result can be set
     as columns to that DataFrame.
     """
@@ -26,7 +26,6 @@ class Map:
     def is_first_session(self, data: bach.DataFrame) -> bach.SeriesBoolean:
         """
         Labels all hits in a session True if that session is the first session of that user in the data.
-
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :returns: :py:class:`bach.SeriesBoolean` with the same index as ``data``.
         """
@@ -50,7 +49,6 @@ class Map:
     def is_new_user(self, data: bach.DataFrame, time_aggregation: str = None) -> bach.SeriesBoolean:
         """
         Labels all hits True if the user is first seen in the period given `time_aggregation`.
-
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param time_aggregation: if None, it uses the :py:attr:`ModelHub.time_aggregation` set in ModelHub
             instance.
@@ -87,7 +85,6 @@ class Map:
     def is_conversion_event(self, data: bach.DataFrame, name: str) -> bach.SeriesBoolean:
         """
         Labels a hit True if it is a conversion event, all other hits are labeled False.
-
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param name: the name of the conversion to label as set in
             :py:attr:`ModelHub.conversion_events`.
@@ -116,7 +113,6 @@ class Map:
         """
         Counts the total number of conversions given a partition (ie session_id
         or user_id).
-
         :param name: the name of the conversion to label as set in
             :py:attr:`ModelHub.conversion_events`.
         :param partition: the partition over which the number of conversions are counted. Can be any column
@@ -147,7 +143,6 @@ class Map:
         """
         Counts the number of time a user is converted at a moment in time given a partition (ie 'session_id'
         or 'user_id').
-
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param name: the name of the conversion to label as set in
             :py:attr:`ModelHub.conversion_events`.
@@ -160,20 +155,20 @@ class Map:
 
         data = data.copy()
         data['__conversion'] = self._mh.map.is_conversion_event(data, name)
-        exp = f"case when {{}} then row_number() over (partition by {{}}, {{}}) end"
-        expression = Expression.construct(exp,
-                                          data.all_series['__conversion'],
-                                          data.all_series[partition],
-                                          data.all_series['__conversion'])
-        data['__conversion_counter'] = data['__conversion']\
-            .copy_override_dtype(dtype='int64')\
-            .copy_override(expression=expression)
-        data = data.materialize()
-        data['conversions_in_time'] = data.sort_values([partition, 'moment'])\
-            .groupby(partition)\
-            .window()['__conversion_counter'].count()
+        data['__conversion_counter'] = 0
+        data.loc[data['__conversion'], '__conversion_counter'] = 1
 
-        return data.conversions_in_time
+        # make the query more clean, just require these series
+        data = data[[partition, 'moment', '__conversion_counter']]
+        if is_bigquery(data.engine):
+            # group by materializes for BQ, window will make reference to column
+            data = data.materialize(node_name='conversion_counter_bq')
+
+        window = data.sort_values([partition, 'moment']).groupby(partition).window()
+        data['conversions_in_time'] = (
+            data['__conversion_counter'].copy_override_type(bach.SeriesInt64).sum(window)
+        )
+        return data.conversions_in_time.materialize(node_name='conversions_in_time')
 
     def pre_conversion_hit_number(self,
                                   data: bach.DataFrame,
@@ -183,7 +178,6 @@ class Map:
         Returns a count backwards from the first conversion, given the partition. I.e. first hit before
         converting is 1, second hit before converting 2, etc. Returns None if there are no conversions
         in the partition or after the first conversion.
-
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param name: the name of the conversion to label as set in
             :py:attr:`ModelHub.conversion_events`.
@@ -197,25 +191,32 @@ class Map:
         data = data.copy()
         data['__conversions'] = self._mh.map.conversions_in_time(data, name=name)
 
-        window = data.groupby(partition).window()
-        converted = window['__conversions'].max()
+        # make the query more clean, just require these series
+        required_series = [partition, 'session_id', 'session_hit_number', '__conversions']
+        data = data[required_series]
 
-        data['__is_converted'] = converted != 0
-        data = data.materialize()
-        assert(isinstance(data['__is_converted'], SeriesBoolean))  # help mypy to overcome generic Series type
-        pre_conversion_hits = data[data['__is_converted']]
-        pre_conversion_hits = pre_conversion_hits[pre_conversion_hits['__conversions'] == 0]
+        # sort all windows by session id and hit number
+        sort_by = ['session_id', 'session_hit_number']
 
-        window = pre_conversion_hits.sort_values(['session_id',
-                                                  'session_hit_number'],
-                                                 ascending=False).groupby(partition).window()
-        pre_conversion_hits['pre_conversion_hit_number'] = pre_conversion_hits.session_hit_number.\
-            window_row_number(window)
+        window = data.sort_values(sort_by, ascending=False).groupby(partition).window()
+        max_number_of_conversions = data['__conversions'].max(window)
+        data['__is_converted'] = True
+        data.loc[max_number_of_conversions == 0, '__is_converted'] = False
 
-        pre_conversion_hits = pre_conversion_hits.materialize()
-        data['pre_conversion_hit_number'] = pre_conversion_hits['pre_conversion_hit_number']
+        pre_conversion_hits = data.materialize()
 
-        return data.pre_conversion_hit_number
+        window = pre_conversion_hits.sort_values(sort_by, ascending=False).groupby(partition).window()
+
+        # number all rows except where __is_converted is NULL and _conversions == 0
+        pch_mask = (pre_conversion_hits['__is_converted']) & (pre_conversion_hits['__conversions'] == 0)
+        pre_conversion_hits['pre_conversion_hit_number'] = 1
+        pre_conversion_hits.loc[~pch_mask, 'pre_conversion_hit_number'] = None
+        pre_conversion_hit_number = (
+            pre_conversion_hits['pre_conversion_hit_number']
+            .astype('int64').copy_override_type(bach.SeriesInt64)  # None is parsed as string
+        )
+        pre_conversion_hit_number = pre_conversion_hit_number.sum(window)
+        return pre_conversion_hit_number.materialize().copy_override_type(bach.SeriesInt64)
 
     def retention_matrix(self,
                          data: bach.DataFrame,
@@ -359,4 +360,3 @@ class Map:
             plt.show()
 
         return retention_matrix
-
