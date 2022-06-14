@@ -4,19 +4,26 @@ Copyright 2021 Objectiv B.V.
 import json
 import os
 
+from typing import List, Generic, TypeVar
 # added for metabase export
 import requests
 
-from bach import DataFrame
-from bach.expression import Expression, quote_string, quote_identifier
-from bach.series import Series
-from bach.series import SeriesJson
+from bach import DataFrame, Series, SeriesString, SeriesJson
+from bach.expression import Expression, quote_string, quote_identifier, join_expressions
 from bach.series.series_json import JsonAccessor
 from bach.types import register_dtype
 from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery
 
 
-class ObjectivStack(JsonAccessor):
+TSeriesJson = TypeVar('TSeriesJson', bound='SeriesJson')
+
+
+class ObjectivStack(JsonAccessor, Generic[TSeriesJson]):
+    """
+    Specialized JsonAccessor that has functions to work on SeriesJsons whose data consists of an array
+    of objects.
+    """
+
     def get_from_context_with_type_series(self, type: str, key: str, dtype='string'):
         """
         .. _get_from_context_with_type_series:
@@ -62,6 +69,73 @@ class ObjectivStack(JsonAccessor):
         as_str = dtype == 'string'
         value_series = ctx_series.json.get_value(key=key, as_str=as_str)
         return value_series.copy_override_dtype(dtype)
+
+    def filter_keys_of_dicts(self, keys: List[str]) -> 'TSeriesJson':
+        """
+        Return a new Series, that consists of the same top level array, but with all the sub-dictionaries
+        having only their original fields if that field is listed in the keys parameter.
+        """
+        engine = self._series_object.engine
+        if is_postgres(engine):
+            return self._pg_filter_keys_of_dicts(keys)
+        if is_bigquery(engine):
+            return self._bigquery_filter_keys_of_dicts(keys)
+        raise DatabaseNotSupportedException(engine)
+
+    def _pg_filter_keys_of_dicts(self, keys: List[str]) -> 'TSeriesJson':
+        jsonb_build_object_str = [f"{quote_string(self._series_object.engine, key)}" for key in keys]
+        expression_str = f'''(
+            select jsonb_agg((
+                select json_object_agg(items.key, items.value)
+                from jsonb_each(objects.value) as items
+                where items.key in ({", ".join(jsonb_build_object_str)})))
+            from jsonb_array_elements({{}}) as objects)
+        '''
+        expression = Expression.construct(
+            expression_str,
+            self._series_object
+        )
+        return self._series_object.copy_override(expression=expression)
+
+    def _bigquery_filter_keys_of_dicts(self, keys: List[str]) -> 'TSeriesJson':
+        json_object_str_expressions = []
+        # We unnest the json-array, and then for every json object in the array we build a copy of that
+        # json object, but with only the keys that are listed in the `keys` variable.
+        # Unfortunately BigQuery has no way (yet) to turn a struct into a json string, so we have to do raw
+        # string building to get json objects.
+        for i, key in enumerate(keys):
+            if '"' in key:
+                raise ValueError(f'key values containing double quotes are not supported. key: {key}')
+            # Each iteration we build an expression of this form (the comma is skipped on the 1st iteration):
+            #       , "key": value
+            # This gives a combined expression of the form:
+            #       "key1": value1, "key2": value2, ..., "keyN": valueN
+            # However, we have to build the json as a raw string. So all the individual parts are strings,
+            # which we then add to a list. The items in that list will then become the arguments to a sql
+            # concat() function call, which then creates one combined string of the form that we intend.
+            comma_expr = Expression.string_value(', ')
+            key_expr = Expression.string_value(json.dumps(key))
+            colon_expr = Expression.string_value(': ')
+            value_expr = Expression.construct('''JSON_QUERY(item, '$."{}"')''', Expression.raw(key))
+            if i > 0:
+                json_object_str_expressions.append(comma_expr)
+            json_object_str_expressions.append(key_expr)
+            json_object_str_expressions.append(colon_expr)
+            json_object_str_expressions.append(value_expr)
+
+        json_object_key_values_expr = join_expressions(json_object_str_expressions)
+        # Here we build the json object as a string by concatenating all earlier key-value and comma
+        # expressions.
+        json_object_expr = Expression.construct(
+            '''select concat('{', {}, '}') from unnest(json_query_array({}, '$')) as item''',
+            json_object_key_values_expr,
+            self._series_object,
+        )
+        json_str_expression = Expression.construct(
+            "'[' || ARRAY_TO_STRING(ARRAY({}), ', ') || ']'",
+            json_object_expr
+        )
+        return self._series_object.copy_override(expression=json_str_expression)
 
 
 @register_dtype(value_types=[], override_registered_types=True)
@@ -171,7 +245,7 @@ class SeriesLocationStack(SeriesJson):
             return self[{'_type': 'NavigationContext'}: None]
 
         @property
-        def feature_stack(self):
+        def feature_stack(self) -> 'SeriesLocationStack':
             """
             .. _ls_feature_stack:
 
@@ -179,30 +253,20 @@ class SeriesLocationStack(SeriesJson):
             and a `id` key.
             """
             keys = ['_type', 'id']
-            jsonb_build_object_str = [f"{quote_string(self._series_object.engine, key)}" for key in keys]
-            expression_str = f'''(
-                select jsonb_agg((
-                    select json_object_agg(items.key, items.value)
-                    from jsonb_each(objects.value) as items
-                    where items.key in ({", ".join(jsonb_build_object_str)})))
-                from jsonb_array_elements({{}}) as objects)
-            '''
-            expression = Expression.construct(
-                expression_str,
-                self._series_object
-            )
-            return self._series_object\
-                .copy_override_dtype('objectiv_location_stack')\
-                .copy_override(expression=expression)
+            series = self.filter_keys_of_dicts(keys=keys)
+            return series
 
         @property
-        def nice_name(self):
+        def nice_name(self) -> 'SeriesString':
             """
             .. _ls_nice_name:
 
             Returns a nice name for the location stack. This is a human readable name for the data in the
             feature stack.
             """
+            if is_bigquery(self._series_object.engine):
+                # TODO: This is temporary, just so that we have something
+                return self._series_object.json[0].json.get_value('_type', as_str=True) + ' TODO'
             expression = Expression.construct(
                 f"""(
                 select array_to_string(
@@ -231,7 +295,7 @@ class SeriesLocationStack(SeriesJson):
                 self._series_object,
                 self._series_object
             )
-            return self._series_object.copy_override_dtype('string').copy_override(expression=expression)
+            return self._series_object.copy_override_type(SeriesString).copy_override(expression=expression)
 
     @property
     def objectiv(self):

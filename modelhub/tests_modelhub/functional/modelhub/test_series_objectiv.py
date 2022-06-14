@@ -78,7 +78,6 @@ def test_objectiv_stack_type3(db_params):
     )
 
 
-@pytest.mark.skip_bigquery  # TODO: BigQuery
 def test_objectiv_stack_type4(db_params):
     bt = get_df_with_json_data_real(db_params)
 
@@ -86,6 +85,7 @@ def test_objectiv_stack_type4(db_params):
     bts = bt.b.location_stack.feature_stack
     assert_equals_data(
         bts,
+        use_to_pandas=True,
         expected_columns=['_index_event_id', 'b'],
         expected_data=[
             [1, [{'id': '#document', '_type': 'WebDocumentContext'}, {'id': 'home', '_type': 'SectionContext'}, {'id': 'yep', '_type': 'SectionContext'}, {'id': 'cc91EfoBh8A', '_type': 'SectionContext'}]],
