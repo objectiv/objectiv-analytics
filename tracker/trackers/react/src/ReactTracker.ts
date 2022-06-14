@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ContextsConfig, Tracker, TrackerConfig, TrackerPlatform } from '@objectiv/tracker-core';
+import { ContextsConfig, isPluginsArray, Tracker, TrackerConfig, TrackerPlatform } from '@objectiv/tracker-core';
 import { makeReactTrackerDefaultPluginsList } from './common/factories/makeReactTrackerDefaultPluginsList';
 import { makeReactTrackerDefaultQueue } from './common/factories/makeReactTrackerDefaultQueue';
 import { makeReactTrackerDefaultTransport } from './common/factories/makeReactTrackerDefaultTransport';
@@ -96,11 +96,10 @@ export class ReactTracker extends Tracker {
     }
 
     // Configure to use provided `plugins` or automatically create a Plugins instance with some sensible web defaults
-    if (!config.plugins) {
-      config = {
-        ...config,
-        plugins: makeReactTrackerDefaultPluginsList(config),
-      };
+    if (isPluginsArray(trackerConfig.plugins) || trackerConfig.plugins === undefined) {
+      config.plugins = [...makeReactTrackerDefaultPluginsList(trackerConfig), ...(trackerConfig.plugins ?? [])];
+    } else {
+      config.plugins = trackerConfig.plugins;
     }
 
     // Initialize Core Tracker

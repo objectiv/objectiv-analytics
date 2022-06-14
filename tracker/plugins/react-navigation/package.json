@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/plugin-react-navigation",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "Automatically tracked React Navigation 6+ Components, listeners and state for Objectiv React Native Tracker",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
@@ -49,24 +49,23 @@
     "test:ci": "jest --silent --ci --runInBand",
     "test:coverage": "jest --silent --coverage --runInBand",
     "check:dependencies": "npx depcheck",
-    "npm-publish": "shx rm -f .npmrc && npm publish --access=public",
-    "npm-publish:verdaccio": "shx cp ../../verdaccio/.npmrc .npmrc && npm publish && shx rm -f .npmrc"
+    "npm-publish": "npm publish --access=public --tag=$TAG",
+    "npm-publish:verdaccio": "npm publish --tag=$TAG"
   },
   "dependencies": {
-    "@objectiv/tracker-react-core": "^0.0.19",
-    "@objectiv/tracker-react-native": "^0.0.19"
+    "@objectiv/tracker-react-core": "^0.0.20",
+    "@objectiv/tracker-react-native": "^0.0.20"
   },
   "devDependencies": {
-    "@objectiv/testing-tools": "^0.0.19",
+    "@objectiv/developer-tools": "^0.0.20",
+    "@objectiv/testing-tools": "^0.0.20",
     "@react-navigation/bottom-tabs": "^6.2.0",
+    "@react-navigation/core": "^6.1.1",
     "@react-navigation/native": "^6.0.8",
     "@react-navigation/stack": "^6.1.1",
     "@testing-library/react-native": "^9.0.0",
-    "@types/jest": "^27.4.1",
     "@types/react-native": "^0.67.2",
-    "babel-jest": "^27.5.1",
     "jest": "^27.5.1",
-    "jest-react-native": "^18.0.0",
     "jest-standard-reporter": "^2.0.0",
     "prettier": "^2.5.1",
     "react-native": "^0.67.3",
@@ -74,7 +73,6 @@
     "react-native-safe-area-context": "^4.1.2",
     "react-native-screens": "^3.13.1",
     "react-test-renderer": "^17.0.2",
-    "shx": "^0.3.3",
     "tsup": "^5.12.0",
     "typescript": "^4.6.2"
   },

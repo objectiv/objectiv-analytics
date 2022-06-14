@@ -26,7 +26,7 @@ should be adjusted depending on where the data is stored and how to access it.
 ```python
 from modelhub import ModelHub
 # instantiate the model hub
-modelhub = ModelHub(time_aggregation='YYYY-MM-DD')
+modelhub = ModelHub(time_aggregation='%Y-%m-%d')
 # get the Bach DataFrame to use with model hub models
 df = modelhub.get_objectiv_dataframe(db_url='postgresql://user:pass@localhost:5432/database',
                                      table_name='data')

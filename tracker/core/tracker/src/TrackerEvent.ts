@@ -2,7 +2,13 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { AbstractEvent, AbstractGlobalContext, AbstractLocationContext, Contexts } from '@objectiv/schema';
+import {
+  AbstractEvent,
+  AbstractGlobalContext,
+  AbstractLocationContext,
+  Contexts,
+  EventAbstractDiscriminators,
+} from '@objectiv/schema';
 import { cleanObjectFromInternalProperties } from './cleanObjectFromInternalProperties';
 import { ContextsConfig } from './Context';
 import { generateUUID } from './helpers';
@@ -88,3 +94,8 @@ export class TrackerEvent implements UntrackedEvent, Contexts {
     };
   }
 }
+
+/**
+ * An Event ready to be validated.
+ */
+export type EventToValidate = TrackerEvent & EventAbstractDiscriminators;

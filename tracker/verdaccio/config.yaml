@@ -28,7 +28,6 @@ packages:
     access: $all
     publish: $all
     unpublish: $all
-    proxy: npmjs
 
   '**':
     # allow all users (including non-authenticated users) to read all packages

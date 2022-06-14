@@ -6,6 +6,21 @@ import { TrackingContext, trackPressEvent } from '@objectiv/tracker-react-core';
 import React from 'react';
 
 /**
+ * This symbol is used to mark an event as handled in case we re-dispatch it. This allows us to skip handling the
+ * re-dispatched event and causing an infinite loop.
+ */
+const EVENT_REDISPATCHED_PROPERTY = Symbol('OBJECTIV_EVENT_REDISPATCHED');
+
+/**
+ * Update the type definition of MouseEvent to allow it to get the redispatched property.
+ */
+declare global {
+  interface MouseEvent {
+    [EVENT_REDISPATCHED_PROPERTY]: boolean;
+  }
+}
+
+/**
  * Anchor click handler factory parameters
  */
 export type AnchorClickHandlerParameters = {
@@ -42,6 +57,13 @@ export const makeAnchorClickHandler =
       // Execute onClick prop, if any.
       props.onClick && props.onClick(event);
     } else {
+      const nativeEvent = event.nativeEvent;
+
+      if (nativeEvent[EVENT_REDISPATCHED_PROPERTY]) {
+        // This is a redispatched event so skip it
+        return;
+      }
+
       // Prevent event from being handled by the user agent.
       event.preventDefault();
 
@@ -59,7 +81,10 @@ export const makeAnchorClickHandler =
       // Execute onClick prop, if any.
       props.onClick && props.onClick(event);
 
-      // Resume navigation.
-      window.location.href = props.anchorHref;
+      // Resume navigation by redispatching a clone of the original event
+      const eventClone = new (nativeEvent.constructor as any)(nativeEvent.type, nativeEvent);
+      eventClone[EVENT_REDISPATCHED_PROPERTY] = true;
+      const target = event.currentTarget || event.target;
+      target.dispatchEvent(eventClone);
     }
   };

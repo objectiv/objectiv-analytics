@@ -5,18 +5,11 @@
 import { LocationContextName, Tracker } from '@objectiv/tracker-core';
 import { fireEvent, getByTestId, render } from '@testing-library/react';
 import React from 'react';
-import {
-  InputContextWrapper,
-  LocationTree,
-  ObjectivProvider,
-  trackInputChangeEvent,
-  useInputChangeEventTracker,
-} from '../src';
+import { InputContextWrapper, ObjectivProvider, trackInputChangeEvent, useInputChangeEventTracker } from '../src';
 
 describe('InputContextWrapper', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    LocationTree.clear();
   });
 
   afterEach(() => {

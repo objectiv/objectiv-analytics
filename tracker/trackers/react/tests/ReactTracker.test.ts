@@ -2,11 +2,12 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { RootLocationContextFromURLPlugin } from '@objectiv/plugin-root-location-context-from-url';
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
   GlobalContextName,
-  TrackerConsole,
   TrackerEvent,
+  TrackerPlugins,
   TrackerQueue,
   TrackerQueueMemoryStore,
   TrackerTransportRetry,
@@ -17,7 +18,8 @@ import fetchMock from 'jest-fetch-mock';
 import { clear, mockUserAgent } from 'jest-useragent-mock';
 import { ReactTracker } from '../src/';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('ReactTracker', () => {
   beforeEach(() => {
@@ -129,6 +131,47 @@ describe('ReactTracker', () => {
       expect(testTracker).toBeInstanceOf(ReactTracker);
       expect(testTracker.plugins?.plugins).toEqual([
         expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
+      ]);
+    });
+
+    it('should allow customizing a plugin, without affecting the existing ones', () => {
+      const testTracker = new ReactTracker({
+        applicationId: 'app-id',
+        endpoint: 'localhost',
+        plugins: [
+          new RootLocationContextFromURLPlugin({
+            idFactoryFunction: () => 'test',
+          }),
+        ],
+      });
+      expect(testTracker).toBeInstanceOf(ReactTracker);
+      expect(testTracker.plugins?.plugins).toEqual([
+        expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
+        expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
+        expect.objectContaining({ pluginName: 'HttpContextPlugin' }),
+        expect.objectContaining({ pluginName: 'PathContextFromURLPlugin' }),
+        expect.objectContaining({ pluginName: 'RootLocationContextFromURLPlugin' }),
+      ]);
+    });
+
+    it('should allow customizing the plugin set', () => {
+      const testTracker = new ReactTracker({
+        applicationId: 'app-id',
+        endpoint: 'localhost',
+      });
+      const trackerClone = new ReactTracker({
+        applicationId: 'app-id',
+        endpoint: 'localhost',
+        plugins: new TrackerPlugins({ tracker: testTracker, plugins: testTracker.plugins.plugins }),
+      });
+
+      expect(trackerClone).toBeInstanceOf(ReactTracker);
+      expect(trackerClone.plugins?.plugins).toEqual([
+        expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
+        expect.objectContaining({ pluginName: 'ApplicationContextPlugin' }),
+        expect.objectContaining({ pluginName: 'HttpContextPlugin' }),
+        expect.objectContaining({ pluginName: 'PathContextFromURLPlugin' }),
+        expect.objectContaining({ pluginName: 'RootLocationContextFromURLPlugin' }),
       ]);
     });
   });

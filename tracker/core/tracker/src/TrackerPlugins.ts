@@ -5,7 +5,6 @@
 import { ContextsConfig } from './Context';
 import { isValidIndex } from './helpers';
 import { Tracker, TrackerInterface } from './Tracker';
-import { TrackerConsole } from './TrackerConsole';
 import { TrackerEvent } from './TrackerEvent';
 import { TrackerPluginInterface } from './TrackerPluginInterface';
 import { TrackerPluginLifecycleInterface } from './TrackerPluginLifecycleInterface';
@@ -52,11 +51,13 @@ export class TrackerPlugins implements TrackerPluginLifecycleInterface, TrackerV
       this.plugins.push(plugin);
     });
 
-    TrackerConsole.groupCollapsed(`｢objectiv:TrackerPlugins｣ Initialized`);
-    TrackerConsole.group(`Plugins:`);
-    TrackerConsole.log(this.plugins.map((plugin) => plugin.pluginName).join(', '));
-    TrackerConsole.groupEnd();
-    TrackerConsole.groupEnd();
+    if (globalThis.objectiv) {
+      globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:TrackerPlugins｣ Initialized`);
+      globalThis.objectiv.TrackerConsole.group(`Plugins:`);
+      globalThis.objectiv.TrackerConsole.log(this.plugins.map((plugin) => plugin.pluginName).join(', '));
+      globalThis.objectiv.TrackerConsole.groupEnd();
+      globalThis.objectiv.TrackerConsole.groupEnd();
+    }
   }
 
   /**
@@ -94,7 +95,7 @@ export class TrackerPlugins implements TrackerPluginLifecycleInterface, TrackerV
     const spliceIndex = index ?? this.plugins.length;
     this.plugins.splice(spliceIndex, 0, plugin);
 
-    TrackerConsole.log(
+    globalThis.objectiv?.TrackerConsole.log(
       `%c｢objectiv:TrackerPlugins｣ ${plugin.pluginName} added at index ${spliceIndex}`,
       'font-weight: bold'
     );
@@ -111,7 +112,10 @@ export class TrackerPlugins implements TrackerPluginLifecycleInterface, TrackerV
 
     this.plugins = this.plugins.filter(({ pluginName }) => pluginName !== pluginInstance.pluginName);
 
-    TrackerConsole.log(`%c｢objectiv:TrackerPlugins｣ ${pluginInstance.pluginName} removed`, 'font-weight: bold');
+    globalThis.objectiv?.TrackerConsole.log(
+      `%c｢objectiv:TrackerPlugins｣ ${pluginInstance.pluginName} removed`,
+      'font-weight: bold'
+    );
   }
 
   /**

@@ -3,12 +3,20 @@
  */
 
 import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
-import { LocationContextName, TrackerConsole } from '@objectiv/tracker-core';
+import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render, screen } from '@testing-library/react';
 import React, { createRef } from 'react';
-import { LocationTree, ObjectivProvider, ReactTracker, TrackedExpandableContext, usePressEventTracker } from '../src';
+import {
+  ObjectivProvider,
+  ReactTracker,
+  TrackedDiv,
+  TrackedExpandableContext,
+  TrackedRootLocationContext,
+  usePressEventTracker,
+} from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 const TrackedButton = () => {
   const trackPressEvent = usePressEventTracker();
@@ -18,7 +26,6 @@ const TrackedButton = () => {
 describe('TrackedExpandableContext', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    LocationTree.clear();
   });
 
   afterEach(() => {
@@ -58,6 +65,85 @@ describe('TrackedExpandableContext', () => {
           }),
         ]),
       })
+    );
+  });
+
+  it('should allow disabling id normalization', () => {
+    const spyTransport = new SpyTransport();
+    jest.spyOn(spyTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+
+    const TrackedButton = ({ children }: { children: React.ReactNode }) => {
+      const trackPressEvent = usePressEventTracker();
+      return <div onClick={trackPressEvent}>{children}</div>;
+    };
+
+    const { container } = render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedExpandableContext Component={'div'} id={'Expandable id 1'}>
+          <TrackedButton>Trigger Event 1</TrackedButton>
+        </TrackedExpandableContext>
+        <TrackedExpandableContext Component={'div'} id={'Expandable id 2'} normalizeId={false}>
+          <TrackedButton>Trigger Event 2</TrackedButton>
+        </TrackedExpandableContext>
+      </ObjectivProvider>
+    );
+
+    fireEvent.click(getByText(container, /trigger event 1/i));
+    fireEvent.click(getByText(container, /trigger event 2/i));
+
+    expect(spyTransport.handle).toHaveBeenCalledTimes(3);
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: 'ApplicationLoadedEvent',
+      })
+    );
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.ExpandableContext,
+            id: 'expandable-id-1',
+          }),
+        ]),
+      })
+    );
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.ExpandableContext,
+            id: 'Expandable id 2',
+          }),
+        ]),
+      })
+    );
+  });
+
+  it('should console.error if an id cannot be automatically generated', () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedRootLocationContext Component={'div'} id={'root'}>
+          <TrackedDiv id={'content'}>
+            <TrackedExpandableContext Component={'div'} id={'☹️'}>
+              {/* nothing to see here */}
+            </TrackedExpandableContext>
+          </TrackedDiv>
+        </TrackedRootLocationContext>
+      </ObjectivProvider>
+    );
+
+    expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
+    expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
+      '｢objectiv｣ Could not generate a valid id for ExpandableContext @ RootLocation:root / Content:content. Please provide the `id` property.'
     );
   });
 

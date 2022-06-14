@@ -2,7 +2,6 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { TrackerConsole } from '@objectiv/tracker-core';
 import { TrackerErrorHandlerCallback } from '../definitions/TrackerErrorHandlerCallback';
 
 /**
@@ -14,7 +13,7 @@ export const trackerErrorHandler = (error: unknown, parameters?: unknown, onErro
   if (onError) {
     onError(error);
   } else {
-    TrackerConsole.error(error, parameters);
+    globalThis.objectiv?.TrackerConsole.error(error, parameters);
   }
   return undefined;
 };
