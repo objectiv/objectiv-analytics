@@ -2,7 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ExpandableContextWrapper, trackVisibility, useOnChange } from '@objectiv/tracker-react-core';
+import { makeIdFromString } from '@objectiv/tracker-core';
+import { ExpandableContextWrapper, trackVisibility, useLocationStack, useOnChange } from '@objectiv/tracker-react-core';
 import React, { useState } from 'react';
 import { TrackedShowableContextProps } from '../types';
 
@@ -12,7 +13,13 @@ import { TrackedShowableContextProps } from '../types';
  */
 export const TrackedExpandableContext = React.forwardRef<HTMLElement, TrackedShowableContextProps>((props, ref) => {
   const [wasVisible, setWasVisible] = useState<boolean>(false);
-  const { id, Component, forwardId = false, isVisible = false, ...otherProps } = props;
+  const { id, Component, forwardId = false, isVisible = false, normalizeId = true, ...otherProps } = props;
+  const locationStack = useLocationStack();
+
+  let expandableId: string | null = id;
+  if (normalizeId) {
+    expandableId = makeIdFromString(expandableId);
+  }
 
   useOnChange(isVisible, () => setWasVisible(isVisible));
 
@@ -22,8 +29,18 @@ export const TrackedExpandableContext = React.forwardRef<HTMLElement, TrackedSho
     ...(forwardId ? { id } : {}),
   };
 
+  if (!expandableId) {
+    if (globalThis.objectiv) {
+      const locationPath = globalThis.objectiv.getLocationPath(locationStack);
+      globalThis.objectiv.TrackerConsole.error(
+        `｢objectiv｣ Could not generate a valid id for ExpandableContext @ ${locationPath}. Please provide the \`id\` property.`
+      );
+    }
+    return React.createElement(Component, componentProps);
+  }
+
   return (
-    <ExpandableContextWrapper id={id}>
+    <ExpandableContextWrapper id={expandableId}>
       {(trackingContext) => {
         if ((wasVisible && !isVisible) || (!wasVisible && isVisible)) {
           trackVisibility({ isVisible, ...trackingContext });

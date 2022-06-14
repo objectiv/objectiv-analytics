@@ -2,13 +2,10 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { ApplicationContextPlugin } from '@objectiv/plugin-application-context';
 import { AbstractGlobalContext, AbstractLocationContext, Contexts } from '@objectiv/schema';
 import { ContextsConfig } from './Context';
 import { waitForPromise } from './helpers';
-import { ApplicationContextPlugin } from './plugins/ApplicationContextPlugin';
-import { OpenTaxonomyValidationPlugin } from './plugins/OpenTaxonomyValidationPlugin';
-import { TrackerConsole } from './TrackerConsole';
-import { getLocationPath } from './TrackerElementLocations';
 import { TrackerEvent, TrackerEventConfig } from './TrackerEvent';
 import { TrackerPluginInterface } from './TrackerPluginInterface';
 import { TrackerPlugins } from './TrackerPlugins';
@@ -77,7 +74,11 @@ export type TrackerConfig = ContextsConfig & {
 export const makeCoreTrackerDefaultPluginsList = (trackerConfig: TrackerConfig) => {
   const { trackApplicationContext = true } = trackerConfig;
 
-  const plugins: TrackerPluginInterface[] = [new OpenTaxonomyValidationPlugin()];
+  const plugins: TrackerPluginInterface[] = [];
+
+  if (globalThis.objectiv) {
+    plugins.push(globalThis.objectiv.OpenTaxonomyValidationPlugin);
+  }
 
   if (trackApplicationContext) {
     plugins.push(new ApplicationContextPlugin());
@@ -133,7 +134,7 @@ export class Tracker implements TrackerInterface {
   readonly transport?: TrackerTransportInterface;
   readonly plugins: TrackerPlugins;
 
-  // By default, trackers are active
+  // Trackers are automatically activated, unless differently specified via config, during construction.
   active: boolean = false;
 
   // Contexts interface
@@ -178,23 +179,25 @@ export class Tracker implements TrackerInterface {
     // Change tracker state. If active it will initialize Plugins and start the Queue runner.
     this.setActive(trackerConfig.active ?? true);
 
-    TrackerConsole.groupCollapsed(
-      `｢objectiv:Tracker:${this.trackerId}｣ Initialized (${getLocationPath(this.location_stack)})`
-    );
-    TrackerConsole.log(`Active: ${this.active}`);
-    TrackerConsole.log(`Application ID: ${this.applicationId}`);
-    TrackerConsole.log(`Queue: ${this.queue?.queueName ?? 'none'}`);
-    TrackerConsole.log(`Transport: ${this.transport?.transportName ?? 'none'}`);
-    TrackerConsole.group(`Plugins:`);
-    TrackerConsole.log(this.plugins.plugins.map((plugin) => plugin.pluginName).join(', '));
-    TrackerConsole.groupEnd();
-    TrackerConsole.group(`Location Stack:`);
-    TrackerConsole.log(this.location_stack);
-    TrackerConsole.groupEnd();
-    TrackerConsole.group(`Global Contexts:`);
-    TrackerConsole.log(this.global_contexts);
-    TrackerConsole.groupEnd();
-    TrackerConsole.groupEnd();
+    if (globalThis.objectiv) {
+      globalThis.objectiv.TrackerConsole.groupCollapsed(
+        `｢objectiv:Tracker:${this.trackerId}｣ Initialized (${globalThis.objectiv.getLocationPath(this.location_stack)})`
+      );
+      globalThis.objectiv.TrackerConsole.log(`Active: ${this.active}`);
+      globalThis.objectiv.TrackerConsole.log(`Application ID: ${this.applicationId}`);
+      globalThis.objectiv.TrackerConsole.log(`Queue: ${this.queue?.queueName ?? 'none'}`);
+      globalThis.objectiv.TrackerConsole.log(`Transport: ${this.transport?.transportName ?? 'none'}`);
+      globalThis.objectiv.TrackerConsole.group(`Plugins:`);
+      globalThis.objectiv.TrackerConsole.log(this.plugins.plugins.map((plugin) => plugin.pluginName).join(', '));
+      globalThis.objectiv.TrackerConsole.groupEnd();
+      globalThis.objectiv.TrackerConsole.group(`Location Stack:`);
+      globalThis.objectiv.TrackerConsole.log(this.location_stack);
+      globalThis.objectiv.TrackerConsole.groupEnd();
+      globalThis.objectiv.TrackerConsole.group(`Global Contexts:`);
+      globalThis.objectiv.TrackerConsole.log(this.global_contexts);
+      globalThis.objectiv.TrackerConsole.groupEnd();
+      globalThis.objectiv.TrackerConsole.groupEnd();
+    }
   }
 
   /**
@@ -216,14 +219,14 @@ export class Tracker implements TrackerInterface {
           // Set the queue processFunction to transport.handle method: the queue will run Transport.handle for each batch
           this.queue.setProcessFunction(processFunction);
 
-          TrackerConsole.log(
+          globalThis.objectiv?.TrackerConsole.log(
             `%c｢objectiv:Tracker:${this.trackerId}｣ ${this.queue.queueName} is ready to run ${this.transport.transportName}`,
             'font-weight:bold'
           );
         }
       }
 
-      TrackerConsole.log(
+      globalThis.objectiv?.TrackerConsole.log(
         `%c｢objectiv:Tracker:${this.trackerId}｣ New state: ${this.active ? 'active' : 'inactive'}`,
         'font-weight: bold'
       );
@@ -280,20 +283,22 @@ export class Tracker implements TrackerInterface {
 
     // Hand over TrackerEvent to TrackerTransport or TrackerQueue, if enabled and usable.
     if (this.transport && this.transport.isUsable()) {
-      TrackerConsole.groupCollapsed(
-        `｢objectiv:Tracker:${this.trackerId}｣ ${this.queue ? 'Queuing' : 'Tracking'} ${
-          trackedEvent._type
-        } (${getLocationPath(trackedEvent.location_stack)})`
-      );
-      TrackerConsole.log(`Event ID: ${trackedEvent.id}`);
-      TrackerConsole.log(`Time: ${trackedEvent.time}`);
-      TrackerConsole.group(`Location Stack:`);
-      TrackerConsole.log(trackedEvent.location_stack);
-      TrackerConsole.groupEnd();
-      TrackerConsole.group(`Global Contexts:`);
-      TrackerConsole.log(trackedEvent.global_contexts);
-      TrackerConsole.groupEnd();
-      TrackerConsole.groupEnd();
+      if (globalThis.objectiv) {
+        globalThis.objectiv.TrackerConsole.groupCollapsed(
+          `｢objectiv:Tracker:${this.trackerId}｣ ${this.queue ? 'Queuing' : 'Tracking'} ${
+            trackedEvent._type
+          } (${globalThis.objectiv.getLocationPath(trackedEvent.location_stack)})`
+        );
+        globalThis.objectiv.TrackerConsole.log(`Event ID: ${trackedEvent.id}`);
+        globalThis.objectiv.TrackerConsole.log(`Time: ${trackedEvent.time}`);
+        globalThis.objectiv.TrackerConsole.group(`Location Stack:`);
+        globalThis.objectiv.TrackerConsole.log(trackedEvent.location_stack);
+        globalThis.objectiv.TrackerConsole.groupEnd();
+        globalThis.objectiv.TrackerConsole.group(`Global Contexts:`);
+        globalThis.objectiv.TrackerConsole.log(trackedEvent.global_contexts);
+        globalThis.objectiv.TrackerConsole.groupEnd();
+        globalThis.objectiv.TrackerConsole.groupEnd();
+      }
 
       if (this.queue) {
         await this.queue.push(trackedEvent);

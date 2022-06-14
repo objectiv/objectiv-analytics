@@ -3,24 +3,17 @@
  */
 
 import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
-import { LocationContextName, TrackerConsole } from '@objectiv/tracker-core';
+import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render, screen, waitFor } from '@testing-library/react';
 import React, { createRef } from 'react';
-import {
-  LocationTree,
-  ObjectivProvider,
-  ReactTracker,
-  TrackedDiv,
-  TrackedLinkContext,
-  TrackedRootLocationContext,
-} from '../src';
+import { ObjectivProvider, ReactTracker, TrackedDiv, TrackedLinkContext, TrackedRootLocationContext } from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedLinkContext', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    LocationTree.clear();
     jest.spyOn(console, 'error').mockImplementation(jest.fn);
   });
 
@@ -59,6 +52,58 @@ describe('TrackedLinkContext', () => {
           expect.objectContaining({
             _type: LocationContextName.LinkContext,
             id: 'link-id',
+          }),
+        ]),
+      })
+    );
+  });
+
+  it('should allow disabling id normalization', () => {
+    const spyTransport = new SpyTransport();
+    jest.spyOn(spyTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+
+    const { container } = render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedLinkContext Component={'a'} id={'Link Id 1'} href={'/some-url'}>
+          Trigger Event 1
+        </TrackedLinkContext>
+        <TrackedLinkContext Component={'a'} id={'Link Id 2'} normalizeId={false} href={'/some-url'}>
+          Trigger Event 2
+        </TrackedLinkContext>
+      </ObjectivProvider>
+    );
+
+    fireEvent.click(getByText(container, /trigger event 1/i));
+    fireEvent.click(getByText(container, /trigger event 2/i));
+
+    expect(spyTransport.handle).toHaveBeenCalledTimes(3);
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: 'ApplicationLoadedEvent',
+      })
+    );
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.LinkContext,
+            id: 'link-id-1',
+          }),
+        ]),
+      })
+    );
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.LinkContext,
+            id: 'Link Id 2',
           }),
         ]),
       })

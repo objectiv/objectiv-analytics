@@ -2,24 +2,23 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-export * from './plugins/ApplicationContextPlugin';
-export * from './plugins/OpenTaxonomyValidationPlugin';
+import { TrackerDeveloperToolsInterface } from './TrackerDeveloperToolsInterface';
 
-export * from './validationRules/ContextValidationRuleConfig';
-export * from './validationRules/GlobalContextValidationRule';
-export * from './validationRules/LocationContextValidationRule';
-export * from './validationRules/logEventValidationRuleError';
+declare global {
+  var objectiv: undefined | TrackerDeveloperToolsInterface;
+}
 
 export * from './cleanObjectFromInternalProperties';
 export * from './Context';
 export * from './ContextFactories';
 export * from './ContextNames';
+export * from './ContextValidationRules';
 export * from './EventFactories';
 export * from './helpers';
-export * from './NoopConsoleImplementation';
+export * from './LocationTreeInterface';
 export * from './Tracker';
-export * from './TrackerConsole';
-export * from './TrackerElementLocations';
+export * from './TrackerConsoleInterface';
+export * from './TrackerDeveloperToolsInterface';
 export * from './TrackerEvent';
 export * from './TrackerPluginInterface';
 export * from './TrackerPluginLifecycleInterface';

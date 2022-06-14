@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { NonEmptyArray, TrackerConsole, TrackerEvent, TrackerQueueStoreInterface } from '@objectiv/tracker-core';
+import { NonEmptyArray, TrackerEvent, TrackerQueueStoreInterface } from '@objectiv/tracker-core';
 
 /**
  * The configuration of LocalStorageQueueStore requires a `trackerId` to be specified.
@@ -28,14 +28,14 @@ export class LocalStorageQueueStore implements TrackerQueueStoreInterface {
 
     this.localStorageKey = `objectiv-events-queue-${config.trackerId}`;
 
-    TrackerConsole.log(`%c｢objectiv:${this.queueStoreName}｣ Initialized`, 'font-weight: bold');
+    globalThis.objectiv?.TrackerConsole.log(`%c｢objectiv:${this.queueStoreName}｣ Initialized`, 'font-weight: bold');
   }
 
   getEventsFromLocalStorage(): TrackerEvent[] {
     try {
       return JSON.parse(localStorage.getItem(this.localStorageKey) ?? '[]');
     } catch (error) {
-      TrackerConsole.error(
+      globalThis.objectiv?.TrackerConsole.error(
         `%c｢objectiv:${this.queueStoreName}｣ Failed to parse Events from localStorage: ${error}`,
         'font-weight: bold'
       );
@@ -47,7 +47,7 @@ export class LocalStorageQueueStore implements TrackerQueueStoreInterface {
     try {
       localStorage.setItem(this.localStorageKey, JSON.stringify(events));
     } catch (error) {
-      TrackerConsole.error(
+      globalThis.objectiv?.TrackerConsole.error(
         `%c｢objectiv:${this.queueStoreName}｣ Failed to write Events to localStorage: ${error}`,
         'font-weight: bold'
       );

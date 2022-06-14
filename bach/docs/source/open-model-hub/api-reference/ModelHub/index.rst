@@ -11,9 +11,3 @@ ModelHub
     :toctree: 
 
     ModelHub
-
-.. toctree::
-    :hidden:
-    :maxdepth: 7
-
-    LogisticRegression/index

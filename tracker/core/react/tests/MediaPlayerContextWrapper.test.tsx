@@ -5,18 +5,11 @@
 import { LocationContextName, Tracker } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render } from '@testing-library/react';
 import React from 'react';
-import {
-  LocationTree,
-  MediaPlayerContextWrapper,
-  ObjectivProvider,
-  trackPressEvent,
-  usePressEventTracker,
-} from '../src';
+import { MediaPlayerContextWrapper, ObjectivProvider, trackPressEvent, usePressEventTracker } from '../src';
 
 describe('MediaPlayerContextWrapper', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    LocationTree.clear();
   });
 
   afterEach(() => {

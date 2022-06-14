@@ -34,16 +34,20 @@ class ModelHub:
     It includes models for a wide range of typical product analytics use cases.
 
     All models from the model hub can run on Bach DataFrames that contain data collected by the Objectiv
-    tracker. To instantiate a DataFrame with Objectiv data use :py:meth:`ModelHub.from_objectiv_data`. Models
+    tracker. To instantiate a DataFrame with Objectiv data use :py:meth:`get_objectiv_dataframe`. Models
     from the model hub assume that at least the columns of a DataFrame instantiated with this method are
     available in order to run properly. These columns are:
 
-    The model hub has two main type of functions: :py:attr:`map` and :py:attr:`aggregate`.
+    The model hub has three main type of functions: helper functions, aggregation models and
+    machine learning models.
 
-    * `map` functions always return a series with the same shape and index as the DataFrame they originate
-      from. This ensures they can be added as a column to that DataFrame.
-    * `aggregate` fuctions return aggregated data in some form from the DataFrame. Can also be accessed with
-      `agg`.
+    * Helper functions always return a series with the same shape and index as the DataFrame they originate
+      from. This ensures they can be added as a column to that DataFrame. The helper functions can be accessed
+      with the :py:attr:`map` accessor from a model hub instance.
+    * Aggregation models return aggregated data in some form from the DataFrame. The aggregation models can be
+      accessed with the :py:attr:`agg` or :py:attr:`aggregate` accessor from a model hub instance.
+    * Machine learning models can be instantiated from the modelhub directly using the model's name,
+      i.e. : :py:meth:`get_logistic_regression`.
     """
     def __init__(self,
                  time_aggregation: str = TIME_DEFAULT_FORMAT):

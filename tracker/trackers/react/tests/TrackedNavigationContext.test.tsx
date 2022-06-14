@@ -3,17 +3,24 @@
  */
 
 import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
-import { LocationContextName, TrackerConsole } from '@objectiv/tracker-core';
+import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render, screen } from '@testing-library/react';
 import React, { createRef } from 'react';
-import { LocationTree, ObjectivProvider, ReactTracker, TrackedNavigationContext, usePressEventTracker } from '../src';
+import {
+  ObjectivProvider,
+  ReactTracker,
+  TrackedDiv,
+  TrackedNavigationContext,
+  TrackedRootLocationContext,
+  usePressEventTracker,
+} from '../src';
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedNavigationContext', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    LocationTree.clear();
   });
 
   afterEach(() => {
@@ -58,6 +65,79 @@ describe('TrackedNavigationContext', () => {
           }),
         ]),
       })
+    );
+  });
+
+  it('should allow disabling id normalization', () => {
+    const spyTransport = new SpyTransport();
+    jest.spyOn(spyTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+
+    const TrackedButton = ({ children }: { children: React.ReactNode }) => {
+      const trackPressEvent = usePressEventTracker();
+      return <div onClick={trackPressEvent}>{children}</div>;
+    };
+
+    const { container } = render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedNavigationContext Component={'nav'} id={'Nav 1'}>
+          <TrackedButton>Trigger Event 1</TrackedButton>
+        </TrackedNavigationContext>
+        <TrackedNavigationContext Component={'nav'} id={'Nav 2'} normalizeId={false}>
+          <TrackedButton>Trigger Event 2</TrackedButton>
+        </TrackedNavigationContext>
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    fireEvent.click(getByText(container, /trigger event 1/i));
+    fireEvent.click(getByText(container, /trigger event 2/i));
+
+    expect(spyTransport.handle).toHaveBeenCalledTimes(2);
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.NavigationContext,
+            id: 'nav-1',
+          }),
+        ]),
+      })
+    );
+    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        _type: 'PressEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.NavigationContext,
+            id: 'Nav 2',
+          }),
+        ]),
+      })
+    );
+  });
+
+  it('should console.error if an id cannot be automatically generated', () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedRootLocationContext Component={'div'} id={'root'}>
+          <TrackedDiv id={'content'}>
+            <TrackedNavigationContext Component={'nav'} id={'☹️'} />
+          </TrackedDiv>
+        </TrackedRootLocationContext>
+      </ObjectivProvider>
+    );
+
+    expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
+    expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
+      '｢objectiv｣ Could not generate a valid id for NavigationContext @ RootLocation:root / Content:content. Please provide the `id` property.'
     );
   });
 

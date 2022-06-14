@@ -1,9 +1,4 @@
-import {
-  ContextsConfig,
-  makeRootLocationContext,
-  TrackerConsole,
-  TrackerPluginInterface,
-} from '@objectiv/tracker-core';
+import { ContextsConfig, makeRootLocationContext, TrackerPluginInterface } from '@objectiv/tracker-core';
 import { makeRootLocationId } from './makeRootLocationId';
 
 /**
@@ -27,19 +22,26 @@ export class RootLocationContextFromURLPlugin implements TrackerPluginInterface 
   constructor(config?: RootLocationContextFromURLPluginConfig) {
     this.idFactoryFunction = config?.idFactoryFunction ?? makeRootLocationId;
 
-    TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
+    globalThis.objectiv?.TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
   }
 
   /**
    * Generate a fresh RootLocationContext before each TrackerEvent is handed over to the TrackerTransport.
    */
   enrich(contexts: Required<ContextsConfig>): void {
+    if (!this.isUsable()) {
+      globalThis.objectiv?.TrackerConsole.error(
+        `｢objectiv:${this.pluginName}｣ Cannot enrich. Plugin is not usable (document: ${typeof document}).`
+      );
+      return;
+    }
+
     const rootLocationContextId = this.idFactoryFunction();
 
     if (rootLocationContextId) {
       contexts.location_stack.unshift(makeRootLocationContext({ id: rootLocationContextId }));
     } else {
-      TrackerConsole.error(
+      globalThis.objectiv?.TrackerConsole.error(
         `%c｢objectiv:${this.pluginName}｣ Could not generate a RootLocationContext from "${location.pathname}"`,
         'font-weight: bold'
       );

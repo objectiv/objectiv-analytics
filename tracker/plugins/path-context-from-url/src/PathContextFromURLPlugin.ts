@@ -5,10 +5,9 @@
 import {
   ContextsConfig,
   GlobalContextName,
-  GlobalContextValidationRule,
   makePathContext,
-  TrackerConsole,
   TrackerEvent,
+  TrackerInterface,
   TrackerPluginInterface,
   TrackerValidationRuleInterface,
 } from '@objectiv/tracker-core';
@@ -23,27 +22,47 @@ import {
  */
 export class PathContextFromURLPlugin implements TrackerPluginInterface {
   readonly pluginName = `PathContextFromURLPlugin`;
-  readonly validationRules: TrackerValidationRuleInterface[];
+  validationRules: TrackerValidationRuleInterface[] = [];
+  initialized: boolean = false;
 
   /**
-   * The constructor is merely responsible for initializing validation rules.
+   * Initializes validation rules.
    */
-  constructor() {
-    this.validationRules = [
-      new GlobalContextValidationRule({
-        logPrefix: this.pluginName,
-        contextName: GlobalContextName.PathContext,
-        once: true,
-      }),
-    ];
+  initialize({ platform }: TrackerInterface): void {
+    if (!this.isUsable()) {
+      globalThis.objectiv?.TrackerConsole.error(
+        `｢objectiv:${this.pluginName}｣ Cannot initialize. Plugin is not usable (document: ${typeof document}).`
+      );
+      return;
+    }
 
-    TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
+    if (globalThis.objectiv) {
+      this.validationRules = [
+        globalThis.objectiv.makeGlobalContextValidationRule({
+          platform,
+          logPrefix: this.pluginName,
+          contextName: GlobalContextName.PathContext,
+          once: true,
+        }),
+      ];
+    }
+
+    this.initialized = true;
+
+    globalThis.objectiv?.TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
   }
 
   /**
    * Generate a fresh PathContext before each TrackerEvent is handed over to the TrackerTransport.
    */
   enrich(contexts: Required<ContextsConfig>): void {
+    if (!this.isUsable()) {
+      globalThis.objectiv?.TrackerConsole.error(
+        `｢objectiv:${this.pluginName}｣ Cannot enrich. Plugin is not usable (document: ${typeof document}).`
+      );
+      return;
+    }
+
     const pathContext = makePathContext({
       id: document.location.href,
     });
@@ -54,9 +73,21 @@ export class PathContextFromURLPlugin implements TrackerPluginInterface {
    * If the Plugin is usable runs all validation rules.
    */
   validate(event: TrackerEvent): void {
-    if (this.isUsable()) {
-      this.validationRules.forEach((validationRule) => validationRule.validate(event));
+    if (!this.isUsable()) {
+      globalThis.objectiv?.TrackerConsole.error(
+        `｢objectiv:${this.pluginName}｣ Cannot validate. Plugin is not usable (document: ${typeof document}).`
+      );
+      return;
     }
+
+    if (!this.initialized) {
+      globalThis.objectiv?.TrackerConsole.error(
+        `｢objectiv:${this.pluginName}｣ Cannot validate. Make sure to initialize the plugin first.`
+      );
+      return;
+    }
+
+    this.validationRules.forEach((validationRule) => validationRule.validate(event));
   }
 
   /**

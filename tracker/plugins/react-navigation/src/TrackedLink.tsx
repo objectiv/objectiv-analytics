@@ -2,7 +2,6 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { getLocationPath, TrackerConsole } from '@objectiv/tracker-core';
 import { LinkContextWrapper, trackPressEvent, useLocationStack } from '@objectiv/tracker-react-core';
 import { NavigationAction } from '@react-navigation/core';
 import { Link } from '@react-navigation/native';
@@ -41,11 +40,14 @@ export function TrackedLink<ParamList extends ReactNavigation.RootParamList>(pro
   const { contextId, contextHref } = makeLinkContextProps(props);
 
   // If we couldn't generate an `id`, log the issue and return an untracked Link.
-  const locationPath = getLocationPath(useLocationStack());
+  const locationStack = useLocationStack();
   if (!contextId) {
-    TrackerConsole.error(
-      `｢objectiv｣ Could not generate a valid id for PressableContext @ ${locationPath}. Please provide the \`id\` property manually.`
-    );
+    if (globalThis.objectiv) {
+      const locationPath = globalThis.objectiv.getLocationPath(locationStack);
+      globalThis.objectiv.TrackerConsole.error(
+        `｢objectiv｣ Could not generate a valid id for PressableContext @ ${locationPath}. Please provide the \`id\` property manually.`
+      );
+    }
     return <Link<ParamList> {...linkProps} />;
   }
 

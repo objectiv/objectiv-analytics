@@ -2,10 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { TrackerConsole, TrackerEvent, TrackerQueue, TrackerQueueMemoryStore } from '../src';
-
-TrackerConsole.setImplementation(MockConsoleImplementation);
+import { TrackerEvent, TrackerQueue, TrackerQueueMemoryStore } from '../src';
 
 describe('TrackerQueueMemoryStore', () => {
   beforeEach(() => {

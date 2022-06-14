@@ -13,7 +13,7 @@ yarn add @objectiv/schema --dev
 ### or
 
 ```sh
-npm install @objectiv/schema --dev
+npm install @objectiv/schema --save-dev
 ```
 
 ## Usage

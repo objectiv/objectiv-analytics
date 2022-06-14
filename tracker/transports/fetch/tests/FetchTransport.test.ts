@@ -3,7 +3,7 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { isTransportSendError, makeTransportSendError, TrackerConsole, TrackerEvent } from '@objectiv/tracker-core';
+import { isTransportSendError, makeTransportSendError, TrackerEvent } from '@objectiv/tracker-core';
 import fetchMock from 'jest-fetch-mock';
 import { defaultFetchFunction, defaultFetchOptions, FetchTransport } from '../src';
 
@@ -13,7 +13,8 @@ const testEvent = new TrackerEvent({
   _type: 'test-event',
 });
 
-TrackerConsole.setImplementation(MockConsoleImplementation);
+require('@objectiv/developer-tools');
+globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('FetchTransport', () => {
   beforeAll(() => {
