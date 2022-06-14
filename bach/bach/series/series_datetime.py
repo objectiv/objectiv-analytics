@@ -541,7 +541,9 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         dtype: StructuredDtype
     ) -> Expression:
         # pandas.Timedelta checks already that the string has the correct format
-        value_td = pandas.Timedelta(value)
+        # round it up to microseconds precision in order to avoid problems with BigQuery
+        # pandas by default uses nanoseconds precision
+        value_td = pandas.Timedelta(value).round(freq='us')
 
         if value_td is pandas.NaT:
             return Expression.construct('NULL')
@@ -626,12 +628,7 @@ class SeriesTimedelta(SeriesAbstractDateTime):
             skipna=skipna,
             min_count=min_count
         )
-        result = result.copy_override_type(SeriesTimedelta)
-
-        if is_bigquery(self.engine):
-            result = self._remove_nano_precision_bigquery(result)
-
-        return result
+        return result.copy_override_type(SeriesTimedelta)
 
     def mean(self, partition: WrappedPartition = None, skipna: bool = True) -> 'SeriesTimedelta':
         """
@@ -645,14 +642,15 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         result = result.copy_override_type(SeriesTimedelta)
 
         if is_bigquery(self.engine):
-            result = self._remove_nano_precision_bigquery(result)
+            result = result._remove_nano_precision_bigquery()
 
         return result
 
-    def _remove_nano_precision_bigquery(self, series: 'SeriesTimedelta') -> 'SeriesTimedelta':
+    def _remove_nano_precision_bigquery(self) -> 'SeriesTimedelta':
         """
         Helper function that removes nano-precision from intervals.
         """
+        series = self.copy()
         # aggregating intervals by average might generate a result with
         # nano-precision, which is not supported by BigQuery TimeStamps
         # therefore we need to make sure we always generate values up to
