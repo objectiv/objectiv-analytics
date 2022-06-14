@@ -523,11 +523,6 @@ class SeriesTimedelta(SeriesAbstractDateTime):
     }
     supported_value_types = (datetime.timedelta, numpy.timedelta64, str)
 
-    # https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#interval_type
-    _BQ_INTERVAL_FORMAT = '%d-%d %d %d:%d:%d.%06.0f'
-    _BQ_SUPPORTED_INTERVAL_PARTS = [
-        'YEAR', 'MONTH', 'DAY', 'HOUR', 'MINUTE', 'SECOND'
-    ]
 
     @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
@@ -651,6 +646,12 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         Helper function that removes nano-precision from intervals.
         """
         series = self.copy()
+        # https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#interval_type
+        _BQ_INTERVAL_FORMAT = '%d-%d %d %d:%d:%d.%06.0f'
+        _BQ_SUPPORTED_INTERVAL_PARTS = [
+            'YEAR', 'MONTH', 'DAY', 'HOUR', 'MINUTE', 'SECOND'
+        ]
+
         # aggregating intervals by average might generate a result with
         # nano-precision, which is not supported by BigQuery TimeStamps
         # therefore we need to make sure we always generate values up to
@@ -658,7 +659,7 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         # https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#timestamp_type
         all_extracted_parts_expr = [
             Expression.construct(f'EXTRACT({date_part} FROM {{}})', series)
-            for date_part in self._BQ_SUPPORTED_INTERVAL_PARTS
+            for date_part in _BQ_SUPPORTED_INTERVAL_PARTS
         ]
         # convert nanoseconds to microseconds
         all_extracted_parts_expr.append(
@@ -678,7 +679,7 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         # https://cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#format_string
         format_expr = Expression.construct(
             f'format({{}}, {{}})',
-            Expression.string_value(self._BQ_INTERVAL_FORMAT),
+            Expression.string_value(_BQ_INTERVAL_FORMAT),
             format_arguments_expr,
         )
         return series.copy_override(
