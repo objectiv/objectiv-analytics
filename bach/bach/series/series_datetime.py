@@ -523,7 +523,6 @@ class SeriesTimedelta(SeriesAbstractDateTime):
     }
     supported_value_types = (datetime.timedelta, numpy.timedelta64, str)
 
-
     @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
