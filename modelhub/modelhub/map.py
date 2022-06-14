@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 class Map:
     """
     Methods in this class can be used to map data in a DataFrame with Objectiv data to series values.
+
     Always returns Series with same index as the DataFrame the method is applied to, so the result can be set
     as columns to that DataFrame.
     """
@@ -26,6 +27,7 @@ class Map:
     def is_first_session(self, data: bach.DataFrame) -> bach.SeriesBoolean:
         """
         Labels all hits in a session True if that session is the first session of that user in the data.
+
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :returns: :py:class:`bach.SeriesBoolean` with the same index as ``data``.
         """
@@ -49,6 +51,7 @@ class Map:
     def is_new_user(self, data: bach.DataFrame, time_aggregation: str = None) -> bach.SeriesBoolean:
         """
         Labels all hits True if the user is first seen in the period given `time_aggregation`.
+
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param time_aggregation: if None, it uses the :py:attr:`ModelHub.time_aggregation` set in ModelHub
             instance.
@@ -85,6 +88,7 @@ class Map:
     def is_conversion_event(self, data: bach.DataFrame, name: str) -> bach.SeriesBoolean:
         """
         Labels a hit True if it is a conversion event, all other hits are labeled False.
+
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param name: the name of the conversion to label as set in
             :py:attr:`ModelHub.conversion_events`.
@@ -113,6 +117,7 @@ class Map:
         """
         Counts the total number of conversions given a partition (ie session_id
         or user_id).
+
         :param name: the name of the conversion to label as set in
             :py:attr:`ModelHub.conversion_events`.
         :param partition: the partition over which the number of conversions are counted. Can be any column
@@ -143,6 +148,7 @@ class Map:
         """
         Counts the number of time a user is converted at a moment in time given a partition (ie 'session_id'
         or 'user_id').
+
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param name: the name of the conversion to label as set in
             :py:attr:`ModelHub.conversion_events`.
@@ -178,6 +184,7 @@ class Map:
         Returns a count backwards from the first conversion, given the partition. I.e. first hit before
         converting is 1, second hit before converting 2, etc. Returns None if there are no conversions
         in the partition or after the first conversion.
+
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param name: the name of the conversion to label as set in
             :py:attr:`ModelHub.conversion_events`.
