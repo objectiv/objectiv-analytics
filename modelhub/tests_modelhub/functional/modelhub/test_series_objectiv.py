@@ -59,7 +59,6 @@ def test_objectiv_stack_type2(db_params):
     )
 
 
-@pytest.mark.skip_bigquery  # TODO: BigQuery
 def test_objectiv_stack_type3(db_params):
     bt = get_df_with_json_data_real(db_params)
 
@@ -74,7 +73,8 @@ def test_objectiv_stack_type3(db_params):
             [3, []],
             [4, []],
             [5, []]
-        ]
+        ],
+        use_to_pandas=True,
     )
 
 
