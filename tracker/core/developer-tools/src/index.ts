@@ -3,6 +3,7 @@
  */
 
 import { TrackerDeveloperToolsInterface } from '@objectiv/tracker-core';
+import { EventRecorder } from './EventRecorder';
 import { getLocationPath } from './getLocationPath';
 import { LocationTree } from './LocationTree';
 import { OpenTaxonomyValidationPlugin } from './OpenTaxonomyValidationPlugin';
@@ -14,6 +15,7 @@ import { makeLocationContextValidationRule } from './validationRules/makeLocatio
  * A global object containing all DeveloperTools
  */
 const developerTools: TrackerDeveloperToolsInterface = {
+  EventRecorder,
   getLocationPath,
   LocationTree,
   makeGlobalContextValidationRule,
