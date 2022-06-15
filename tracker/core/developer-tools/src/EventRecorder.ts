@@ -97,9 +97,13 @@ export const EventRecorder = new (class implements EventRecorderInterface {
       });
     });
 
+    // Splice off excess elements from the list, based on maxEvents
     if (this.events.length >= this.maxEvents) {
       this.events.splice(0, this.events.length - this.maxEvents);
     }
+
+    // Make event list predictable, sort by event id
+    this.events.sort((a: RecordedEvent, b: RecordedEvent) => (a.id.localeCompare(b.id)));
   }
 
   /**

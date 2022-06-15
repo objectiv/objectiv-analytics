@@ -52,8 +52,8 @@ describe('EventRecorder', () => {
 
     expect(EventRecorder.events).toStrictEqual([
       expect.objectContaining({ _type: 'PressEvent', id: 'PressEvent#1' }),
-      expect.objectContaining({ _type: 'VisibleEvent', id: 'VisibleEvent#1' }),
       expect.objectContaining({ _type: 'SuccessEvent', id: 'SuccessEvent#1' }),
+      expect.objectContaining({ _type: 'VisibleEvent', id: 'VisibleEvent#1' }),
     ]);
   });
 
