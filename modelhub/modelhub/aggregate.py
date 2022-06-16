@@ -139,7 +139,7 @@ class Aggregate:
             new_groupby = [groupby]
         else:
             new_groupby = groupby
-        new_groupby.append(data.session_id.copy_override(name='_session_id'))
+        new_groupby.append(data.session_id.copy_override(name='__session_id'))
 
         gdata = self._check_groupby(data=data, groupby=new_groupby)
         session_duration = gdata.aggregate({'moment': ['min', 'max']})
