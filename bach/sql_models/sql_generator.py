@@ -8,7 +8,7 @@ from sqlalchemy.engine import Dialect
 from sql_models.graph_operations import find_nodes, FoundNode
 from sql_models.model import SqlModel, REFERENCE_UNIQUE_FIELD, Materialization
 from sql_models.sql_query_parser import raw_sql_to_selects
-from sql_models.util import quote_identifier
+from sql_models.util import quote_identifier, is_postgres, is_bigquery
 
 
 def to_sql(dialect: Dialect, model: SqlModel) -> str:
@@ -33,8 +33,10 @@ def to_sql_materialized_nodes(
         * The sql to create all views and tables that the given model depends upon
     :param dialect: SQL Dialect
     :param start_node: model to convert to sql
-    :return: A dict of sql statements. The order of the items in the dict is significant: earlier statements
-        will create views and/or tables that might be used by later statements.
+    :return: A dict of sql statements. The key being the name of the model and the value being the sql to
+        run the query, or create the table, or create the view. The order of the items in the dict is
+        significant: earlier statements will create views and/or tables that might be used by later
+        statements.
     """
     result: Dict[str, str] = {}
     compiler_cache: Dict[str, List['SemiCompiledTuple']] = {}
@@ -110,7 +112,10 @@ def _materialize(dialect: Dialect, sql_query: str, model: SqlModel) -> str:
     if materialization == Materialization.TABLE:
         return f'create table {quoted_name} as {sql_query}'
     if materialization == Materialization.TEMP_TABLE:
-        return f'create temporary table {quoted_name} on commit drop as {sql_query}'
+        if is_postgres(dialect):
+            return f'create temporary table {quoted_name} on commit drop as {sql_query}'
+        if is_bigquery(dialect):
+            return f'CREATE TEMP TABLE {quoted_name} as {sql_query}'
     if materialization == Materialization.VIRTUAL_NODE:
         return ''
     raise Exception(f'Unsupported Materialization value: {materialization}')

@@ -21,7 +21,7 @@ from sql_models.constants import NotSet, not_set
 from sql_models.graph_operations import update_placeholders_in_graph, get_all_placeholders
 from sql_models.model import SqlModel, Materialization, CustomSqlModelBuilder, RefPath
 
-from sql_models.sql_generator import to_sql
+from sql_models.sql_generator import to_sql, to_sql_materialized_nodes
 from sql_models.util import quote_identifier, is_bigquery, DatabaseNotSupportedException, is_postgres
 
 if TYPE_CHECKING:
@@ -990,6 +990,7 @@ class DataFrame:
         inplace=False,
         limit: Any = None,
         distinct: bool = False,
+        materialization: Union[Materialization, str] = Materialization.CTE
     ) -> 'DataFrame':
         """
         Create a copy of this DataFrame with as base_node the current DataFrame's state.
@@ -1006,6 +1007,7 @@ class DataFrame:
         :param inplace: Perform operation on self if ``inplace=True``, or create a copy.
         :param limit: The limit (slice, int) to apply.
         :param distinct: Apply distinct statement if ``distinct=True``
+        :param materialization: TODO
         :returns: DataFrame with the current DataFrame's state as base_node
 
         .. note::
@@ -1015,6 +1017,10 @@ class DataFrame:
         index_dtypes = {k: v.instance_dtype for k, v in self.index.items()}
         series_dtypes = {k: v.instance_dtype for k, v in self.data.items()}
         node = self.get_current_node(name=node_name, limit=limit, distinct=distinct)
+        # TODO
+        materialization = Materialization.normalize(materialization)
+        assert materialization in (Materialization.CTE, Materialization.TEMP_TABLE)
+        node = node.copy_set_materialization(materialization=materialization)
 
         df = self.get_instance(
             engine=self.engine,
@@ -2123,7 +2129,11 @@ class DataFrame:
             variable_values=self.variables
         )
         model = update_placeholders_in_graph(start_node=model, placeholder_values=placeholder_values)
-        return to_sql(dialect=self.engine.dialect, model=model)
+        sql_statements = to_sql_materialized_nodes(
+            dialect=self.engine.dialect, start_node=model
+        )
+        sql = ';\n'.join(sql_statements.values())
+        return sql
 
     def merge(
         self,
