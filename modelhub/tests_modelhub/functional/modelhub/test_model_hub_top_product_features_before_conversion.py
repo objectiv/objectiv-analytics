@@ -30,7 +30,7 @@ def test_top_product_features_before_conversion():
     cdf = modelhub.aggregate.top_product_features_before_conversion(df, name=name)
 
     # index checks
-    expected_index = ['_application', '_feature_nice_name', 'event_type']
+    expected_index = ['application', 'feature_nice_name', 'event_type']
     assert len(cdf.index) == 3
     for _index in expected_index:
         assert _index in cdf.index
@@ -51,10 +51,11 @@ def test_top_product_features_before_conversion():
                    ' navbar-top => Overlay: hamburger-menu'
     assert_equals_data(
         cdf,
-        expected_columns=['_application', '_feature_nice_name', 'event_type', 'unique_users'],
+        expected_columns=['application', 'feature_nice_name', 'event_type', 'unique_users'],
         expected_data=[
             ['objectiv-website', feature_name, 'ClickEvent', 1],
         ],
+        use_to_pandas=True
     )
 
     # check if any new column is added to the original dataframe
