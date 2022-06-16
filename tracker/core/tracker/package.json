@@ -40,7 +40,7 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --legacy-output --minify --dts --sourcemap --clean",
     "prettify": "prettier --write .",
-    "prettify:generated": "yarn prettier --write ./src/ContextFactories.ts ./src/ContextNames.ts ./src/EventFactories.ts",
+    "prettify:generated": "yarn prettier --write ./src/ContextFactories.ts ./src/ContextNames.ts ./src/EventFactories.ts ./src/EventNames.ts",
     "tsc": "tsc --noEmit",
     "test": "jest --silent --runInBand",
     "test:ci": "jest --silent --ci --runInBand",
