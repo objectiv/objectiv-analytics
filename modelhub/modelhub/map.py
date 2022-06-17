@@ -233,7 +233,7 @@ class Map:
         sort_by = ['session_id', 'session_hit_number']
 
         window = data.sort_values(sort_by, ascending=False).groupby(partition).window()
-        max_number_of_conversions = data['conversions_in_time'].max(window)
+        max_number_of_conversions = data['__conversions_in_time'].max(window)
         data['__is_converted'] = True
         data.loc[max_number_of_conversions == 0, '__is_converted'] = False
 
@@ -242,7 +242,7 @@ class Map:
         window = data.sort_values(sort_by, ascending=False).groupby(partition).window()
 
         # number all rows except where __is_converted is NULL and _conversions == 0
-        pch_mask = (data['__is_converted']) & (data['conversions_in_time'] == 0)
+        pch_mask = (data['__is_converted']) & (data['__conversions_in_time'] == 0)
         data['__pre_conversion_hit_number'] = 1
         data.loc[~pch_mask, '__pre_conversion_hit_number'] = None
         pre_conversion_hit_number = (
