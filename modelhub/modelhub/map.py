@@ -194,7 +194,7 @@ class Map:
     def conversions_in_time(self,
                             data: bach.DataFrame,
                             name: str,
-                            partition: str = 'session_id') -> bach.SeriesInt64:
+                            partition: str = 'session_id') -> bach.Series:
         """
         Counts the number of time a user is converted at a moment in time given a partition (ie 'session_id'
         or 'user_id').
