@@ -278,3 +278,34 @@ class Map:
 
         return data['__pre_conversion_hit_number'].copy_override(
             name='pre_conversion_hit_number').materialize().copy_override_type(bach.SeriesInt64)
+
+    def _hit_before_conversion(self,
+                               data):
+        """
+        requires
+            `_is_conversion_event`
+            `_conversions_in_time`
+            `_conversions_counter`
+
+        creates
+            `__hit_before_conversion`
+        """
+
+        data['__hit_before_conversion'] = (data['__conversions_in_time'] == 0) & (data['__converted'] >= 1)
+
+
+    def hit_before_conversion(self,
+                                  data: bach.DataFrame,
+                                  name: str,
+                                  partition: str = 'session_id') -> bach.SeriesInt64:
+
+        self._mh._check_data_is_objectiv_data(data)
+        data = data.copy()
+
+        self._is_conversion_event(data, name)
+        self._conversions_in_time(data, partition=partition)
+        self._conversions_counter(data, partition=partition)
+
+        self._hit_before_conversion(data)
+
+        return data['__hit_before_conversion'].copy_override(name='hit_before_conversion')
