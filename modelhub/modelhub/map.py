@@ -136,7 +136,7 @@ class Map:
         """
         data.materialize(inplace=True)
         window = data.groupby(partition).window(end_boundary=WindowFrameBoundary.FOLLOWING)
-        data['__converted'] = window['conversions_in_time'].max()
+        data['__converted'] = window['__conversions_in_time'].max()
 
     def conversions_counter(self,
                             data: bach.DataFrame,
