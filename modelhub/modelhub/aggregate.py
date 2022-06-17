@@ -250,13 +250,17 @@ class Aggregate:
         else:
             data['__feature_nice_name'] = data.location_stack.ls.nice_name
 
-        # label sessions with a conversion
-        data['converted_users'] = self._mh.map.conversions_counter(data,
-                                                                   name=name) >= 1
+        self._mh.map._is_conversion_event(data, name)
+        self._mh.map._conversions_in_time(data, partition='session_id')
+        self._mh.map._conversions_counter(data, partition='session_id')
+        self._mh.map._conversions_in_time(data=data, partition='session_id')
 
+        # label sessions with a conversion
+        data['converted_users'] = data['__converted'] >= 1
+
+        data.materialize(inplace=True)
         # label hits where at that point in time, there are 0 conversions in the session
-        data['zero_conversions_at_moment'] = self._mh.map.conversions_in_time(data,
-                                                                              name) == 0
+        data['zero_conversions_at_moment'] = data['conversions_in_time'] == 0
 
         # filter on above created labels
         converted_users = data[(data.converted_users & data.zero_conversions_at_moment)]
