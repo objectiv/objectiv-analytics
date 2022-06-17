@@ -772,7 +772,7 @@ Object.keys(object_declarations).forEach((definition_type) => {
     const eventNames = Object.keys(object_declarations[definition_type]).sort();
 
     // generate enum
-    contentEventNamesTsFile += `export enum EventNames { 
+    contentEventNamesTsFile += `export enum EventName { 
       ${eventNames.map((name) => `${name} = '${name}'`).join(',\n')}
     }\n\n`;
   }

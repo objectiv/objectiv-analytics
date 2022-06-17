@@ -103,7 +103,7 @@ export const EventRecorder = new (class implements EventRecorderInterface {
     }
 
     // Make event list predictable, sort by event id
-    this.events.sort((a: RecordedEvent, b: RecordedEvent) => (a.id.localeCompare(b.id)));
+    this.events.sort((a: RecordedEvent, b: RecordedEvent) => a.id.localeCompare(b.id));
   }
 
   /**

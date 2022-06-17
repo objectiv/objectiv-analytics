@@ -8,6 +8,7 @@ import { TrackerTransportInterface } from './TrackerTransportInterface';
 /**
  * A predictable AbstractEvent. It has no `time` and a predictable identifier.
  */
+// FIXME fix definition of LocationStack and GlobalContext with RecordedLocationStack and RecorderGlobalContext
 export type RecordedEvent = Omit<AbstractEvent, 'time'>;
 
 /**
