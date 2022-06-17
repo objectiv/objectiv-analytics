@@ -260,7 +260,7 @@ class Aggregate:
 
         data.materialize(inplace=True)
         # label hits where at that point in time, there are 0 conversions in the session
-        data['zero_conversions_at_moment'] = data['conversions_in_time'] == 0
+        data['zero_conversions_at_moment'] = data['__conversions_in_time'] == 0
 
         # filter on above created labels
         converted_users = data[(data.converted_users & data.zero_conversions_at_moment)]

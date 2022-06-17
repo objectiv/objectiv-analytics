@@ -175,7 +175,7 @@ class Map:
 
         creates
             `__conversion_counter`
-            `conversions_in_time`
+            `__conversions_in_time`
         """
 
         data['__conversion_counter'] = 0
@@ -187,7 +187,7 @@ class Map:
             data.materialize(node_name='conversion_counter_bq', inplace=True)
 
         window = data.sort_values([partition, 'moment']).groupby(partition).window()
-        data['conversions_in_time'] = (
+        data['__conversions_in_time'] = (
             data['__conversion_counter'].copy_override_type(bach.SeriesInt64).sum(window)
         )
 
@@ -213,7 +213,8 @@ class Map:
         self._is_conversion_event(data, name)
         self._conversions_in_time(data=data, partition=partition)
 
-        return data.conversions_in_time.materialize(node_name='conversions_in_time')
+        return data['__conversions_in_time'].copy_override(name='conversions_in_time').materialize(
+            node_name='conversions_in_time')
 
     def _pre_conversion_hit_number(self,
                                    data: bach.DataFrame,
@@ -242,10 +243,10 @@ class Map:
 
         # number all rows except where __is_converted is NULL and _conversions == 0
         pch_mask = (data['__is_converted']) & (data['conversions_in_time'] == 0)
-        data['pre_conversion_hit_number'] = 1
-        data.loc[~pch_mask, 'pre_conversion_hit_number'] = None
+        data['__pre_conversion_hit_number'] = 1
+        data.loc[~pch_mask, '__pre_conversion_hit_number'] = None
         pre_conversion_hit_number = (
-            data['pre_conversion_hit_number']
+            data['__pre_conversion_hit_number']
             .astype('int64').copy_override_type(bach.SeriesInt64)  # None is parsed as string
         )
         data['__pre_conversion_hit_number'] = pre_conversion_hit_number.sum(window)
@@ -275,4 +276,5 @@ class Map:
         data.materialize(inplace=True)
         self._pre_conversion_hit_number(data, partition=partition)
 
-        return data['__pre_conversion_hit_number'].materialize().copy_override_type(bach.SeriesInt64)
+        return data['__pre_conversion_hit_number'].copy_override(
+            name='pre_conversion_hit_number').materialize().copy_override_type(bach.SeriesInt64)
