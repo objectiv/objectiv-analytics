@@ -3,6 +3,7 @@
  */
 
 import { AbstractEvent, AbstractGlobalContext, AbstractLocationContext } from '@objectiv/schema';
+import { RecordedEventsInterface } from "./RecordedEventsInterface";
 import { TrackerTransportInterface } from './TrackerTransportInterface';
 
 /**
@@ -60,9 +61,9 @@ export type EventRecorderInterface = TrackerTransportInterface &
     recording: boolean;
 
     /**
-     * Holds the list of recorded events.
+     * A list of recorded events wrapped in a RecordedEvents instance for easier querying.
      */
-    events: RecordedEvent[];
+    events: RecordedEventsInterface;
 
     /**
      * Allows reconfiguring EventRecorder

@@ -11,6 +11,7 @@ import {
   TrackerEvent,
   TransportableEvent,
 } from '@objectiv/tracker-core';
+import { RecordedEvents } from "./RecordedEvents";
 
 /**
  * Some default values for the global instance of EventRecorder. Can be changed by calling EventRecorder.configure.
@@ -30,7 +31,7 @@ export const EventRecorder = new (class implements EventRecorderInterface {
   maxEvents: number = DEFAULT_MAX_EVENTS;
   autoStart: boolean = DEFAULT_AUTO_START;
   recording: boolean = this.enabled && this.autoStart;
-  events: RecordedEvent[] = [];
+  _events: RecordedEvent[] = [];
   eventsCountByType: { [type: string]: number } = {};
 
   /**
@@ -47,7 +48,7 @@ export const EventRecorder = new (class implements EventRecorderInterface {
    * Completely resets EventRecorder state.
    */
   clear() {
-    this.events.length = 0;
+    this._events.length = 0;
     this.eventsCountByType = {};
   }
 
@@ -90,7 +91,7 @@ export const EventRecorder = new (class implements EventRecorderInterface {
       recordedEvent.id = `${eventType}#${this.eventsCountByType[eventType]}`;
       delete recordedEvent.time;
 
-      this.events.push({
+      this._events.push({
         ...cleanObjectFromInternalProperties(recordedEvent),
         location_stack: recordedEvent.location_stack.map(cleanObjectFromInternalProperties),
         global_contexts: recordedEvent.global_contexts.map(cleanObjectFromInternalProperties),
@@ -98,12 +99,19 @@ export const EventRecorder = new (class implements EventRecorderInterface {
     });
 
     // Splice off excess elements from the list, based on maxEvents
-    if (this.events.length >= this.maxEvents) {
-      this.events.splice(0, this.events.length - this.maxEvents);
+    if (this._events.length >= this.maxEvents) {
+      this._events.splice(0, this._events.length - this.maxEvents);
     }
 
     // Make event list predictable, sort by event id
-    this.events.sort((a: RecordedEvent, b: RecordedEvent) => a.id.localeCompare(b.id));
+    this._events.sort((a: RecordedEvent, b: RecordedEvent) => a.id.localeCompare(b.id));
+  }
+
+  /**
+   * Returns a list of recorded events wrapped in a RecordedEvents instance for easier querying.
+   */
+  get events() {
+    return new RecordedEvents(this._events);
   }
 
   /**
