@@ -3,6 +3,7 @@
  */
 
 import { expectToThrow } from '@objectiv/testing-tools';
+import { RecordedEvent } from "@objectiv/tracker-core";
 import { RecordedEvents } from '../src/RecordedEvents';
 
 describe('RecordedEvents', () => {
@@ -499,9 +500,9 @@ describe('RecordedEvents', () => {
     it('should filter by a predicate', async () => {
       expect(
         recordedEvents.filter(
-          (event) =>
-            ['MediaLoadEvent', 'VisibleEvent'].includes(event._type) &&
-            event.location_stack.some(
+          (recordedEvent: RecordedEvent) =>
+            ['MediaLoadEvent', 'VisibleEvent'].includes(recordedEvent._type) &&
+            recordedEvent.location_stack.some(
               ({ _type, id }) => _type === 'OverlayContext' && id === 'star-us-notification-overlay'
             )
         ).events

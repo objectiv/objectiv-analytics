@@ -18,6 +18,7 @@ export * from './EventNames';
 export * from './EventRecorderInterface';
 export * from './helpers';
 export * from './LocationTreeInterface';
+export * from './RecordedEventsInterface';
 export * from './Tracker';
 export * from './TrackerConsoleInterface';
 export * from './TrackerDeveloperToolsInterface';

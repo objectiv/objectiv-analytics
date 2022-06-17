@@ -3,25 +3,19 @@
  */
 
 import {
-  EventName,
-  GlobalContextName,
-  LocationContextName,
+  AnyGlobalContextName,
+  AnyLocationContextName,
   RecordedAbstractGlobalContext,
   RecordedAbstractLocationContext,
   RecordedEvent,
+  RecordedEventPredicate,
+  RecordedEventsInterface,
 } from '@objectiv/tracker-core';
 
-export type AnyEventName = `${EventName}`;
-export type RecordedEventPredicate = (value: RecordedEvent) => boolean;
-export type AnyLocationContextName = `${LocationContextName}`;
-export type AnyLocationContextNameAndId = `${LocationContextName}:${string}` | `:${string}`;
-export type AnyGlobalContextName = `${GlobalContextName}`;
-export type AnyGlobalContextNameAndId = `${GlobalContextName}:${string}` | `:${string}`;
-
 /**
- * RecordedEvents instances can filter the given RecordedEvents by event type and/or context name and id.
+ * RecordedEvents instances can filter the given RecordedEvents by event and/or their contexts.
  */
-export class RecordedEvents {
+export class RecordedEvents implements RecordedEventsInterface {
   readonly events: RecordedEvent[];
 
   /**
@@ -32,7 +26,7 @@ export class RecordedEvents {
   }
 
   /**
-   * The filter method allows to filter by Event _type. It supports querying by:
+   * Filters events by Event name (_type attribute). It supports querying by:
    *
    * - a single event name, e.g. `PressEvent`
    * - a list of event names, e.g. [`PressEvent`, `ApplicationLoadedEvent`]
@@ -40,10 +34,6 @@ export class RecordedEvents {
    *
    * `filter` returns a new instance of RecordedEvents for further chaining.
    */
-  filter(name: AnyEventName): RecordedEvents;
-  filter(names: AnyEventName[]): RecordedEvents;
-  filter(predicate: RecordedEventPredicate): RecordedEvents;
-
   filter(options: unknown) {
     if (typeof options === 'string') {
       return new RecordedEvents(this.events.filter((event) => event._type === options));
@@ -61,7 +51,7 @@ export class RecordedEvents {
   }
 
   /**
-   * The withLocationContext method allows to filter LocationContexts by name, name and id or just id. It supports:
+   * Filters events by their LocationContext's name (_type attribute), name and id or just id. It supports:
    *
    * - a Location Context name, e.g. `RootLocationContext`
    * - a Location Context name and its identifier, separated by a colon, e.g. `RootLocationContext:home`
@@ -69,7 +59,7 @@ export class RecordedEvents {
    *
    * `withLocationContext` returns a new instance of RecordedEvents for further chaining.
    */
-  withLocationContext(nameAndMaybeId: AnyLocationContextName | AnyLocationContextNameAndId) {
+  withLocationContext(nameAndMaybeId: AnyLocationContextName) {
     if (typeof nameAndMaybeId !== 'string') {
       throw new Error(`Invalid location context filter options: ${JSON.stringify(nameAndMaybeId)}`);
     }
@@ -80,7 +70,7 @@ export class RecordedEvents {
   }
 
   /**
-   * The withGlobalContext method allows to filter GlobalContexts by name, name and id or just id. It supports:
+   * Filters events by their GlobalContext's name (_type attribute), name and id or just id. It supports:
    *
    * - a Global Context name, e.g. `PathContext`
    * - a Global Context name and its identifier, separated by a colon, e.g. `PathContext:http://localhost/`
@@ -88,7 +78,7 @@ export class RecordedEvents {
    *
    * `withGlobalContext` returns a new instance of RecordedEvents for further chaining.
    */
-  withGlobalContext(nameAndMaybeId: AnyGlobalContextName | AnyGlobalContextNameAndId) {
+  withGlobalContext(nameAndMaybeId: AnyGlobalContextName) {
     if (typeof nameAndMaybeId !== 'string') {
       throw new Error(`Invalid global context filter options: ${JSON.stringify(nameAndMaybeId)}`);
     }
@@ -99,11 +89,17 @@ export class RecordedEvents {
   }
 }
 
+/**
+ * Helper private function to split Context names from their identifiers.
+ */
 const splitNameAndMaybeId = (nameAndMaybeId: string) => {
   const [name, ...id] = nameAndMaybeId.split(':');
   return [name, id.join(':')];
 };
 
+/**
+ * Helper private predicate to match a Context in the given list of contexts by name, id or both.
+ */
 const hasContext = (
   contexts: (RecordedAbstractLocationContext | RecordedAbstractGlobalContext)[],
   name: string,
