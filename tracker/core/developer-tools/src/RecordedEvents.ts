@@ -2,8 +2,14 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { AbstractContext } from '@objectiv/schema';
-import { EventName, GlobalContextName, LocationContextName, RecordedEvent } from '@objectiv/tracker-core';
+import {
+  EventName,
+  GlobalContextName,
+  LocationContextName,
+  RecordedAbstractGlobalContext,
+  RecordedAbstractLocationContext,
+  RecordedEvent,
+} from '@objectiv/tracker-core';
 
 export type AnyEventName = `${EventName}`;
 export type RecordedEventPredicate = (value: RecordedEvent) => boolean;
@@ -39,7 +45,7 @@ export class RecordedEvents {
   }
 
   withLocationContext(nameAndMaybeId: AnyLocationContextName | AnyLocationContextNameAndId) {
-    if(typeof nameAndMaybeId !== 'string') {
+    if (typeof nameAndMaybeId !== 'string') {
       throw new Error(`Invalid location context filter options: ${JSON.stringify(nameAndMaybeId)}`);
     }
 
@@ -49,7 +55,7 @@ export class RecordedEvents {
   }
 
   withGlobalContext(nameAndMaybeId: AnyGlobalContextName | AnyGlobalContextNameAndId) {
-    if(typeof nameAndMaybeId !== 'string') {
+    if (typeof nameAndMaybeId !== 'string') {
       throw new Error(`Invalid global context filter options: ${JSON.stringify(nameAndMaybeId)}`);
     }
 
@@ -64,7 +70,11 @@ const splitNameAndMaybeId = (nameAndMaybeId: string) => {
   return [name, id.join(':')];
 };
 
-const hasContext = (contexts: AbstractContext[], name: string, id: string) =>
+const hasContext = (
+  contexts: (RecordedAbstractLocationContext | RecordedAbstractGlobalContext)[],
+  name: string,
+  id: string
+) =>
   contexts.find((context) => {
     if (name && id) {
       return context._type === name && context.id === id;

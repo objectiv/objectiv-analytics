@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { expectToThrow } from "@objectiv/testing-tools";
+import { expectToThrow } from '@objectiv/testing-tools';
 import { RecordedEvents } from '../src/RecordedEvents';
 
 describe('RecordedEvents', () => {
@@ -466,7 +466,6 @@ describe('RecordedEvents', () => {
     },
   ];
 
-  // @ts-ignore FIX types (LS and GC are incorrect)
   const recordedEvents = new RecordedEvents(events);
 
   describe('filter', () => {

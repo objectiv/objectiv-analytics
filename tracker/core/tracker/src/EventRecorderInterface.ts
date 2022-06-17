@@ -2,14 +2,27 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { AbstractEvent } from '@objectiv/schema';
+import { AbstractEvent, AbstractGlobalContext, AbstractLocationContext } from '@objectiv/schema';
 import { TrackerTransportInterface } from './TrackerTransportInterface';
 
 /**
- * A predictable AbstractEvent. It has no `time` and a predictable identifier.
+ * A version of AbstractLocationContext without its discriminatory properties.
  */
-// FIXME fix definition of LocationStack and GlobalContext with RecordedLocationStack and RecorderGlobalContext
-export type RecordedEvent = Omit<AbstractEvent, 'time'>;
+export type RecordedAbstractLocationContext = Omit<AbstractLocationContext, '__location_context' | '__instance_id'>;
+
+/**
+ * A version of AbstractGlobalContext without its discriminatory properties.
+ */
+export type RecordedAbstractGlobalContext = Omit<AbstractGlobalContext, '__global_context' | '__instance_id'>;
+
+/**
+ * A predictable AbstractEvent. It has no `time`, a predictable identifier and no discriminatory properties.
+ * Its location_stack and global_contexts also don't have any discriminatory properties.
+ */
+export type RecordedEvent = Omit<AbstractEvent, 'time' | 'location_stack' | 'global_contexts'> & {
+  location_stack: RecordedAbstractLocationContext[];
+  global_contexts: RecordedAbstractGlobalContext[];
+};
 
 /**
  * EventRecording instances can store lists of TrackerEvents for snapshot-testing or other debugging purposes.
