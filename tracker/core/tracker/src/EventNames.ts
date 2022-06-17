@@ -18,3 +18,19 @@ export enum EventName {
   SuccessEvent = 'SuccessEvent',
   VisibleEvent = 'VisibleEvent',
 }
+
+export type AnyEventName =
+  | 'ApplicationLoadedEvent'
+  | 'FailureEvent'
+  | 'HiddenEvent'
+  | 'InputChangeEvent'
+  | 'InteractiveEvent'
+  | 'MediaEvent'
+  | 'MediaLoadEvent'
+  | 'MediaPauseEvent'
+  | 'MediaStartEvent'
+  | 'MediaStopEvent'
+  | 'NonInteractiveEvent'
+  | 'PressEvent'
+  | 'SuccessEvent'
+  | 'VisibleEvent';

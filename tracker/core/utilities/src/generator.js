@@ -752,6 +752,9 @@ Object.keys(object_declarations).forEach((definition_type) => {
     contentContextNamesTsFile += `export enum ${enumName} { 
       ${contextNames.map((name) => `${name} = '${name}'`).join(',\n')}
     }\n\n`;
+
+    // generate set
+    contentContextNamesTsFile += `export type Any${enumName} = '${contextNames.join("' | '")}';\n\n`;
   }
 });
 
@@ -775,6 +778,9 @@ Object.keys(object_declarations).forEach((definition_type) => {
     contentEventNamesTsFile += `export enum EventName { 
       ${eventNames.map((name) => `${name} = '${name}'`).join(',\n')}
     }\n\n`;
+
+    // generate set
+    contentEventNamesTsFile += `export type AnyEventName = '${eventNames.join("' | '")}';\n\n`;
   }
 });
 

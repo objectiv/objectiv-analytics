@@ -2,24 +2,9 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { GlobalContextName, LocationContextName } from './ContextNames';
-import { EventName } from './EventNames';
+import { AnyGlobalContextName, AnyLocationContextName } from './ContextNames';
+import { AnyEventName } from './EventNames';
 import { RecordedEvent } from './EventRecorderInterface';
-
-/**
- * Set of all Event names.
- */
-export type AnyEventName = `${EventName}`;
-
-/**
- * Set of all Location Context names. An identifier can be also be present, prepended by a colon; e.g. Context:id.
- */
-export type AnyLocationContextName = `${LocationContextName}` | `${LocationContextName}:${string}` | `:${string}`;
-
-/**
- * Set of all Global Context names. An identifier can be also be present, prepended by a colon; e.g. Context:id.
- */
-export type AnyGlobalContextName = `${GlobalContextName}` | `${GlobalContextName}:${string}` | `:${string}`;
 
 /**
  * Predicate that can be passed to `filter`. Receives a recordedEvent as parameter.
@@ -49,24 +34,14 @@ export type RecordedEventsInterface = {
   filter(predicate: RecordedEventPredicate): RecordedEventsInterface;
 
   /**
-   * Filters events by their LocationContext's name (_type attribute), name and id or just id. It supports:
-   *
-   * - a Location Context name, e.g. `RootLocationContext`
-   * - a Location Context name and its identifier, separated by a colon, e.g. `RootLocationContext:home`
-   * - a Location Context identifier, prefixed by a colon, e.g. `:home`
-   *
+   * Filters events by their LocationContext's name (_type attribute), name and id or just name.
    * `withLocationContext` returns a new instance of RecordedEvents for further chaining.
    */
-  withLocationContext(nameAndMaybeId: AnyLocationContextName): RecordedEventsInterface;
+  withLocationContext(name: AnyLocationContextName, id?: string): RecordedEventsInterface;
 
   /**
-   * Filters events by their GlobalContext's name (_type attribute), name and id or just id. It supports:
-   *
-   * - a Global Context name, e.g. `PathContext`
-   * - a Global Context name and its identifier, separated by a colon, e.g. `PathContext:http://localhost/`
-   * - a Global Context identifier, prefixed by a colon, e.g. `:http://localhost/`
-   *
+   * Filters events by their GlobalContext's name (_type attribute), name and id or just name.
    * `withGlobalContext` returns a new instance of RecordedEvents for further chaining.
    */
-  withGlobalContext(nameAndMaybeId: AnyGlobalContextName): RecordedEventsInterface;
+  withGlobalContext(name: AnyGlobalContextName, id?: string): RecordedEventsInterface;
 };

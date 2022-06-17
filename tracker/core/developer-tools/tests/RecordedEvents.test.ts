@@ -3,7 +3,7 @@
  */
 
 import { expectToThrow } from '@objectiv/testing-tools';
-import { RecordedEvent } from "@objectiv/tracker-core";
+import { RecordedEvent } from '@objectiv/tracker-core';
 import { RecordedEvents } from '../src/RecordedEvents';
 
 describe('RecordedEvents', () => {
@@ -518,16 +518,42 @@ describe('RecordedEvents', () => {
 
   describe('withLocationContext', () => {
     it('should throw', async () => {
+      expectToThrow(
+        // @ts-ignore
+        () => recordedEvents.withLocationContext(),
+        `Invalid location context filter name option: undefined`
+      );
+      expectToThrow(
+        // @ts-ignore
+        () => recordedEvents.withLocationContext(null),
+        `Invalid location context filter name option: null`
+      );
       // @ts-ignore
-      expectToThrow(() => recordedEvents.withLocationContext(), `Invalid location context filter options: undefined`);
+      expectToThrow(() => recordedEvents.withLocationContext({}), `Invalid location context filter name option: {}`);
       // @ts-ignore
-      expectToThrow(() => recordedEvents.withLocationContext(null), `Invalid location context filter options: null`);
+      expectToThrow(() => recordedEvents.withLocationContext(123), `Invalid location context filter name option: 123`);
       // @ts-ignore
-      expectToThrow(() => recordedEvents.withLocationContext({}), `Invalid location context filter options: {}`);
-      // @ts-ignore
-      expectToThrow(() => recordedEvents.withLocationContext(123), `Invalid location context filter options: 123`);
-      // @ts-ignore
-      expectToThrow(() => recordedEvents.withLocationContext([]), `Invalid location context filter options: `);
+      expectToThrow(() => recordedEvents.withLocationContext([]), `Invalid location context filter name option: `);
+      expectToThrow(
+        // @ts-ignore
+        () => recordedEvents.withLocationContext('ContentContext', null),
+        `Invalid location context filter id option: null`
+      );
+      expectToThrow(
+        // @ts-ignore
+        () => recordedEvents.withLocationContext('ContentContext', {}),
+        `Invalid location context filter id option: {}`
+      );
+      expectToThrow(
+        // @ts-ignore
+        () => recordedEvents.withLocationContext('ContentContext', 123),
+        `Invalid location context filter id option: 123`
+      );
+      expectToThrow(
+        // @ts-ignore
+        () => recordedEvents.withLocationContext('ContentContext', []),
+        `Invalid location context filter id option: `
+      );
     });
 
     it('should filter by location context', async () => {
@@ -537,16 +563,12 @@ describe('RecordedEvents', () => {
     });
 
     it('should filter by location context and id', async () => {
-      expect(recordedEvents.withLocationContext('LinkContext:logo').events).toStrictEqual([events[2]]);
-    });
-
-    it('should filter by id only', async () => {
-      expect(recordedEvents.withLocationContext(':logo').events).toStrictEqual([events[2]]);
+      expect(recordedEvents.withLocationContext('LinkContext', 'logo').events).toStrictEqual([events[2]]);
     });
 
     it('should allow to chain withLocationContext', async () => {
       expect(
-        recordedEvents.withLocationContext('LinkContext').withLocationContext('LinkContext:twitter').events
+        recordedEvents.withLocationContext('LinkContext').withLocationContext('LinkContext', 'twitter').events
       ).toStrictEqual([events[11]]);
     });
   });
@@ -554,15 +576,35 @@ describe('RecordedEvents', () => {
   describe('withGlobalContext', () => {
     it('should throw', async () => {
       // @ts-ignore
-      expectToThrow(() => recordedEvents.withGlobalContext(), `Invalid global context filter options: undefined`);
+      expectToThrow(() => recordedEvents.withGlobalContext(), `Invalid global context filter name option: undefined`);
       // @ts-ignore
-      expectToThrow(() => recordedEvents.withGlobalContext(null), `Invalid global context filter options: null`);
+      expectToThrow(() => recordedEvents.withGlobalContext(null), `Invalid global context filter name option: null`);
       // @ts-ignore
-      expectToThrow(() => recordedEvents.withGlobalContext({}), `Invalid global context filter options: {}`);
+      expectToThrow(() => recordedEvents.withGlobalContext({}), `Invalid global context filter name option: {}`);
       // @ts-ignore
-      expectToThrow(() => recordedEvents.withGlobalContext(123), `Invalid global context filter options: 123`);
+      expectToThrow(() => recordedEvents.withGlobalContext(123), `Invalid global context filter name option: 123`);
       // @ts-ignore
-      expectToThrow(() => recordedEvents.withGlobalContext([]), `Invalid global context filter options: `);
+      expectToThrow(() => recordedEvents.withGlobalContext([]), `Invalid global context filter name option: `);
+      expectToThrow(
+        // @ts-ignore
+        () => recordedEvents.withGlobalContext('ApplicationContext', null),
+        `Invalid location context filter id option: null`
+      );
+      expectToThrow(
+        // @ts-ignore
+        () => recordedEvents.withGlobalContext('ApplicationContext', {}),
+        `Invalid location context filter id option: {}`
+      );
+      expectToThrow(
+        // @ts-ignore
+        () => recordedEvents.withGlobalContext('ApplicationContext', 123),
+        `Invalid location context filter id option: 123`
+      );
+      expectToThrow(
+        // @ts-ignore
+        () => recordedEvents.withGlobalContext('ApplicationContext', []),
+        `Invalid location context filter id option: `
+      );
     });
 
     it('should filter by global context', async () => {
@@ -570,15 +612,7 @@ describe('RecordedEvents', () => {
     });
 
     it('should filter by global context and id', async () => {
-      expect(recordedEvents.withGlobalContext('PathContext:http://localhost:3000/video').events).toStrictEqual([
-        events[1],
-        events[4],
-        events[9],
-      ]);
-    });
-
-    it('should filter by id only', async () => {
-      expect(recordedEvents.withGlobalContext(':http://localhost:3000/video').events).toStrictEqual([
+      expect(recordedEvents.withGlobalContext('PathContext', 'http://localhost:3000/video').events).toStrictEqual([
         events[1],
         events[4],
         events[9],
@@ -587,7 +621,7 @@ describe('RecordedEvents', () => {
 
     it('should allow to chain withGlobalContext', async () => {
       expect(
-        recordedEvents.withGlobalContext('PathContext').withGlobalContext('PathContext:http://localhost:3000/video')
+        recordedEvents.withGlobalContext('PathContext').withGlobalContext('PathContext', 'http://localhost:3000/video')
           .events
       ).toStrictEqual([events[1], events[4], events[9]]);
     });

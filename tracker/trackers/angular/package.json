@@ -31,6 +31,7 @@
   "scripts": {
     "build": "ng-packagr -p ng-package.json",
     "prettify": "prettier --write .",
+    "tsc": "tsc --noEmit",
     "npm-publish": "npm publish --access=public --tag=$TAG",
     "npm-publish:verdaccio": "npm publish --tag=$TAG"
   },

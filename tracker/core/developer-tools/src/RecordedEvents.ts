@@ -51,68 +51,48 @@ export class RecordedEvents implements RecordedEventsInterface {
   }
 
   /**
-   * Filters events by their LocationContext's name (_type attribute), name and id or just id. It supports:
-   *
-   * - a Location Context name, e.g. `RootLocationContext`
-   * - a Location Context name and its identifier, separated by a colon, e.g. `RootLocationContext:home`
-   * - a Location Context identifier, prefixed by a colon, e.g. `:home`
-   *
+   * Filters events by their LocationContext's name (_type attribute), name and id or just name.
    * `withLocationContext` returns a new instance of RecordedEvents for further chaining.
    */
-  withLocationContext(nameAndMaybeId: AnyLocationContextName) {
-    if (typeof nameAndMaybeId !== 'string') {
-      throw new Error(`Invalid location context filter options: ${JSON.stringify(nameAndMaybeId)}`);
+  withLocationContext(name: AnyLocationContextName, id?: string) {
+    if (typeof name !== 'string') {
+      throw new Error(`Invalid location context filter name option: ${JSON.stringify(name)}`);
     }
-
-    const [name, id] = splitNameAndMaybeId(nameAndMaybeId);
+    if (id !== undefined && typeof id !== 'string') {
+      throw new Error(`Invalid location context filter id option: ${JSON.stringify(id)}`);
+    }
 
     return new RecordedEvents(this.events.filter((event) => hasContext(event.location_stack, name, id)));
   }
 
   /**
-   * Filters events by their GlobalContext's name (_type attribute), name and id or just id. It supports:
-   *
-   * - a Global Context name, e.g. `PathContext`
-   * - a Global Context name and its identifier, separated by a colon, e.g. `PathContext:http://localhost/`
-   * - a Global Context identifier, prefixed by a colon, e.g. `:http://localhost/`
-   *
+   * Filters events by their GlobalContext's name (_type attribute), name and id or just name.
    * `withGlobalContext` returns a new instance of RecordedEvents for further chaining.
    */
-  withGlobalContext(nameAndMaybeId: AnyGlobalContextName) {
-    if (typeof nameAndMaybeId !== 'string') {
-      throw new Error(`Invalid global context filter options: ${JSON.stringify(nameAndMaybeId)}`);
+  withGlobalContext(name: AnyGlobalContextName, id?: string) {
+    if (typeof name !== 'string') {
+      throw new Error(`Invalid global context filter name option: ${JSON.stringify(name)}`);
     }
-
-    const [name, id] = splitNameAndMaybeId(nameAndMaybeId);
+    if (id !== undefined && typeof id !== 'string') {
+      throw new Error(`Invalid location context filter id option: ${JSON.stringify(id)}`);
+    }
 
     return new RecordedEvents(this.events.filter((event) => hasContext(event.global_contexts, name, id)));
   }
 }
 
 /**
- * Helper private function to split Context names from their identifiers.
- */
-const splitNameAndMaybeId = (nameAndMaybeId: string) => {
-  const [name, ...id] = nameAndMaybeId.split(':');
-  return [name, id.join(':')];
-};
-
-/**
- * Helper private predicate to match a Context in the given list of contexts by name, id or both.
+ * Helper private predicate to match a Context in the given list of contexts by name and id or just name.
  */
 const hasContext = (
   contexts: (RecordedAbstractLocationContext | RecordedAbstractGlobalContext)[],
   name: string,
-  id: string
+  id?: string
 ) =>
   contexts.find((context) => {
     if (name && id) {
       return context._type === name && context.id === id;
     }
 
-    if (name) {
-      return context._type === name;
-    }
-
-    return context.id === id;
+    return context._type === name;
   });
