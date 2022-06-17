@@ -293,11 +293,10 @@ class Map:
 
         data['__hit_before_conversion'] = (data['__conversions_in_time'] == 0) & (data['__converted'] >= 1)
 
-
     def hit_before_conversion(self,
-                                  data: bach.DataFrame,
-                                  name: str,
-                                  partition: str = 'session_id') -> bach.SeriesInt64:
+                              data: bach.DataFrame,
+                              name: str,
+                              partition: str = 'session_id') -> bach.Series:
 
         self._mh._check_data_is_objectiv_data(data)
         data = data.copy()
