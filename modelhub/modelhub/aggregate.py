@@ -139,7 +139,7 @@ class Aggregate:
             new_groupby = [groupby]
         else:
             new_groupby = groupby
-        new_groupby.append(data.session_id.copy_override(name='_session_id'))
+        new_groupby.append(data.session_id.copy_override(name='__session_id'))
 
         gdata = self._check_groupby(data=data, groupby=new_groupby)
         session_duration = gdata.aggregate({'moment': ['min', 'max']})
@@ -191,20 +191,30 @@ class Aggregate:
         self._mh._check_data_is_objectiv_data(data)
 
         # the following columns have to be in the data
-        data['_application'] = data.global_contexts.gc.application
+        data['__application'] = data.global_contexts.gc.application
 
         if location_stack is not None:
-            data['_feature_nice_name'] = location_stack.ls.nice_name
+            data['__feature_nice_name'] = location_stack.ls.nice_name
         else:
-            data['_feature_nice_name'] = data.location_stack.ls.nice_name
+            data['__feature_nice_name'] = data.location_stack.ls.nice_name
 
-        groupby_col = ['_application', '_feature_nice_name', 'event_type']
+        groupby_col = ['__application', '__feature_nice_name', 'event_type']
 
         # selects specific event types, so stack_event_types must be a superset of [event_types]
         interactive_events = data[data.stack_event_types >= [event_type]]
 
         # users by feature
         users_feature = interactive_events.groupby(groupby_col).agg({'user_id': 'nunique'})
+
+        # remove double underscores from the columns name
+        columns = {
+            col: col[2:] if col.startswith('__') else col
+            for col in groupby_col
+        }
+        _index = list(columns.values())
+        users_feature = users_feature.reset_index().rename(columns=columns)
+        users_feature = users_feature.dropna().set_index(_index)
+
         return users_feature.sort_values('user_id_nunique', ascending=False)
 
     def top_product_features_before_conversion(self,
@@ -233,20 +243,24 @@ class Aggregate:
         if not name:
             raise ValueError('Conversion event label is not provided.')
 
-        data['_application'] = data.global_contexts.gc.application
+        data['__application'] = data.global_contexts.gc.application
 
         if location_stack is not None:
-            data['_feature_nice_name'] = location_stack.ls.nice_name
+            data['__feature_nice_name'] = location_stack.ls.nice_name
         else:
-            data['_feature_nice_name'] = data.location_stack.ls.nice_name
+            data['__feature_nice_name'] = data.location_stack.ls.nice_name
+
+        self._mh.map._is_conversion_event(data, name)
+        self._mh.map._conversions_in_time(data, partition='session_id')
+        self._mh.map._conversions_counter(data, partition='session_id')
+        self._mh.map._conversions_in_time(data=data, partition='session_id')
 
         # label sessions with a conversion
-        data['converted_users'] = self._mh.map.conversions_counter(data,
-                                                                   name=name) >= 1
+        data['converted_users'] = data['__converted'] >= 1
 
+        data.materialize(inplace=True)
         # label hits where at that point in time, there are 0 conversions in the session
-        data['zero_conversions_at_moment'] = self._mh.map.conversions_in_time(data,
-                                                                              name) == 0
+        data['zero_conversions_at_moment'] = data['__conversions_in_time'] == 0
 
         # filter on above created labels
         converted_users = data[(data.converted_users & data.zero_conversions_at_moment)]
@@ -254,9 +268,17 @@ class Aggregate:
         # select only user interactions
         converted_users_filtered = converted_users[converted_users.stack_event_types >= [event_type]]
 
+        groupby_col = ['__application', '__feature_nice_name', 'event_type']
         converted_users_features = self._mh.agg.unique_users(converted_users_filtered,
-                                                             groupby=['_application',
-                                                                      '_feature_nice_name',
-                                                                      'event_type'])
+                                                             groupby=groupby_col)
 
-        return converted_users_features.sort_values(ascending=False).to_frame()
+        # remove double underscores from the columns name
+        columns = {
+            col: col[2:] if col.startswith('__') else col
+            for col in groupby_col
+        }
+        _index = list(columns.values())
+        converted_users_features = converted_users_features.reset_index().rename(columns=columns)
+        converted_users_features = converted_users_features.dropna().set_index(_index)
+
+        return converted_users_features.sort_values('unique_users', ascending=False)
