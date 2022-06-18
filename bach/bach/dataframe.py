@@ -2132,7 +2132,9 @@ class DataFrame:
         sql_statements = to_sql_materialized_nodes(
             dialect=self.engine.dialect, start_node=model
         )
-        sql = ';\n'.join(sql_statements.values())
+        sql_statements = [sql_stat for sql_stat in sql_statements
+                          if not sql_stat.materialization.has_lasting_effect]
+        sql = ';\n'.join(sql_stat.sql for sql_stat in sql_statements)
         return sql
 
     def merge(

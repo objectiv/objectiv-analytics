@@ -11,6 +11,12 @@ from sql_models.sql_query_parser import raw_sql_to_selects
 from sql_models.util import quote_identifier, is_postgres, is_bigquery
 
 
+class GeneratedSqlStatement(NamedTuple):
+    name: str
+    materialization: Materialization
+    sql: str
+
+
 def to_sql(dialect: Dialect, model: SqlModel) -> str:
     """
     Give the sql to query the given model
@@ -26,19 +32,20 @@ def to_sql_materialized_nodes(
         dialect: Dialect,
         start_node: SqlModel,
         include_start_node=True,
-) -> Dict[str, str]:
+) -> List[GeneratedSqlStatement]:
     """
     Give list of sql statements:
         * The sql to query the given model
         * The sql to create all views and tables that the given model depends upon
     :param dialect: SQL Dialect
     :param start_node: model to convert to sql
-    :return: A dict of sql statements. The key being the name of the model and the value being the sql to
-        run the query, or create the table, or create the view. The order of the items in the dict is
-        significant: earlier statements will create views and/or tables that might be used by later
-        statements.
+    :return: A list of generated sql statements. Each object contains the name of the model, the
+        materialization of the model, and the sql to run the query, or create the table, or create the view.
+        The order of the items is significant: earlier statements will create views and/or tables that might
+        be used by later statements.
+        The names are guaranteed to be unique in the list.
     """
-    result: Dict[str, str] = {}
+    result: List[GeneratedSqlStatement] = []
     compiler_cache: Dict[str, List['SemiCompiledTuple']] = {}
     # find all nodes that are materialized as view or table, and the start_node if needed
     # make sure we get the longest possible path to a node (use_last_found_instance=True). That way we can
@@ -55,11 +62,15 @@ def to_sql_materialized_nodes(
     _check_names_unique(found_node.model for found_node in materialized_found_nodes)
     for found_node in reversed(materialized_found_nodes):
         model = found_node.model
-        result[model_to_name(model)] = _to_sql_materialized_node(
-            dialect=dialect,
-            model=model,
-            compiler_cache=compiler_cache,
+        generated_sql = GeneratedSqlStatement(
+            name=model_to_name(model),
+            sql=_to_sql_materialized_node(
+                dialect=dialect,
+                model=model,
+                compiler_cache=compiler_cache),
+            materialization=model.materialization
         )
+        result.append(generated_sql)
     return result
 
 

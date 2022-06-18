@@ -9,7 +9,7 @@ from sqlalchemy.engine import Engine, Dialect
 from bach import DataFrame
 from bach.sql_model import BachSqlModel
 from sql_models.model import Materialization, SqlModel, CustomSqlModelBuilder
-from sql_models.sql_generator import to_sql_materialized_nodes
+from sql_models.sql_generator import to_sql_materialized_nodes, GeneratedSqlStatement
 from sql_models.util import quote_identifier
 
 
@@ -207,11 +207,11 @@ class Savepoints:
         """
         sql_statements = self.to_sql(dialect)
         drop_statements = {}
-        for name in reversed(list(sql_statements.keys())):
-            info = self._entries[name]
-            if info.materialization == Materialization.TABLE:
+        for sql_stat in reversed(sql_statements):
+            name = sql_stat.name
+            if sql_stat.materialization == Materialization.TABLE:
                 drop_statements[name] = f'drop table if exists {quote_identifier(dialect, name)}'
-            elif info.materialization == Materialization.VIEW:
+            elif sql_stat.materialization == Materialization.VIEW:
                 drop_statements[name] = f'drop view if exists {quote_identifier(dialect, name)}'
         return drop_statements
 
@@ -225,15 +225,15 @@ class Savepoints:
         """
         sql_statements = self.to_sql(dialect)
         return {
-            name: statement for name, statement in sql_statements.items()
-            if self._entries[name].materialization in (Materialization.TABLE, Materialization.VIEW)
+            sql_stat.name: sql_stat.sql for sql_stat in sql_statements
+            if sql_stat.materialization in (Materialization.TABLE, Materialization.VIEW)
         }
 
-    def to_sql(self, dialect: Dialect) -> Dict[str, str]:
+    def to_sql(self, dialect: Dialect) -> List[GeneratedSqlStatement]:
         """
         Generate the sql for all save-points
         :param dialect: SQL Dialect
-        :return: dictionary mapping the name of each savepoint to the sql for that savepoint.
+        :return: List of GeneratedSql statements, each representing one savepoint
         """
         graph = self._get_combined_graph()
         sqls = to_sql_materialized_nodes(dialect=dialect, start_node=graph, include_start_node=False)

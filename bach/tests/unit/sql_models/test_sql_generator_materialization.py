@@ -4,7 +4,7 @@ Copyright 2021 Objectiv B.V.
 import re
 
 from sql_models.model import Materialization
-from sql_models.sql_generator import to_sql, to_sql_materialized_nodes
+from sql_models.sql_generator import to_sql, to_sql_materialized_nodes, GeneratedSqlStatement
 from sql_models.util import is_bigquery
 from tests.unit.sql_models.test_graph_operations import get_simple_test_graph
 from tests.unit.sql_models.util import ValueModel, RefModel, JoinModel, assert_roughly_equal_sql
@@ -22,12 +22,24 @@ def test_simple_to_sql(dialect):
     sql_temp_table = to_sql(dialect=dialect, model=graph_temp_table)
 
     # assert that output of to_sql_materialized_nodes() matched to_sql()
-    expected_view = {'JoinModel___72375bcf8a25de05a031b9b40b871b7e': sql_view}
-    expected_table = {'JoinModel___ba94544f10ddca3e10485ffc73a35215': sql_table}
-    expected_temp_table = {'JoinModel___873a21bbc5cca01b28d8794d0e96eb3e': sql_temp_table}
-    assert to_sql_materialized_nodes(dialect=dialect, start_node=graph_view) == expected_view
-    assert to_sql_materialized_nodes(dialect=dialect, start_node=graph_table) == expected_table
-    assert to_sql_materialized_nodes(dialect=dialect, start_node=graph_temp_table) == expected_temp_table
+    expected_view = GeneratedSqlStatement(
+        name='JoinModel___72375bcf8a25de05a031b9b40b871b7e',
+        sql=sql_view,
+        materialization=Materialization.VIEW
+    )
+    expected_table = GeneratedSqlStatement(
+        name='JoinModel___ba94544f10ddca3e10485ffc73a35215',
+        sql=sql_table,
+        materialization=Materialization.TABLE
+    )
+    expected_temp_table = GeneratedSqlStatement(
+        name='JoinModel___873a21bbc5cca01b28d8794d0e96eb3e',
+        sql=sql_temp_table,
+        materialization=Materialization.TEMP_TABLE
+    )
+    assert to_sql_materialized_nodes(dialect=dialect, start_node=graph_view) == [expected_view]
+    assert to_sql_materialized_nodes(dialect=dialect, start_node=graph_table) == [expected_table]
+    assert to_sql_materialized_nodes(dialect=dialect, start_node=graph_temp_table) == [expected_temp_table]
 
     # assert that the sql generate for the table is correct
     expected_sql_table = '''
@@ -81,10 +93,9 @@ def test_edge_node_materialization(dialect):
         expected_query = expected_query.replace('"', '`')
         expected_table = expected_table.replace('"', '`')
         expected_view = expected_view.replace('"', '`')
-    result_list = list(result.values())
-    assert result_list[0] == expected_table
-    assert result_list[1] == expected_view
-    assert_roughly_equal_sql(result_list[2], expected_query)
+    assert result[0].sql == expected_table
+    assert result[1].sql == expected_view
+    assert_roughly_equal_sql(result[2].sql, expected_query)
 
 
 def test_non_edge_node_materialization(dialect):
@@ -117,6 +128,5 @@ def test_non_edge_node_materialization(dialect):
     if is_bigquery(dialect):
         jm_expected_sql = jm_expected_sql.replace('"', '`')
         graph_expected_sql = graph_expected_sql.replace('"', '`')
-    result_list = list(result.values())
-    assert_roughly_equal_sql(result_list[0], jm_expected_sql)
-    assert_roughly_equal_sql(result_list[1], graph_expected_sql)
+    assert_roughly_equal_sql(result[0].sql, jm_expected_sql)
+    assert_roughly_equal_sql(result[1].sql, graph_expected_sql)
