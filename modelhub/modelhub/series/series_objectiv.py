@@ -269,22 +269,18 @@ class SeriesLocationStack(SeriesJson):
                 return self._series_object.json[0].json.get_value('_type', as_str=True) + ' TODO'
             expression = Expression.construct(
                 f"""(
-                select array_to_string(
-                    array_agg(
+                select string_agg(
                         replace(
                             regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\\1 \\2', 'g'),
-                        ' Context', '') || ': ' || (value ->> 'id')
-                    ),
+                        ' Context', '') || ': ' || (value ->> 'id'),
                 ' => ')
                 from jsonb_array_elements({{}}) with ordinality
                 where ordinality = jsonb_array_length({{}})) || case
                     when jsonb_array_length({{}}) > 1
-                        then ' located at ' || (select array_to_string(
-                    array_agg(
+                        then ' located at ' || (select string_agg(
                         replace(
                             regexp_replace(value ->> '_type', '([a-z])([A-Z])', '\\1 \\2', 'g'),
-                        ' Context', '') || ': ' || (value ->> 'id')
-                    ),
+                        ' Context', '') || ': ' || (value ->> 'id'),
                 ' => ')
                 from jsonb_array_elements({{}}) with ordinality
                 where ordinality < jsonb_array_length({{}})
