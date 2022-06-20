@@ -69,6 +69,8 @@ The event type describes what kind of event is triggered. The goal of the open t
 
     df[df.day == '2022-01-10'].event_type.head()
 
+.. _open_taxonomy_location_stack_and_global_contexts:
+
 location_stack & global_contexts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The location stack and global contexts are stored as json type data. Within the DataFrame, it is easy to access data in json data based on position or content.
