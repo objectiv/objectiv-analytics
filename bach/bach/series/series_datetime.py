@@ -115,6 +115,50 @@ class DateTimeOperation:
         str_series = self._series.copy_override_type(SeriesString).copy_override(expression=expression)
         return str_series
 
+    def date_trunc(self, date_part: str) -> Series:
+        """
+        Truncates date value based on a specified date part.
+        The value is always rounded to the beginning of date_part.
+
+        :param date_part: can be 'week', 'quarter', etc.
+
+        .. code-block:: python
+
+            # return first day of the week in the week
+            df['week'] = df.some_date_series.dt.date_trunc('week')
+            # return the first day of the quarter
+            df['quarter'] = df.some_date_series.dt.date_trunc('quarter')
+
+        :returns: the truncated timestamp value with a granularity of date_part.
+
+        """
+
+        available_formats = ['second', 'minute', 'hour', 'day', 'week',
+                             'month', 'quarter', 'year']
+        if date_part not in available_formats:
+            raise ValueError(f'{date_part} format is not available.')
+
+        engine = self._series.engine
+
+        if is_postgres(engine):
+            expression = Expression.construct(
+                'date_trunc({}, {})',
+                Expression.string_value(date_part),
+                self._series,
+            )
+        elif is_bigquery(engine):
+
+            expression = Expression.construct(
+                'timestamp_trunc({}, {})',
+                self._series,
+                Expression.raw(date_part),
+            )
+        else:
+            raise DatabaseNotSupportedException(engine)
+
+        int_series = self._series.copy_override(expression=expression)
+        return int_series
+
 
 class TimedeltaOperation(DateTimeOperation):
     def _get_conversion_df(self) -> 'DataFrame':

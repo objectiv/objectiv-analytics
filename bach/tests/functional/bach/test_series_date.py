@@ -133,7 +133,6 @@ def test_date_format(engine, recwarn):
         ],
     )
 
-
 @pytest.mark.skip_bigquery
 def test_date_format_all_supported_pg_codes(engine):
     timestamp = datetime.datetime(2021, 5, 3, 11, 28, 36, 388000, tzinfo=datetime.timezone.utc)
@@ -152,6 +151,120 @@ def test_date_format_all_supported_pg_codes(engine):
     # datetime divides year by 100 and truncates integral part, postgres considers '2001' as start of 21st century
     pdf['%C'] = '21'
     pd.testing.assert_frame_equal(pdf, df.to_pandas(), check_dtype=False)
+
+
+def test_date_trunc(engine):
+    mt = get_df_with_food_data(engine)
+    mt['date'] = mt['date'].astype('date')
+
+    # second
+    dt = mt.moment.dt.date_trunc('second')
+    assert_equals_data(
+        dt,
+        expected_columns=['_index_skating_order', 'moment'],
+        expected_data=[
+            [1, datetime.datetime(2021, 5, 3, 11, 28, 36)],
+            [2, datetime.datetime(2021, 5, 4, 23, 28, 36)],
+            [4, datetime.datetime(2022, 5, 3, 14, 13, 13)],
+        ],
+        use_to_pandas=True,
+    )
+
+    # minute
+    dt = mt.moment.dt.date_trunc('minute')
+    assert_equals_data(
+        dt,
+        expected_columns=['_index_skating_order', 'moment'],
+        expected_data=[
+            [1, datetime.datetime(2021, 5, 3, 11, 28)],
+            [2, datetime.datetime(2021, 5, 4, 23, 28)],
+            [4, datetime.datetime(2022, 5, 3, 14, 13)],
+        ],
+        use_to_pandas=True,
+    )
+
+    # hour
+    dt = mt.moment.dt.date_trunc('hour')
+    assert_equals_data(
+        dt,
+        expected_columns=['_index_skating_order', 'moment'],
+        expected_data=[
+            [1, datetime.datetime(2021, 5, 3, 11)],
+            [2, datetime.datetime(2021, 5, 4, 23)],
+            [4, datetime.datetime(2022, 5, 3, 14)],
+        ],
+        use_to_pandas=True,
+    )
+
+    tzinfo = datetime.timezone.utc
+
+    # day
+    dt = mt.date.dt.date_trunc('day')
+    assert_equals_data(
+        dt,
+        expected_columns=['_index_skating_order', 'date'],
+        expected_data=[
+            [1, datetime.datetime(2021, 5, 3, tzinfo=tzinfo)],
+            [2, datetime.datetime(2021, 5, 4, tzinfo=tzinfo)],
+            [4, datetime.datetime(2022, 5, 3, tzinfo=tzinfo)],
+        ],
+        use_to_pandas=True,
+    )
+
+    # week
+    dt = mt.date.dt.date_trunc('week')
+    assert_equals_data(
+        dt,
+        expected_columns=['_index_skating_order', 'date'],
+        expected_data=[
+            [1, datetime.datetime(2021, 5, 3, tzinfo=tzinfo)],
+            [2, datetime.datetime(2021, 5, 3, tzinfo=tzinfo)],
+            [4, datetime.datetime(2022, 5, 2, tzinfo=tzinfo)],
+        ],
+        use_to_pandas=True,
+    )
+
+    # month
+    dt = mt.date.dt.date_trunc('month')
+    assert_equals_data(
+        dt,
+        expected_columns=['_index_skating_order', 'date'],
+        expected_data=[
+            [1, datetime.datetime(2021, 5, 1, tzinfo=tzinfo)],
+            [2, datetime.datetime(2021, 5, 1, tzinfo=tzinfo)],
+            [4, datetime.datetime(2022, 5, 1, tzinfo=tzinfo)],
+        ],
+        use_to_pandas=True,
+    )
+
+    # quarter
+    dt = mt.date.dt.date_trunc('quarter')
+    assert_equals_data(
+        dt,
+        expected_columns=['_index_skating_order', 'date'],
+        expected_data=[
+            [1, datetime.datetime(2021, 4, 1, tzinfo=tzinfo)],
+            [2, datetime.datetime(2021, 4, 1, tzinfo=tzinfo)],
+            [4, datetime.datetime(2022, 4, 1, tzinfo=tzinfo)],
+        ],
+        use_to_pandas=True,
+    )
+
+    # year
+    dt = mt.date.dt.date_trunc('year')
+    assert_equals_data(
+        dt,
+        expected_columns=['_index_skating_order', 'date'],
+        expected_data=[
+            [1, datetime.datetime(2021, 1, 1, tzinfo=tzinfo)],
+            [2, datetime.datetime(2021, 1, 1, tzinfo=tzinfo)],
+            [4, datetime.datetime(2022, 1, 1, tzinfo=tzinfo)],
+        ],
+        use_to_pandas=True,
+    )
+
+    with pytest.raises(ValueError, match='some_wrong_format format is not available.'):
+        mt.date.dt.date_trunc('some_wrong_format')
 
 
 def test_date_arithmetic(pg_engine):
