@@ -40,7 +40,7 @@ What is in these columns:
 
 * `day`: the day of the session as a date.
 * `moment`: the exact moment of the event.
-* `user_id`: the unique identifyer of the user based on the cookie.
+* `user_id`: the unique identifier of the user based on the cookie.
 * `global_contexts`: a json-like data column that stores additional information on the event that is logged. 
   This includes data like device data, application data, and cookie information. 
   :ref:`See this example notebook <open_taxonomy_location_stack_and_global_contexts>` for a more detailed 
