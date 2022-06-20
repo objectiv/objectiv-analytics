@@ -1,4 +1,4 @@
- _explore_data:
+.. _explore_data:
 
 .. frontmatterposition:: 4
 
@@ -101,4 +101,5 @@ Get the SQL for any analysis
 
 Where to go next
 ----------------
+
 Now that you had a first look at your new data collected with Objectiv, the best place to go next is looking at the `basic product analytics example notebook <https://objectiv.io/docs/modeling/example-notebooks/product-analytics/>`_. This will help you get familiar product analytics metrics from Objectiv. Straight from your raw data & ready to go.
