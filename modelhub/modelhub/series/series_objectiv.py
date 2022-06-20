@@ -77,12 +77,12 @@ class ObjectivStack(JsonAccessor, Generic[TSeriesJson]):
         """
         engine = self._series_object.engine
         if is_postgres(engine):
-            return self._pg_filter_keys_of_dicts(keys)
+            return self._postgres_filter_keys_of_dicts(keys)
         if is_bigquery(engine):
             return self._bigquery_filter_keys_of_dicts(keys)
         raise DatabaseNotSupportedException(engine)
 
-    def _pg_filter_keys_of_dicts(self, keys: List[str]) -> 'TSeriesJson':
+    def _postgres_filter_keys_of_dicts(self, keys: List[str]) -> 'TSeriesJson':
         jsonb_build_object_str = [f"{quote_string(self._series_object.engine, key)}" for key in keys]
         expression_str = f'''(
             select jsonb_agg((
@@ -264,9 +264,65 @@ class SeriesLocationStack(SeriesJson):
             Returns a nice name for the location stack. This is a human readable name for the data in the
             feature stack.
             """
-            if is_bigquery(self._series_object.engine):
-                # TODO: This is temporary, just so that we have something
-                return self._series_object.json[0].json.get_value('_type', as_str=True) + ' TODO'
+            engine = self._series_object.engine
+            if is_postgres(engine):
+                expression = self._postgres_nice_name()
+            elif is_bigquery(engine):
+                expression = self._bigquery_nice_name()
+            else:
+                raise DatabaseNotSupportedException(engine)
+            return self._series_object.copy_override_type(SeriesString).copy_override(expression=expression)
+
+        def _bigquery_nice_name(self) -> Expression:
+            # last_element_nice_expr turns something with _type='SectionContext' and id='section_id'
+            # into something like 'Section: section_id'
+            last_element = self._series_object.json[-1]
+            last_element_nice_expr = Expression.construct(
+                """
+                    REGEXP_REPLACE(
+                        REGEXP_REPLACE({}, '([a-z])([A-Z])', r'\\1 \\2'),
+                        ' Context$',
+                        ''
+                    ) || ': ' || {}
+                """,
+                last_element.json.get_value('_type', as_str=True),
+                last_element.json.get_value('id', as_str=True)
+            )
+
+            # For all other elements in the stack we do something similar as we did with the last element
+            # in last_element_nice_expr. But we prepend 'Located at', and couple the elements with ' => '.
+            # Example output value for other_elements_expr:
+            #   'located at Web Document: #document => Section: x => Section: y'
+
+            # element_json allows us to reuse code from the accessor without duplicating. 'element' will be
+            # set by iterating over the json array in the query below.
+            element_json = self._series_object.copy_override(expression=Expression.construct('element'))
+            other_elements_expr = Expression.construct(
+                """
+                    CASE WHEN {} > 1
+                    THEN ' located at ' || (SELECT STRING_AGG(
+                                    REGEXP_REPLACE(
+                                        REGEXP_REPLACE({}, '([a-z])([A-Z])', r'\\1 \\2'),
+                                        ' Context$',
+                                        ''
+                                    ) || ': ' || {},
+                                    ' => '
+                                )
+                                FROM UNNEST (JSON_QUERY_ARRAY({}, '$')) AS element WITH OFFSET AS pos
+                                WHERE pos < ({} - 1)
+                            )
+                    ELSE ''
+                    END
+                """,
+                self._series_object.json.get_array_length(),
+                element_json.json.get_value('_type', as_str=True),
+                element_json.json.get_value('id', as_str=True),
+                self._series_object,
+                self._series_object.json.get_array_length(),
+            )
+            return Expression.construct('({}) || ({})', last_element_nice_expr, other_elements_expr)
+
+        def _postgres_nice_name(self) -> Expression:
             expression = Expression.construct(
                 f"""(
                     select string_agg(
@@ -298,7 +354,7 @@ class SeriesLocationStack(SeriesJson):
                 self._series_object,
                 self._series_object
             )
-            return self._series_object.copy_override_type(SeriesString).copy_override(expression=expression)
+            return expression
 
     @property
     def objectiv(self):
