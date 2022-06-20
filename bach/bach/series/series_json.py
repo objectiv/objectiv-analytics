@@ -525,14 +525,16 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
 
     def get_array_item(self, key: int) -> 'TSeriesJson':
         """ For documentation, see implementation in parent class :class:`JsonAccessor` """
-        if key >= 0:
-            expression = Expression.construct(f'''JSON_QUERY({{}}, '$[{key}]')''', self._series_object)
-            return self._series_object.copy_override(expression=expression)
-        # case key < 0
-        # BigQuery doesn't (yet) natively support this, so we emulate this.
-        array_len = self.get_array_length()
-        expr_offset = Expression.construct(f'OFFSET({{}} {key})', array_len)
-        expression = Expression.construct('JSON_QUERY_ARRAY({})[{}]', self._series_object, expr_offset)
+        if key < 0:
+            # BigQuery doesn't (yet) natively support this, so we emulate this by reversing the array
+            key = -key - 1
+            array_expr = Expression.construct(
+                "'[' || ARRAY_TO_STRING(ARRAY_REVERSE(JSON_QUERY_ARRAY({})), ', ') || ']'",
+                self._series_object
+            )
+        else:
+            array_expr = self._series_object.expression
+        expression = Expression.construct(f'''JSON_QUERY({{}}, '$[{key}]')''', array_expr)
         return self._series_object.copy_override(expression=expression)
 
     def get_dict_item(self, key: str) -> 'TSeriesJson':

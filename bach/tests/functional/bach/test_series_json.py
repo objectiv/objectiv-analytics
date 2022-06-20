@@ -137,19 +137,21 @@ def test_json_getitem(engine, dtype):
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bt = bt[['mixed_column']]
     bt['sel_0'] = bt.mixed_column.json[0]
-    bt['sel_min2'] = bt.mixed_column.json[-2]
+    bt['sel_min2'] = bt.mixed_column.json[-3]
+    bt['sel_min5'] = bt.mixed_column.json[-5]  # -5 doesn't exist
     bt['sel_a'] = bt.mixed_column.json["a"]
     bt = bt.drop(columns=['mixed_column'])
+    print(bt.view_sql())
     assert_equals_data(
         bt,
         use_to_pandas=True,
-        expected_columns=['_index_row', 'sel_0', 'sel_min2', 'sel_a'],
+        expected_columns=['_index_row', 'sel_0', 'sel_min2', 'sel_min5', 'sel_a'],
         expected_data=[
-            [0, None, None, "b"],
-            [1, "a", "c", None],
-            [2, None, None, "b"],
-            [3, {"_type": "WebDocumentContext", "id": "#document"}, {"_type": "SectionContext", "id": "top-10"}, None],
-            [4, None, None, None]
+            [0, None, None, None, "b"],
+            [1, "a", "b", None, None],
+            [2, None, None, None, "b"],
+            [3, {"_type": "WebDocumentContext", "id": "#document"}, {"_type": "SectionContext", "id": "home"}, None, None],
+            [4, None, None, None, None]
         ]
     )
 
