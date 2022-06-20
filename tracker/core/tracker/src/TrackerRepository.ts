@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { Tracker } from './Tracker';
+import { Tracker, WaitForQueueParameters } from './Tracker';
 import { TrackerRepositoryInterface } from './TrackerRepositoryInterface';
 
 /**
@@ -79,5 +79,11 @@ export const TrackerRepository = new (class<T extends Tracker> implements Tracke
 
   flushAllQueues() {
     this.trackersMap.forEach((tracker) => tracker.flushQueue());
+  }
+
+  async waitForAllQueues(parameters?: WaitForQueueParameters): Promise<true> {
+    await Promise.all(Array.from(this.trackersMap.values()).map((tracker) => tracker.waitForQueue(parameters)));
+
+    return true;
   }
 })();

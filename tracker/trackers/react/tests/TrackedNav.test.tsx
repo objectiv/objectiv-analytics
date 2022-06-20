@@ -3,7 +3,7 @@
  */
 
 import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
-import { LocationContextName } from '@objectiv/tracker-core';
+import { LocationContextName, TrackerRepository } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render } from '@testing-library/react';
 import React from 'react';
 import {
@@ -21,6 +21,8 @@ globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation)
 describe('TrackedNav', () => {
   beforeEach(() => {
     jest.resetAllMocks();
+    TrackerRepository.trackersMap.clear();
+    TrackerRepository.defaultTracker = undefined;
   });
 
   afterEach(() => {

@@ -3,7 +3,14 @@
  */
 
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { ContextsConfig, generateUUID, LocationContextName, Tracker, TrackerEvent } from '@objectiv/tracker-core';
+import {
+  ContextsConfig,
+  generateUUID,
+  LocationContextName,
+  Tracker,
+  TrackerEvent,
+  TrackerRepository,
+} from '@objectiv/tracker-core';
 import { RootLocationContextFromURLPlugin } from '../src';
 
 require('@objectiv/developer-tools');
@@ -11,6 +18,8 @@ globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation)
 
 describe('RootLocationContextFromURLPlugin', () => {
   beforeEach(() => {
+    TrackerRepository.trackersMap.clear();
+    TrackerRepository.defaultTracker = undefined;
     jest.resetAllMocks();
   });
 

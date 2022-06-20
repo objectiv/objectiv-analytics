@@ -3,7 +3,7 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
+import { GlobalContextName, LocationContextName, TrackerRepository } from '@objectiv/tracker-core';
 import {
   NavigationContextWrapper,
   ObjectivProvider,
@@ -22,6 +22,8 @@ globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation)
 
 describe('makePressListener', () => {
   beforeEach(() => {
+    TrackerRepository.trackersMap.clear();
+    TrackerRepository.defaultTracker = undefined;
     jest.resetAllMocks();
   });
 

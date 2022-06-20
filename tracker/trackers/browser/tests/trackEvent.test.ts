@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import { matchUUID, MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
 import {
   generateUUID,
   LocationContextName,
@@ -145,7 +145,7 @@ describe('trackEvent', () => {
   });
 
   it('should use the given tracker instance', () => {
-    const trackerOverride = new BrowserTracker({ applicationId: 'override', endpoint: 'override' });
+    const trackerOverride = new BrowserTracker({ applicationId: 'override', transport: new SpyTransport() });
     jest.spyOn(trackerOverride, 'trackEvent');
 
     expect(getTracker().trackEvent).not.toHaveBeenCalled();

@@ -11,7 +11,7 @@ import {
   TrackerEvent,
   TransportableEvent,
 } from '@objectiv/tracker-core';
-import { RecordedEvents } from "./RecordedEvents";
+import { RecordedEvents } from './RecordedEvents';
 
 /**
  * Some default values for the global instance of EventRecorder. Can be changed by calling EventRecorder.configure.

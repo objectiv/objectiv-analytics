@@ -10,6 +10,7 @@ import { TrackerEvent, TrackerEventConfig } from './TrackerEvent';
 import { TrackerPluginInterface } from './TrackerPluginInterface';
 import { TrackerPlugins } from './TrackerPlugins';
 import { TrackerQueueInterface } from './TrackerQueueInterface';
+import { TrackerRepository } from './TrackerRepository';
 import { TrackerTransportGroup } from './TrackerTransportGroup';
 import { TrackerTransportInterface } from './TrackerTransportInterface';
 
@@ -188,6 +189,9 @@ export class Tracker implements TrackerInterface {
 
     // Change tracker state. If active it will initialize Plugins and start the Queue runner.
     this.setActive(trackerConfig.active ?? true);
+
+    // Add Tracker to the TrackerRepository
+    TrackerRepository.add(this);
 
     if (globalThis.objectiv) {
       globalThis.objectiv.TrackerConsole.groupCollapsed(

@@ -3,13 +3,18 @@
  * @jest-environment node
  */
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { TrackerEvent } from '@objectiv/tracker-core';
+import { TrackerEvent, TrackerRepository } from '@objectiv/tracker-core';
 import { RootLocationContextFromURLPlugin } from '../src';
 
 require('@objectiv/developer-tools');
 globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('RootLocationContextFromURLPlugin - node', () => {
+  beforeEach(() => {
+    TrackerRepository.trackersMap.clear();
+    TrackerRepository.defaultTracker = undefined;
+  });
+
   it('should instantiate as unusable', () => {
     const testRootLocationContextFromURLPlugin = new RootLocationContextFromURLPlugin();
     expect(testRootLocationContextFromURLPlugin.isUsable()).toBe(false);

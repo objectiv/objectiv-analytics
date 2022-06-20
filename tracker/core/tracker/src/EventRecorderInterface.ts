@@ -3,7 +3,7 @@
  */
 
 import { AbstractEvent, AbstractGlobalContext, AbstractLocationContext } from '@objectiv/schema';
-import { RecordedEventsInterface } from "./RecordedEventsInterface";
+import { RecordedEventsInterface } from './RecordedEventsInterface';
 import { TrackerTransportInterface } from './TrackerTransportInterface';
 
 /**

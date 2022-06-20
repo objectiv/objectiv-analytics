@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { TrackerDeveloperToolsInterface } from '@objectiv/tracker-core';
+import { TrackerDeveloperToolsInterface, TrackerRepository } from '@objectiv/tracker-core';
 import { EventRecorder } from './EventRecorder';
 import { getLocationPath } from './getLocationPath';
 import { LocationTree } from './LocationTree';
@@ -22,6 +22,7 @@ const developerTools: TrackerDeveloperToolsInterface = {
   makeLocationContextValidationRule,
   OpenTaxonomyValidationPlugin,
   TrackerConsole,
+  TrackerRepository,
 };
 
 /**

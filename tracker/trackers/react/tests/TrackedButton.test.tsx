@@ -14,6 +14,7 @@ globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation)
 describe('TrackedButton', () => {
   beforeEach(() => {
     jest.resetAllMocks();
+    globalThis.objectiv?.TrackerRepository.trackersMap.delete('app-id');
   });
 
   afterEach(() => {
