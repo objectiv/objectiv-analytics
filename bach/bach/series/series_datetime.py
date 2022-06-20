@@ -124,7 +124,7 @@ class DateTimeOperation:
 
         .. code-block:: python
 
-            # return first day of the week in the week
+            # return the date corresponding to the Monday of that week
             df['week'] = df.some_date_series.dt.date_trunc('week')
             # return the first day of the quarter
             df['quarter'] = df.some_date_series.dt.date_trunc('quarter')
@@ -147,7 +147,6 @@ class DateTimeOperation:
                 self._series,
             )
         elif is_bigquery(engine):
-
             if date_part == 'week':
                 date_part = 'week(monday)'
             expression = Expression.construct(
