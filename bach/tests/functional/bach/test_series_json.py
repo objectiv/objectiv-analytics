@@ -134,45 +134,22 @@ def test_json_compare(engine, dtype):
 
 
 def test_json_getitem(engine, dtype):
-    # TODO: make this a one-query test
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
-    bts = bt.mixed_column.json[0]
+    bt = bt[['mixed_column']]
+    bt['sel_0'] = bt.mixed_column.json[0]
+    bt['sel_min2'] = bt.mixed_column.json[-2]
+    bt['sel_a'] = bt.mixed_column.json["a"]
+    bt = bt.drop(columns=['mixed_column'])
     assert_equals_data(
-        bts,
+        bt,
         use_to_pandas=True,
-        expected_columns=['_index_row', 'mixed_column'],
+        expected_columns=['_index_row', 'sel_0', 'sel_min2', 'sel_a'],
         expected_data=[
-            [0, None],
-            [1, "a"],
-            [2, None],
-            [3, {"_type": "WebDocumentContext", "id": "#document"}],
-            [4, None]
-        ]
-    )
-    bts = bt.mixed_column.json[-2]
-    assert_equals_data(
-        bts,
-        use_to_pandas=True,
-        expected_columns=['_index_row', 'mixed_column'],
-        expected_data=[
-            [0, None],
-            [1, "c"],
-            [2, None],
-            [3, {"_type": "SectionContext", "id": "top-10"}],
-            [4, None]
-        ]
-    )
-    bts = bt.mixed_column.json["a"]
-    assert_equals_data(
-        bts,
-        use_to_pandas=True,
-        expected_columns=['_index_row', 'mixed_column'],
-        expected_data=[
-            [0, "b"],
-            [1, None],
-            [2, "b"],
-            [3, None],
-            [4, None]
+            [0, None, None, "b"],
+            [1, "a", "c", None],
+            [2, None, None, "b"],
+            [3, {"_type": "WebDocumentContext", "id": "#document"}, {"_type": "SectionContext", "id": "top-10"}, None],
+            [4, None, None, None]
         ]
     )
 
