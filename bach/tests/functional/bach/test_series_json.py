@@ -72,11 +72,26 @@ def test_json_get_single_value(engine, dtype):
 def test_json_array_contains(engine, dtype):
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
 
-    bts = bt.list_column.json.array_contains( ['b', 'c'])
+    # for bigquery order of keys should be the same as in the data
+    bts = bt.list_column.json.array_contains({"_type":"SectionContext","id":"home"})
 
     assert_equals_data(
         bts,
         expected_columns=['_index_row', 'list_column'],
+        expected_data=[
+            [0, False],
+            [1, False],
+            [2, False],
+            [3, True],
+            [4, None]
+        ]
+    )
+
+    # mixed column
+    bts = bt.mixed_column.json.array_contains('a')
+    assert_equals_data(
+        bts,
+        expected_columns=['_index_row', 'mixed_column'],
         expected_data=[
             [0, False],
             [1, True],
@@ -86,14 +101,14 @@ def test_json_array_contains(engine, dtype):
         ]
     )
 
-    # mixed column
-    bts = bt.mixed_column.json.array_contains(['a'])
+    # dict_column column
+    bts = bt.dict_column.json.array_contains({"a": "b"})
     assert_equals_data(
         bts,
-        expected_columns=['_index_row', 'mixed_column'],
+        expected_columns=['_index_row', 'dict_column'],
         expected_data=[
             [0, False],
-            [1, True],
+            [1, False],
             [2, False],
             [3, False],
             [4, None]
