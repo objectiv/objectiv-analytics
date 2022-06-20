@@ -148,6 +148,8 @@ class DateTimeOperation:
             )
         elif is_bigquery(engine):
 
+            if date_part == 'week':
+                date_part = 'week(monday)'
             expression = Expression.construct(
                 'timestamp_trunc({}, {})',
                 self._series,

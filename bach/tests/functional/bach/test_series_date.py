@@ -196,69 +196,67 @@ def test_date_trunc(engine):
         use_to_pandas=True,
     )
 
-    tzinfo = datetime.timezone.utc
-
     # day
-    dt = mt.date.dt.date_trunc('day')
+    dt = mt.moment.dt.date_trunc('day')
     assert_equals_data(
         dt,
-        expected_columns=['_index_skating_order', 'date'],
+        expected_columns=['_index_skating_order', 'moment'],
         expected_data=[
-            [1, datetime.datetime(2021, 5, 3, tzinfo=tzinfo)],
-            [2, datetime.datetime(2021, 5, 4, tzinfo=tzinfo)],
-            [4, datetime.datetime(2022, 5, 3, tzinfo=tzinfo)],
+            [1, datetime.datetime(2021, 5, 3)],
+            [2, datetime.datetime(2021, 5, 4)],
+            [4, datetime.datetime(2022, 5, 3)],
         ],
         use_to_pandas=True,
     )
 
     # week
-    dt = mt.date.dt.date_trunc('week')
+    dt = mt.moment.dt.date_trunc('week')
     assert_equals_data(
         dt,
-        expected_columns=['_index_skating_order', 'date'],
+        expected_columns=['_index_skating_order', 'moment'],
         expected_data=[
-            [1, datetime.datetime(2021, 5, 3, tzinfo=tzinfo)],
-            [2, datetime.datetime(2021, 5, 3, tzinfo=tzinfo)],
-            [4, datetime.datetime(2022, 5, 2, tzinfo=tzinfo)],
+            [1, datetime.datetime(2021, 5, 3)],
+            [2, datetime.datetime(2021, 5, 3)],
+            [4, datetime.datetime(2022, 5, 2)],
         ],
         use_to_pandas=True,
     )
 
     # month
-    dt = mt.date.dt.date_trunc('month')
+    dt = mt.moment.dt.date_trunc('month')
     assert_equals_data(
         dt,
-        expected_columns=['_index_skating_order', 'date'],
+        expected_columns=['_index_skating_order', 'moment'],
         expected_data=[
-            [1, datetime.datetime(2021, 5, 1, tzinfo=tzinfo)],
-            [2, datetime.datetime(2021, 5, 1, tzinfo=tzinfo)],
-            [4, datetime.datetime(2022, 5, 1, tzinfo=tzinfo)],
+            [1, datetime.datetime(2021, 5, 1)],
+            [2, datetime.datetime(2021, 5, 1)],
+            [4, datetime.datetime(2022, 5, 1)],
         ],
         use_to_pandas=True,
     )
 
     # quarter
-    dt = mt.date.dt.date_trunc('quarter')
+    dt = mt.moment.dt.date_trunc('quarter')
     assert_equals_data(
         dt,
-        expected_columns=['_index_skating_order', 'date'],
+        expected_columns=['_index_skating_order', 'moment'],
         expected_data=[
-            [1, datetime.datetime(2021, 4, 1, tzinfo=tzinfo)],
-            [2, datetime.datetime(2021, 4, 1, tzinfo=tzinfo)],
-            [4, datetime.datetime(2022, 4, 1, tzinfo=tzinfo)],
+            [1, datetime.datetime(2021, 4, 1)],
+            [2, datetime.datetime(2021, 4, 1)],
+            [4, datetime.datetime(2022, 4, 1)],
         ],
         use_to_pandas=True,
     )
 
     # year
-    dt = mt.date.dt.date_trunc('year')
+    dt = mt.moment.dt.date_trunc('year')
     assert_equals_data(
         dt,
-        expected_columns=['_index_skating_order', 'date'],
+        expected_columns=['_index_skating_order', 'moment'],
         expected_data=[
-            [1, datetime.datetime(2021, 1, 1, tzinfo=tzinfo)],
-            [2, datetime.datetime(2021, 1, 1, tzinfo=tzinfo)],
-            [4, datetime.datetime(2022, 1, 1, tzinfo=tzinfo)],
+            [1, datetime.datetime(2021, 1, 1)],
+            [2, datetime.datetime(2021, 1, 1)],
+            [4, datetime.datetime(2022, 1, 1)],
         ],
         use_to_pandas=True,
     )
