@@ -16,12 +16,12 @@ globalThis.objectiv = {
 
     add(newInstance: T) {
       if (this.trackersMap.has(newInstance.trackerId)) {
-        globalThis.objectiv.devTools?.TrackerConsole.error(
-          `｢objectiv:TrackerRepository｣ Tracker \`${newInstance.trackerId}\` already exists.`
+        globalThis.objectiv.devTools?.TrackerConsole.log(
+          `｢objectiv:TrackerRepository｣ Tracker \`${newInstance.trackerId}\` already exists. Reusing existing instance.`
         );
-        return;
+      } else {
+        this.trackersMap.set(newInstance.trackerId, newInstance);
       }
-      this.trackersMap.set(newInstance.trackerId, newInstance);
       if (!this.defaultTracker) {
         this.defaultTracker = newInstance;
       }

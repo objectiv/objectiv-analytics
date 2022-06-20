@@ -101,20 +101,18 @@ describe('TrackerRepository', () => {
     expect(globalThis.objectiv.TrackerRepository.get('tracker-3')?.applicationId).toBe('app-id');
   });
 
-  it('should not allow overwriting an existing Tracker instance', () => {
+  it('should reuse an existing Tracker instance', () => {
     new Tracker({ applicationId: 'app-id', trackerId: 'tracker-1' });
     new Tracker({ applicationId: 'tracker-1' });
     expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(1);
-    expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
-    expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
-      '｢objectiv:TrackerRepository｣ Tracker `tracker-1` already exists.'
+    expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
+      '｢objectiv:TrackerRepository｣ Tracker `tracker-1` already exists. Reusing existing instance.'
     );
+    jest.resetAllMocks();
     new Tracker({ applicationId: 'app-id', trackerId: 'tracker-1' });
     expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(1);
-    expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(2);
-    expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
-      2,
-      '｢objectiv:TrackerRepository｣ Tracker `tracker-1` already exists.'
+    expect(MockConsoleImplementation.log).toHaveBeenCalledWith(
+      '｢objectiv:TrackerRepository｣ Tracker `tracker-1` already exists. Reusing existing instance.'
     );
   });
 
