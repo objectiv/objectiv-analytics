@@ -4,9 +4,9 @@
 
 .. currentmodule:: bach_open_taxonomy
 
-==========================
+=================
 Explore your data
-==========================
+=================
 
 In this example, we briefly demonstrate how you can easily explore your new data collected with Objectiv.
 
@@ -22,14 +22,18 @@ based on the data set that comes with our quickstart docker demo.
 
 
 A first look at the data
------------------------
+------------------------
+
 .. code-block:: python
+
     # have a look at the data
     df.sort_values('session_id', ascending=False).head()
 
 Understanding the columns
------------------------
+-------------------------
+
 .. code-block:: python
+
     # show the data type of each column
     df.dtypes
 
@@ -54,42 +58,48 @@ To get a good understanding of all the data and what you can get out of it, the 
 * `Location contexts to capture your product's UI in the data <https://objectiv.io/docs/taxonomy/location-contexts>`_.
 
 Your first Objectiv event data
------------------------
+------------------------------
 Before we dig any deeper, let's look at what data Objectiv is now tracking from your product. An easy way to do this, is by looking at it from the 'root locations', these are the main sections in your products UI.
 
 Before we can do this, we first extract data from the Global Contexts and Location Stack. These columns contain all relevant context about the event. See more detailed examples on how you can do this in `this example notebook <https://objectiv.io/docs/modeling/example-notebooks/open-taxonomy/#location_stack--global_contexts>`_.
 
 .. code-block:: python
+
     # adding specific contexts to the data as columns
     df['application'] = df.global_contexts.gc.application
     df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
     df['path'] = df.global_contexts.gc.get_from_context_with_type_series(type='PathContext', key='id')
 
 .. code-block:: python
+
     # now, we can easily slice the data using these columns
     event_data = modelhub.agg.unique_users(df, groupby=['application', 'root_location', 'path', 'event_type'])
     event_data.sort_values(ascending=False).to_frame().head(50)
 
 Understanding product features
------------------------
+------------------------------
 Objectiv captures the UI of your product in the data using the Location Context. This means, you can easily slice the data on any part of the UI that you're interested in. See `this example notebook <https://objectiv.io/docs/modeling/example-notebooks/open-taxonomy/#location_stack--global_contexts>`_. It also means you can make product features very readable and easy to understand for your internal data reports.
 
 .. code-block:: python
+
     # adding the readable product feature name to the data frame as column
     df['feature_nice_name'] = df.location_stack.ls.nice_name
 
 .. code-block:: python
+
     # now, we can easily look at the data by product feature
     product_feature_data = modelhub.agg.unique_users(df, groupby=['feature_nice_name', 'event_type'])
     product_feature_data.sort_values(ascending=False).to_frame().head(50)
 
 Get the SQL for any analysis
------------------------
+----------------------------
+
 .. code-block:: python
+
     # just one analysis as an example, this works for anything you do with Objectiv Bach
     display_sql_as_markdown(product_feature_data)
 
 Where to go next
------------------------
-## Where to go next
+----------------
+
 Now that you had a first look at your new data collected with Objectiv, the best place to go next is looking at the `basic product analytics example notebook <https://objectiv.io/docs/modeling/example-notebooks/product-analytics/>`_. This will help you get familiar product analytics metrics from Objectiv. Straight from your raw data & ready to go.
