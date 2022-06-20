@@ -8,7 +8,7 @@ export class SpyTransport implements TrackerTransportInterface {
   readonly transportName = 'SpyTransport';
 
   async handle(): Promise<any> {
-    globalThis.objectiv?.TrackerConsole.log('SpyTransport.handle');
+    globalThis.objectiv.devTools?.TrackerConsole.log('SpyTransport.handle');
   }
 
   isUsable(): boolean {

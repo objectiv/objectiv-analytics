@@ -7,7 +7,7 @@ import { makePathContext, Tracker, TrackerEvent } from '@objectiv/tracker-core';
 import { PathContextFromURLPlugin } from '../src';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('PathContextFromURLPlugin - node', () => {
   beforeEach(() => {
@@ -82,7 +82,7 @@ describe('PathContextFromURLPlugin - node', () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      globalThis.objectiv = undefined;
+      globalThis.objectiv.devTools = undefined;
     });
 
     afterEach(() => {

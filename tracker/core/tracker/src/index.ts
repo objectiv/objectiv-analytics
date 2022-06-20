@@ -2,10 +2,10 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { TrackerDeveloperToolsInterface } from './TrackerDeveloperToolsInterface';
+import { TrackerGlobalsInterface } from './TrackerGlobalsInterface';
 
 declare global {
-  var objectiv: undefined | TrackerDeveloperToolsInterface;
+  var objectiv: TrackerGlobalsInterface;
 }
 
 export * from './cleanObjectFromInternalProperties';

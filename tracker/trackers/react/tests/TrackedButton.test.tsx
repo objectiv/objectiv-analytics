@@ -9,12 +9,12 @@ import React from 'react';
 import { ObjectivProvider, ReactTracker, TrackedButton } from '../src';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedButton', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    globalThis.objectiv?.TrackerRepository.trackersMap.delete('app-id');
+    globalThis.objectiv.TrackerRepository.trackersMap.delete('app-id');
   });
 
   afterEach(() => {

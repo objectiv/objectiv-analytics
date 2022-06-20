@@ -16,7 +16,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { TrackedNavLink, TrackedNavLinkProps } from '../src/TrackedNavLink';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedNavLink', () => {
   const spyTransport = { transportName: 'SpyTransport', handle: jest.fn(), isUsable: () => true };

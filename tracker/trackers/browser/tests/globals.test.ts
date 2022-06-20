@@ -3,31 +3,24 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import {
-  BrowserTracker,
-  getOrMakeTracker,
-  getTracker,
-  makeTracker,
-  setDefaultTracker,
-  TrackerRepository,
-} from '../src/';
+import { BrowserTracker, getOrMakeTracker, getTracker, makeTracker, setDefaultTracker } from '../src/';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('globals', () => {
   afterEach(() => {
-    TrackerRepository.trackersMap.clear();
-    TrackerRepository.defaultTracker = undefined;
+    globalThis.objectiv.TrackerRepository.trackersMap.clear();
+    globalThis.objectiv.TrackerRepository.defaultTracker = undefined;
     jest.resetAllMocks();
   });
   beforeEach(() => {
-    expect(TrackerRepository.trackersMap.size).toBe(0);
+    expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(0);
   });
 
   it('should create a new Browser Tracker in window.object.tracker and start auto tracking', () => {
     makeTracker({ applicationId: 'app-id', endpoint: 'localhost' });
-    expect(TrackerRepository.trackersMap.size).toBe(1);
+    expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(1);
     expect(getTracker()).toBeInstanceOf(BrowserTracker);
     expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
   });
@@ -36,7 +29,7 @@ describe('globals', () => {
     makeTracker({ applicationId: 'app-id-1', endpoint: 'localhost' });
     makeTracker({ applicationId: 'app-id-2', endpoint: 'localhost' });
     makeTracker({ applicationId: 'app-id-3', endpoint: 'localhost' });
-    expect(TrackerRepository.trackersMap.size).toBe(3);
+    expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(3);
     expect(getTracker().applicationId).toBe('app-id-1');
     expect(getTracker('app-id-1').applicationId).toBe('app-id-1');
     expect(getTracker('app-id-2').applicationId).toBe('app-id-2');
@@ -47,7 +40,7 @@ describe('globals', () => {
     makeTracker({ applicationId: 'app-id-1', endpoint: 'localhost' });
     makeTracker({ applicationId: 'app-id-2', endpoint: 'localhost' });
     makeTracker({ applicationId: 'app-id-3', endpoint: 'localhost' });
-    expect(TrackerRepository.trackersMap.size).toBe(3);
+    expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(3);
     expect(getTracker().applicationId).toBe('app-id-1');
     await setDefaultTracker('app-id-2');
     expect(getTracker().applicationId).toBe('app-id-2');
@@ -60,7 +53,7 @@ describe('globals', () => {
   it('should allow changing default Browser Tracker and specify custom options', async () => {
     makeTracker({ applicationId: 'app-id-1', endpoint: 'localhost' });
     makeTracker({ applicationId: 'app-id-2', endpoint: 'localhost' });
-    expect(TrackerRepository.trackersMap.size).toBe(2);
+    expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(2);
     expect(getTracker().applicationId).toBe('app-id-1');
     await setDefaultTracker({ trackerId: 'app-id-2' });
     expect(getTracker().applicationId).toBe('app-id-2');
@@ -82,7 +75,7 @@ describe('globals', () => {
     makeTracker({ applicationId: 'app-id', trackerId: 'tracker-1', endpoint: 'localhost' });
     makeTracker({ applicationId: 'app-id', trackerId: 'tracker-2', endpoint: 'localhost' });
     makeTracker({ applicationId: 'app-id', trackerId: 'tracker-3', endpoint: 'localhost' });
-    expect(TrackerRepository.trackersMap.size).toBe(3);
+    expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(3);
     expect(() => getTracker('app-id-1')).toThrow('No Tracker found. Please create one via `makeTracker`.');
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
@@ -96,13 +89,13 @@ describe('globals', () => {
   it('should not allow overwriting an existing Browser Trackers instance', () => {
     makeTracker({ applicationId: 'app-id', trackerId: 'tracker-1', endpoint: 'localhost' });
     makeTracker({ applicationId: 'tracker-1', endpoint: 'localhost' });
-    expect(TrackerRepository.trackersMap.size).toBe(1);
+    expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
       '｢objectiv:TrackerRepository｣ Tracker `tracker-1` already exists.'
     );
     makeTracker({ applicationId: 'app-id', trackerId: 'tracker-1', endpoint: 'localhost' });
-    expect(TrackerRepository.trackersMap.size).toBe(1);
+    expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(2);
     expect(MockConsoleImplementation.error).toHaveBeenNthCalledWith(
       2,
@@ -111,28 +104,28 @@ describe('globals', () => {
   });
 
   it('should create a new Browser Tracker ', () => {
-    expect(TrackerRepository.trackersMap.size).toBe(0);
+    expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(0);
     expect(getOrMakeTracker({ applicationId: 'app-id', trackerId: 'tracker1', endpoint: 'localhost' })).toBeInstanceOf(
       BrowserTracker
     );
-    expect(TrackerRepository.trackersMap.size).toBe(1);
+    expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(1);
   });
 
   it('should return the existing Browser Tracker', () => {
-    expect(TrackerRepository.trackersMap.size).toBe(0);
+    expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(0);
     const trackerConfig = { applicationId: 'app-id', endpoint: 'localhost' };
     makeTracker(trackerConfig);
-    expect(TrackerRepository.trackersMap.size).toBe(1);
+    expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(1);
     expect(getOrMakeTracker(trackerConfig)).toBeInstanceOf(BrowserTracker);
-    expect(TrackerRepository.trackersMap.size).toBe(1);
+    expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(1);
   });
 
   it('should TrackerConsole.error because a Browser Tracker exists with the same Tracker Id but has a different configuration', () => {
     const trackerConfig1 = { applicationId: 'app-id', endpoint: 'localhost' };
     const trackerConfig2 = { applicationId: 'app-id', endpoint: 'http://collector' };
-    expect(TrackerRepository.trackersMap.size).toBe(0);
+    expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(0);
     makeTracker(trackerConfig1);
-    expect(TrackerRepository.trackersMap.size).toBe(1);
+    expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(1);
     getOrMakeTracker(trackerConfig2);
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
@@ -145,7 +138,7 @@ describe('globals', () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      globalThis.objectiv = undefined;
+      globalThis.objectiv.devTools = undefined;
     });
 
     afterEach(() => {
@@ -155,9 +148,9 @@ describe('globals', () => {
     it('should not TrackerConsole.error because a Browser Tracker exists with the same Tracker Id but has a different configuration', () => {
       const trackerConfig1 = { applicationId: 'app-id', endpoint: 'localhost' };
       const trackerConfig2 = { applicationId: 'app-id', endpoint: 'http://collector' };
-      expect(TrackerRepository.trackersMap.size).toBe(0);
+      expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(0);
       makeTracker(trackerConfig1);
-      expect(TrackerRepository.trackersMap.size).toBe(1);
+      expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(1);
       getOrMakeTracker(trackerConfig2);
       expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
     });

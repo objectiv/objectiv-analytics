@@ -8,7 +8,7 @@ export class UnusableTransport implements TrackerTransportInterface {
   readonly transportName = 'UnusableTransport';
 
   async handle(): Promise<any> {
-    globalThis.objectiv?.TrackerConsole.log('UnusableTransport.handle');
+    globalThis.objectiv.devTools?.TrackerConsole.log('UnusableTransport.handle');
   }
 
   isUsable(): boolean {

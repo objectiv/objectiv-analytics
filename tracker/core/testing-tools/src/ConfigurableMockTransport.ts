@@ -13,7 +13,7 @@ export class ConfigurableMockTransport implements TrackerTransportInterface {
   }
 
   async handle(): Promise<any> {
-    globalThis.objectiv?.TrackerConsole.log('MockTransport.handle');
+    globalThis.objectiv.devTools?.TrackerConsole.log('MockTransport.handle');
   }
 
   isUsable(): boolean {

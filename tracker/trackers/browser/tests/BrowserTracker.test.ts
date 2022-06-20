@@ -18,8 +18,8 @@ import { clear, mockUserAgent } from 'jest-useragent-mock';
 import { BrowserTracker } from '../src/';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
-globalThis.objectiv?.EventRecorder.configure({ enabled: false });
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.EventRecorder.configure({ enabled: false });
 
 describe('BrowserTracker', () => {
   beforeEach(() => {

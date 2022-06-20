@@ -16,7 +16,7 @@ import {
 } from '../src';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedScrollView', () => {
   const spyTransport = new SpyTransport();
@@ -37,7 +37,7 @@ describe('TrackedScrollView', () => {
   });
 
   const ScrollViewChild = (props: { title: string }) => {
-    const locationPath = globalThis.objectiv?.getLocationPath(useLocationStack());
+    const locationPath = globalThis.objectiv.devTools?.getLocationPath(useLocationStack());
 
     console.debug(locationPath);
 

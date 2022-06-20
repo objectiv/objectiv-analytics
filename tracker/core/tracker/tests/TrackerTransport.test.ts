@@ -28,7 +28,7 @@ const testContexts: ContextsConfig = {
 const testEvent = new TrackerEvent({ _type: testEventName, ...testContexts });
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackerTransportSwitch', () => {
   beforeEach(() => {

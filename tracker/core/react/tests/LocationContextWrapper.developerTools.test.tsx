@@ -25,9 +25,9 @@ describe('LocationContextWrapper', () => {
     const spyTransport = { transportName: 'SpyTransport', handle: jest.fn(), isUsable: () => true };
     const tracker = new Tracker({ applicationId: 'app-id', transport: spyTransport });
 
-    if (globalThis.objectiv) {
-      jest.spyOn(globalThis.objectiv.LocationTree, 'add');
-      jest.spyOn(globalThis.objectiv.LocationTree, 'remove');
+    if (globalThis.objectiv.devTools) {
+      jest.spyOn(globalThis.objectiv.devTools.LocationTree, 'add');
+      jest.spyOn(globalThis.objectiv.devTools.LocationTree, 'remove');
     }
 
     const { rerender } = render(
@@ -38,8 +38,8 @@ describe('LocationContextWrapper', () => {
       </ObjectivProvider>
     );
 
-    expect(globalThis.objectiv?.LocationTree.add).toHaveBeenCalledTimes(1);
-    expect(globalThis.objectiv?.LocationTree.remove).not.toHaveBeenCalled();
+    expect(globalThis.objectiv.devTools?.LocationTree.add).toHaveBeenCalledTimes(1);
+    expect(globalThis.objectiv.devTools?.LocationTree.remove).not.toHaveBeenCalled();
 
     jest.resetAllMocks();
 
@@ -51,7 +51,7 @@ describe('LocationContextWrapper', () => {
       </ObjectivProvider>
     );
 
-    expect(globalThis.objectiv?.LocationTree.add).toHaveBeenCalledTimes(1);
-    expect(globalThis.objectiv?.LocationTree.remove).toHaveBeenCalledTimes(1);
+    expect(globalThis.objectiv.devTools?.LocationTree.add).toHaveBeenCalledTimes(1);
+    expect(globalThis.objectiv.devTools?.LocationTree.remove).toHaveBeenCalledTimes(1);
   });
 });

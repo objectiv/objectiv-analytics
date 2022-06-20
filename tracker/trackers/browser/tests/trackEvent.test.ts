@@ -48,7 +48,7 @@ import {
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('trackEvent', () => {
   const testElement = document.createElement('div');

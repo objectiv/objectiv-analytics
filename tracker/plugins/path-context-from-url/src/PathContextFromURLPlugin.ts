@@ -30,15 +30,15 @@ export class PathContextFromURLPlugin implements TrackerPluginInterface {
    */
   initialize({ platform }: TrackerInterface): void {
     if (!this.isUsable()) {
-      globalThis.objectiv?.TrackerConsole.error(
+      globalThis.objectiv.devTools?.TrackerConsole.error(
         `｢objectiv:${this.pluginName}｣ Cannot initialize. Plugin is not usable (document: ${typeof document}).`
       );
       return;
     }
 
-    if (globalThis.objectiv) {
+    if (globalThis.objectiv.devTools) {
       this.validationRules = [
-        globalThis.objectiv.makeGlobalContextValidationRule({
+        globalThis.objectiv.devTools.makeGlobalContextValidationRule({
           platform,
           logPrefix: this.pluginName,
           contextName: GlobalContextName.PathContext,
@@ -49,7 +49,10 @@ export class PathContextFromURLPlugin implements TrackerPluginInterface {
 
     this.initialized = true;
 
-    globalThis.objectiv?.TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
+    globalThis.objectiv.devTools?.TrackerConsole.log(
+      `%c｢objectiv:${this.pluginName}｣ Initialized`,
+      'font-weight: bold'
+    );
   }
 
   /**
@@ -57,7 +60,7 @@ export class PathContextFromURLPlugin implements TrackerPluginInterface {
    */
   enrich(contexts: Required<ContextsConfig>): void {
     if (!this.isUsable()) {
-      globalThis.objectiv?.TrackerConsole.error(
+      globalThis.objectiv.devTools?.TrackerConsole.error(
         `｢objectiv:${this.pluginName}｣ Cannot enrich. Plugin is not usable (document: ${typeof document}).`
       );
       return;
@@ -74,14 +77,14 @@ export class PathContextFromURLPlugin implements TrackerPluginInterface {
    */
   validate(event: TrackerEvent): void {
     if (!this.isUsable()) {
-      globalThis.objectiv?.TrackerConsole.error(
+      globalThis.objectiv.devTools?.TrackerConsole.error(
         `｢objectiv:${this.pluginName}｣ Cannot validate. Plugin is not usable (document: ${typeof document}).`
       );
       return;
     }
 
     if (!this.initialized) {
-      globalThis.objectiv?.TrackerConsole.error(
+      globalThis.objectiv.devTools?.TrackerConsole.error(
         `｢objectiv:${this.pluginName}｣ Cannot validate. Make sure to initialize the plugin first.`
       );
       return;

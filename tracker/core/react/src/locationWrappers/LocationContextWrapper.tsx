@@ -36,21 +36,21 @@ export const LocationContextWrapper = ({ children, locationContext }: LocationCo
   const parentLocationContext = useParentLocationContext();
 
   useOnMount(() => {
-    if (globalThis.objectiv) {
-      globalThis.objectiv.LocationTree.add(locationContext, parentLocationContext);
+    if (globalThis.objectiv.devTools) {
+      globalThis.objectiv.devTools.LocationTree.add(locationContext, parentLocationContext);
     }
   });
 
   useOnUnmount(() => {
-    if (globalThis.objectiv) {
-      globalThis.objectiv.LocationTree.remove(locationContext);
+    if (globalThis.objectiv.devTools) {
+      globalThis.objectiv.devTools.LocationTree.remove(locationContext);
     }
   });
 
   useOnChange<AbstractLocationContext>(locationContext, (previousLocationContext) => {
-    if (globalThis.objectiv) {
-      globalThis.objectiv.LocationTree.remove(previousLocationContext);
-      globalThis.objectiv.LocationTree.add(locationContext, parentLocationContext);
+    if (globalThis.objectiv.devTools) {
+      globalThis.objectiv.devTools.LocationTree.remove(previousLocationContext);
+      globalThis.objectiv.devTools.LocationTree.add(locationContext, parentLocationContext);
     }
   });
 

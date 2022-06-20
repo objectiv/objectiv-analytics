@@ -10,7 +10,7 @@ import { trackNewElement } from '../src/mutationObserver/trackNewElement';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('trackNewElement', () => {
   beforeEach(() => {
@@ -42,31 +42,31 @@ describe('trackNewElement', () => {
 
   it('should skip collision checks if the Element is not a Tagged Element', async () => {
     const div = document.createElement('div');
-    if (globalThis.objectiv) {
-      jest.spyOn(globalThis.objectiv.LocationTree, 'add');
+    if (globalThis.objectiv.devTools) {
+      jest.spyOn(globalThis.objectiv.devTools.LocationTree, 'add');
     }
 
     jest.resetAllMocks();
 
     trackNewElement(div, getTracker());
 
-    expect(globalThis.objectiv?.LocationTree.add).not.toHaveBeenCalled();
+    expect(globalThis.objectiv.devTools?.LocationTree.add).not.toHaveBeenCalled();
   });
 
   it('should skip collision checks if the Element has the `validate` attribute disabling location check', async () => {
     const div = makeTaggedElement('div', 'div', 'div');
-    if (globalThis.objectiv) {
-      jest.spyOn(globalThis.objectiv.LocationTree, 'add');
+    if (globalThis.objectiv.devTools) {
+      jest.spyOn(globalThis.objectiv.devTools.LocationTree, 'add');
     }
 
     trackNewElement(div, getTracker());
-    expect(globalThis.objectiv?.LocationTree.add).toHaveBeenCalledTimes(1);
+    expect(globalThis.objectiv.devTools?.LocationTree.add).toHaveBeenCalledTimes(1);
 
     jest.resetAllMocks();
 
     div.setAttribute(TaggingAttribute.validate, JSON.stringify({ locationUniqueness: false }));
     trackNewElement(div, getTracker());
-    expect(globalThis.objectiv?.LocationTree.add).not.toHaveBeenCalled();
+    expect(globalThis.objectiv.devTools?.LocationTree.add).not.toHaveBeenCalled();
   });
 
   it('should skip the Element if it is already Tracked', async () => {

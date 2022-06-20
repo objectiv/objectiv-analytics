@@ -3,7 +3,7 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { GlobalContextName, LocationContextName, TrackerRepository } from '@objectiv/tracker-core';
+import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import {
   NavigationContextWrapper,
   ObjectivProvider,
@@ -18,12 +18,12 @@ import { Text } from 'react-native';
 import { makeLinkPressListener } from '../src/makeLinkPressListener';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('makePressListener', () => {
   beforeEach(() => {
-    TrackerRepository.trackersMap.clear();
-    TrackerRepository.defaultTracker = undefined;
+    globalThis.objectiv.TrackerRepository.trackersMap.clear();
+    globalThis.objectiv.TrackerRepository.defaultTracker = undefined;
     jest.resetAllMocks();
   });
 

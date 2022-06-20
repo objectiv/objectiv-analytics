@@ -8,7 +8,6 @@ import { EventRecorderInterface } from './EventRecorderInterface';
 import { LocationTreeInterface } from './LocationTreeInterface';
 import { TrackerConsoleInterface } from './TrackerConsoleInterface';
 import { TrackerPluginInterface } from './TrackerPluginInterface';
-import { TrackerRepositoryInterface } from './TrackerRepositoryInterface';
 
 /**
  * DeveloperTools interface definition.
@@ -21,5 +20,4 @@ export interface TrackerDeveloperToolsInterface {
   makeLocationContextValidationRule: LocationContextValidationRuleFactory;
   OpenTaxonomyValidationPlugin: TrackerPluginInterface;
   TrackerConsole: TrackerConsoleInterface;
-  TrackerRepository: TrackerRepositoryInterface<any>;
 }

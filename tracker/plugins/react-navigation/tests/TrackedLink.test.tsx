@@ -3,7 +3,7 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { GlobalContextName, LocationContextName, TrackerRepository } from '@objectiv/tracker-core';
+import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import {
   ContentContextWrapper,
   ObjectivProvider,
@@ -23,12 +23,12 @@ type TestParamList = {
 };
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedLink', () => {
   beforeEach(() => {
-    TrackerRepository.trackersMap.clear();
-    TrackerRepository.defaultTracker = undefined;
+    globalThis.objectiv.TrackerRepository.trackersMap.clear();
+    globalThis.objectiv.TrackerRepository.defaultTracker = undefined;
     jest.resetAllMocks();
   });
 
@@ -337,7 +337,7 @@ describe('TrackedLink', () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      globalThis.objectiv = undefined;
+      globalThis.objectiv.devTools = undefined;
     });
 
     afterEach(() => {

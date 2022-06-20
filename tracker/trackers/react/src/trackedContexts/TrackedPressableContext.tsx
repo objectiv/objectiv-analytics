@@ -37,9 +37,9 @@ export const TrackedPressableContext = React.forwardRef<HTMLElement, TrackedPres
   // If we couldn't generate an `id`, log the issue and return an untracked Component.
   const locationStack = useLocationStack();
   if (!pressableId) {
-    if (globalThis.objectiv) {
-      const locationPath = globalThis.objectiv.getLocationPath(locationStack);
-      globalThis.objectiv.TrackerConsole.error(
+    if (globalThis.objectiv.devTools) {
+      const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
+      globalThis.objectiv.devTools.TrackerConsole.error(
         `｢objectiv｣ Could not generate a valid id for PressableContext @ ${locationPath}. Please provide either the \`title\` or the \`id\` property manually.`
       );
     }

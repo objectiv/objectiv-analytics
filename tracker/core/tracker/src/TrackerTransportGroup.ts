@@ -28,15 +28,15 @@ export class TrackerTransportGroup implements TrackerTransportInterface {
   constructor(config: TransportGroupConfig) {
     this.usableTransports = config.transports.filter((transport) => transport.isUsable());
 
-    if (globalThis.objectiv) {
-      globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:${this.transportName}｣ Initialized`);
-      globalThis.objectiv.TrackerConsole.log(
+    if (globalThis.objectiv.devTools) {
+      globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(`｢objectiv:${this.transportName}｣ Initialized`);
+      globalThis.objectiv.devTools.TrackerConsole.log(
         `Transports: ${config.transports.map((transport) => transport.transportName).join(', ')}`
       );
-      globalThis.objectiv.TrackerConsole.log(
+      globalThis.objectiv.devTools.TrackerConsole.log(
         `Usable Transports: ${this.usableTransports.map((transport) => transport.transportName).join(', ')}`
       );
-      globalThis.objectiv.TrackerConsole.groupEnd();
+      globalThis.objectiv.devTools.TrackerConsole.groupEnd();
     }
   }
 

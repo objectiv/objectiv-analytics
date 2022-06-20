@@ -7,7 +7,7 @@ import { Tracker, TrackerEvent } from '@objectiv/tracker-core';
 import { HttpContextPlugin } from '../src';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('HttpContextPlugin - node', () => {
   it('should instantiate as unusable', () => {
@@ -43,7 +43,7 @@ describe('HttpContextPlugin - node', () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      globalThis.objectiv = undefined;
+      globalThis.objectiv.devTools = undefined;
     });
 
     afterEach(() => {

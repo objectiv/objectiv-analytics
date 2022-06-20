@@ -8,7 +8,7 @@ import xhrMock from 'xhr-mock';
 import { XHRTransport } from '../src';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 beforeEach(() => {
   jest.spyOn(console, 'error').mockImplementation(() => {});

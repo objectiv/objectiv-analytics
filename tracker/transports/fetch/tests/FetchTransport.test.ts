@@ -14,7 +14,7 @@ const testEvent = new TrackerEvent({
 });
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('FetchTransport', () => {
   beforeAll(() => {

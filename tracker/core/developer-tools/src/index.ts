@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { TrackerDeveloperToolsInterface, TrackerRepository } from '@objectiv/tracker-core';
+import { TrackerDeveloperToolsInterface } from '@objectiv/tracker-core';
 import { EventRecorder } from './EventRecorder';
 import { getLocationPath } from './getLocationPath';
 import { LocationTree } from './LocationTree';
@@ -22,10 +22,9 @@ const developerTools: TrackerDeveloperToolsInterface = {
   makeLocationContextValidationRule,
   OpenTaxonomyValidationPlugin,
   TrackerConsole,
-  TrackerRepository,
 };
 
 /**
- * Extend or set global objectiv interface with developer tools
+ * Set developer tools in globals. Globals are created by Core Tracker.
  */
-globalThis.objectiv = { ...(globalThis.objectiv ?? {}), ...developerTools };
+globalThis.objectiv.devTools = developerTools;
