@@ -5,7 +5,7 @@ import bach
 from bach import SeriesBoolean
 from bach.expression import Expression
 from bach.partitioning import WindowFrameBoundary, WindowFrameMode
-from typing import TYPE_CHECKING
+from typing import cast, TYPE_CHECKING
 
 from sql_models.util import is_bigquery
 
@@ -311,36 +311,41 @@ class Map:
         # add first cohort to our data DataFrame
         data = data.merge(cohorts, on='user_id', how='left')
 
+        from bach import SeriesTimestamp, SeriesTimedelta
+        moment = cast(SeriesTimestamp, data['moment'])
+        first_cohort = cast(SeriesTimestamp, data['first_cohort'])
+
         # calculate cohort distance
         if time_period == 'yearly':
-            data['cohort'] = data['moment'].dt.strftime('%Y').astype(dtype=int)
-            data['first_cohort'] = data['first_cohort'].dt.strftime('%Y').astype(dtype=int)
+            data['cohort'] = moment.dt.strftime('%Y').astype(dtype=int)
+            data['first_cohort'] = first_cohort.dt.strftime('%Y').astype(dtype=int)
             data['cohort_distance'] = data['cohort'] - data['first_cohort']
 
         elif time_period == 'monthly':
-            data['cohort_year'] = data['moment'].dt.strftime('%Y').astype(dtype=int)
-            data['first_cohort_year'] = data['first_cohort'].dt.strftime('%Y').astype(dtype=int)
+            data['cohort_year'] = moment.dt.strftime('%Y').astype(dtype=int)
+            data['first_cohort_year'] = first_cohort.dt.strftime('%Y').astype(dtype=int)
             data['cohort_year_diff'] = data['cohort_year'] - data['first_cohort_year']
 
-            data['cohort_month'] = data['moment'].dt.strftime('%m').astype(dtype=int)
-            data['first_cohort_month'] = data['first_cohort'].dt.strftime('%m').astype(dtype=int)
+            data['cohort_month'] = moment.dt.strftime('%m').astype(dtype=int)
+            data['first_cohort_month'] = first_cohort.dt.strftime('%m').astype(dtype=int)
             data['cohort_month_diff'] = data['cohort_month'] - data['first_cohort_month']
 
             n_months = 12
             data['cohort_distance'] = data['cohort_year_diff'] * n_months + data['cohort_month_diff']
 
-        elif time_period == 'weekly' or time_period == 'biweekly':
-            n_days = 7.0 if time_period == 'weekly' else 14.0
+        elif time_period == 'weekly':
+            n_days = 7.0
 
-            data['cohort'] = data['moment'].dt.date_trunc('week').astype('timestamp')
-            data['first_cohort'] = data['first_cohort'].dt.date_trunc('week')
-            data['cohort_distance'] = (data['cohort'] - data['first_cohort']).dt.days
+            data['cohort'] = moment.dt.date_trunc('week').astype('timestamp')
+            data['first_cohort'] = first_cohort.dt.date_trunc('week')
+            cohort_distance = cast(SeriesTimedelta, data['cohort'] - data['first_cohort'])
+            data['cohort_distance'] = cohort_distance.dt.days
             data['cohort_distance'] = data['cohort_distance'] / n_days
 
         else:
             # daily
             data['cohort_distance'] = data['moment'] - data['first_cohort']
-            data['cohort_distance'] = data['cohort_distance'].dt.days
+            data['cohort_distance'] = cast(SeriesTimedelta, data['cohort_distance']).dt.days
 
         # applying start date filter
         if _start_date is not None:
@@ -356,9 +361,9 @@ class Map:
 
         # make the first_cohort pretty
         if time_period == 'monthly':
-            data['first_cohort'] = data['first_cohort'].dt.strftime('%Y-%m')
+            data['first_cohort'] = cast(SeriesTimestamp, data['first_cohort']).dt.strftime('%Y-%m')
         if time_period == 'weekly' or time_period == 'daily':
-            data['first_cohort'] = data['first_cohort'].dt.strftime('%Y-%m-%d')
+            data['first_cohort'] = cast(SeriesTimestamp, data['first_cohort']).dt.strftime('%Y-%m-%d')
         data['first_cohort'] = data['first_cohort'].astype(dtype=str)
         data['cohort_distance'] = data['cohort_distance'].astype(dtype=str)
 
@@ -372,12 +377,12 @@ class Map:
 
         # renaming columns, removing string attached after unstacking
         column_name_map = {col: col.replace('__user_id_nunique', '').replace('.0', '')
-                           for col in retention_matrix.columns}
+                           for col in retention_matrix.data_columns}
         retention_matrix = retention_matrix.rename(columns=column_name_map)
 
         # 'sort' with column names (numerical sorting, even though the columns are strings)
         columns = [f'_{j}' for j in sorted([int(i.replace('_', ''))
-                                            for i in retention_matrix.columns])]
+                                            for i in retention_matrix.data_columns])]
         retention_matrix = retention_matrix[columns]
         # for BigQuery we need sorting
         retention_matrix = retention_matrix.sort_index()
