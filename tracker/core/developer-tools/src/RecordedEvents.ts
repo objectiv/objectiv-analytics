@@ -16,6 +16,7 @@ import {
  * RecordedEvents instances can filter the given RecordedEvents by event and/or their contexts.
  */
 export class RecordedEvents implements RecordedEventsInterface {
+  readonly name = 'RecordedEvents';
   readonly events: RecordedEvent[];
 
   /**
