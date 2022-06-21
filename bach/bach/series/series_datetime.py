@@ -120,14 +120,17 @@ class DateTimeOperation:
         Truncates date value based on a specified date part.
         The value is always rounded to the beginning of date_part.
 
-        :param date_part: can be 'week', 'quarter', etc.
+        This operation can be applied only on SeriesDate or SeriesTimestamp.
+
+        :param date_part: Allowed values are 'second', 'minute',
+            'hour', 'day', 'week', 'month', 'quarter', and 'year'.
 
         .. code-block:: python
 
             # return the date corresponding to the Monday of that week
-            df['week'] = df.some_date_series.dt.date_trunc('week')
+            df['week'] = df.some_date_or_timestamp_series.dt.date_trunc('week')
             # return the first day of the quarter
-            df['quarter'] = df.some_date_series.dt.date_trunc('quarter')
+            df['quarter'] = df.some_date_or_timestamp_series.dt.date_trunc('quarter')
 
         :returns: the truncated timestamp value with a granularity of date_part.
 
@@ -137,6 +140,10 @@ class DateTimeOperation:
                              'month', 'quarter', 'year']
         if date_part not in available_formats:
             raise ValueError(f'{date_part} format is not available.')
+
+        if not (isinstance(self._series, SeriesDate) or
+                isinstance(self._series, SeriesTimestamp)):
+            raise ValueError(f'{type(self._series)} type is not supported.')
 
         engine = self._series.engine
 
@@ -157,8 +164,7 @@ class DateTimeOperation:
         else:
             raise DatabaseNotSupportedException(engine)
 
-        int_series = self._series.copy_override(expression=expression)
-        return int_series
+        return self._series.copy_override(expression=expression)
 
 
 class TimedeltaOperation(DateTimeOperation):

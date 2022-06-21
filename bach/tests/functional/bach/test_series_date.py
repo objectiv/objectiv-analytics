@@ -222,47 +222,55 @@ def test_date_trunc(engine):
         use_to_pandas=True,
     )
 
+    from datetime import date
+
     # month
-    dt = mt.moment.dt.date_trunc('month')
+    dt = mt.date.dt.date_trunc('month')
     assert_equals_data(
         dt,
-        expected_columns=['_index_skating_order', 'moment'],
+        expected_columns=['_index_skating_order', 'date'],
         expected_data=[
-            [1, datetime.datetime(2021, 5, 1)],
-            [2, datetime.datetime(2021, 5, 1)],
-            [4, datetime.datetime(2022, 5, 1)],
+            [1, date(2021, 5, 1)],
+            [2, date(2021, 5, 1)],
+            [4, date(2022, 5, 1)],
         ],
         use_to_pandas=True,
     )
 
     # quarter
-    dt = mt.moment.dt.date_trunc('quarter')
+    dt = mt.date.dt.date_trunc('quarter')
     assert_equals_data(
         dt,
-        expected_columns=['_index_skating_order', 'moment'],
+        expected_columns=['_index_skating_order', 'date'],
         expected_data=[
-            [1, datetime.datetime(2021, 4, 1)],
-            [2, datetime.datetime(2021, 4, 1)],
-            [4, datetime.datetime(2022, 4, 1)],
+            [1, date(2021, 4, 1)],
+            [2, date(2021, 4, 1)],
+            [4, date(2022, 4, 1)],
         ],
         use_to_pandas=True,
     )
 
     # year
-    dt = mt.moment.dt.date_trunc('year')
+    dt = mt.date.dt.date_trunc('year')
     assert_equals_data(
         dt,
-        expected_columns=['_index_skating_order', 'moment'],
+        expected_columns=['_index_skating_order', 'date'],
         expected_data=[
-            [1, datetime.datetime(2021, 1, 1)],
-            [2, datetime.datetime(2021, 1, 1)],
-            [4, datetime.datetime(2022, 1, 1)],
+            [1, date(2021, 1, 1)],
+            [2, date(2021, 1, 1)],
+            [4, date(2022, 1, 1)],
         ],
         use_to_pandas=True,
     )
 
     with pytest.raises(ValueError, match='some_wrong_format format is not available.'):
         mt.date.dt.date_trunc('some_wrong_format')
+
+    # not supported series type
+    mt['time'] = datetime.time(21, 10, 5)
+    with pytest.raises(ValueError, match="<class 'bach.series.series_datetime.SeriesTime'>"
+                                         " type is not supported."):
+        mt['time'].dt.date_trunc('hour')
 
 
 def test_date_arithmetic(pg_engine):
