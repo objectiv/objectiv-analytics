@@ -69,63 +69,46 @@ def test_json_get_single_value(engine, dtype):
     assert a == {'a': 'b', 'c': {'a': 'c'}}
 
 
-# TODO: __le__ for BigQuery
-def test_json_compare_lists__ge__(engine, dtype):
+def test_json_array_contains(engine, dtype):
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
-    bts = bt.list_column >= [{"c": "d"}]
-    assert_equals_data(
-        bts,
-        expected_columns=['_index_row', 'list_column'],
-        expected_data=[
-            [0, True],
-            [1, False],
-            [2, False],
-            [3, False],
-            [4, None]
-        ]
-    )
 
-    bts = bt.list_column >= ['b', 'c']
+    # for bigquery order of keys should be the same as in the data
+    bts = bt.list_column.json.array_contains({"_type":"SectionContext","id":"home"})
+
     assert_equals_data(
         bts,
         expected_columns=['_index_row', 'list_column'],
         expected_data=[
             [0, False],
-            [1, True],
-            [2, False],
-            [3, False],
-            [4, None]
-        ]
-    )
-
-
-@pytest.mark.skip_bigquery
-def test_json_compare(engine, dtype):
-    # These less-than-or-equals compares check that the left hand is contained in the right hand, on
-    # Postgres. On` BigQuery we cannot support this, so we skip this function for BQ on purpose.
-    # BigQuery can only search when the top-level is an array
-    # therefore searching is a dict is a "superset" of another dict is not possible
-    # TODO: maybe get rid of the Postgres support too?
-    bt = get_df_with_json_data(engine=engine, dtype=dtype)
-    bts = {"a": "b"} <= bt.mixed_column
-    assert_equals_data(
-        bts,
-        expected_columns=['_index_row', 'mixed_column'],
-        expected_data=[
-            [0, True],
             [1, False],
-            [2, True],
-            [3, False],
+            [2, False],
+            [3, True],
             [4, None]
         ]
     )
-    bts = ["a"] <= bt.mixed_column
+
+    # mixed column
+    bts = bt.mixed_column.json.array_contains('a')
     assert_equals_data(
         bts,
         expected_columns=['_index_row', 'mixed_column'],
         expected_data=[
             [0, False],
             [1, True],
+            [2, False],
+            [3, False],
+            [4, None]
+        ]
+    )
+
+    # dict_column column
+    bts = bt.dict_column.json.array_contains({"a": "b"})
+    assert_equals_data(
+        bts,
+        expected_columns=['_index_row', 'dict_column'],
+        expected_data=[
+            [0, False],
+            [1, False],
             [2, False],
             [3, False],
             [4, None]
