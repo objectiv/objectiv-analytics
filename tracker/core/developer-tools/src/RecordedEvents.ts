@@ -44,7 +44,7 @@ export class RecordedEvents implements RecordedEventsInterface {
       return new RecordedEvents(this.events.filter((event) => options.includes(event._type)));
     }
 
-    if (options instanceof Function) {
+    if (typeof options === 'function') {
       return new RecordedEvents(this.events.filter(options as RecordedEventPredicate));
     }
 
