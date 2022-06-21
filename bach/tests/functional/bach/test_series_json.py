@@ -136,16 +136,16 @@ def test_json_compare(engine, dtype):
 def test_json_getitem(engine, dtype):
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bt = bt[['mixed_column']]
-    bt['sel_0'] = bt.mixed_column.json[0]
-    bt['sel_min2'] = bt.mixed_column.json[-3]
-    bt['sel_min5'] = bt.mixed_column.json[-5]  # -5 doesn't exist
-    bt['sel_a'] = bt.mixed_column.json["a"]
+    bt['get_0'] = bt.mixed_column.json[0]
+    bt['get_min2'] = bt.mixed_column.json[-3]
+    bt['get_min5'] = bt.mixed_column.json[-5]  # -5 doesn't exist, we expect to get `None`
+    bt['get_a'] = bt.mixed_column.json["a"]
     bt = bt.drop(columns=['mixed_column'])
     print(bt.view_sql())
     assert_equals_data(
         bt,
         use_to_pandas=True,
-        expected_columns=['_index_row', 'sel_0', 'sel_min2', 'sel_min5', 'sel_a'],
+        expected_columns=['_index_row', 'get_0', 'get_min2', 'get_min5', 'get_a'],
         expected_data=[
             [0, None, None, None, "b"],
             [1, "a", "b", None, None],

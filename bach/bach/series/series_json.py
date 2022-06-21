@@ -524,7 +524,12 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
         return Expression.construct(fmt, slicing_mask, self._series_object)
 
     def get_array_item(self, key: int) -> 'TSeriesJson':
-        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        """
+        Returns an item from the json array.
+        The key is treated as a 0-based index. If negative this will count from the end of the array (one
+            based). If the index does not exist this will render None/NULL.
+        This assumes the top-level item in the json is an array
+        """
         if key < 0:
             # BigQuery doesn't (yet) natively support this, so we emulate this by reversing the array
             key = -key - 1
@@ -700,7 +705,12 @@ class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
             )
 
     def get_array_item(self, key: int) -> 'TSeriesJson':
-        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        """
+        Returns an item from the json array.
+        The key is treated as a 0-based index. If negative this will count from the end of the array (one
+            based). If the index does not exist this will render None/NULL.
+        This assumes the top-level item in the json is an array
+        """
         return self._series_object \
             .copy_override(expression=Expression.construct(f'{{}}->{key}', self._series_object))
 
