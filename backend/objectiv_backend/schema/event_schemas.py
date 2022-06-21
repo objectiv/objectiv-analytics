@@ -101,7 +101,7 @@ class EventSubSchema:
             raise ValueError(f'Not a valid event_type {event_type}')
 
         event_types: Set[EventType] = {event_type}
-        context_types: Set[ContextType] = set(self.schema[event_type].get('requiresContext', []))
+        context_types: Set[ContextType] = set(deepcopy(self.schema[event_type].get('requiresContext', [])))
         parents: List[EventType] = self.schema[event_type].get('parents', [])
         for parent in parents:
             parent_event_types, parent_context_types = \
@@ -266,7 +266,7 @@ class ContextSubSchema:
         if context_type not in self.schema:
             raise ValueError(f'Not a valid context_type {context_type}')
 
-        required_context_types: Set[ContextType] = set(self.schema[context_type].get('requiresContext', []))
+        required_context_types: Set[ContextType] = set(deepcopy(self.schema[context_type].get('requiresContext', [])))
         parent_context_types: Set[ContextType] = {context_type}
         parents: List[ContextType] = self.schema[context_type].get('parents', [])
         for parent in parents:
