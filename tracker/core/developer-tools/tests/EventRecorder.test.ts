@@ -35,7 +35,7 @@ describe('EventRecorder', () => {
     expect(EventRecorder.recording).toBe(true);
   });
 
-  it('should store the events in `events`', async () => {
+  it('should store the events in `events` and sort them up', async () => {
     const testPressEvent = new TrackerEvent({ _type: 'PressEvent', id: 'test-press-event' });
     const testVisibleEvent = new TrackerEvent({ _type: 'VisibleEvent', id: 'test-visible-event' });
     const testSuccessEvent = new TrackerEvent({ _type: 'SuccessEvent', id: 'test-success-event' });
@@ -61,7 +61,7 @@ describe('EventRecorder', () => {
     ]);
   });
 
-  it('should store the error messages in `errors`', async () => {
+  it('should store the error messages in `errors` and sort them up', async () => {
     expect(EventRecorder.errors).toStrictEqual([]);
 
     EventRecorder.error('error 3');

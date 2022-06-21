@@ -4,6 +4,7 @@
 
 import { LocationContextValidationRuleFactory, TrackerEvent } from '@objectiv/tracker-core';
 import { LocationContextErrorMessages } from '../ContextErrorMessages';
+import { EventRecorder } from '../EventRecorder';
 import { TrackerConsole } from '../TrackerConsole';
 import { LocationContextErrorType } from '../types';
 
@@ -54,6 +55,9 @@ export const makeLocationContextValidationRule: LocationContextValidationRuleFac
         const errorMessagePrefix = `｢objectiv${this.logPrefix ? ':' + this.logPrefix : ''}｣`;
         const errorMessageTemplate = LocationContextErrorMessages[this.platform][errorType][this.contextName];
         const errorMessageBody = errorMessageTemplate.replace(/{{eventName}}/g, event._type);
+        const errorMessage = `%c${errorMessagePrefix} Error: ${errorMessageBody}`;
+
+        EventRecorder.error(errorMessage);
 
         TrackerConsole.groupCollapsed(`%c${errorMessagePrefix} Error: ${errorMessageBody}`, 'color:red');
         TrackerConsole.group(`Event:`);
