@@ -250,10 +250,10 @@ class Aggregate:
         else:
             data['__feature_nice_name'] = data.location_stack.ls.nice_name
 
-        self._mh.map._is_conversion_event(data, name)
-        self._mh.map._conversions_in_time(data, partition='session_id')
+        self._mh.map.add_is_conversion_event(data, '__conversion', name)
+        self._mh.map.add_conversions_in_time(data, '__conversions_in_time',
+                                             '__conversion', partition='session_id')
         self._mh.map._conversions_counter(data, partition='session_id')
-        self._mh.map._conversions_in_time(data=data, partition='session_id')
 
         # label sessions with a conversion
         data['converted_users'] = data['__converted'] >= 1

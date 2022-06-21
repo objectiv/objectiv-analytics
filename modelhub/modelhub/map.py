@@ -85,10 +85,17 @@ class Map:
         is_new_user_series = is_new_user_series.copy_override_type(bach.SeriesBoolean)
         return is_new_user_series.copy_override(name='is_new_user').materialize()
 
-    def _is_conversion_event(self, data: bach.DataFrame, name: str):
+    def add_is_conversion_event(self,
+                                data: bach.DataFrame,
+                                column_name_to_add: str,
+                                name: str):
         """
-        creates
-            `__conversion`
+        Labels a hit True if it is a conversion event, all other hits are labeled False.
+
+        :param data: :py:class:`bach.DataFrame` to apply the method on.
+        :param column_name_to_add: name of the column that is added to `data`
+        :param name: the name of the conversion to label as set in
+            :py:attr:`ModelHub.conversion_events`.
         """
 
         if name not in self._mh._conversion_events:
@@ -103,7 +110,7 @@ class Map:
         else:
             series = ((conversion_stack.json.get_array_length() > 0) & (data.event_type == conversion_event))
 
-        data['__conversion'] = series
+        data[column_name_to_add] = series
 
     def is_conversion_event(self, data: bach.DataFrame, name: str) -> bach.Series:
         """
@@ -118,7 +125,7 @@ class Map:
         self._mh._check_data_is_objectiv_data(data)
         data = data.copy()
 
-        self._is_conversion_event(data, name=name)
+        self.add_is_conversion_event(data, column_name_to_add='__conversion', name=name)
 
         return data['__conversion'].copy_override(name='is_conversion_event')
 
@@ -128,8 +135,8 @@ class Map:
 
         """
         requires
-            `_is_conversion_event`
-            `_conversions_in_time`
+            `add_is_conversion_event`
+            `add_conversions_in_time`
 
         creates
             `__converted`
@@ -156,8 +163,9 @@ class Map:
         self._mh._check_data_is_objectiv_data(data)
         data = data.copy()
 
-        self._is_conversion_event(data, name)
-        self._conversions_in_time(data, partition=partition)
+        self.add_is_conversion_event(data, '__conversion', name)
+        self.add_conversions_in_time(data, '__conversions_in_time', '__conversion',
+                                     partition=partition)
         self._conversions_counter(data, partition=partition)
 
         return data['__converted'].copy_override(name='converted',
@@ -166,20 +174,26 @@ class Map:
     def conversion_count(self, *args, **kwargs):
         raise NotImplementedError('function is renamed please use `conversions_in_time`')
 
-    def _conversions_in_time(self,
-                             data: bach.DataFrame,
-                             partition: str):
+    def add_conversions_in_time(self,
+                                data: bach.DataFrame,
+                                column_name_to_add,
+                                is_conversion_event_column,
+                                partition: str = 'session_id'):
         """
-        requires
-            `_is_conversion_event`
+        Counts the number of time a user is converted at a moment in time given a partition (ie 'session_id'
+        or 'user_id').
 
-        creates
-            `__conversion_counter`
-            `__conversions_in_time`
+        :param data: :py:class:`bach.DataFrame` to apply the method on.
+        :param column_name_to_add: name of the column that is added to `data`
+        :param is_conversion_event_column: column created by `add_is_conversion_event`
+        :param partition: the partition over which the number of conversions are counted. Can be any column
+            in ``data``.
         """
 
-        data['__conversion_counter'] = 0
-        data.loc[data['__conversion'], '__conversion_counter'] = 1
+        column_name_to_add_conversion_counter = '__conversion_counter'
+
+        data[column_name_to_add_conversion_counter] = 0
+        data.loc[data[is_conversion_event_column], column_name_to_add_conversion_counter] = 1
 
         # make the query more clean, just require these series
         if is_bigquery(data.engine):
@@ -187,9 +201,11 @@ class Map:
             data.materialize(node_name='conversion_counter_bq', inplace=True)
 
         window = data.sort_values([partition, 'moment']).groupby(partition).window()
-        data['__conversions_in_time'] = (
-            data['__conversion_counter'].copy_override_type(bach.SeriesInt64).sum(window)
+        data[column_name_to_add] = (
+            data[column_name_to_add_conversion_counter].copy_override_type(bach.SeriesInt64).sum(window)
         )
+
+        del(data[column_name_to_add_conversion_counter])
 
     def conversions_in_time(self,
                             data: bach.DataFrame,
@@ -210,8 +226,9 @@ class Map:
         self._mh._check_data_is_objectiv_data(data)
         data = data.copy()
 
-        self._is_conversion_event(data, name)
-        self._conversions_in_time(data=data, partition=partition)
+        self.add_is_conversion_event(data, '__conversion', name)
+        self.add_conversions_in_time(data, '__conversions_in_time', '__conversion',
+                                     partition=partition)
 
         return data['__conversions_in_time'].copy_override(name='conversions_in_time').materialize(
             node_name='conversions_in_time')
@@ -221,8 +238,8 @@ class Map:
                                    partition: str):
         """
         requires in `data`
-            `_is_conversion_event`
-            `_conversions_in_time`
+            `add_is_conversion_event`
+            `add_conversions_in_time`
 
         creates
 
@@ -271,8 +288,9 @@ class Map:
         self._mh._check_data_is_objectiv_data(data)
         data = data.copy()
 
-        self._is_conversion_event(data, name)
-        self._conversions_in_time(data, partition=partition)
+        self.add_is_conversion_event(data, '__conversion', name)
+        self.add_conversions_in_time(data, '__conversions_in_time', '__conversion',
+                                     partition=partition)
         data.materialize(inplace=True)
         self._pre_conversion_hit_number(data, partition=partition)
 
