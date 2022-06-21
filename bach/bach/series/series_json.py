@@ -402,7 +402,7 @@ class JsonAccessor(Generic[TSeriesJson]):
         # So for now we have a dedicated len function for arrays.
         return self._implementation.get_array_length()
 
-    def array_contains(self, item: AllSupportedLiteralTypes) -> 'SeriesBoolean':
+    def array_contains(self, item: Union[int, float, bool, str]) -> 'SeriesBoolean':
         """
         Find if item is contained in the array.
 
@@ -577,14 +577,11 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
             .copy_override_type(SeriesInt64) \
             .copy_override(expression=expression)
 
-    def array_contains(self, item: AllSupportedLiteralTypes) -> 'SeriesBoolean':
+    def array_contains(self, item: Union[int, float, bool, str]) -> 'SeriesBoolean':
         """ For documentation, see implementation in class :class:`JsonAccessor` """
         # Implementing __ge__ for BigQuery, since @> operator is not supported, we need to
         # simulate it by verifying if all searched items exist in the array.
         # all items are converted into string by using json.dumps
-        # therefore be aware that if you are searching for a dict type object, the order
-        # of the keys MATTER and will only match when both compared values have the same
-        # keys and values
 
         to_search_expr = Expression.string_value(json.dumps([item]))
         # get all the searching values that exist in the array
@@ -716,5 +713,6 @@ class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
             .copy_override_type(SeriesInt64) \
             .copy_override(expression=expression)
 
-    def array_contains(self, item: AllSupportedLiteralTypes) -> 'SeriesBoolean':
+    def array_contains(self, item: Union[int, float, bool, str]) -> 'SeriesBoolean':
+        """ For documentation, see implementation in class :class:`JsonAccessor` """
         return self._series_object._comparator_operation([item], "@>")
