@@ -74,6 +74,8 @@ class ObjectivStack(JsonAccessor, Generic[TSeriesJson]):
         """
         Return a new Series, that consists of the same top level array, but with all the sub-dictionaries
         having only their original fields if that field is listed in the keys parameter.
+
+        The fields of the sub-dictionaries MUST be scalar values (i.e. string, number, or boolean).
         """
         engine = self._series_object.engine
         if is_postgres(engine):
@@ -98,44 +100,29 @@ class ObjectivStack(JsonAccessor, Generic[TSeriesJson]):
         return self._series_object.copy_override(expression=expression)
 
     def _bigquery_filter_keys_of_dicts(self, keys: List[str]) -> 'TSeriesJson':
-        json_object_str_expressions = []
         # We unnest the json-array, and then for every json object in the array we build a copy of that
         # json object, but with only the keys that are listed in the `keys` variable.
-        # Unfortunately BigQuery has no way (yet) to turn a struct into a json string, so we have to do raw
-        # string building to get json objects.
+        object_entries_expressions = []
         for i, key in enumerate(keys):
             if '"' in key:
                 raise ValueError(f'key values containing double quotes are not supported. key: {key}')
-            # Each iteration we build an expression of this form (the comma is skipped on the 1st iteration):
-            #       , "key": value
-            # This gives a combined expression of the form:
-            #       "key1": value1, "key2": value2, ..., "keyN": valueN
-            # However, we have to build the json as a raw string. So all the individual parts are strings,
-            # which we then add to a list. The items in that list will then become the arguments to a sql
-            # concat() function call, which then creates one combined string of the form that we intend.
-            comma_expr = Expression.string_value(', ')
-            key_expr = Expression.string_value(json.dumps(key))
-            colon_expr = Expression.string_value(': ')
-            value_expr = Expression.construct('''JSON_QUERY(item, '$."{}"')''', Expression.raw(key))
-            if i > 0:
-                json_object_str_expressions.append(comma_expr)
-            json_object_str_expressions.append(key_expr)
-            json_object_str_expressions.append(colon_expr)
-            json_object_str_expressions.append(value_expr)
-
-        json_object_key_values_expr = join_expressions(json_object_str_expressions)
-        # Here we build the json object as a string by concatenating all earlier key-value and comma
-        # expressions.
-        json_object_expr = Expression.construct(
-            '''select concat('{', {}, '}') from unnest(json_query_array({}, '$')) as item''',
-            json_object_key_values_expr,
-            self._series_object,
+            # Using JSON_VALUE here means this only works with scalar, but we warn the user in the docstring
+            # of this.
+            entry_expr = Expression.construct(
+                '''JSON_VALUE(item, '$."{}"') as {}''',
+                Expression.raw(key),
+                Expression.identifier(key)
+            )
+            object_entries_expressions.append(entry_expr)
+        expression = Expression.construct(
+            '''TO_JSON_STRING(ARRAY(
+                SELECT STRUCT({})
+                FROM UNNEST (JSON_QUERY_ARRAY({}, '$')) AS item WITH OFFSET AS pos
+                ORDER BY pos))''',
+            join_expressions(object_entries_expressions),
+            self._series_object
         )
-        json_str_expression = Expression.construct(
-            "'[' || ARRAY_TO_STRING(ARRAY({}), ', ') || ']'",
-            json_object_expr
-        )
-        return self._series_object.copy_override(expression=json_str_expression)
+        return self._series_object.copy_override(expression=expression)
 
 
 @register_dtype(value_types=[], override_registered_types=True)
