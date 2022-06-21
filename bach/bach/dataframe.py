@@ -999,7 +999,12 @@ class DataFrame:
         the size of the generated SQL query. But this can be useful if the current DataFrame contains
         expressions that you want to evaluate before further expressions are build on top of them. This might
         make sense for very large expressions, or for non-deterministic expressions (e.g. see
-        :py:meth:`SeriesUuid.sql_gen_random_uuid`).
+        :py:meth:`SeriesUuid.sql_gen_random_uuid`). Additionally, materializing as a temporary table can
+        improve performance in some instances.
+
+        Note this function does NOT query the database or materializes any data in the database. It merely
+        changes the underlying SqlModel graph, which gets executed by data transfer functions (e.g.
+        :meth:`to_pandas()`)
 
         TODO: a known problem is that DataFrames with 'json_postgres' columns cannot be fully materialized.
 
@@ -1007,7 +1012,8 @@ class DataFrame:
         :param inplace: Perform operation on self if ``inplace=True``, or create a copy.
         :param limit: The limit (slice, int) to apply.
         :param distinct: Apply distinct statement if ``distinct=True``
-        :param materialization: TODO
+        :param materialization: Set the materialization of the SqlModel in the graph. Only
+            Materialization.CTE / 'cte' and Materialization.TEMP_TABLE / 'temp_table' are supported.
         :returns: DataFrame with the current DataFrame's state as base_node
 
         .. note::
@@ -1017,7 +1023,6 @@ class DataFrame:
         index_dtypes = {k: v.instance_dtype for k, v in self.index.items()}
         series_dtypes = {k: v.instance_dtype for k, v in self.data.items()}
         node = self.get_current_node(name=node_name, limit=limit, distinct=distinct)
-        # TODO
         materialization = Materialization.normalize(materialization)
         assert materialization in (Materialization.CTE, Materialization.TEMP_TABLE)
         node = node.copy_set_materialization(materialization=materialization)
