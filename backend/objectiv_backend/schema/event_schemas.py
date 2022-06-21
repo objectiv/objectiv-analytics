@@ -115,7 +115,7 @@ class EventSubSchema:
 
     def list_event_types(self) -> List[str]:
         """ Give a alphabetically sorted list of all event-types. """
-        return self._compiled_list_event_types
+        return [t for t in self._compiled_list_event_types]
 
     def get_all_parent_event_types(self, event_type: EventType) -> Set[EventType]:
         """
@@ -266,7 +266,7 @@ class ContextSubSchema:
         if context_type not in self.schema:
             raise ValueError(f'Not a valid context_type {context_type}')
 
-        required_context_types: Set[ContextType] = set(self.schema[context_type].get('requiresContext', []))
+        required_context_types: Set[ContextType] = {ct for ct in self.schema[context_type].get('requiresContext', [])}
         parent_context_types: Set[ContextType] = {context_type}
         parents: List[ContextType] = self.schema[context_type].get('parents', [])
         for parent in parents:
@@ -283,25 +283,27 @@ class ContextSubSchema:
 
     def list_context_types(self) -> List[ContextType]:
         """ Give a alphabetically sorted list of all context-types. """
-        return self._compiled_list_context_types
+        return [t for t in self._compiled_list_context_types]
 
     def get_all_parent_context_types(self, context_type: ContextType) -> Set[ContextType]:
         """
         Given a context_type, give a set with that context_type and all its parent context_types
         """
-        return self._compiled_all_parent_and_required_context_types.get(context_type, {}).get('parents', [context_type])
+        return {t for t in self._compiled_all_parent_and_required_context_types.get(context_type, {}).get('parents', {
+            context_type})}
 
     def get_all_required_context_types(self, context_type: ContextType) -> Set[ContextType]:
         """
         Given a context_type, give a set with that context_type and all its parent context_types
         """
-        return self._compiled_all_parent_and_required_context_types.get(context_type, {}).get('requiredContexts', {})
+        return {c for c in
+                self._compiled_all_parent_and_required_context_types.get(context_type, {}).get('requiredContexts', {})}
 
     def get_all_child_context_types(self, context_type: ContextType) -> Set[ContextType]:
         """
         Given a context_type, give a set with that context_type and all its child context_types
         """
-        return self._compiled_all_child_context_types.get(context_type, set())
+        return {c for c in self._compiled_all_child_context_types.get(context_type, set())}
 
     def get_context_schema(self, context_type: ContextType) -> Optional[Dict[str, Any]]:
         """
