@@ -14,6 +14,7 @@ from modelhub.map import Map
 from modelhub.models.logistic_regression import LogisticRegression
 from modelhub.series.series_objectiv import MetaBase
 from sql_models.constants import NotSet
+from sql_models.util import is_bigquery
 
 if TYPE_CHECKING:
     from modelhub.series import SeriesLocationStack
@@ -105,7 +106,7 @@ class ModelHub:
     def get_objectiv_dataframe(
         self,
         db_url: str = None,
-        table_name: str = 'data',
+        table_name: str = None,
         start_date: str = None,
         end_date: str = None,
         *,
@@ -121,7 +122,8 @@ class ModelHub:
         :param db_url: the url that indicate database dialect and connection arguments. If not given, env DSN
             is used to create one. If that's not there, the default of
             'postgresql://objectiv:@localhost:5432/objectiv' will be used.
-        :param table_name: the name of the sql table where the data is stored.
+        :param table_name: the name of the sql table where the data is stored. Will default to 'events' for
+            bigquery and 'data' for other engines.
         :param start_date: first date for which data is loaded to the DataFrame. If None, data is loaded from
             the first date in the sql table. Format as 'YYYY-MM-DD'.
         :param end_date: last date for which data is loaded to the DataFrame. If None, data is loaded up to
@@ -134,6 +136,11 @@ class ModelHub:
         """
         engine = self._get_db_engine(db_url=db_url, bq_credentials_path=bq_credentials_path)
         from modelhub.stack import get_sessionized_data
+        if table_name is None:
+            if is_bigquery(engine):
+                table_name = 'events'
+            else:
+                table_name = 'data'
 
         data = get_sessionized_data(
             engine=engine,

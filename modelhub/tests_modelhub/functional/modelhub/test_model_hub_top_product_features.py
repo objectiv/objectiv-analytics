@@ -18,25 +18,28 @@ def test_top_product_features():
 
     # index _application
     assert_equals_data(
-        tdf.index['_application'],
-        expected_columns=['_application'],
+        tdf.index['application'],
+        expected_columns=['application'],
         expected_data=[
             ['objectiv-docs'],
-            ['objectiv-website'],
-            ['objectiv-website'],
-            ['objectiv-website'],
+            ['objectiv-docs'],
             ['objectiv-docs'],
             ['objectiv-website'],
             ['objectiv-website'],
             ['objectiv-website'],
             ['objectiv-website'],
-            ['objectiv-docs'],
             ['objectiv-website'],
-            ['objectiv-website']],
+            ['objectiv-website'],
+            ['objectiv-website'],
+            ['objectiv-website'],
+            ['objectiv-website']
+        ],
+        order_by=['application'],
+        use_to_pandas=True
     )
 
     # index feature_nice_name
-    assert '_feature_nice_name' in tdf.index
+    assert 'feature_nice_name' in tdf.index
 
     # index event_type
     assert set(tdf.index['event_type'].array) == {'ClickEvent'}
@@ -51,11 +54,10 @@ def test_top_product_features():
 
     assert_equals_data(
         tdf,
-        expected_columns=['_application', '_feature_nice_name', 'event_type', 'user_id_nunique'],
+        expected_columns=['application', 'feature_nice_name', 'event_type', 'user_id_nunique'],
         expected_data=[
             ['objectiv-docs', 'Link: logo', 'ClickEvent', 1],
             ['objectiv-docs', 'Link: notebook-product-analytics', 'ClickEvent', 1],
-            ['objectiv-docs', None, 'ClickEvent', 1],
             ['objectiv-website', 'Link: About Us', 'ClickEvent', 2],
             ['objectiv-website', 'Link: Contact Us', 'ClickEvent', 1],
             ['objectiv-website', 'Link: Cookies', 'ClickEvent', 1],
@@ -65,7 +67,9 @@ def test_top_product_features():
             ['objectiv-website', 'Link: Docs', 'ClickEvent', 1],
             ['objectiv-website', 'Link: GitHub', 'ClickEvent', 1],
         ],
-        order_by=['_application', '_feature_nice_name', 'user_id_nunique']
+        use_to_pandas=True,
+        order_by=['application', 'feature_nice_name', 'user_id_nunique']
+
     )
 
     # check if any new column is added to the original dataframe

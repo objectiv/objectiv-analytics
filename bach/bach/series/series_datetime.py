@@ -13,7 +13,7 @@ from sqlalchemy.engine import Dialect
 
 from bach import DataFrame
 from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64
-from bach.expression import Expression
+from bach.expression import Expression, join_expressions
 from bach.series.series import WrappedPartition, ToPandasInfo
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
     parse_c_code_to_bigquery_code
@@ -114,6 +114,57 @@ class DateTimeOperation:
 
         str_series = self._series.copy_override_type(SeriesString).copy_override(expression=expression)
         return str_series
+
+    def date_trunc(self, date_part: str) -> Series:
+        """
+        Truncates date value based on a specified date part.
+        The value is always rounded to the beginning of date_part.
+
+        This operation can be applied only on SeriesDate or SeriesTimestamp.
+
+        :param date_part: Allowed values are 'second', 'minute',
+            'hour', 'day', 'week', 'month', 'quarter', and 'year'.
+
+        .. code-block:: python
+
+            # return the date corresponding to the Monday of that week
+            df['week'] = df.some_date_or_timestamp_series.dt.date_trunc('week')
+            # return the first day of the quarter
+            df['quarter'] = df.some_date_or_timestamp_series.dt.date_trunc('quarter')
+
+        :returns: the truncated timestamp value with a granularity of date_part.
+
+        """
+
+        available_formats = ['second', 'minute', 'hour', 'day', 'week',
+                             'month', 'quarter', 'year']
+        if date_part not in available_formats:
+            raise ValueError(f'{date_part} format is not available.')
+
+        if not (isinstance(self._series, SeriesDate) or
+                isinstance(self._series, SeriesTimestamp)):
+            raise ValueError(f'{type(self._series)} type is not supported.')
+
+        engine = self._series.engine
+
+        if is_postgres(engine):
+            expression = Expression.construct(
+                'date_trunc({}, {})',
+                Expression.string_value(date_part),
+                self._series,
+            )
+        elif is_bigquery(engine):
+            if date_part == 'week':
+                date_part = 'week(monday)'
+            expression = Expression.construct(
+                'timestamp_trunc({}, {})',
+                self._series,
+                Expression.raw(date_part),
+            )
+        else:
+            raise DatabaseNotSupportedException(engine)
+
+        return self._series.copy_override(expression=expression)
 
 
 class TimedeltaOperation(DateTimeOperation):
@@ -535,7 +586,9 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         dtype: StructuredDtype
     ) -> Expression:
         # pandas.Timedelta checks already that the string has the correct format
-        value_td = pandas.Timedelta(value)
+        # round it up to microseconds precision in order to avoid problems with BigQuery
+        # pandas by default uses nanoseconds precision
+        value_td = pandas.Timedelta(value).round(freq='us')
 
         if value_td is pandas.NaT:
             return Expression.construct('NULL')
@@ -620,7 +673,7 @@ class SeriesTimedelta(SeriesAbstractDateTime):
             skipna=skipna,
             min_count=min_count
         )
-        return cast('SeriesTimedelta', result)
+        return result.copy_override_type(SeriesTimedelta)
 
     def mean(self, partition: WrappedPartition = None, skipna: bool = True) -> 'SeriesTimedelta':
         """
@@ -631,7 +684,59 @@ class SeriesTimedelta(SeriesAbstractDateTime):
             expression='avg',
             skipna=skipna
         )
-        return cast('SeriesTimedelta', result)
+        result = result.copy_override_type(SeriesTimedelta)
+
+        if is_bigquery(self.engine):
+            result = result._remove_nano_precision_bigquery()
+
+        return result
+
+    def _remove_nano_precision_bigquery(self) -> 'SeriesTimedelta':
+        """
+        Helper function that removes nano-precision from intervals.
+        """
+        series = self.copy()
+        # https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#interval_type
+        _BQ_INTERVAL_FORMAT = '%d-%d %d %d:%d:%d.%06.0f'
+        _BQ_SUPPORTED_INTERVAL_PARTS = [
+            'YEAR', 'MONTH', 'DAY', 'HOUR', 'MINUTE', 'SECOND'
+        ]
+
+        # aggregating intervals by average might generate a result with
+        # nano-precision, which is not supported by BigQuery TimeStamps
+        # therefore we need to make sure we always generate values up to
+        # microseconds precision
+        # https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#timestamp_type
+        all_extracted_parts_expr = [
+            Expression.construct(f'EXTRACT({date_part} FROM {{}})', series)
+            for date_part in _BQ_SUPPORTED_INTERVAL_PARTS
+        ]
+        # convert nanoseconds to microseconds
+        all_extracted_parts_expr.append(
+            Expression.construct(f'EXTRACT(NANOSECOND FROM {{}}) / 1000', series)
+        )
+        format_arguments_expr = join_expressions(all_extracted_parts_expr)
+
+        # All parts will create a string with following format
+        # '%d-%d %d %d:%d:%d.%06.0f'
+        # where the first 6 digits are date parts from YEAR to SECOND
+        # Format specifier %06.0f will format fractional part of seconds with maximum width of 6 digits
+        # for example:
+        # nanoseconds = 1142857, converting them into microseconds is 1142.857
+        # when applying string formatting, the value will be rounded into 1143 (.0 precision)
+        # and will be left padded by 2 leading zeros: 001143 (0 flag and 6 minimum width)
+        # for more information:
+        # https://cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#format_string
+        format_expr = Expression.construct(
+            f'format({{}}, {{}})',
+            Expression.string_value(_BQ_INTERVAL_FORMAT),
+            format_arguments_expr,
+        )
+        return series.copy_override(
+            expression=self.dtype_to_expression(
+                self.engine, source_dtype='string', expression=format_expr,
+            )
+        )
 
     def quantile(
         self, partition: WrappedPartition = None, q: Union[float, List[float]] = 0.5,
