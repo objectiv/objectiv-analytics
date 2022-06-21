@@ -1,5 +1,6 @@
 import json
 from typing import Dict, Any
+from copy import deepcopy
 
 from objectiv_backend.schema.schema import make_event_from_dict, make_context, \
     ContentContext, HttpContext, MarketingContext
@@ -202,3 +203,23 @@ def test_add_context_with_optionals_set():
     assert marketing_context['creative_format'] == context_vars['creative_format']
     assert 'marketing_tactic' in marketing_context
     assert marketing_context['marketing_tactic'] == context_vars['marketing_tactic']
+
+
+def test_required_context_broken_state():
+    event_list = json.loads(CLICK_EVENT_JSON)
+    event = make_event_from_dict(event_list['events'][0])
+
+    # check event is valid to start with
+    event_schema = get_collector_config().event_schema
+    b = deepcopy(event_schema)
+
+    assert(validate_event_adheres_to_schema(event_schema=event_schema, event=event) == [])
+
+    # now we change it to ApplicationLoadedEvent, this doesn't require a location_stack, yet, it has one
+    event['_type'] = 'ApplicationLoadedEvent'
+    assert (validate_event_adheres_to_schema(event_schema=event_schema, event=event) == [])
+
+    # now we remove the location_stack, event should still be valid
+
+    event['location_stack'] = []
+    assert (validate_event_adheres_to_schema(event_schema=event_schema, event=event) == [])
