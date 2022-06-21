@@ -163,7 +163,7 @@ def test_all_parent_context_types():
     # If we get a non-existing context we don't complain. Because in operation if we get more data (or
     # more contexts) than required then that's fine.
     # todo: check whether above is good idea. or should we put the leniency in another spot in the code?
-    assert schema.get_all_parent_context_types('X') == ['X']
+    assert schema.get_all_parent_context_types('X') == {'X'}
     assert schema.get_all_parent_context_types('BaseContext') == {'BaseContext'}
     assert schema.get_all_parent_context_types('OtherContext') == {'BaseContext', 'OtherContext'}
     assert schema.get_all_parent_context_types('ExtraContext') == \
