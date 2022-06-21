@@ -275,16 +275,19 @@ class Map:
             raise ValueError(f'{time_period} time_period is not available.')
 
         from datetime import datetime
+
+        _start_date = None
         if start_date is not None:
             try:
-                start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                _start_date = datetime.strptime(start_date, '%Y-%m-%d')
             except Exception as e:
                 print('Please provide correct start_date.')
                 raise e
 
+        _end_date = None
         if end_date is not None:
             try:
-                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                _end_date = datetime.strptime(end_date, '%Y-%m-%d')
             except Exception as e:
                 print('Please provide correct end_date.')
                 raise e
@@ -297,33 +300,29 @@ class Map:
         if event_type is not None:
             data = data[data['event_type'] == event_type]
 
-        data['timestamp'] = data.day.dt.strftime('%Y%m%d').astype('timestamp')
-
         # for retention matrix calculation we need only event date and user_id
-        columns = ['user_id', 'day']
+        columns = ['user_id', 'moment']
         data = data[columns]
 
-        data['cohort'] = data.day.astype('timestamp')
-
         # get the first cohort
-        cohorts = data.groupby('user_id')['cohort'].min().reset_index()
-        cohorts = cohorts.rename(columns={'cohort': 'first_cohort'})
+        cohorts = data.groupby('user_id')['moment'].min().reset_index()
+        cohorts = cohorts.rename(columns={'moment': 'first_cohort'})
 
         # add first cohort to our data DataFrame
         data = data.merge(cohorts, on='user_id', how='left')
 
         # calculate cohort distance
-        if time_period == "yearly":
-            data['cohort'] = data['cohort'].dt.strftime('%Y').astype(dtype=int)
+        if time_period == 'yearly':
+            data['cohort'] = data['moment'].dt.strftime('%Y').astype(dtype=int)
             data['first_cohort'] = data['first_cohort'].dt.strftime('%Y').astype(dtype=int)
             data['cohort_distance'] = data['cohort'] - data['first_cohort']
 
-        elif time_period == "monthly":
-            data['cohort_year'] = data['cohort'].dt.strftime('%Y').astype(dtype=int)
+        elif time_period == 'monthly':
+            data['cohort_year'] = data['moment'].dt.strftime('%Y').astype(dtype=int)
             data['first_cohort_year'] = data['first_cohort'].dt.strftime('%Y').astype(dtype=int)
             data['cohort_year_diff'] = data['cohort_year'] - data['first_cohort_year']
 
-            data['cohort_month'] = data['cohort'].dt.strftime('%m').astype(dtype=int)
+            data['cohort_month'] = data['moment'].dt.strftime('%m').astype(dtype=int)
             data['first_cohort_month'] = data['first_cohort'].dt.strftime('%m').astype(dtype=int)
             data['cohort_month_diff'] = data['cohort_month'] - data['first_cohort_month']
 
@@ -333,28 +332,27 @@ class Map:
         elif time_period == 'weekly' or time_period == 'biweekly':
             n_days = 7.0 if time_period == 'weekly' else 14.0
 
-            data['cohort'] = data.day.dt.date_trunc('week').astype('timestamp')
+            data['cohort'] = data['moment'].dt.date_trunc('week').astype('timestamp')
             data['first_cohort'] = data['first_cohort'].dt.date_trunc('week')
             data['cohort_distance'] = (data['cohort'] - data['first_cohort']).dt.days
             data['cohort_distance'] = data['cohort_distance'] / n_days
 
         else:
             # daily
-            data['cohort_distance'] = data['cohort'] - data['first_cohort']
+            data['cohort_distance'] = data['moment'] - data['first_cohort']
             data['cohort_distance'] = data['cohort_distance'].dt.days
 
-        # applying start_date filter
-        if start_date is not None:
-            first_cohort_start_date = start_date
+        # applying start date filter
+        if _start_date is not None:
             if time_period == 'yearly':
-                _filter = data['first_cohort'] >= first_cohort_start_date.year
+                _filter = data['first_cohort'] >= _start_date.year
             else:
-                _filter = data['first_cohort'] >= first_cohort_start_date
+                _filter = data['first_cohort'] >= _start_date
             data = data[_filter]
 
-        # applying end_date filter
-        if end_date is not None:
-            data = data[data['cohort'] < end_date]
+        # applying end date filter
+        if _end_date is not None:
+            data = data[data['moment'] < _end_date]
 
         # make the first_cohort pretty
         if time_period == 'monthly':
@@ -381,6 +379,8 @@ class Map:
         columns = [f'_{j}' for j in sorted([int(i.replace('_', ''))
                                             for i in retention_matrix.columns])]
         retention_matrix = retention_matrix[columns]
+        # for BigQuery we need sorting
+        retention_matrix = retention_matrix.sort_index()
 
         if percentage:
             first_column = retention_matrix[columns[0]]
