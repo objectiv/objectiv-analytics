@@ -117,45 +117,29 @@ def test_json_array_contains(engine, dtype):
 
 
 def test_json_getitem(engine, dtype):
-    # TODO: make this a one-query test
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
-    bts = bt.mixed_column.json[0]
+    bt = bt[['mixed_column']]
+    bt['get_0'] = bt.mixed_column.json[0]
+    bt['get_min3'] = bt.mixed_column.json[-3]
+    bt['get_min4'] = bt.mixed_column.json[-4]  # Should be the same as json[0] for row 0 and 4
+    bt['get_min5'] = bt.mixed_column.json[-5]  # -5 doesn't exist, we expect to get `None`
+    bt['get_a'] = bt.mixed_column.json["a"]
+    bt = bt.drop(columns=['mixed_column'])
     assert_equals_data(
-        bts,
+        bt,
         use_to_pandas=True,
-        expected_columns=['_index_row', 'mixed_column'],
+        expected_columns=['_index_row', 'get_0', 'get_min3', 'get_min4', 'get_min5', 'get_a'],
         expected_data=[
-            [0, None],
-            [1, "a"],
-            [2, None],
-            [3, {"_type": "WebDocumentContext", "id": "#document"}],
-            [4, None]
-        ]
-    )
-    bts = bt.mixed_column.json[-2]
-    assert_equals_data(
-        bts,
-        use_to_pandas=True,
-        expected_columns=['_index_row', 'mixed_column'],
-        expected_data=[
-            [0, None],
-            [1, "c"],
-            [2, None],
-            [3, {"_type": "SectionContext", "id": "top-10"}],
-            [4, None]
-        ]
-    )
-    bts = bt.mixed_column.json["a"]
-    assert_equals_data(
-        bts,
-        use_to_pandas=True,
-        expected_columns=['_index_row', 'mixed_column'],
-        expected_data=[
-            [0, "b"],
-            [1, None],
-            [2, "b"],
-            [3, None],
-            [4, None]
+            [0, None, None, None, None, "b"],
+            [1, "a", "b", "a", None, None],
+            [2, None, None, None, None, "b"],
+            [3,
+             {"_type": "WebDocumentContext", "id": "#document"},
+             {"_type": "SectionContext", "id": "home"},
+             {"_type": "WebDocumentContext", "id": "#document"},
+             None,
+             None],
+            [4, None, None, None, None, None]
         ]
     )
 

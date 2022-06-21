@@ -515,15 +515,21 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
         return Expression.construct(fmt, slicing_mask, self._series_object)
 
     def get_array_item(self, key: int) -> 'TSeriesJson':
-        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
-        if key >= 0:
+        """
+        Returns an item from the json array.
+        The key is treated as a 0-based index. If negative this will count from the end of the array (one
+            based). If the index does not exist this will render None/NULL.
+        This assumes the top-level item in the json is an array
+        """
+        if key < 0:
+            # BigQuery doesn't (yet) natively support this, so we emulate this by reversing the array
+            key = abs(key)
+            expression = Expression.construct(
+                f'ARRAY_REVERSE(JSON_QUERY_ARRAY({{}}))[SAFE_ORDINAL({key})]',
+                self._series_object
+            )
+        else:
             expression = Expression.construct(f'''JSON_QUERY({{}}, '$[{key}]')''', self._series_object)
-            return self._series_object.copy_override(expression=expression)
-        # case key < 0
-        # BigQuery doesn't (yet) natively support this, so we emulate this.
-        array_len = self.get_array_length()
-        expr_offset = Expression.construct(f'OFFSET({{}} {key})', array_len)
-        expression = Expression.construct('JSON_QUERY_ARRAY({})[{}]', self._series_object, expr_offset)
         return self._series_object.copy_override(expression=expression)
 
     def get_dict_item(self, key: str) -> 'TSeriesJson':
@@ -678,7 +684,12 @@ class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
             )
 
     def get_array_item(self, key: int) -> 'TSeriesJson':
-        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        """
+        Returns an item from the json array.
+        The key is treated as a 0-based index. If negative this will count from the end of the array (one
+            based). If the index does not exist this will render None/NULL.
+        This assumes the top-level item in the json is an array
+        """
         return self._series_object \
             .copy_override(expression=Expression.construct(f'{{}}->{key}', self._series_object))
 
