@@ -1,6 +1,5 @@
 import json
 from typing import Dict, Any
-from copy import deepcopy
 
 from objectiv_backend.schema.schema import make_event_from_dict, make_context, \
     ContentContext, HttpContext, MarketingContext
@@ -211,8 +210,6 @@ def test_required_context_broken_state():
 
     # check event is valid to start with
     event_schema = get_collector_config().event_schema
-    b = deepcopy(event_schema)
-
     assert(validate_event_adheres_to_schema(event_schema=event_schema, event=event) == [])
 
     # now we change it to ApplicationLoadedEvent, this doesn't require a location_stack, yet, it has one
@@ -220,6 +217,5 @@ def test_required_context_broken_state():
     assert (validate_event_adheres_to_schema(event_schema=event_schema, event=event) == [])
 
     # now we remove the location_stack, event should still be valid
-
     event['location_stack'] = []
     assert (validate_event_adheres_to_schema(event_schema=event_schema, event=event) == [])
