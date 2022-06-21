@@ -201,7 +201,7 @@ class Aggregate:
         groupby_col = ['__application', '__feature_nice_name', 'event_type']
 
         # selects specific event types, so stack_event_types must be a superset of [event_types]
-        interactive_events = data[data.stack_event_types >= [event_type]]
+        interactive_events = data[data.stack_event_types.json.array_contains(event_type)]
 
         # users by feature
         users_feature = interactive_events.groupby(groupby_col).agg({'user_id': 'nunique'})
@@ -262,7 +262,9 @@ class Aggregate:
         converted_users = data[(data.converted_users & data.zero_conversions_at_moment)]
 
         # select only user interactions
-        converted_users_filtered = converted_users[converted_users.stack_event_types >= [event_type]]
+        converted_users_filtered = converted_users[
+            converted_users.stack_event_types.json.array_contains(event_type)
+        ]
 
         groupby_col = ['__application', '__feature_nice_name', 'event_type']
         converted_users_features = self._mh.agg.unique_users(converted_users_filtered,

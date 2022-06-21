@@ -102,7 +102,8 @@ From this prepared dataset, we show the users for the home page first.
 .. code-block:: python
 
     # select only user actions, so stack_event_types must be a superset of ['InteractiveEvent']
-    interactive_events = df[df.stack_event_types >= ['InteractiveEvent']]
+    interactive_events = df[df.stack_event_types.json.array_contains('InteractiveEvent')]
+
 
     top_interactions = modelhub.agg.unique_users(interactive_events, groupby=['application','root_location','feature_nice_name', 'event_type'])
     top_interactions = top_interactions.reset_index()
