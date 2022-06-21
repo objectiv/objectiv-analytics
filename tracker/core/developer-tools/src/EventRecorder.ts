@@ -17,29 +17,28 @@ import { RecordedEvents } from './RecordedEvents';
  * Some default values for the global instance of EventRecorder. Can be changed by calling EventRecorder.configure.
  */
 const DEFAULT_ENABLED = true;
-const DEFAULT_MAX_EVENTS = 1000;
 const DEFAULT_AUTO_START = true;
 
 /**
- * EventRecorder factory. A TrackerTransport to store TrackerEvents in the `recordedEvents` state for later analysis.
+ * EventRecorder is a TrackerTransport to store TrackerEvents and error messages for later analysis.
  * Recorded TrackerEvents are automatically assigned predictable identifiers: `event.type` + `#` + number of times
  * Event Type occurred, starting at 1. Also, their `time` is removed. This ensures comparability.
+ * Furthermore, the lists of TrackedEvents and error messages are sorted for easier testing.
  */
 export const EventRecorder = new (class implements EventRecorderInterface {
   readonly transportName = 'EventRecorder';
   enabled: boolean = DEFAULT_ENABLED;
-  maxEvents: number = DEFAULT_MAX_EVENTS;
   autoStart: boolean = DEFAULT_AUTO_START;
   recording: boolean = this.enabled && this.autoStart;
+  errors: string[] = [];
   _events: RecordedEvent[] = [];
   eventsCountByType: { [type: string]: number } = {};
 
   /**
-   * Reconfigures EventRecorder `maxEvents` and/or `autoStart`.
+   * Reconfigures EventRecorder's `enabled` and `autoStart` options.
    */
   configure(eventRecorderConfig?: EventRecorderConfig) {
     this.enabled = eventRecorderConfig?.enabled ?? DEFAULT_ENABLED;
-    this.maxEvents = eventRecorderConfig?.maxEvents ?? DEFAULT_MAX_EVENTS;
     this.autoStart = eventRecorderConfig?.autoStart ?? DEFAULT_AUTO_START;
     this.recording = this.enabled && this.autoStart;
   }
@@ -48,6 +47,7 @@ export const EventRecorder = new (class implements EventRecorderInterface {
    * Completely resets EventRecorder state.
    */
   clear() {
+    this.errors.length = 0;
     this._events.length = 0;
     this.eventsCountByType = {};
   }
@@ -98,13 +98,18 @@ export const EventRecorder = new (class implements EventRecorderInterface {
       });
     });
 
-    // Splice off excess elements from the list, based on maxEvents
-    if (this._events.length >= this.maxEvents) {
-      this._events.splice(0, this._events.length - this.maxEvents);
-    }
-
     // Make event list predictable, sort by event id
     this._events.sort((a: RecordedEvent, b: RecordedEvent) => a.id.localeCompare(b.id));
+  }
+
+  /**
+   * Records an error.
+   */
+  error(errorMessage: string) {
+    this.errors.push(errorMessage);
+
+    // Make error list predictable by sorting it
+    this.errors.sort();
   }
 
   /**

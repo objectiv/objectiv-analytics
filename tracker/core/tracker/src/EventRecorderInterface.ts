@@ -26,7 +26,7 @@ export type RecordedEvent = Omit<AbstractEvent, 'time' | 'location_stack' | 'glo
 };
 
 /**
- * EventRecording instances can store lists of TrackerEvents for snapshot-testing or other debugging purposes.
+ * The configuration options of EventRecorder.
  */
 export type EventRecorderConfig = {
   /**
@@ -35,23 +35,19 @@ export type EventRecorderConfig = {
   enabled?: boolean;
 
   /**
-   * Determines how many TrackerEvents will be recorded before rotating the oldest ones. Default to 1000.
-   */
-  maxEvents?: number;
-
-  /**
    * Whether EventRecorder will start recording automatically. Default to true.
    */
   autoStart?: boolean;
 };
 
 /**
- * EventRecording instances can store lists of TrackerEvents for snapshot-testing or other debugging purposes.
+ * EventRecorder instances can store lists of TrackerEvents for snapshot-testing or other debugging purposes.
  */
 export type EventRecorderInterface = TrackerTransportInterface &
   Required<EventRecorderConfig> & {
     /**
-     * When set to false it will cause EventRecorder to become unusable. Trackers will not automatically record events.
+     * When set to false it will cause EventRecorder to become unusable.
+     * Trackers will not automatically record events and errors will not be collected.
      */
     enabled: boolean;
 
@@ -61,12 +57,17 @@ export type EventRecorderInterface = TrackerTransportInterface &
     recording: boolean;
 
     /**
+     * A list of recorded error messages.
+     */
+    errors: string[];
+
+    /**
      * A list of recorded events wrapped in a RecordedEvents instance for easier querying.
      */
     events: RecordedEventsInterface;
 
     /**
-     * Allows reconfiguring EventRecorder
+     * Allows reconfiguring EventRecorder.
      */
     configure: (eventRecorderConfig?: EventRecorderConfig) => void;
 
@@ -76,12 +77,17 @@ export type EventRecorderInterface = TrackerTransportInterface &
     clear: () => void;
 
     /**
-     * Starts recording events.
+     * Starts recording events and errors.
      */
     start: () => void;
 
     /**
-     * Stops recording events.
+     * Stops recording events and errors.
      */
     stop: () => void;
+
+    /**
+     * Records an error.
+     */
+    error: (errorMessage: string) => void;
   };

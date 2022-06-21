@@ -27,7 +27,6 @@ describe('PathContextFromURLPlugin - node', () => {
     );
   });
 
-
   describe('Without developer tools', () => {
     let objectivGlobal = globalThis.objectiv;
 

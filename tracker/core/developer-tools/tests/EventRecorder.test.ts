@@ -35,13 +35,7 @@ describe('EventRecorder', () => {
     expect(EventRecorder.recording).toBe(true);
   });
 
-  it('should allow configuring maxEvents', async () => {
-    EventRecorder.configure({ maxEvents: 10 });
-
-    expect(EventRecorder.maxEvents).toBe(10);
-  });
-
-  it('should store the events in recordedEvents', async () => {
+  it('should store the events in `events`', async () => {
     const testPressEvent = new TrackerEvent({ _type: 'PressEvent', id: 'test-press-event' });
     const testVisibleEvent = new TrackerEvent({ _type: 'VisibleEvent', id: 'test-visible-event' });
     const testSuccessEvent = new TrackerEvent({ _type: 'SuccessEvent', id: 'test-success-event' });
@@ -65,6 +59,16 @@ describe('EventRecorder', () => {
     expect(EventRecorder.events.filter('VisibleEvent').events).toStrictEqual([
       expect.objectContaining({ _type: 'VisibleEvent', id: 'VisibleEvent#1' }),
     ]);
+  });
+
+  it('should store the error messages in `errors`', async () => {
+    expect(EventRecorder.errors).toStrictEqual([]);
+
+    EventRecorder.error('error 3');
+    EventRecorder.error('error 1');
+    EventRecorder.error('error 2');
+
+    expect(EventRecorder.errors).toStrictEqual(['error 1', 'error 2', 'error 3']);
   });
 
   it('should automatically assign a predictable identifier to Events of the same type', async () => {
@@ -156,47 +160,5 @@ describe('EventRecorder', () => {
     await EventRecorder.handle(testPressEvent, testVisibleEvent, testSuccessEvent);
 
     expect(EventRecorder._events.length).toBe(0);
-  });
-
-  it('should throw away the oldest recorder events when reaching maxEvents', async () => {
-    EventRecorder.configure({ maxEvents: 3 });
-
-    const event1 = new TrackerEvent({ _type: 'PressEvent' });
-    const event2 = new TrackerEvent({ _type: 'PressEvent' });
-    const event3 = new TrackerEvent({ _type: 'PressEvent' });
-    const event4 = new TrackerEvent({ _type: 'PressEvent' });
-    const event5 = new TrackerEvent({ _type: 'PressEvent' });
-    const event6 = new TrackerEvent({ _type: 'PressEvent' });
-    const event7 = new TrackerEvent({ _type: 'PressEvent' });
-    const event8 = new TrackerEvent({ _type: 'PressEvent' });
-    const event9 = new TrackerEvent({ _type: 'PressEvent' });
-
-    await EventRecorder.handle(event1, event2, event3, event4);
-
-    expect(EventRecorder._events.length).toBe(3);
-    expect(EventRecorder._events[0].id).toBe('PressEvent#2');
-    expect(EventRecorder._events[1].id).toBe('PressEvent#3');
-    expect(EventRecorder._events[2].id).toBe('PressEvent#4');
-
-    await EventRecorder.handle(event5);
-
-    expect(EventRecorder._events.length).toBe(3);
-    expect(EventRecorder._events[0].id).toBe('PressEvent#3');
-    expect(EventRecorder._events[1].id).toBe('PressEvent#4');
-    expect(EventRecorder._events[2].id).toBe('PressEvent#5');
-
-    await EventRecorder.handle(event6, event7, event8);
-
-    expect(EventRecorder._events.length).toBe(3);
-    expect(EventRecorder._events[0].id).toBe('PressEvent#6');
-    expect(EventRecorder._events[1].id).toBe('PressEvent#7');
-    expect(EventRecorder._events[2].id).toBe('PressEvent#8');
-
-    await EventRecorder.handle(event9);
-
-    expect(EventRecorder._events.length).toBe(3);
-    expect(EventRecorder._events[0].id).toBe('PressEvent#7');
-    expect(EventRecorder._events[1].id).toBe('PressEvent#8');
-    expect(EventRecorder._events[2].id).toBe('PressEvent#9');
   });
 });
