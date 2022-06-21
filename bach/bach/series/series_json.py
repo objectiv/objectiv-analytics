@@ -532,14 +532,13 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
         """
         if key < 0:
             # BigQuery doesn't (yet) natively support this, so we emulate this by reversing the array
-            key = -key - 1
-            array_expr = Expression.construct(
-                "'[' || ARRAY_TO_STRING(ARRAY_REVERSE(JSON_QUERY_ARRAY({})), ', ') || ']'",
+            key = abs(key)
+            expression = Expression.construct(
+                f'ARRAY_REVERSE(JSON_QUERY_ARRAY({{}}))[SAFE_ORDINAL({key})]',
                 self._series_object
             )
         else:
-            array_expr = self._series_object.expression
-        expression = Expression.construct(f'''JSON_QUERY({{}}, '$[{key}]')''', array_expr)
+            expression = Expression.construct(f'''JSON_QUERY({{}}, '$[{key}]')''', self._series_object)
         return self._series_object.copy_override(expression=expression)
 
     def get_dict_item(self, key: str) -> 'TSeriesJson':
