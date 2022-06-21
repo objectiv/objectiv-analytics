@@ -138,19 +138,25 @@ def test_json_getitem(engine, dtype):
     bt = bt[['mixed_column']]
     bt['get_0'] = bt.mixed_column.json[0]
     bt['get_min3'] = bt.mixed_column.json[-3]
+    bt['get_min4'] = bt.mixed_column.json[-4]  # Should be the same as json[0] for row 0 and 4
     bt['get_min5'] = bt.mixed_column.json[-5]  # -5 doesn't exist, we expect to get `None`
     bt['get_a'] = bt.mixed_column.json["a"]
     bt = bt.drop(columns=['mixed_column'])
     assert_equals_data(
         bt,
         use_to_pandas=True,
-        expected_columns=['_index_row', 'get_0', 'get_min3', 'get_min5', 'get_a'],
+        expected_columns=['_index_row', 'get_0', 'get_min3', 'get_min4', 'get_min5', 'get_a'],
         expected_data=[
-            [0, None, None, None, "b"],
-            [1, "a", "b", None, None],
-            [2, None, None, None, "b"],
-            [3, {"_type": "WebDocumentContext", "id": "#document"}, {"_type": "SectionContext", "id": "home"}, None, None],
-            [4, None, None, None, None]
+            [0, None, None, None, None, "b"],
+            [1, "a", "b", "a", None, None],
+            [2, None, None, None, None, "b"],
+            [3,
+             {"_type": "WebDocumentContext", "id": "#document"},
+             {"_type": "SectionContext", "id": "home"},
+             {"_type": "WebDocumentContext", "id": "#document"},
+             None,
+             None],
+            [4, None, None, None, None, None]
         ]
     )
 
