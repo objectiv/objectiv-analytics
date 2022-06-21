@@ -2,15 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import {
-  ContextsConfig,
-  GlobalContextName,
-  makePathContext,
-  TrackerEvent,
-  TrackerInterface,
-  TrackerPluginInterface,
-  TrackerValidationRuleInterface,
-} from '@objectiv/tracker-core';
+import { ContextsConfig, makePathContext, TrackerPluginInterface, } from '@objectiv/tracker-core';
 
 /**
  * The PathContextFromURL Plugin gathers the current URL using the Location API.
@@ -22,33 +14,11 @@ import {
  */
 export class PathContextFromURLPlugin implements TrackerPluginInterface {
   readonly pluginName = `PathContextFromURLPlugin`;
-  validationRules: TrackerValidationRuleInterface[] = [];
-  initialized: boolean = false;
 
   /**
    * Initializes validation rules.
    */
-  initialize({ platform }: TrackerInterface): void {
-    if (!this.isUsable()) {
-      globalThis.objectiv.devTools?.TrackerConsole.error(
-        `｢objectiv:${this.pluginName}｣ Cannot initialize. Plugin is not usable (document: ${typeof document}).`
-      );
-      return;
-    }
-
-    if (globalThis.objectiv.devTools) {
-      this.validationRules = [
-        globalThis.objectiv.devTools.makeGlobalContextValidationRule({
-          platform,
-          logPrefix: this.pluginName,
-          contextName: GlobalContextName.PathContext,
-          once: true,
-        }),
-      ];
-    }
-
-    this.initialized = true;
-
+  initialize(): void {
     globalThis.objectiv.devTools?.TrackerConsole.log(
       `%c｢objectiv:${this.pluginName}｣ Initialized`,
       'font-weight: bold'
@@ -70,27 +40,6 @@ export class PathContextFromURLPlugin implements TrackerPluginInterface {
       id: document.location.href,
     });
     contexts.global_contexts.push(pathContext);
-  }
-
-  /**
-   * If the Plugin is usable runs all validation rules.
-   */
-  validate(event: TrackerEvent): void {
-    if (!this.isUsable()) {
-      globalThis.objectiv.devTools?.TrackerConsole.error(
-        `｢objectiv:${this.pluginName}｣ Cannot validate. Plugin is not usable (document: ${typeof document}).`
-      );
-      return;
-    }
-
-    if (!this.initialized) {
-      globalThis.objectiv.devTools?.TrackerConsole.error(
-        `｢objectiv:${this.pluginName}｣ Cannot validate. Make sure to initialize the plugin first.`
-      );
-      return;
-    }
-
-    this.validationRules.forEach((validationRule) => validationRule.validate(event));
   }
 
   /**
