@@ -505,8 +505,8 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
         if not isinstance(filtering_slice, dict):
             raise TypeError(f'key should be a dict, actual type: {type(filtering_slice)}')
 
-        # this way we can reuse code from the accesor without duplicating.
-        # 'element' will filled by iterating over the json array in the query below.
+        # this way we can reuse code from the accessor without duplicating.
+        # 'element' will be filled by iterating over the json array in the query below.
         element_json = self._series_object.copy_override(
             expression=Expression.construct('element'),
         )
@@ -540,8 +540,7 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
         return cast('TSeriesJson', self.get_value(key=key, as_str=False))
 
     def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'TSeriesJson']:
-        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
-        # TODO: as_str is never used?
+        """ For documentation, see function :meth:`JsonAccessor.get_value()` """
         # Special characters are tricky. According to the latests jsonpath spec draft we should use the
         # index selector [1] (e.g. `$['key with special characters']`). But BigQuery only supports the dot
         # selector [2][3]. However BigQuery does allow us to quote the key when using the dot selector [4],
@@ -576,7 +575,7 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
         ).copy_override_type(SeriesString)
 
     def get_array_length(self) -> 'SeriesInt64':
-        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        """ For documentation, see function :meth:`JsonAccessor.get_array_length()` """
         # Implementing a more generic __len__() function is not trivial as a json object can be (among
         # others) an array, a dict, or a string, all of which should be supported by a generic __len__().
         # So for now we have a dedicated len function for arrays.
@@ -708,7 +707,7 @@ class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
         return cast('TSeriesJson', self.get_value(key=key, as_str=False))
 
     def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'TSeriesJson']:
-        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        """ For documentation, see function :meth:`JsonAccessor.get_value()` """
 
         if '"' in key:
             raise ValueError(f'key values containing double quotes are not supported. key: {key}')
@@ -726,7 +725,7 @@ class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
         return result
 
     def get_array_length(self) -> 'SeriesInt64':
-        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        """ For documentation, see function :meth:`JsonAccessor.get_array_length()` """
         from bach.series import SeriesInt64
         expression = Expression.construct('jsonb_array_length({})', self._series_object)
         return self._series_object \

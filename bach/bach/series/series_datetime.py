@@ -115,6 +115,57 @@ class DateTimeOperation:
         str_series = self._series.copy_override_type(SeriesString).copy_override(expression=expression)
         return str_series
 
+    def date_trunc(self, date_part: str) -> Series:
+        """
+        Truncates date value based on a specified date part.
+        The value is always rounded to the beginning of date_part.
+
+        This operation can be applied only on SeriesDate or SeriesTimestamp.
+
+        :param date_part: Allowed values are 'second', 'minute',
+            'hour', 'day', 'week', 'month', 'quarter', and 'year'.
+
+        .. code-block:: python
+
+            # return the date corresponding to the Monday of that week
+            df['week'] = df.some_date_or_timestamp_series.dt.date_trunc('week')
+            # return the first day of the quarter
+            df['quarter'] = df.some_date_or_timestamp_series.dt.date_trunc('quarter')
+
+        :returns: the truncated timestamp value with a granularity of date_part.
+
+        """
+
+        available_formats = ['second', 'minute', 'hour', 'day', 'week',
+                             'month', 'quarter', 'year']
+        if date_part not in available_formats:
+            raise ValueError(f'{date_part} format is not available.')
+
+        if not (isinstance(self._series, SeriesDate) or
+                isinstance(self._series, SeriesTimestamp)):
+            raise ValueError(f'{type(self._series)} type is not supported.')
+
+        engine = self._series.engine
+
+        if is_postgres(engine):
+            expression = Expression.construct(
+                'date_trunc({}, {})',
+                Expression.string_value(date_part),
+                self._series,
+            )
+        elif is_bigquery(engine):
+            if date_part == 'week':
+                date_part = 'week(monday)'
+            expression = Expression.construct(
+                'timestamp_trunc({}, {})',
+                self._series,
+                Expression.raw(date_part),
+            )
+        else:
+            raise DatabaseNotSupportedException(engine)
+
+        return self._series.copy_override(expression=expression)
+
 
 class TimedeltaOperation(DateTimeOperation):
     def _get_conversion_df(self) -> 'DataFrame':
