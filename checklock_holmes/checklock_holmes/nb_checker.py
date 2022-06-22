@@ -127,20 +127,21 @@ class NoteBookChecker:
                 continue
 
             if is_execution:
-                source_without_comments = [
-                    stmt for stmt in cell_metadata['source'] if not stmt.startswith('#')
+                source_without_comments_and_displays = [
+                    stmt for stmt in cell_metadata['source']
+                    if not (
+                        stmt.startswith('#')
+                        # avoid printing on console
+                        or (_IGNORE_MARKDOWN_SQL_DISPLAYS and 'display_sql_as_markdown' in stmt)
+                    )
                 ]
 
-                # ignore cell with just comments
-                if not source_without_comments:
+                if not source_without_comments_and_displays:
                     continue
 
                 formatted_block = self._log_wrapped_cell_code(
-                    cell_num, engine, source=source_without_comments,
+                    cell_num, engine, source=source_without_comments_and_displays,
                 )
-                # avoid printing on console
-                if _IGNORE_MARKDOWN_SQL_DISPLAYS and 'display_sql_as_markdown(' in formatted_block:
-                    continue
 
             else:
                 formatted_block = f'    # CELL {cell_num}\n    ' + '    '.join(cell_metadata['source'])

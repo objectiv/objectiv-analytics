@@ -8,6 +8,7 @@ from typing import List
 class SupportedEngine(str, Enum):
     POSTGRES = 'postgres'
     BIGQUERY = 'bigquery'
+    ALL = 'all'
 
     @classmethod
     def get_supported_engines(cls, engines_to_check: List[str]) -> List['SupportedEngine']:
@@ -15,6 +16,6 @@ class SupportedEngine(str, Enum):
         Returns supported engines based on cli provided param
         """
         if len(engines_to_check) == 1 and engines_to_check[0] == 'all':
-            return [cls(eng) for eng in cls]
+            return [cls(eng) for eng in cls if eng != 'all']
 
-        return [cls(e_check) for e_check in engines_to_check]
+        return [cls(e_check) for e_check in engines_to_check if e_check != 'all']
