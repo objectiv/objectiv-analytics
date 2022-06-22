@@ -1,9 +1,6 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-from enum import Enum
-from typing import List, Union
-
 import bach
 from bach.series import Series
 from sql_models.constants import NotSet, not_set
