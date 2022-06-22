@@ -1,3 +1,7 @@
+"""
+Copyright 2022 Objectiv B.V.
+"""
+
 import glob
 import os
 import re

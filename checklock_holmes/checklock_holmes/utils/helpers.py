@@ -1,3 +1,7 @@
+"""
+Copyright 2022 Objectiv B.V.
+"""
+
 from datetime import datetime
 from typing import List
 
@@ -5,6 +9,11 @@ from tabulate import tabulate
 
 from checklock_holmes.models.nb_checker_models import NoteBookCheck
 from checklock_holmes.utils import constants
+
+
+class CuriousIncident(Exception):
+    def __init__(self, notebook_name: str, exc: Exception):
+        super().__init__(f'{exc} that was the curious incident when executing {notebook_name} notebook')
 
 
 def store_github_issue(nb_check: NoteBookCheck, github_issues_file: str) -> None:

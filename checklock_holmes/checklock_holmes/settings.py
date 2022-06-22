@@ -1,3 +1,7 @@
+"""
+Copyright 2022 Objectiv B.V.
+"""
+
 from typing import Dict
 
 from pydantic import BaseSettings

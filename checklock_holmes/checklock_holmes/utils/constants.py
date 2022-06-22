@@ -1,3 +1,7 @@
+"""
+Copyright 2022 Objectiv B.V.
+"""
+
 # templates
 from termcolor import colored
 
@@ -58,6 +62,6 @@ ELAPSED_TIME_CELL_HEADER = 'elapsed_time per cell (seconds)'
 SUCCESS_CHECK_MESSAGE = colored('Successful checks: {success_checks} ({perc_success}%)', 'green')
 FAILED_CHECK_MESSAGE = colored('Failed checks: {failed_checks} ({perc_failed}%)', 'red')
 MORE_INFORMATION_MESSAGE = (
-    'For more information about failed checks, please see: '
+    'Dear Watson, for more information about failed checks, please see: '
     f"{colored('{github_issue_file}', 'blue')} file."
 )

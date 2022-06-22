@@ -1,3 +1,6 @@
+"""
+Copyright 2022 Objectiv B.V.
+"""
 import json
 import re
 import time
@@ -14,6 +17,8 @@ from checklock_holmes.utils.constants import (
     TIMING_CELL_CODE_TEMPLATE, WRAPPED_CODE_TEMPLATE
 )
 from checklock_holmes.utils.supported_engines import SupportedEngine
+
+from checklock_holmes.utils.helpers import CuriousIncident
 
 _DEFAULT_ENV_VARIABLES = {
     'OBJECTIV_VERSION_CHECK_DISABLE': 'true'
@@ -46,6 +51,9 @@ class NoteBookChecker:
         try:
             exec(wrapped_script)
         except Exception as exc:
+            if not self._errors.get(engine):
+                raise CuriousIncident(notebook_name=self.metadata.name, exc=exc)
+
             completed = False
         end_time = time.time()
 
@@ -95,8 +103,14 @@ class NoteBookChecker:
                 continue
 
             if is_execution:
+                source_without_comments = [stmt for stmt in cell_metadata['source'] if not stmt.startswith('#')]
+
+                # ignore cell with just comments
+                if not source_without_comments:
+                    continue
+
                 formatted_block = self._log_wrapped_cell_code(
-                    cell_num, engine, source=cell_metadata['source'],
+                    cell_num, engine, source=source_without_comments,
                 )
                 # avoid printing on console
                 if _IGNORE_MARKDOWN_SQL_DISPLAYS and 'display_sql_as_markdown(' in formatted_block:

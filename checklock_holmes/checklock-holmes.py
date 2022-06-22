@@ -1,4 +1,5 @@
-"""CHECKLOCK HOLMES CLI
+"""
+CHECKLOCK HOLMES CLI
 Usage:
     checklock-holmes.py [-x | --exitfirst] [-e | --engine=<engine>...] [--nb=<file>...] [--gh_issues_dir=<ghi>] [--dump_nb_scripts_dir=<nbs_dir>] [-t | --timeit]
     checklock-holmes.py -h | --help
@@ -11,6 +12,8 @@ Options:
     --gh_issues_dir=<ghi>           Directory for logging github issues [default: {default_github_issues_dir}].
     --dump_nb_scripts_dir<nbs_dir>  Directory where to dump notebook scripts.
     -t --timeit                     Time each cell
+
+Copyright 2022 Objectiv B.V.
 """
 from docopt import docopt
 from tqdm import tqdm
