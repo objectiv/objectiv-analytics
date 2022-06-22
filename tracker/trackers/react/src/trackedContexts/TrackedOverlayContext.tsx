@@ -3,8 +3,8 @@
  */
 
 import { makeIdFromString } from '@objectiv/tracker-core';
-import { OverlayContextWrapper, trackVisibility, useLocationStack, useOnChange } from '@objectiv/tracker-react-core';
-import React, { useState } from 'react';
+import { OverlayContextWrapper, trackVisibility, useLocationStack } from '@objectiv/tracker-react-core';
+import React, { useRef } from 'react';
 import { TrackedShowableContextProps } from '../types';
 
 /**
@@ -12,16 +12,14 @@ import { TrackedShowableContextProps } from '../types';
  * Automatically tracks HiddenEvent and VisibleEvent based on the given `isVisible` prop.
  */
 export const TrackedOverlayContext = React.forwardRef<HTMLElement, TrackedShowableContextProps>((props, ref) => {
-  const [wasVisible, setWasVisible] = useState<boolean>(false);
   const { id, Component, forwardId = false, isVisible = false, normalizeId = true, ...otherProps } = props;
+  const wasVisible = useRef<boolean>(isVisible);
   const locationStack = useLocationStack();
 
   let overlayId: string | null = id;
   if (normalizeId) {
     overlayId = makeIdFromString(overlayId);
   }
-
-  useOnChange(isVisible, () => setWasVisible(isVisible));
 
   const componentProps = {
     ...otherProps,
@@ -42,7 +40,8 @@ export const TrackedOverlayContext = React.forwardRef<HTMLElement, TrackedShowab
   return (
     <OverlayContextWrapper id={overlayId}>
       {(trackingContext) => {
-        if ((wasVisible && !isVisible) || (!wasVisible && isVisible)) {
+        if ((wasVisible.current && !isVisible) || (!wasVisible.current && isVisible)) {
+          wasVisible.current = isVisible;
           trackVisibility({ isVisible, ...trackingContext });
         }
         return React.createElement(Component, componentProps);
