@@ -1,6 +1,6 @@
 .. _feature_importance:
 
-.. frontmatterposition:: 6
+.. frontmatterposition:: 7
 
 .. currentmodule:: bach
 

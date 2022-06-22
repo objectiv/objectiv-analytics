@@ -1,6 +1,6 @@
 .. _example_logistic_regression:
 
-.. frontmatterposition:: 5
+.. frontmatterposition:: 6
 
 .. currentmodule:: bach
 
@@ -112,7 +112,7 @@ Create columns for the predicted values and labels in the sampled data set. Labe
     features_set_sample['predicted_labels'] = lr.predict(X)
 
     # show the sampled data set, including predictions
-    features_set_sample.head()
+    features_set_sample.head(20)
 
 Unsample and view the SQL
 -------------------------

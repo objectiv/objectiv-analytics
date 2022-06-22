@@ -69,8 +69,10 @@ introduction examples are :ref:`here <bach_examples>`.
     machine-learning
     product-analytics
     user-intent
+    explore-data
     feature-engineering
-    modelhub-basics
-    feature-importance
-    open-taxonomy
     logistic-regression
+    feature-importance
+    modelhub-basics
+    open-taxonomy
+
