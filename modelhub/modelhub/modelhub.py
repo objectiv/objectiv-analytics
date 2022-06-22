@@ -142,12 +142,6 @@ class ModelHub:
             else:
                 table_name = 'data'
 
-        if table_name is None:
-            if is_bigquery(engine):
-                table_name = 'events'
-            else:
-                table_name = 'data'
-
         data = get_sessionized_data(
             engine=engine,
             start_date=start_date,
