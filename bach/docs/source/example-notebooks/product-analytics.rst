@@ -74,7 +74,7 @@ To calculate the retention matrix, we need to distribute the users into mutually
 In the retention matrix:
     - each row represents a cohort,
     - each column represents a time range, where time is calculated with respect to the cohort start time,
-    - the values of the matrix elements are the number of users in a given cohort that returned again in a given time range.
+    - the values of the matrix elements are the number or percentage (depending on `percentage` parameter) of users in a given cohort that returned again in a given time range.
 
 N.B. the users' activity starts to be traced from start_date specified in modelhub where we load the data: `modelhub.get_objectiv_dataframe(start_date='2022-02-02')`.
 
