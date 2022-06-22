@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from sql_models.util import is_bigquery
 
-from modelhub.util import use_only_required_objectiv_series
+from modelhub.decorators import use_only_required_objectiv_series
 
 if TYPE_CHECKING:
     from modelhub import ModelHub
@@ -64,7 +64,7 @@ class Map:
             'start_boundary': WindowFrameBoundary.PRECEDING,
             'end_boundary': WindowFrameBoundary.FOLLOWING,
         }
-        data_cp = data[['session_id', 'user_id']]
+        data_cp = data.copy()
         data_cp['time_agg'] = self._mh.time_agg(data, time_aggregation)
 
         window = data_cp.groupby('user_id').window(**frame_args)
@@ -166,8 +166,6 @@ class Map:
         data['__conversion_counter'] = 0
         data.loc[data['__conversion'], '__conversion_counter'] = 1
 
-        # make the query more clean, just require these series
-        data = data[[partition, 'moment', '__conversion_counter']]
         if is_bigquery(data.engine):
             # group by materializes for BQ, window will make reference to column
             data = data.materialize(node_name='conversion_counter_bq')
@@ -201,10 +199,6 @@ class Map:
 
         data = data.copy()
         data['__conversions'] = self._mh.map.conversions_in_time(data, name=name)
-
-        # make the query more clean, just require these series
-        required_series = [partition, 'session_id', 'session_hit_number', '__conversions']
-        data = data[required_series]
 
         # sort all windows by session id and hit number
         sort_by = ['session_id', 'session_hit_number']

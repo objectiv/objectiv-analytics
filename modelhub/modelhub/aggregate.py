@@ -6,7 +6,7 @@ from bach.series import Series
 from sql_models.constants import NotSet, not_set
 from typing import List, Union, TYPE_CHECKING
 
-from modelhub.util import use_only_required_objectiv_series
+from modelhub.decorators import use_only_required_objectiv_series
 
 if TYPE_CHECKING:
     from modelhub import ModelHub
