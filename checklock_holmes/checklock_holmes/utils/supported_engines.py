@@ -11,6 +11,9 @@ class SupportedEngine(str, Enum):
 
     @classmethod
     def get_supported_engines(cls, engines_to_check: List[str]) -> List['SupportedEngine']:
+        """
+        Returns supported engines based on cli provided param
+        """
         if len(engines_to_check) == 1 and engines_to_check[0] == 'all':
             return [cls(eng) for eng in cls]
 

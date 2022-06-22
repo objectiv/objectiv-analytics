@@ -39,6 +39,7 @@ def check_notebooks(check_settings: NoteBookCheckSettings, exit_on_fail: bool) -
     total_checks = len(check_settings.notebooks_to_check) * len(check_settings.engines_to_check)
 
     stop_checks = False
+    # progress bar
     with tqdm(total=total_checks) as pbar:
         for nb in check_settings.notebooks_to_check:
             nb_metadata = NoteBookMetadata(path=nb)
@@ -48,14 +49,17 @@ def check_notebooks(check_settings: NoteBookCheckSettings, exit_on_fail: bool) -
             for engine in check_settings.engines_to_check:
                 pbar.set_description(f'Starting {engine} checks for {nb_metadata.name}.{NOTEBOOK_EXTENSION}...')
 
+                # store script before check, this way we don't wait till the check is finished
                 if check_settings.dump_nb_scripts_dir:
                     script_path = f'{check_settings.dump_nb_scripts_dir}/{nb_checker.metadata.name}_{engine}.py'
                     store_nb_script(script_path, nb_checker.get_script(engine, is_execution=False))
 
                 nb_check = nb_checker.check_notebook(engine)
                 checks.append(nb_check)
+                # update progress bar after finishing check
                 pbar.update(1)
 
+                # add issue to the file if check ends up with error
                 if nb_check.error:
                     store_github_issue(nb_check, github_issues_file_path)
                     if exit_on_fail:
@@ -65,6 +69,7 @@ def check_notebooks(check_settings: NoteBookCheckSettings, exit_on_fail: bool) -
             if stop_checks:
                 break
 
+    # display final check report
     display_check_results(
         nb_checks=checks,
         github_files_path=github_issues_file_path,

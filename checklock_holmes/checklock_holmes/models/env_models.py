@@ -9,6 +9,9 @@ class BaseEnvModel(BaseModel):
     _PREFIX = ''
 
     def dict(self, **kwargs):
+        """
+        Adds prefix to environment variables names if the model has one.
+        """
         return {
             (f'{self._PREFIX}_{field_name}' if self._PREFIX else field_name).upper(): value
             for field_name, value in super().dict(**kwargs).items()

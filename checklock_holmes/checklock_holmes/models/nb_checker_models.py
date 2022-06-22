@@ -26,6 +26,9 @@ class CellTiming(BaseModel):
 
 
 def _check_dir(dir_name: Optional[str]) -> None:
+    """
+    Helper for creating provided issues/scripts directory if it does not exist
+    """
     if dir_name and not os.path.exists(dir_name):
         os.makedirs(dir_name)
 
@@ -39,10 +42,16 @@ class NoteBookCheckSettings(BaseModel):
 
     @validator('engines_to_check')
     def _process_engines_to_check(cls, engines_to_check: List[str]) -> List[SupportedEngine]:
+        """
+        Verifies if engines are supported, parses string values to SupportedEngine instance
+        """
         return SupportedEngine.get_supported_engines(engines_to_check)
 
     @validator('notebooks_to_check')
     def _process_notebooks_to_check(cls, nb_to_check: List[str]) -> List[str]:
+        """
+        Verifies notebooks extensions, will retrieve all notebooks if filepath suggests.
+        """
         processed_nb_to_check = []
         for nb_file in nb_to_check:
             if NOTEBOOK_EXTENSION not in nb_file:
@@ -57,11 +66,17 @@ class NoteBookCheckSettings(BaseModel):
 
     @validator('github_issues_dir')
     def _check_gh_dir(cls, dir: str) -> str:
+        """
+        Creates issue directory if provided dir does not exist
+        """
         _check_dir(dir)
         return dir
 
     @validator('dump_nb_scripts_dir')
     def _check_nb_scripts_dir(cls, dir: str) -> str:
+        """
+        Creates scripts directory if provided dir does not exist
+        """
         _check_dir(dir)
         return dir
 
@@ -72,6 +87,9 @@ class NoteBookMetadata(BaseModel):
 
     @validator('name', always=True)
     def _process_name(cls, val: Optional[str], values: Dict[str, str]) -> str:
+        """
+        Extracts notebook name from notebook filepath.
+        """
         path = values['path']
         match = re.compile(NOTEBOOK_NAME_REGEX_PATTERN).match(path)
         if not match:

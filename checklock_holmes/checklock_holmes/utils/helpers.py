@@ -17,6 +17,9 @@ class CuriousIncident(Exception):
 
 
 def store_github_issue(nb_check: NoteBookCheck, github_issues_file: str) -> None:
+    """
+    If notebook check resulted with an error, it will add an issue to the final check's issue file.
+    """
     if not nb_check.error:
         raise Exception('Cannot create issue for a check with no errors.')
 
@@ -32,6 +35,9 @@ def store_github_issue(nb_check: NoteBookCheck, github_issues_file: str) -> None
 
 
 def get_github_issue_filename() -> str:
+    """
+    Generates issue file name based on checking time.
+    """
     current_check_time = datetime.now()
     return constants.GITHUB_ISSUE_FILENAME_TEMPLATE.format(
         date_str=current_check_time.strftime(constants.GTIHUB_ISSUE_DATE_STR_FORMAT)
@@ -39,6 +45,9 @@ def get_github_issue_filename() -> str:
 
 
 def store_nb_script(nb_scripts_path: str, script: str) -> None:
+    """
+    Stores the executed script for the notebook
+    """
     with open(nb_scripts_path, 'w') as file:
         file.write(script)
 
@@ -48,6 +57,9 @@ def display_check_results(
     github_files_path: str,
     display_cell_timings: bool,
 ) -> None:
+    """
+    Displays final report in console
+    """
     data_to_show = []
     failed_checks = 0
     success_checks = 0
