@@ -406,8 +406,7 @@ class JsonAccessor(Generic[TSeriesJson]):
         """
         Find if item is contained in the array.
 
-        :param item: item to be verified if it is contained by the array.
-
+        :param item: item to be verified if it is contained by the array. Only supports scalar values.
         :returns: boolean series indicating if the array contains the element.
 
         This assumes the top-level item in the json is an array. Will result in an exception (later on) if

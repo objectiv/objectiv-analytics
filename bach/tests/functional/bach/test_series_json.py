@@ -1,6 +1,9 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+import pandas
+
+from bach import DataFrame
 from sql_models.util import is_postgres, is_bigquery
 from tests.functional.bach.test_data_and_utils import get_df_with_json_data, assert_equals_data
 import pytest
@@ -10,7 +13,6 @@ import pytest
 # Additionally, on Postgres we have two json dtypes: 'json' and 'jsonb' that should support the same
 # operations. Therefore, we also have the 'dtype' argument. On all other databases than postgres we skip
 # the tests for dtype 'jsonb' as those databases only support 'json'
-
 
 pytestmark = [pytest.mark.parametrize('dtype', ('json', 'json_postgres'))]
 
@@ -70,48 +72,51 @@ def test_json_get_single_value(engine, dtype):
 
 
 def test_json_array_contains(engine, dtype):
-    bt = get_df_with_json_data(engine=engine, dtype=dtype)
+    # Setting up custom test data
+    # The data from `get_df_with_json_data` only contains one row with an array with scalars, so we use this
+    # custom test data instead.
+    test_data = [
+        [0, '["a", "b", "c", "d"]'],
+        [1, '[1, 2, 3, 4]'],
+        [2, '[true, true, true, true]'],
+        [3, '[true, false, true, true]'],
+        [4, '[1.1, 1.337, 4.123, 123.456]'],
+        [5, '[-1.1, -1.337, -4.123, -123.456]'],
+        [6, '["a", true, 3, -1.337]'],
+        [7, None]
+    ]
+    pdf = pandas.DataFrame.from_records(test_data, columns=['index', 'column'])
+    pdf.set_index(pdf.columns[0], drop=True, inplace=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df['column'] = df.column.astype(dtype)
+    df = df.materialize()
+    # Done setting up custom test data
 
-    # for bigquery order of keys should be the same as in the data
-    bts = bt.list_column.json.array_contains({"_type":"SectionContext","id":"home"})
-
+    # Actual test below
+    df['a'] = df.column.json.array_contains('a')
+    df['b'] = df.column.json.array_contains('b')
+    df['e'] = df.column.json.array_contains('e')
+    df['one'] = df.column.json.array_contains(1)
+    df['three'] = df.column.json.array_contains(3)
+    df['five'] = df.column.json.array_contains(5)
+    df['true'] = df.column.json.array_contains(True)
+    df['false'] = df.column.json.array_contains(False)
+    df['f1_1'] = df.column.json.array_contains(1.1)
+    df['f_1_337'] = df.column.json.array_contains(-1.337)
+    df = df.drop(columns=['column'])
     assert_equals_data(
-        bts,
-        expected_columns=['_index_row', 'list_column'],
+        df,
+        expected_columns=['_index_index',
+                          'a', 'b', 'e', 'one', 'three', 'five', 'true', 'false', 'f1_1', 'f_1_337'],
         expected_data=[
-            [0, False],
-            [1, False],
-            [2, False],
-            [3, True],
-            [4, None]
-        ]
-    )
-
-    # mixed column
-    bts = bt.mixed_column.json.array_contains('a')
-    assert_equals_data(
-        bts,
-        expected_columns=['_index_row', 'mixed_column'],
-        expected_data=[
-            [0, False],
-            [1, True],
-            [2, False],
-            [3, False],
-            [4, None]
-        ]
-    )
-
-    # dict_column column
-    bts = bt.dict_column.json.array_contains({"a": "b"})
-    assert_equals_data(
-        bts,
-        expected_columns=['_index_row', 'dict_column'],
-        expected_data=[
-            [0, False],
-            [1, False],
-            [2, False],
-            [3, False],
-            [4, None]
+            [0, True,  True,  False, False, False, False, False, False, False, False],
+            [1, False, False, False, True,  True,  False, False, False, False, False],
+            [2, False, False, False, False, False, False, True,  False, False, False],
+            [3, False, False, False, False, False, False, True,  True,  False, False],
+            [4, False, False, False, False, False, False, False, False, True,  False],
+            [5, False, False, False, False, False, False, False, False, False, True],
+            [6, True,  False, False, False, True,  False, True,  False, False, True],
+            [7, None, None, None, None, None, None, None, None, None, None]
         ]
     )
 
