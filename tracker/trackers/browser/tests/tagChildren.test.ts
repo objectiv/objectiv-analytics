@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
+import { expectToThrow, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { parseTagChildren, stringifyTagChildren, tagChild, tagChildren, tagContent, TaggingAttribute } from '../src';
 
 require('@objectiv/developer-tools');
@@ -15,9 +15,9 @@ describe('tagChild and tagChildren', () => {
 
   it('should return an empty object when error occurs', () => {
     // @ts-ignore
-    expect(() => stringifyTagChildren('')).toThrow();
+    expectToThrow(() => stringifyTagChildren(''));
     // @ts-ignore
-    expect(() => parseTagChildren(null)).toThrow();
+    expectToThrow(() => parseTagChildren(null));
     // @ts-ignore
     expect(tagChild('')).toBeUndefined();
     // @ts-ignore

@@ -4,6 +4,7 @@
 
 import {
   ConfigurableMockTransport,
+  expectToThrow,
   LogTransport,
   MockConsoleImplementation,
   UnusableTransport,
@@ -237,23 +238,26 @@ describe('TrackerTransportRetry', () => {
   });
 
   it('should not accept 0 or negative minTimeoutMs', () => {
-    expect(() => new TrackerTransportRetry({ transport: new UnusableTransport(), minTimeoutMs: 0 })).toThrow(
+    expectToThrow(
+      () => new TrackerTransportRetry({ transport: new UnusableTransport(), minTimeoutMs: 0 }),
       'minTimeoutMs must be at least 1'
     );
-    expect(() => new TrackerTransportRetry({ transport: new UnusableTransport(), minTimeoutMs: -10 })).toThrow(
+    expectToThrow(
+      () => new TrackerTransportRetry({ transport: new UnusableTransport(), minTimeoutMs: -10 }),
       'minTimeoutMs must be at least 1'
     );
   });
 
   it('should not accept minTimeoutMs bigger than maxTimeoutMs', () => {
-    expect(
+    expectToThrow(
       () =>
         new TrackerTransportRetry({
           transport: new UnusableTransport(),
           minTimeoutMs: 10,
           maxTimeoutMs: 5,
-        })
-    ).toThrow('minTimeoutMs cannot be bigger than maxTimeoutMs');
+        }),
+      'minTimeoutMs cannot be bigger than maxTimeoutMs'
+    );
   });
 
   it('should do nothing if the given transport is not usable', () => {

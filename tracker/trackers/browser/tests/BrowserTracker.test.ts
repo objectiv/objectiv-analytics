@@ -3,7 +3,7 @@
  */
 
 import { RootLocationContextFromURLPlugin } from '@objectiv/plugin-root-location-context-from-url';
-import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
+import { expectToThrow, MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
 import {
   GlobalContextName,
   TrackerEvent,
@@ -35,16 +35,16 @@ describe('BrowserTracker', () => {
   });
 
   it('should not instantiate without either `transport` or `endpoint`', () => {
-    expect(
+    expectToThrow(
       () =>
         new BrowserTracker({
           applicationId: 'app-id',
         })
-    ).toThrow();
+    );
   });
 
   it('should not instantiate with both `endpoint` and `transport`', () => {
-    expect(
+    expectToThrow(
       () =>
         new BrowserTracker({
           applicationId: 'app-id',
@@ -53,7 +53,7 @@ describe('BrowserTracker', () => {
             endpoint: 'localhost',
           }),
         })
-    ).toThrow();
+    );
   });
 
   it('should instantiate with `applicationId` and `endpoint`', () => {

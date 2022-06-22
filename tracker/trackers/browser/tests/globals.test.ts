@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
+import { expectToThrow, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { BrowserTracker, getOrMakeTracker, getTracker, makeTracker, setDefaultTracker } from '../src/';
 
 require('@objectiv/developer-tools');
@@ -76,7 +76,7 @@ describe('globals', () => {
     makeTracker({ applicationId: 'app-id', trackerId: 'tracker-2', endpoint: 'localhost' });
     makeTracker({ applicationId: 'app-id', trackerId: 'tracker-3', endpoint: 'localhost' });
     expect(globalThis.objectiv.TrackerRepository.trackersMap.size).toBe(3);
-    expect(() => getTracker('app-id-1')).toThrow('No Tracker found. Please create one via `makeTracker`.');
+    expectToThrow(() => getTracker('app-id-1'), 'No Tracker found. Please create one via `makeTracker`.');
     expect(MockConsoleImplementation.error).toHaveBeenCalledTimes(1);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
       '｢objectiv:TrackerRepository｣ Tracker `app-id-1` not found.'

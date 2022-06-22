@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
+import { expectToThrow, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { makeContentContext } from '@objectiv/tracker-core';
 import {
   ChildrenTaggingQueries,
@@ -43,17 +43,17 @@ describe('parsersAndStringifiers', () => {
 
     it('Should not stringify objects that are not Location Contexts', () => {
       // @ts-ignore
-      expect(() => stringifyLocationContext({ id: 'not a location context' })).toThrow();
+      expectToThrow(() => stringifyLocationContext({ id: 'not a location context' }));
       // @ts-ignore
-      expect(() => stringifyLocationContext({})).toThrow();
+      expectToThrow(() => stringifyLocationContext({}));
     });
 
     it('Should not parse objects that are not stringified Location Contexts', () => {
-      expect(() => parseLocationContext(`{ "id": "not a location context" }`)).toThrow();
+      expectToThrow(() => parseLocationContext(`{ "id": "not a location context" }`));
     });
 
     it('Should not parse objects that are invalid Location Contexts', () => {
-      expect(() => parseLocationContext(`{ "_type": "Nope", "id": "fake-news" }`)).toThrow();
+      expectToThrow(() => parseLocationContext(`{ "_type": "Nope", "id": "fake-news" }`));
     });
   });
 
@@ -95,34 +95,34 @@ describe('parsersAndStringifiers', () => {
 
     it('Should not stringify objects that are not Visibility Attributes objects or invalid ones', () => {
       // @ts-ignore
-      expect(() => stringifyTrackVisibility('string')).toThrow();
+      expectToThrow(() => stringifyTrackVisibility('string'));
       // @ts-ignore
-      expect(() => stringifyTrackVisibility({ mode: 'nope' })).toThrow();
+      expectToThrow(() => stringifyTrackVisibility({ mode: 'nope' }));
       // @ts-ignore
-      expect(() => stringifyTrackVisibility({ mode: 'auto', isVisible: true })).toThrow();
+      expectToThrow(() => stringifyTrackVisibility({ mode: 'auto', isVisible: true }));
       // @ts-ignore
-      expect(() => stringifyTrackVisibility({ mode: 'auto', isVisible: 0 })).toThrow();
+      expectToThrow(() => stringifyTrackVisibility({ mode: 'auto', isVisible: 0 }));
       // @ts-ignore
-      expect(() => stringifyTrackVisibility({ mode: 'manual' })).toThrow();
+      expectToThrow(() => stringifyTrackVisibility({ mode: 'manual' }));
     });
 
     it('Should not parse strings that are not Visibility Attributes or malformed', () => {
       // @ts-ignore
-      expect(() => parseTrackVisibility('{"mode":auto}')).toThrow();
+      expectToThrow(() => parseTrackVisibility('{"mode":auto}'));
       // @ts-ignore
-      expect(() => parseTrackVisibility('{"mode":"auto","isVisible":true}')).toThrow();
+      expectToThrow(() => parseTrackVisibility('{"mode":"auto","isVisible":true}'));
       // @ts-ignore
-      expect(() => parseTrackVisibility('{"mode":"auto","isVisible":false}')).toThrow();
+      expectToThrow(() => parseTrackVisibility('{"mode":"auto","isVisible":false}'));
       // @ts-ignore
-      expect(() => parseTrackVisibility('{"mode":"manual"}')).toThrow();
+      expectToThrow(() => parseTrackVisibility('{"mode":"manual"}'));
       // @ts-ignore
-      expect(() => parseTrackVisibility('{"mode":"manual","isVisible":0}')).toThrow();
+      expectToThrow(() => parseTrackVisibility('{"mode":"manual","isVisible":0}'));
       // @ts-ignore
-      expect(() => parseTrackVisibility('{"mode":"manual","isVisible":1}')).toThrow();
+      expectToThrow(() => parseTrackVisibility('{"mode":"manual","isVisible":1}'));
       // @ts-ignore
-      expect(() => parseTrackVisibility('{"mode":"manual","isVisible":null}')).toThrow();
+      expectToThrow(() => parseTrackVisibility('{"mode":"manual","isVisible":null}'));
       // @ts-ignore
-      expect(() => parseTrackVisibility('{"mode":"manual","isVisible":"true"}')).toThrow();
+      expectToThrow(() => parseTrackVisibility('{"mode":"manual","isVisible":"true"}'));
     });
   });
 
@@ -147,17 +147,17 @@ describe('parsersAndStringifiers', () => {
 
     it('Should not stringify objects that are not Validate Attributes objects or invalid ones', () => {
       // @ts-ignore
-      expect(() => stringifyValidate('string')).toThrow();
+      expectToThrow(() => stringifyValidate('string'));
       // @ts-ignore
-      expect(() => stringifyValidate(true)).toThrow();
+      expectToThrow(() => stringifyValidate(true));
       // @ts-ignore
-      expect(() => stringifyValidate({})).toThrow();
+      expectToThrow(() => stringifyValidate({}));
       // @ts-ignore
-      expect(() => stringifyValidate({ locationUniqueness: 'what' })).toThrow();
+      expectToThrow(() => stringifyValidate({ locationUniqueness: 'what' }));
       // @ts-ignore
-      expect(() => stringifyValidate({ locationUniqueness: undefined })).toThrow();
+      expectToThrow(() => stringifyValidate({ locationUniqueness: undefined }));
       // @ts-ignore
-      expect(() => stringifyValidate({ locationUniqueness: null })).toThrow();
+      expectToThrow(() => stringifyValidate({ locationUniqueness: null }));
     });
 
     it('Should parse validate Attributes correctly', () => {
@@ -167,15 +167,15 @@ describe('parsersAndStringifiers', () => {
 
     it('Should not parse strings that are not validate Attributes or malformed', () => {
       // @ts-ignore
-      expect(() => parseValidate('{"whatIsThis":true}')).toThrow();
+      expectToThrow(() => parseValidate('{"whatIsThis":true}'));
       // @ts-ignore
-      expect(() => parseValidate('{"locationUniqueness":"wrong"}')).toThrow();
+      expectToThrow(() => parseValidate('{"locationUniqueness":"wrong"}'));
       // @ts-ignore
-      expect(() => parseValidate('{"locationUniqueness":"false"}')).toThrow();
+      expectToThrow(() => parseValidate('{"locationUniqueness":"false"}'));
       // @ts-ignore
-      expect(() => parseValidate('{"locationUniqueness":1}')).toThrow();
+      expectToThrow(() => parseValidate('{"locationUniqueness":1}'));
       // @ts-ignore
-      expect(() => parseValidate('{"locationUniqueness":null}')).toThrow();
+      expectToThrow(() => parseValidate('{"locationUniqueness":null}'));
     });
   });
 
@@ -219,72 +219,72 @@ describe('parsersAndStringifiers', () => {
 
     it('Should not stringify objects that are not Children Attributes objects or invalid ones', () => {
       // @ts-ignore
-      expect(() => stringifyTagChildren('string')).toThrow();
+      expectToThrow(() => stringifyTagChildren('string'));
       // @ts-ignore
-      expect(() => stringifyTagChildren(true)).toThrow();
+      expectToThrow(() => stringifyTagChildren(true));
       // @ts-ignore
-      expect(() => stringifyTagChildren([null, 1, 2, 3])).toThrow();
+      expectToThrow(() => stringifyTagChildren([null, 1, 2, 3]));
       // @ts-ignore
-      expect(() => stringifyTagChildren([undefined])).toThrow();
+      expectToThrow(() => stringifyTagChildren([undefined]));
       // @ts-ignore
-      expect(() => stringifyTagChildren([true])).toThrow();
+      expectToThrow(() => stringifyTagChildren([true]));
       // @ts-ignore
-      expect(() => stringifyTagChildren([false])).toThrow();
+      expectToThrow(() => stringifyTagChildren([false]));
       // @ts-ignore
-      expect(() => stringifyTagChildren([{}])).toThrow();
+      expectToThrow(() => stringifyTagChildren([{}]));
       // @ts-ignore
-      expect(() => stringifyTagChildren([{ queryAll: '#id' }])).toThrow();
+      expectToThrow(() => stringifyTagChildren([{ queryAll: '#id' }]));
       // @ts-ignore
-      expect(() => stringifyTagChildren([{ queryAll: '#id', tagAs: 'invalid' }])).toThrow();
+      expectToThrow(() => stringifyTagChildren([{ queryAll: '#id', tagAs: 'invalid' }]));
     });
 
     it('Should not parse strings that are not Visibility Attributes or malformed', () => {
       // @ts-ignore
-      expect(() => parseTagChildren()).toThrow();
+      expectToThrow(() => parseTagChildren());
       // @ts-ignore
-      expect(() => parseTagChildren(null)).toThrow();
+      expectToThrow(() => parseTagChildren(null));
       // @ts-ignore
-      expect(() => parseTagChildren(undefined)).toThrow();
+      expectToThrow(() => parseTagChildren(undefined));
       // @ts-ignore
-      expect(() => parseTagChildren(true)).toThrow();
+      expectToThrow(() => parseTagChildren(true));
       // @ts-ignore
-      expect(() => parseTagChildren(false)).toThrow();
+      expectToThrow(() => parseTagChildren(false));
       // @ts-ignore
-      expect(() => parseTagChildren(0)).toThrow();
+      expectToThrow(() => parseTagChildren(0));
       // @ts-ignore
-      expect(() => parseTagChildren(1)).toThrow();
+      expectToThrow(() => parseTagChildren(1));
       // @ts-ignore
-      expect(() => parseTagChildren('undefined')).toThrow();
+      expectToThrow(() => parseTagChildren('undefined'));
       // @ts-ignore
-      expect(() => parseTagChildren('null')).toThrow();
+      expectToThrow(() => parseTagChildren('null'));
       // @ts-ignore
-      expect(() => parseTagChildren('true')).toThrow();
+      expectToThrow(() => parseTagChildren('true'));
       // @ts-ignore
-      expect(() => parseTagChildren('false')).toThrow();
+      expectToThrow(() => parseTagChildren('false'));
       // @ts-ignore
-      expect(() => parseTagChildren('0')).toThrow();
+      expectToThrow(() => parseTagChildren('0'));
       // @ts-ignore
-      expect(() => parseTagChildren('1')).toThrow();
+      expectToThrow(() => parseTagChildren('1'));
       // @ts-ignore
-      expect(() => parseTagChildren('{}')).toThrow();
+      expectToThrow(() => parseTagChildren('{}'));
       // @ts-ignore
-      expect(() => parseTagChildren('[[]]')).toThrow();
+      expectToThrow(() => parseTagChildren('[[]]'));
       // @ts-ignore
-      expect(() => parseTagChildren('[null]')).toThrow();
+      expectToThrow(() => parseTagChildren('[null]'));
       // @ts-ignore
-      expect(() => parseTagChildren('[true]')).toThrow();
+      expectToThrow(() => parseTagChildren('[true]'));
       // @ts-ignore
-      expect(() => parseTagChildren('[false]')).toThrow();
+      expectToThrow(() => parseTagChildren('[false]'));
       // @ts-ignore
-      expect(() => parseTagChildren('[0]')).toThrow();
+      expectToThrow(() => parseTagChildren('[0]'));
       // @ts-ignore
-      expect(() => parseTagChildren('[1]')).toThrow();
+      expectToThrow(() => parseTagChildren('[1]'));
       // @ts-ignore
-      expect(() => parseTagChildren('[{}]')).toThrow();
+      expectToThrow(() => parseTagChildren('[{}]'));
       // @ts-ignore
-      expect(() => parseTagChildren('[[]]')).toThrow();
+      expectToThrow(() => parseTagChildren('[[]]'));
       // @ts-ignore
-      expect(() => parseTagChildren('[{]')).toThrow();
+      expectToThrow(() => parseTagChildren('[{]'));
     });
   });
 
@@ -345,7 +345,7 @@ describe('parsersAndStringifiers', () => {
     it(`should throw`, () => {
       const stringifiedTrackClicks = JSON.stringify('{not: "valid"}');
 
-      expect(() => parseTrackClicks(stringifiedTrackClicks)).toThrow();
+      expectToThrow(() => parseTrackClicks(stringifiedTrackClicks));
     });
   });
 
