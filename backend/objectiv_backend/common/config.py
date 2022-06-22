@@ -64,6 +64,10 @@ _SP_AWS_MESSAGE_TOPIC_BAD = os.environ.get('SP_AWS_MESSAGE_TOPIC_BAD', '')
 _OBJ_COOKIE = 'obj_user_id'
 # default cookie duration is 1 year, can be overridden by setting `COOKIE_DURATION`
 _OBJ_COOKIE_DURATION = int(os.environ.get('COOKIE_DURATION', 60 * 60 * 24 * 365 * 1))
+# default cookie samesite is Lax, can be overridden by setting `COOKIE_SAMESITE`
+_OBJ_COOKIE_SAMESITE = str(os.environ.get('COOKIE_SAMESITE', 'Lax'))
+# default cookie secure is False, can be overridden by setting `COOKIE_SECURE`
+_OBJ_COOKIE_SECURE = bool(os.environ.get('COOKIE_SECURE', False))
 
 # Maximum number of events that a worker will process in a single batch. Only relevant in async mode
 WORKER_BATCH_SIZE = 200
@@ -117,9 +121,14 @@ class OutputConfig(NamedTuple):
 
 
 class CookieConfig(NamedTuple):
+    # name (key) of the cookie
     name: str
-    # duration in seconds
+    # duration (max_age) in seconds
     duration: int
+    # restricts context. Possible values: Lax (default value), Strict (requires also secure=True to work), None.
+    samesite: str
+    # secure, if `True` cookie will be set only via HTTPS. If SameSite is set to None secure must be set to `True`.
+    secure: bool = False
 
 
 class TimestampValidationConfig(NamedTuple):
@@ -228,7 +237,9 @@ def get_config_output() -> OutputConfig:
 def get_config_cookie() -> CookieConfig:
     return CookieConfig(
         name=_OBJ_COOKIE,
-        duration=_OBJ_COOKIE_DURATION
+        duration=_OBJ_COOKIE_DURATION,
+        samesite=_OBJ_COOKIE_SAMESITE,
+        secure=_OBJ_COOKIE_SECURE
     )
 
 

@@ -1,6 +1,6 @@
 .. _example_open_taxonomy:
 
-.. frontmatterposition:: 8
+.. frontmatterposition:: 9
 
 .. currentmodule:: bach
 
@@ -22,7 +22,7 @@ At first we have to install the open model hub and instantiate the Objectiv Data
 
 The data
 --------
-The index contains a unique identifyer for every hit.
+The index contains a unique identifier for every hit.
 
 .. code-block:: python
 
@@ -36,7 +36,7 @@ The dtypes of columns can be displayed with:
 
 - `day`: the day of the session as a date.
 - `moment`: the exact moment of the event.
-- `user_id`: the unique identifyer of the user based on the cookie.
+- `user_id`: the unique identifier of the user based on the cookie.
 - `global_contexts`: a json-like data column that stores additional information on the event that is logged. This includes data like device data, application data, and cookie information. See below for more detailed explanation.
 - `location_stack`: a json-like data column that stores information on the exact location where the event is triggered in the product's UI. See below for more detailed explanation.
 - `event_type`: the type of event that is logged.
@@ -68,6 +68,8 @@ The event type describes what kind of event is triggered. The goal of the open t
 .. code-block:: python
 
     df[df.day == '2022-01-10'].event_type.head()
+
+.. _open_taxonomy_location_stack_and_global_contexts:
 
 location_stack & global_contexts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
