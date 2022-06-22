@@ -66,7 +66,9 @@ class Aggregate:
         series = data[column].nunique()
         return series.copy_override(name=name)
 
-    @use_only_required_objectiv_series(include_series_from_params=['groupby'])
+    @use_only_required_objectiv_series(
+        required_series=['user_id', 'moment'], include_series_from_params=['groupby'],
+    )
     def unique_users(self,
                      data: bach.DataFrame,
                      groupby: GroupByType = not_set) -> bach.SeriesInt64:
@@ -88,7 +90,9 @@ class Aggregate:
                                          column='user_id',
                                          name='unique_users')
 
-    @use_only_required_objectiv_series(include_series_from_params=['groupby'])
+    @use_only_required_objectiv_series(
+        required_series=['session_id', 'moment'], include_series_from_params=['groupby'],
+    )
     def unique_sessions(self,
                         data: bach.DataFrame,
                         groupby: GroupByType = not_set) -> bach.SeriesInt64:
@@ -110,7 +114,9 @@ class Aggregate:
                                          column='session_id',
                                          name='unique_sessions')
 
-    @use_only_required_objectiv_series(include_series_from_params=['groupby'])
+    @use_only_required_objectiv_series(
+        required_series=['session_id', 'moment'], include_series_from_params=['groupby']
+    )
     def session_duration(self,
                          data: bach.DataFrame,
                          groupby: GroupByType = not_set,
@@ -157,7 +163,7 @@ class Aggregate:
             return grouped_data.sum()
         return grouped_data.mean()
 
-    @use_only_required_objectiv_series()
+    @use_only_required_objectiv_series(required_series=['user_id', 'session_id'])
     def frequency(self, data: bach.DataFrame) -> bach.SeriesInt64:
         """
         Calculate a frequency table for the number of users by number of sessions.
@@ -170,7 +176,9 @@ class Aggregate:
 
         return frequency.user_id_nunique
 
-    @use_only_required_objectiv_series()
+    @use_only_required_objectiv_series(
+        required_series=['global_contexts', 'location_stack', 'user_id', 'stack_event_types', 'event_type'],
+    )
     def top_product_features(self,
                              data: bach.DataFrame,
                              location_stack: 'SeriesLocationStack' = None,
@@ -216,7 +224,13 @@ class Aggregate:
 
         return users_feature.sort_values('user_id_nunique', ascending=False)
 
-    @use_only_required_objectiv_series()
+    @use_only_required_objectiv_series(
+        required_series=[
+            'global_contexts', 'location_stack', 'user_id', 'stack_event_types',
+            # required by Map.conversions_in_time and Map.conversions_counter
+            'session_id', 'moment', 'event_type',
+        ],
+    )
     def top_product_features_before_conversion(self,
                                                data: bach.DataFrame,
                                                name: str,

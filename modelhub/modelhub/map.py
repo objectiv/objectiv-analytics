@@ -24,7 +24,7 @@ class Map:
     def __init__(self, mh: 'ModelHub'):
         self._mh = mh
 
-    @use_only_required_objectiv_series()
+    @use_only_required_objectiv_series(required_series=['user_id', 'session_id'])
     def is_first_session(self, data: bach.DataFrame) -> bach.SeriesBoolean:
         """
         Labels all hits in a session True if that session is the first session of that user in the data.
@@ -48,7 +48,7 @@ class Map:
 
         return new_series
 
-    @use_only_required_objectiv_series()
+    @use_only_required_objectiv_series(required_series=['user_id', 'session_id', 'moment'])
     def is_new_user(self, data: bach.DataFrame, time_aggregation: str = None) -> bach.SeriesBoolean:
         """
         Labels all hits True if the user is first seen in the period given `time_aggregation`.
@@ -85,7 +85,7 @@ class Map:
         is_new_user_series = is_new_user_series.copy_override_type(bach.SeriesBoolean)
         return is_new_user_series.copy_override(name='is_new_user').materialize()
 
-    @use_only_required_objectiv_series()
+    @use_only_required_objectiv_series(required_series=['event_type'])
     def is_conversion_event(self, data: bach.DataFrame, name: str) -> bach.SeriesBoolean:
         """
         Labels a hit True if it is a conversion event, all other hits are labeled False.
@@ -108,7 +108,10 @@ class Map:
             series = ((conversion_stack.json.get_array_length() > 0) & (data.event_type == conversion_event))
         return series.copy_override(name='is_conversion_event')
 
-    @use_only_required_objectiv_series(include_series_from_params=['partition'])
+    @use_only_required_objectiv_series(
+        required_series=['session_id', 'moment', 'event_type'],
+        include_series_from_params=['partition'],
+    )
     def conversions_counter(self,
                             data: bach.DataFrame,
                             name: str,
@@ -138,7 +141,10 @@ class Map:
     def conversion_count(self, *args, **kwargs):
         raise NotImplementedError('function is renamed please use `conversions_in_time`')
 
-    @use_only_required_objectiv_series(include_series_from_params=['partition'])
+    @use_only_required_objectiv_series(
+        required_series=['session_id', 'moment', 'event_type'],
+        include_series_from_params=['partition'],
+    )
     def conversions_in_time(self,
                             data: bach.DataFrame,
                             name: str,
@@ -172,7 +178,10 @@ class Map:
         )
         return data.conversions_in_time.materialize(node_name='conversions_in_time')
 
-    @use_only_required_objectiv_series(include_series_from_params=['partition'])
+    @use_only_required_objectiv_series(
+        required_series=['session_id', 'session_hit_number', 'moment', 'event_type'],
+        include_series_from_params=['partition'],
+    )
     def pre_conversion_hit_number(self,
                                   data: bach.DataFrame,
                                   name: str,
