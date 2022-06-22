@@ -4,7 +4,7 @@
 
 import React, { ReactNode, useContext } from 'react';
 import { trackApplicationLoadedEvent } from '../../eventTrackers/trackApplicationLoadedEvent';
-import { useOnMount } from '../../hooks/useOnMount';
+import { useOnMountOnce } from '../../hooks/useOnMountOnce';
 import { ObjectivProviderContext } from './ObjectivProviderContext';
 import { TrackerProviderContext } from './TrackerProviderContext';
 import { TrackingContext } from './TrackingContext';
@@ -31,7 +31,7 @@ export type ObjectivProviderProps = TrackerProviderContext & {
   /**
    * ObjectivProvider children can also be a function (render props).
    */
-  children: ReactNode | ((parameters: TrackingContext) => void);
+  children: ReactNode | ((parameters: TrackingContext) => ReactNode);
 
   /**
    * Optional. A partial ObjectivProviderOptions object to override the default options.
@@ -53,7 +53,7 @@ export const ObjectivProvider = ({ children, tracker, options }: ObjectivProvide
     `);
   }
 
-  useOnMount(() => {
+  useOnMountOnce(() => {
     if (trackApplicationLoaded) {
       trackApplicationLoadedEvent({ tracker });
     }
