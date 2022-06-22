@@ -16,7 +16,7 @@ pycodestyle:
 	pycodestyle checklock_holmes
 
 mypy:
-	mypy checklock_holmes
+	mypy checklock-holmes.py checklock_holmes
 
 check-dev: requirements isort pycodestyle mypy
 

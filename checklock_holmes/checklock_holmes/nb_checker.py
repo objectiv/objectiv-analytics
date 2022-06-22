@@ -16,9 +16,8 @@ from checklock_holmes.utils.constants import (
     NB_SCRIPT_TO_STORE_TEMPLATE, SET_ENV_VARIABLE_TEMPLATE,
     TIMING_CELL_CODE_TEMPLATE, WRAPPED_CODE_TEMPLATE
 )
-from checklock_holmes.utils.supported_engines import SupportedEngine
-
 from checklock_holmes.utils.helpers import CuriousIncident
+from checklock_holmes.utils.supported_engines import SupportedEngine
 
 _DEFAULT_ENV_VARIABLES = {
     'OBJECTIV_VERSION_CHECK_DISABLE': 'true'
@@ -102,7 +101,7 @@ class NoteBookChecker:
         """
         self._errors[engine] = CellError(
             number=cell_number,
-            exc=f'{exc.__class__.__name__}: {exc.args[0][:self.MAX_LOG_EXCEPTION_MESSAGE]}...'
+            exc=f'{exc.__class__.__name__}: {str(exc)[:self.MAX_LOG_EXCEPTION_MESSAGE]}...'
         )
 
     def _log_cell_timing(self, cell_number: int, elapsed_time: int) -> None:
@@ -128,7 +127,9 @@ class NoteBookChecker:
                 continue
 
             if is_execution:
-                source_without_comments = [stmt for stmt in cell_metadata['source'] if not stmt.startswith('#')]
+                source_without_comments = [
+                    stmt for stmt in cell_metadata['source'] if not stmt.startswith('#')
+                ]
 
                 # ignore cell with just comments
                 if not source_without_comments:

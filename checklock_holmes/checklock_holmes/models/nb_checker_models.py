@@ -5,13 +5,11 @@ Copyright 2022 Objectiv B.V.
 import glob
 import os
 import re
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, validator
 
-from checklock_holmes.utils.constants import (
-    NOTEBOOK_EXTENSION, NOTEBOOK_NAME_REGEX_PATTERN
-)
+from checklock_holmes.utils.constants import NOTEBOOK_EXTENSION
 from checklock_holmes.utils.supported_engines import SupportedEngine
 
 
@@ -34,7 +32,7 @@ def _check_dir(dir_name: Optional[str]) -> None:
 
 
 class NoteBookCheckSettings(BaseModel):
-    engines_to_check: List[Union[str, SupportedEngine]]
+    engines_to_check: List[SupportedEngine]
     notebooks_to_check: List[str]
     github_issues_dir: str
     dump_nb_scripts_dir: Optional[str] = None
@@ -83,7 +81,7 @@ class NoteBookCheckSettings(BaseModel):
 
 class NoteBookMetadata(BaseModel):
     path: str
-    name: Optional[str]
+    name: str = ''
 
     @validator('name', always=True)
     def _process_name(cls, val: Optional[str], values: Dict[str, str]) -> str:
@@ -91,7 +89,7 @@ class NoteBookMetadata(BaseModel):
         Extracts notebook name from notebook filepath.
         """
         path = values['path']
-        match = re.compile(NOTEBOOK_NAME_REGEX_PATTERN).match(path)
+        match = re.compile(rf'(.*/)?(?P<nb_name>.+)(\.{NOTEBOOK_EXTENSION})').match(path)
         if not match:
             raise Exception(f'Cannot get notebook name from {path} path.')
         return match.group('nb_name')
