@@ -129,8 +129,8 @@ def test_retention_matrix():
         data,
         expected_columns=['first_cohort', '_0', '_1'],
         expected_data=[
-            ['2021-11', 1.0, 0.5],
-            ['2021-12', 1.0, -999.0],
+            ['2021-11', 100.0, 50.0],
+            ['2021-12', 100.0, -999.0],
         ],
         use_to_pandas=True,
     )
