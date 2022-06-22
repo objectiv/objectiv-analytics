@@ -161,6 +161,21 @@ describe('ObjectivProvider', () => {
     );
   });
 
+  it('should track an ApplicationLoadedEvent once', () => {
+    const tracker = new Tracker({ applicationId: 'app-id' });
+    jest.spyOn(tracker, 'trackEvent');
+
+    const { rerender } = render(<ObjectivProvider tracker={tracker}>app</ObjectivProvider>);
+    rerender(<ObjectivProvider tracker={tracker}>app</ObjectivProvider>);
+
+    expect(tracker.trackEvent).toHaveBeenCalledTimes(1);
+    expect(tracker.trackEvent).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining(makeApplicationLoadedEvent()),
+      undefined
+    );
+  });
+
   it('should not track ApplicationLoadedEvent', () => {
     const tracker = new Tracker({ applicationId: 'app-id' });
     jest.spyOn(tracker, 'trackEvent');
