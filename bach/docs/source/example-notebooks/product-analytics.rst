@@ -111,7 +111,7 @@ This is  just a simple example to demonstrate the differences you can find betwe
 
 User time spent
 ---------------
-Similarly we can calculate the average session duration for time intervals. `duration_root_month` gives the
+We can also calculate the average session duration for time intervals. `duration_root_month` gives the
 average time spent per root location per month.
 
 .. code-block:: python
