@@ -4,6 +4,7 @@
 
 import { AbstractLocationContext } from '@objectiv/schema';
 import { generateUUID, LocationNode, LocationTreeInterface } from '@objectiv/tracker-core';
+import { EventRecorder } from './EventRecorder';
 import { getLocationPath } from './getLocationPath';
 import { TrackerConsole } from './TrackerConsole';
 
@@ -60,6 +61,10 @@ export const LocationTree: LocationTreeInterface = {
    */
   error: (locationId: string, message: string, type: 'collision' = 'collision') => {
     if (errorCache.get(locationId) !== type) {
+      const errorMessage = `｢objectiv｣ ${message}`;
+
+      EventRecorder.error(errorMessage);
+
       TrackerConsole.error(`｢objectiv｣ ${message}`);
       TrackerConsole.log(`Location Tree:`);
       LocationTree.log();

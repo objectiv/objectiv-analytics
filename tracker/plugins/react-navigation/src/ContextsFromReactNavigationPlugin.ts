@@ -28,7 +28,10 @@ export class ContextsFromReactNavigationPlugin<ParamList extends ReactNavigation
   constructor(config: ContextsFromReactNavigationPluginConfig<ParamList>) {
     this.navigationContainerRef = config.navigationContainerRef;
 
-    globalThis.objectiv?.TrackerConsole.log(`%c｢objectiv:${this.pluginName}｣ Initialized`, 'font-weight: bold');
+    globalThis.objectiv.devTools?.TrackerConsole.log(
+      `%c｢objectiv:${this.pluginName}｣ Initialized`,
+      'font-weight: bold'
+    );
   }
 
   /**

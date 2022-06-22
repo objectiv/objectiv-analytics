@@ -32,8 +32,10 @@ export const trackRemovedElement = (element: GuardableElement, tracker: BrowserT
       }
 
       // Remove this element from TrackerState - this will allow it to re-render
-      if (globalThis.objectiv) {
-        globalThis.objectiv.LocationTree.remove(parseLocationContext(element.getAttribute(TaggingAttribute.context)));
+      if (globalThis.objectiv.devTools) {
+        globalThis.objectiv.devTools.LocationTree.remove(
+          parseLocationContext(element.getAttribute(TaggingAttribute.context))
+        );
       }
     }
   } catch (error) {

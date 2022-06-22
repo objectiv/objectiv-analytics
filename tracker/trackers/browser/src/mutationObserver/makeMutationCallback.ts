@@ -39,10 +39,10 @@ export const makeMutationCallback = (): MutationCallback => {
       // Track DOM changes
       mutationsList.forEach(({ addedNodes, removedNodes, target, attributeName, oldValue }) => {
         // Element ID change for programmatically instrumented elements - keep TrackerState in sync
-        if (globalThis.objectiv && attributeName === TaggingAttribute.elementId && oldValue) {
+        if (globalThis.objectiv.devTools && attributeName === TaggingAttribute.elementId && oldValue) {
           const element = document.querySelector(`[${TaggingAttribute.elementId}='${oldValue}']`);
           if (element) {
-            globalThis.objectiv.LocationTree.remove(
+            globalThis.objectiv.devTools.LocationTree.remove(
               parseLocationContext(element.getAttribute(TaggingAttribute.context))
             );
           }

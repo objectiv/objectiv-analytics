@@ -4,7 +4,6 @@
 
 import { BrowserTracker } from './BrowserTracker';
 import { BrowserTrackerConfig } from './definitions/BrowserTrackerConfig';
-import { getTrackerRepository } from './getTrackerRepository';
 import { startAutoTracking } from './startAutoTracking';
 
 /**
@@ -12,9 +11,7 @@ import { startAutoTracking } from './startAutoTracking';
  */
 export const makeTracker = (trackerConfig: BrowserTrackerConfig): BrowserTracker => {
   const newTracker = new BrowserTracker(trackerConfig);
-  const trackerRepository = getTrackerRepository();
 
-  trackerRepository.add(newTracker);
   startAutoTracking(trackerConfig);
 
   return newTracker;

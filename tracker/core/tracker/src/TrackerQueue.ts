@@ -62,13 +62,13 @@ export class TrackerQueue implements TrackerQueueInterface {
     this.batchDelayMs = config?.batchDelayMs ?? 1000;
     this.concurrency = config?.concurrency ?? 4;
 
-    if (globalThis.objectiv) {
-      globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:${this.queueName}｣ Initialized`);
-      globalThis.objectiv.TrackerConsole.log(`Store: ${this.store.queueStoreName}`);
-      globalThis.objectiv.TrackerConsole.log(`Batch Size: ${this.batchSize}`);
-      globalThis.objectiv.TrackerConsole.log(`Batch Delay (ms): ${this.batchDelayMs}`);
-      globalThis.objectiv.TrackerConsole.log(`Concurrency: ${this.concurrency}`);
-      globalThis.objectiv.TrackerConsole.groupEnd();
+    if (globalThis.objectiv.devTools) {
+      globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(`｢objectiv:${this.queueName}｣ Initialized`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Store: ${this.store.queueStoreName}`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Batch Size: ${this.batchSize}`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Batch Delay (ms): ${this.batchDelayMs}`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Concurrency: ${this.concurrency}`);
+      globalThis.objectiv.devTools.TrackerConsole.groupEnd();
     }
   }
 
@@ -118,11 +118,11 @@ export class TrackerQueue implements TrackerQueueInterface {
         break;
       }
 
-      if (globalThis.objectiv) {
-        globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:${this.queueName}｣ Batch read`);
-        globalThis.objectiv.TrackerConsole.log(`Events:`);
-        globalThis.objectiv.TrackerConsole.log(eventsBatch);
-        globalThis.objectiv.TrackerConsole.groupEnd();
+      if (globalThis.objectiv.devTools) {
+        globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(`｢objectiv:${this.queueName}｣ Batch read`);
+        globalThis.objectiv.devTools.TrackerConsole.log(`Events:`);
+        globalThis.objectiv.devTools.TrackerConsole.log(eventsBatch);
+        globalThis.objectiv.devTools.TrackerConsole.groupEnd();
       }
 
       // Gather Event Ids. Used for both deletion and processingEventIds cleanup.

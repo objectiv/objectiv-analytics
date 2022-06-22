@@ -25,6 +25,6 @@ const developerTools: TrackerDeveloperToolsInterface = {
 };
 
 /**
- * Extend or set global objectiv interface with developer tools
+ * Set developer tools in globals. Globals are created by Core Tracker.
  */
-globalThis.objectiv = { ...(globalThis.objectiv ?? {}), ...developerTools };
+globalThis.objectiv.devTools = developerTools;

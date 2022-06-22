@@ -7,7 +7,7 @@ import { TrackerEvent } from '@objectiv/tracker-core';
 import { LocalStorageQueueStore } from '../src';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('LocalStorageQueueStore', () => {
   beforeEach(() => {
@@ -176,7 +176,7 @@ describe('LocalStorageQueueStore', () => {
     beforeEach(() => {
       localStorage.clear();
       jest.clearAllMocks();
-      globalThis.objectiv = undefined;
+      globalThis.objectiv.devTools = undefined;
     });
 
     afterEach(() => {

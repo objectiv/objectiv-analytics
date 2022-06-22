@@ -13,7 +13,7 @@ export const trackerErrorHandler = (error: unknown, parameters?: unknown, onErro
   if (onError) {
     onError(error);
   } else {
-    globalThis.objectiv?.TrackerConsole.error(error, parameters);
+    globalThis.objectiv.devTools?.TrackerConsole.error(error, parameters);
   }
   return undefined;
 };

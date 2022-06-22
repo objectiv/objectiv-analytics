@@ -2,11 +2,11 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
+import { expectToThrow, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { Tracker, TrackerEvent, TrackerPluginInterface, TrackerPlugins } from '../src';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('Plugin', () => {
   beforeEach(() => {
@@ -70,7 +70,7 @@ describe('Plugin', () => {
     const testPlugins = new TrackerPlugins({ tracker, plugins: [pluginA, pluginB] });
     expect(testPlugins.get('test-pluginA')).toBe(pluginA);
     expect(testPlugins.get('test-pluginB')).toBe(pluginB);
-    expect(() => testPlugins.get('test-pluginC')).toThrow('｢objectiv:TrackerPlugins｣ test-pluginC: not found');
+    expectToThrow(() => testPlugins.get('test-pluginC'), '｢objectiv:TrackerPlugins｣ test-pluginC: not found');
   });
 
   it('should add plugins', () => {
@@ -93,7 +93,8 @@ describe('Plugin', () => {
       '%c｢objectiv:TrackerPlugins｣ test-pluginB added at index 1',
       'font-weight: bold'
     );
-    expect(() => testPlugins.add(pluginB)).toThrow(
+    expectToThrow(
+      () => testPlugins.add(pluginB),
       '｢objectiv:TrackerPlugins｣ test-pluginB: already exists. Use "replace" instead'
     );
     expect(testPlugins.plugins).toEqual([
@@ -123,10 +124,10 @@ describe('Plugin', () => {
         pluginName: 'test-pluginB',
       },
     ]);
-    expect(() => testPlugins.add(pluginC, -1)).toThrow('｢objectiv:TrackerPlugins｣ invalid index');
-    expect(() => testPlugins.add(pluginC, Infinity)).toThrow('｢objectiv:TrackerPlugins｣ invalid index');
+    expectToThrow(() => testPlugins.add(pluginC, -1), '｢objectiv:TrackerPlugins｣ invalid index');
+    expectToThrow(() => testPlugins.add(pluginC, Infinity), '｢objectiv:TrackerPlugins｣ invalid index');
     // @ts-ignore
-    expect(() => testPlugins.add(pluginC, '0')).toThrow('｢objectiv:TrackerPlugins｣ invalid index');
+    expectToThrow(() => testPlugins.add(pluginC, '0'), '｢objectiv:TrackerPlugins｣ invalid index');
   });
 
   it('should remove plugins', () => {
@@ -152,7 +153,7 @@ describe('Plugin', () => {
         pluginName: 'test-pluginC',
       },
     ]);
-    expect(() => testPlugins.remove('test-pluginB')).toThrow('｢objectiv:TrackerPlugins｣ test-pluginB: not found');
+    expectToThrow(() => testPlugins.remove('test-pluginB'), '｢objectiv:TrackerPlugins｣ test-pluginB: not found');
   });
 
   it('should replace plugins', () => {
@@ -215,7 +216,7 @@ describe('Plugin', () => {
       },
     ]);
     const newPluginD = { pluginName: 'test-pluginD', isUsable: () => true };
-    expect(() => testPlugins.replace(newPluginD)).toThrow('｢objectiv:TrackerPlugins｣ test-pluginD: not found');
+    expectToThrow(() => testPlugins.replace(newPluginD), '｢objectiv:TrackerPlugins｣ test-pluginD: not found');
     const newPluginB2 = { pluginName: 'test-pluginB', isUsable: () => true, newParameter: { a: 1 } };
     testPlugins.replace(newPluginB2, 0);
     expect(testPlugins.plugins).toEqual([
@@ -235,10 +236,10 @@ describe('Plugin', () => {
         pluginName: 'test-pluginC',
       },
     ]);
-    expect(() => testPlugins.replace(newPluginB2, -1)).toThrow('｢objectiv:TrackerPlugins｣ invalid index');
-    expect(() => testPlugins.replace(newPluginB2, Infinity)).toThrow('｢objectiv:TrackerPlugins｣ invalid index');
+    expectToThrow(() => testPlugins.replace(newPluginB2, -1), '｢objectiv:TrackerPlugins｣ invalid index');
+    expectToThrow(() => testPlugins.replace(newPluginB2, Infinity), '｢objectiv:TrackerPlugins｣ invalid index');
     // @ts-ignore
-    expect(() => testPlugins.replace(newPluginB2, '0')).toThrow('｢objectiv:TrackerPlugins｣ invalid index');
+    expectToThrow(() => testPlugins.replace(newPluginB2, '0'), '｢objectiv:TrackerPlugins｣ invalid index');
   });
 
   it('constructor should behave like `add`', () => {
@@ -342,7 +343,7 @@ describe('Plugin', () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      globalThis.objectiv = undefined;
+      globalThis.objectiv.devTools = undefined;
     });
 
     afterEach(() => {

@@ -2,14 +2,14 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import { matchUUID, MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import { generateUUID } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker, TaggingAttribute } from '../src';
 import { trackVisibilityHiddenEvent } from '../src/mutationObserver/trackVisibilityHiddenEvent';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('trackVisibilityHiddenEvent', () => {
   beforeEach(() => {
@@ -75,7 +75,7 @@ describe('trackVisibilityHiddenEvent', () => {
   });
 
   it('should use given tracker instead of the global one', async () => {
-    const trackerOverride = new BrowserTracker({ applicationId: 'override', endpoint: 'override' });
+    const trackerOverride = new BrowserTracker({ applicationId: 'override', transport: new LogTransport() });
     jest.spyOn(trackerOverride, 'trackEvent');
 
     const trackedDiv = makeTaggedElement('div-id', null, 'div');

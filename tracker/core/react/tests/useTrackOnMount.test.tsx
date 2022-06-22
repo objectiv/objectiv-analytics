@@ -18,9 +18,9 @@ describe('useTrackOnMount', () => {
     jest.resetAllMocks();
   });
 
-  const spyTransport = { transportName: 'SpyTransport', handle: jest.fn(), isUsable: () => true };
+  const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
   const renderSpy = jest.fn();
-  const tracker = new Tracker({ applicationId: 'app-id', transport: spyTransport });
+  const tracker = new Tracker({ applicationId: 'app-id', transport: LogTransport });
 
   const Index = () => {
     return (
@@ -41,8 +41,8 @@ describe('useTrackOnMount', () => {
   it('should execute once on mount', () => {
     render(<Index />);
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenCalledWith(expect.objectContaining({ _type: 'VisibleEvent' }));
+    expect(LogTransport.handle).toHaveBeenCalledTimes(1);
+    expect(LogTransport.handle).toHaveBeenCalledWith(expect.objectContaining({ _type: 'VisibleEvent' }));
   });
 
   it('should not execute on unmount', () => {
@@ -50,8 +50,8 @@ describe('useTrackOnMount', () => {
 
     unmount();
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenCalledWith(expect.objectContaining({ _type: 'VisibleEvent' }));
+    expect(LogTransport.handle).toHaveBeenCalledTimes(1);
+    expect(LogTransport.handle).toHaveBeenCalledWith(expect.objectContaining({ _type: 'VisibleEvent' }));
   });
 
   it('should not execute on rerender', () => {
@@ -61,17 +61,17 @@ describe('useTrackOnMount', () => {
     rerender(<Index />);
 
     expect(renderSpy).toHaveBeenCalledTimes(3);
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenCalledWith(expect.objectContaining({ _type: 'VisibleEvent' }));
+    expect(LogTransport.handle).toHaveBeenCalledTimes(1);
+    expect(LogTransport.handle).toHaveBeenCalledWith(expect.objectContaining({ _type: 'VisibleEvent' }));
   });
 
   it('should allow overriding the tracker with a custom one', () => {
-    const spyTransport2 = { transportName: 'spyTransport2', handle: jest.fn(), isUsable: () => true };
-    const anotherTracker = new Tracker({ applicationId: 'app-id', transport: spyTransport2 });
+    const LogTransport2 = { transportName: 'LogTransport2', handle: jest.fn(), isUsable: () => true };
+    const anotherTracker = new Tracker({ applicationId: 'app-id', transport: LogTransport2 });
     renderHook(() => useTrackOnMount({ event: makeVisibleEvent(), tracker: anotherTracker }));
 
-    expect(spyTransport.handle).not.toHaveBeenCalled();
-    expect(spyTransport2.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport2.handle).toHaveBeenCalledWith(expect.objectContaining({ _type: 'VisibleEvent' }));
+    expect(LogTransport.handle).not.toHaveBeenCalled();
+    expect(LogTransport2.handle).toHaveBeenCalledTimes(1);
+    expect(LogTransport2.handle).toHaveBeenCalledWith(expect.objectContaining({ _type: 'VisibleEvent' }));
   });
 });

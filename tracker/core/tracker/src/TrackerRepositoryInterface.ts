@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { Tracker } from './Tracker';
+import { Tracker, WaitForQueueParameters } from './Tracker';
 
 /**
  * The generic interface of the TrackerRepository
@@ -52,4 +52,9 @@ export interface TrackerRepositoryInterface<T extends Tracker> {
    * Flushes all Tracker instances Queues
    */
   flushAllQueues(): void;
+
+  /**
+   * Waits for the queues of all Trackers to be idle, or flushed
+   */
+  waitForAllQueues(parameters?: WaitForQueueParameters): Promise<true>;
 }

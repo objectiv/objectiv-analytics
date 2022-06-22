@@ -11,6 +11,14 @@ export enum GlobalContextName {
   SessionContext = 'SessionContext',
 }
 
+export type AnyGlobalContextName =
+  | 'ApplicationContext'
+  | 'CookieIdContext'
+  | 'HttpContext'
+  | 'MarketingContext'
+  | 'PathContext'
+  | 'SessionContext';
+
 export enum LocationContextName {
   ContentContext = 'ContentContext',
   ExpandableContext = 'ExpandableContext',
@@ -22,3 +30,14 @@ export enum LocationContextName {
   PressableContext = 'PressableContext',
   RootLocationContext = 'RootLocationContext',
 }
+
+export type AnyLocationContextName =
+  | 'ContentContext'
+  | 'ExpandableContext'
+  | 'InputContext'
+  | 'LinkContext'
+  | 'MediaPlayerContext'
+  | 'NavigationContext'
+  | 'OverlayContext'
+  | 'PressableContext'
+  | 'RootLocationContext';

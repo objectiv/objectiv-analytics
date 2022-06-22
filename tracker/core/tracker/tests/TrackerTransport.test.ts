@@ -4,9 +4,9 @@
 
 import {
   ConfigurableMockTransport,
+  expectToThrow,
   LogTransport,
   MockConsoleImplementation,
-  UnusableTransport,
 } from '@objectiv/testing-tools';
 import {
   ContextsConfig,
@@ -28,7 +28,7 @@ const testContexts: ContextsConfig = {
 const testEvent = new TrackerEvent({ _type: testEventName, ...testContexts });
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackerTransportSwitch', () => {
   beforeEach(() => {
@@ -41,7 +41,7 @@ describe('TrackerTransportSwitch', () => {
   });
 
   it('should not pick any TrackerTransport', () => {
-    const transport1 = new UnusableTransport();
+    const transport1 = new ConfigurableMockTransport({ isUsable: false });
     const transport2 = new LogTransport();
     transport2.isUsable = () => false;
 
@@ -64,7 +64,7 @@ describe('TrackerTransportSwitch', () => {
   });
 
   it('should pick the second TrackerTransport', () => {
-    const transport1 = new UnusableTransport();
+    const transport1 = new ConfigurableMockTransport({ isUsable: false });
     const transport2 = new LogTransport();
 
     expect(transport1.isUsable()).toBe(false);
@@ -88,7 +88,7 @@ describe('TrackerTransportSwitch', () => {
 
 describe('TrackerTransportGroup', () => {
   it('should not handle any TrackerTransport', () => {
-    const transport1 = new UnusableTransport();
+    const transport1 = new ConfigurableMockTransport({ isUsable: false });
     const transport2 = new LogTransport();
     transport2.isUsable = () => false;
 
@@ -228,7 +228,7 @@ describe('TrackerTransport complex configurations', () => {
 
 describe('TrackerTransportRetry', () => {
   it('should generate exponential timeouts', () => {
-    const retryTransport = new TrackerTransportRetry({ transport: new UnusableTransport() });
+    const retryTransport = new TrackerTransportRetry({ transport: new ConfigurableMockTransport({ isUsable: false }) });
     const retryTransportAttempt = new TrackerTransportRetryAttempt(retryTransport, [testEvent]);
     const timeouts = Array.from(Array(10).keys()).map(
       retryTransportAttempt.calculateNextTimeoutMs.bind(retryTransport)
@@ -237,27 +237,32 @@ describe('TrackerTransportRetry', () => {
   });
 
   it('should not accept 0 or negative minTimeoutMs', () => {
-    expect(() => new TrackerTransportRetry({ transport: new UnusableTransport(), minTimeoutMs: 0 })).toThrow(
+    expectToThrow(
+      () =>
+        new TrackerTransportRetry({ transport: new ConfigurableMockTransport({ isUsable: false }), minTimeoutMs: 0 }),
       'minTimeoutMs must be at least 1'
     );
-    expect(() => new TrackerTransportRetry({ transport: new UnusableTransport(), minTimeoutMs: -10 })).toThrow(
+    expectToThrow(
+      () =>
+        new TrackerTransportRetry({ transport: new ConfigurableMockTransport({ isUsable: false }), minTimeoutMs: -10 }),
       'minTimeoutMs must be at least 1'
     );
   });
 
   it('should not accept minTimeoutMs bigger than maxTimeoutMs', () => {
-    expect(
+    expectToThrow(
       () =>
         new TrackerTransportRetry({
-          transport: new UnusableTransport(),
+          transport: new ConfigurableMockTransport({ isUsable: false }),
           minTimeoutMs: 10,
           maxTimeoutMs: 5,
-        })
-    ).toThrow('minTimeoutMs cannot be bigger than maxTimeoutMs');
+        }),
+      'minTimeoutMs cannot be bigger than maxTimeoutMs'
+    );
   });
 
   it('should do nothing if the given transport is not usable', () => {
-    const unusableTransport = new UnusableTransport();
+    const unusableTransport = new ConfigurableMockTransport({ isUsable: false });
     jest.spyOn(unusableTransport, 'handle');
 
     const retryTransport = new TrackerTransportRetry({ transport: unusableTransport });

@@ -31,8 +31,8 @@ describe('SuccessEvent', () => {
   });
 
   it('should track a SuccessEvent (hook relying on TrackingContextProvider)', () => {
-    const spyTransport = { transportName: 'SpyTransport', handle: jest.fn(), isUsable: () => true };
-    const tracker = new Tracker({ applicationId: 'app-id', transport: spyTransport });
+    const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
+    const tracker = new Tracker({ applicationId: 'app-id', transport: LogTransport });
 
     const Component = () => {
       const trackSuccessEvent = useSuccessEventTracker();
@@ -47,8 +47,8 @@ describe('SuccessEvent', () => {
       </TrackingContextProvider>
     );
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'SuccessEvent' }));
+    expect(LogTransport.handle).toHaveBeenCalledTimes(1);
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'SuccessEvent' }));
   });
 
   it('should track a SuccessEvent (hook with custom tracker)', () => {

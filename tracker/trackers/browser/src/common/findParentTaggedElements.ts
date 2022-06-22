@@ -30,7 +30,7 @@ export const findParentTaggedElements = (
     const parentElementId = element.getAttribute(TaggingAttribute.parentElementId);
     const parentElement = document.querySelector(`[${TaggingAttribute.elementId}='${parentElementId}']`);
     if (!isTaggedElement(parentElement)) {
-      globalThis.objectiv?.TrackerConsole.error(
+      globalThis.objectiv.devTools?.TrackerConsole.error(
         `findParentTaggedElements: missing or invalid Parent Element '${parentElementId}'`
       );
       return parentElements;

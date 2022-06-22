@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
+import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import { render } from '@testing-library/react-native';
 import React from 'react';
 import { Text } from 'react-native';
@@ -16,12 +16,12 @@ import {
 } from '../src';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedFlatList', () => {
-  const spyTransport = new SpyTransport();
-  jest.spyOn(spyTransport, 'handle');
-  const tracker = new ReactNativeTracker({ applicationId: 'app-id', transport: spyTransport });
+  const logTransport = new LogTransport();
+  jest.spyOn(logTransport, 'handle');
+  const tracker = new ReactNativeTracker({ applicationId: 'app-id', transport: logTransport });
   jest.spyOn(console, 'debug').mockImplementation(jest.fn);
 
   type ListItemType = {
@@ -56,7 +56,7 @@ describe('TrackedFlatList', () => {
   });
 
   const ListItem = (props: ListItemType) => {
-    const locationPath = globalThis.objectiv?.getLocationPath(useLocationStack());
+    const locationPath = globalThis.objectiv.devTools?.getLocationPath(useLocationStack());
 
     console.debug(locationPath);
 

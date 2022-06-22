@@ -28,14 +28,17 @@ export class LocalStorageQueueStore implements TrackerQueueStoreInterface {
 
     this.localStorageKey = `objectiv-events-queue-${config.trackerId}`;
 
-    globalThis.objectiv?.TrackerConsole.log(`%c｢objectiv:${this.queueStoreName}｣ Initialized`, 'font-weight: bold');
+    globalThis.objectiv.devTools?.TrackerConsole.log(
+      `%c｢objectiv:${this.queueStoreName}｣ Initialized`,
+      'font-weight: bold'
+    );
   }
 
   getEventsFromLocalStorage(): TrackerEvent[] {
     try {
       return JSON.parse(localStorage.getItem(this.localStorageKey) ?? '[]');
     } catch (error) {
-      globalThis.objectiv?.TrackerConsole.error(
+      globalThis.objectiv.devTools?.TrackerConsole.error(
         `%c｢objectiv:${this.queueStoreName}｣ Failed to parse Events from localStorage: ${error}`,
         'font-weight: bold'
       );
@@ -47,7 +50,7 @@ export class LocalStorageQueueStore implements TrackerQueueStoreInterface {
     try {
       localStorage.setItem(this.localStorageKey, JSON.stringify(events));
     } catch (error) {
-      globalThis.objectiv?.TrackerConsole.error(
+      globalThis.objectiv.devTools?.TrackerConsole.error(
         `%c｢objectiv:${this.queueStoreName}｣ Failed to write Events to localStorage: ${error}`,
         'font-weight: bold'
       );

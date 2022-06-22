@@ -8,5 +8,4 @@ export * from './localStorageMock';
 export * from './LogTransport';
 export * from './matchUUID';
 export * from './MockConsoleImplementation';
-export * from './SpyTransport';
-export * from './UnusableTransport';
+export * from './LogTransport';

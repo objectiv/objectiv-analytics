@@ -8,7 +8,7 @@ export class LogTransport implements TrackerTransportInterface {
   readonly transportName = 'LogTransport';
 
   async handle(): Promise<any> {
-    globalThis.objectiv?.TrackerConsole.log('LogTransport.handle');
+    globalThis.objectiv.devTools?.TrackerConsole.log('LogTransport.handle');
   }
 
   isUsable(): boolean {

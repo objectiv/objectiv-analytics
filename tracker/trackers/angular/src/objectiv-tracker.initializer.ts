@@ -3,7 +3,7 @@
  */
 
 import { APP_INITIALIZER, Provider } from '@angular/core';
-import { BrowserTrackerConfig, getTrackerRepository, startAutoTracking } from '@objectiv/tracker-browser';
+import { BrowserTrackerConfig, startAutoTracking } from '@objectiv/tracker-browser';
 import { AngularTracker } from './AngularTracker';
 import { OBJECTIV_TRACKER_CONFIG_TOKEN } from './objectiv-tracker.token';
 
@@ -18,14 +18,12 @@ export const OBJECTIV_TRACKER_INITIALIZER_PROVIDER: Provider = {
 };
 
 /**
- * Simply calls makeTracker
+ * Simply create a new AngularTracker instance and starts the auto-tracking MutationObserver.
  */
 export function ObjectivTrackerInitializer(trackerConfig: BrowserTrackerConfig) {
   return async () => {
     const newTracker = new AngularTracker(trackerConfig);
-    const trackerRepository = getTrackerRepository();
 
-    trackerRepository.add(newTracker);
     startAutoTracking(trackerConfig);
 
     return newTracker;

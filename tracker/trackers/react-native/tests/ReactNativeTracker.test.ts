@@ -3,7 +3,7 @@
  */
 
 import { RootLocationContextFromURLPlugin } from '@objectiv/plugin-root-location-context-from-url';
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
+import { expectToThrow, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
   GlobalContextName,
   TrackerEvent,
@@ -17,8 +17,8 @@ import fetchMock from 'jest-fetch-mock';
 import { ReactNativeTracker } from '../src/';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
-globalThis.objectiv?.EventRecorder.configure({ enabled: false });
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.EventRecorder.configure({ enabled: false });
 
 describe('ReactNativeTracker', () => {
   beforeEach(() => {
@@ -26,16 +26,16 @@ describe('ReactNativeTracker', () => {
   });
 
   it('should not instantiate without either `transport` or `endpoint`', () => {
-    expect(
+    expectToThrow(
       () =>
         new ReactNativeTracker({
           applicationId: 'app-id',
         })
-    ).toThrow();
+    );
   });
 
   it('should not instantiate with both `endpoint` and `transport`', () => {
-    expect(
+    expectToThrow(
       () =>
         new ReactNativeTracker({
           applicationId: 'app-id',
@@ -44,7 +44,7 @@ describe('ReactNativeTracker', () => {
             endpoint: 'localhost',
           }),
         })
-    ).toThrow();
+    );
   });
 
   it('should instantiate with `applicationId` and `endpoint`', () => {

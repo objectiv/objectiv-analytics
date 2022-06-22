@@ -15,11 +15,11 @@ export const defaultXHRFunction = ({
   events: [TrackerEvent, ...TrackerEvent[]];
 }): Promise<unknown> => {
   return new Promise(function (resolve, reject) {
-    if (globalThis.objectiv) {
-      globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:XHRTransport｣ Sending`);
-      globalThis.objectiv.TrackerConsole.log(`Events:`);
-      globalThis.objectiv.TrackerConsole.log(events);
-      globalThis.objectiv.TrackerConsole.groupEnd();
+    if (globalThis.objectiv.devTools) {
+      globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(`｢objectiv:XHRTransport｣ Sending`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Events:`);
+      globalThis.objectiv.devTools.TrackerConsole.log(events);
+      globalThis.objectiv.devTools.TrackerConsole.groupEnd();
     }
 
     const xhr = new XMLHttpRequest();
@@ -29,32 +29,32 @@ export const defaultXHRFunction = ({
     xhr.withCredentials = true;
     xhr.onload = () => {
       if (xhr.status === 200) {
-        if (globalThis.objectiv) {
-          globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:XHRTransport｣ Succeeded`);
-          globalThis.objectiv.TrackerConsole.log(`Events:`);
-          globalThis.objectiv.TrackerConsole.log(events);
-          globalThis.objectiv.TrackerConsole.groupEnd();
+        if (globalThis.objectiv.devTools) {
+          globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(`｢objectiv:XHRTransport｣ Succeeded`);
+          globalThis.objectiv.devTools.TrackerConsole.log(`Events:`);
+          globalThis.objectiv.devTools.TrackerConsole.log(events);
+          globalThis.objectiv.devTools.TrackerConsole.groupEnd();
         }
 
         resolve(xhr.response);
       } else {
-        if (globalThis.objectiv) {
-          globalThis.objectiv.TrackerConsole.groupCollapsed(`%c｢objectiv:XHRTransport｣ Failed`, 'color:red');
-          globalThis.objectiv.TrackerConsole.log(`Events:`);
-          globalThis.objectiv.TrackerConsole.log(events);
-          globalThis.objectiv.TrackerConsole.log(`Response: ${xhr}`);
-          globalThis.objectiv.TrackerConsole.groupEnd();
+        if (globalThis.objectiv.devTools) {
+          globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(`%c｢objectiv:XHRTransport｣ Failed`, 'color:red');
+          globalThis.objectiv.devTools.TrackerConsole.log(`Events:`);
+          globalThis.objectiv.devTools.TrackerConsole.log(events);
+          globalThis.objectiv.devTools.TrackerConsole.log(`Response: ${xhr}`);
+          globalThis.objectiv.devTools.TrackerConsole.groupEnd();
         }
 
         reject(makeTransportSendError());
       }
     };
     xhr.onerror = () => {
-      if (globalThis.objectiv) {
-        globalThis.objectiv.TrackerConsole.groupCollapsed(`%c｢objectiv:XHRTransport｣ Error`, 'color:red');
-        globalThis.objectiv.TrackerConsole.log(`Events:`);
-        globalThis.objectiv.TrackerConsole.log(events);
-        globalThis.objectiv.TrackerConsole.groupEnd();
+      if (globalThis.objectiv.devTools) {
+        globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(`%c｢objectiv:XHRTransport｣ Error`, 'color:red');
+        globalThis.objectiv.devTools.TrackerConsole.log(`Events:`);
+        globalThis.objectiv.devTools.TrackerConsole.log(events);
+        globalThis.objectiv.devTools.TrackerConsole.groupEnd();
       }
 
       reject(makeTransportSendError());

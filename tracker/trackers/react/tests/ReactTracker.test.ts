@@ -3,7 +3,7 @@
  */
 
 import { RootLocationContextFromURLPlugin } from '@objectiv/plugin-root-location-context-from-url';
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
+import { expectToThrow, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
   GlobalContextName,
   TrackerEvent,
@@ -19,8 +19,8 @@ import { clear, mockUserAgent } from 'jest-useragent-mock';
 import { ReactTracker } from '../src/';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
-globalThis.objectiv?.EventRecorder.configure({ enabled: false });
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.EventRecorder.configure({ enabled: false });
 
 describe('ReactTracker', () => {
   beforeEach(() => {
@@ -28,16 +28,16 @@ describe('ReactTracker', () => {
   });
 
   it('should not instantiate without either `transport` or `endpoint`', () => {
-    expect(
+    expectToThrow(
       () =>
         new ReactTracker({
           applicationId: 'app-id',
         })
-    ).toThrow();
+    );
   });
 
   it('should not instantiate with both `endpoint` and `transport`', () => {
-    expect(
+    expectToThrow(
       () =>
         new ReactTracker({
           applicationId: 'app-id',
@@ -46,7 +46,7 @@ describe('ReactTracker', () => {
             endpoint: 'localhost',
           }),
         })
-    ).toThrow();
+    );
   });
 
   it('should instantiate with `applicationId` and `endpoint`', () => {

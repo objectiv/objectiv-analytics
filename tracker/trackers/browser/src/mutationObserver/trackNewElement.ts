@@ -34,7 +34,7 @@ export const trackNewElement = (element: Element, tracker: BrowserTracker) => {
       const validate = parseValidate(element.getAttribute(TaggingAttribute.validate));
 
       // Add this element to LocationTree - this will also check if its Location is unique
-      if (globalThis.objectiv && validate.locationUniqueness) {
+      if (globalThis.objectiv.devTools && validate.locationUniqueness) {
         const elementLocationContextAttribute = element.getAttribute(TaggingAttribute.context);
         const elementLocationContext = parseLocationContext(elementLocationContextAttribute);
 
@@ -47,7 +47,7 @@ export const trackNewElement = (element: Element, tracker: BrowserTracker) => {
           }
         }
 
-        globalThis.objectiv.LocationTree.add(elementLocationContext, parentLocationContext);
+        globalThis.objectiv.devTools.LocationTree.add(elementLocationContext, parentLocationContext);
       }
 
       // Visibility: visible tracking

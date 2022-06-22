@@ -7,10 +7,12 @@ import { ContextsConfig, generateUUID, LocationContextName, Tracker, TrackerEven
 import { RootLocationContextFromURLPlugin } from '../src';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('RootLocationContextFromURLPlugin', () => {
   beforeEach(() => {
+    globalThis.objectiv.TrackerRepository.trackersMap.clear();
+    globalThis.objectiv.TrackerRepository.defaultTracker = undefined;
     jest.resetAllMocks();
   });
 
@@ -176,7 +178,7 @@ describe('RootLocationContextFromURLPlugin', () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      globalThis.objectiv = undefined;
+      globalThis.objectiv.devTools = undefined;
     });
 
     afterEach(() => {
