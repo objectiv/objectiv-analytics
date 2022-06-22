@@ -9,7 +9,7 @@ from tests.functional.bach.test_data_and_utils import get_df_with_json_data, ass
 import pytest
 
 # We want to run all tests here for all supported databases, and thus we have the 'engine' argument on all
-# tests. Or at least soon we'll have that, for now we use 'pg_engine'.
+# tests.
 # Additionally, on Postgres we have two json dtypes: 'json' and 'jsonb' that should support the same
 # operations. Therefore, we also have the 'dtype' argument. On all other databases than postgres we skip
 # the tests for dtype 'jsonb' as those databases only support 'json'
@@ -19,11 +19,7 @@ pytestmark = [pytest.mark.parametrize('dtype', ('json', 'json_postgres'))]
 
 @pytest.fixture(autouse=True, scope='function')
 def skip_jsonb_if_not_postgres(request):
-    try:
-        # TODO: remove this try-except when we support json on BigQuery and stop using 'pg_engine' here
-        engine = request.getfixturevalue('engine')
-    except pytest.FixtureLookupError:
-        engine = request.getfixturevalue('pg_engine')
+    engine = request.getfixturevalue('engine')
     if request.getfixturevalue('dtype') == 'json_postgres' and not is_postgres(engine):
         pytest.skip(msg='json_postgres dtype is only supported on Postgres. Skipping for other databases')
 
