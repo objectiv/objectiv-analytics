@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
+import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
@@ -23,9 +23,9 @@ describe('TrackedInputContext', () => {
   });
 
   it('should wrap the given Component in an InputContext', () => {
-    const spyTransport = new SpyTransport();
-    jest.spyOn(spyTransport, 'handle');
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
     render(
       <ObjectivProvider tracker={tracker}>
@@ -37,8 +37,8 @@ describe('TrackedInputContext', () => {
 
     fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some new text' } });
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenCalledWith(
       expect.objectContaining({
         _type: 'InputChangeEvent',
         location_stack: expect.arrayContaining([
@@ -52,9 +52,9 @@ describe('TrackedInputContext', () => {
   });
 
   it('should allow disabling id normalization', () => {
-    const spyTransport = new SpyTransport();
-    jest.spyOn(spyTransport, 'handle');
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
     render(
       <ObjectivProvider tracker={tracker}>
@@ -74,8 +74,8 @@ describe('TrackedInputContext', () => {
     fireEvent.blur(screen.getByTestId('test-input-1'), { target: { value: 'some new text 1' } });
     fireEvent.blur(screen.getByTestId('test-input-2'), { target: { value: 'some new text 2' } });
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(2);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         _type: 'InputChangeEvent',
@@ -87,7 +87,7 @@ describe('TrackedInputContext', () => {
         ]),
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
         _type: 'InputChangeEvent',
@@ -103,7 +103,7 @@ describe('TrackedInputContext', () => {
 
   it('should console.error if an id cannot be automatically generated', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
 
     render(
       <ObjectivProvider tracker={tracker}>

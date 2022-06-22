@@ -3,7 +3,7 @@
  */
 
 import '@objectiv/developer-tools';
-import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
+import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import { generateUUID } from '@objectiv/tracker-core';
 import {
   AutoTrackingState,
@@ -53,7 +53,7 @@ describe('startAutoTracking', () => {
   });
 
   it('should not track application loaded event', () => {
-    const tracker = new BrowserTracker({ transport: new SpyTransport(), applicationId: 'app' });
+    const tracker = new BrowserTracker({ transport: new LogTransport(), applicationId: 'app' });
     jest.spyOn(tracker, 'trackEvent');
 
     startAutoTracking({ trackApplicationLoadedEvent: false });

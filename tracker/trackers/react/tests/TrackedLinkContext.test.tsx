@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
+import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render, screen, waitFor } from '@testing-library/react';
 import React, { createRef } from 'react';
@@ -25,9 +25,9 @@ describe('TrackedLinkContext', () => {
   });
 
   it('should wrap the given Component in a LinkContext', () => {
-    const spyTransport = new SpyTransport();
-    jest.spyOn(spyTransport, 'handle');
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
@@ -39,14 +39,14 @@ describe('TrackedLinkContext', () => {
 
     fireEvent.click(getByText(container, /trigger event/i));
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(2);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         _type: 'ApplicationLoadedEvent',
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
         _type: 'PressEvent',
@@ -61,9 +61,9 @@ describe('TrackedLinkContext', () => {
   });
 
   it('should allow disabling id normalization', () => {
-    const spyTransport = new SpyTransport();
-    jest.spyOn(spyTransport, 'handle');
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
@@ -79,14 +79,14 @@ describe('TrackedLinkContext', () => {
     fireEvent.click(getByText(container, /trigger event 1/i));
     fireEvent.click(getByText(container, /trigger event 2/i));
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(3);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         _type: 'ApplicationLoadedEvent',
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
         _type: 'PressEvent',
@@ -98,7 +98,7 @@ describe('TrackedLinkContext', () => {
         ]),
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       3,
       expect.objectContaining({
         _type: 'PressEvent',
@@ -113,7 +113,7 @@ describe('TrackedLinkContext', () => {
   });
 
   it('should allow forwarding the id property', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
 
     render(
       <ObjectivProvider tracker={tracker}>
@@ -137,7 +137,7 @@ describe('TrackedLinkContext', () => {
   });
 
   it('should console.error if an id cannot be automatically generated', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
 
     render(
       <ObjectivProvider tracker={tracker}>
@@ -158,7 +158,7 @@ describe('TrackedLinkContext', () => {
   });
 
   it('should allow forwarding the title property', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
 
     render(
       <ObjectivProvider tracker={tracker}>
@@ -189,7 +189,7 @@ describe('TrackedLinkContext', () => {
   });
 
   it('should allow forwarding the href property', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
 
     render(
       <ObjectivProvider tracker={tracker}>
@@ -207,7 +207,7 @@ describe('TrackedLinkContext', () => {
   });
 
   it('should allow forwarding refs', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
     const ref = createRef<HTMLDivElement>();
 
     render(
@@ -227,7 +227,7 @@ describe('TrackedLinkContext', () => {
 
   it('should execute the given onClick as well', async () => {
     const clickSpy = jest.fn();
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
@@ -245,10 +245,10 @@ describe('TrackedLinkContext', () => {
   it('should not wait until tracked', async () => {
     jest.useFakeTimers();
     const clickSpy = jest.fn();
-    const spyTransport = new SpyTransport();
+    const logTransport = new LogTransport();
     const handleMock = jest.fn(async () => new Promise((resolve) => setTimeout(resolve, 10000)));
-    jest.spyOn(spyTransport, 'handle').mockImplementation(handleMock);
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+    jest.spyOn(logTransport, 'handle').mockImplementation(handleMock);
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
@@ -270,11 +270,11 @@ describe('TrackedLinkContext', () => {
   it('should wait until tracked', async () => {
     jest.useFakeTimers();
     const clickSpy = jest.fn();
-    const spyTransport = new SpyTransport();
+    const logTransport = new LogTransport();
     jest
-      .spyOn(spyTransport, 'handle')
+      .spyOn(logTransport, 'handle')
       .mockImplementation(async () => new Promise((resolve) => setTimeout(resolve, 100)));
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
@@ -290,8 +290,8 @@ describe('TrackedLinkContext', () => {
 
     await waitFor(() => expect(clickSpy).toHaveBeenCalledTimes(1));
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         _type: 'PressEvent',

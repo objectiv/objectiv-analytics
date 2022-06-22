@@ -3,7 +3,7 @@
  */
 
 import '@objectiv/developer-tools';
-import { matchUUID, MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
+import { matchUUID, MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeMutationCallback, TaggingAttribute } from '../src';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
@@ -17,7 +17,7 @@ describe('makeMutationCallback - new nodes', () => {
   });
 
   it('should track newly added nodes that are Elements and visibility for existing nodes', () => {
-    const tracker = new BrowserTracker({ transport: new SpyTransport(), applicationId: 'test-app' });
+    const tracker = new BrowserTracker({ transport: new LogTransport(), applicationId: 'test-app' });
     jest.spyOn(tracker, 'trackEvent');
     const mutationCallback = makeMutationCallback();
     const mutationObserver = new MutationObserver(mutationCallback);
@@ -90,7 +90,7 @@ describe('makeMutationCallback - new nodes', () => {
 
 describe('makeMutationCallback - removed nodes', () => {
   it('should track visibility:hidden events for removed nodes', () => {
-    const tracker = new BrowserTracker({ transport: new SpyTransport(), applicationId: 'app' });
+    const tracker = new BrowserTracker({ transport: new LogTransport(), applicationId: 'app' });
     jest.spyOn(tracker, 'trackEvent');
     const mutationCallback = makeMutationCallback();
     const mutationObserver = new MutationObserver(mutationCallback);

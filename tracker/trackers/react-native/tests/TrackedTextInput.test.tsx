@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
+import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
@@ -18,9 +18,9 @@ require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedTextInput', () => {
-  const spyTransport = new SpyTransport();
-  jest.spyOn(spyTransport, 'handle');
-  const tracker = new ReactNativeTracker({ applicationId: 'app-id', transport: spyTransport });
+  const logTransport = new LogTransport();
+  jest.spyOn(logTransport, 'handle');
+  const tracker = new ReactNativeTracker({ applicationId: 'app-id', transport: logTransport });
 
   const TestTrackedTextInput = (props: TrackedTextInputProps & { testID?: string }) => (
     <TrackingContextProvider tracker={tracker}>
@@ -41,8 +41,8 @@ describe('TrackedTextInput', () => {
 
     fireEvent(getByTestId('test-switch'), 'endEditing', true);
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenCalledWith(
       expect.objectContaining({
         _type: 'InputChangeEvent',
         location_stack: expect.arrayContaining([

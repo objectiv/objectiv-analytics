@@ -31,8 +31,8 @@ describe('NonInteractiveEvent', () => {
   });
 
   it('should track an NonInteractiveEvent (hook relying on TrackingContextProvider)', () => {
-    const spyTransport = { transportName: 'SpyTransport', handle: jest.fn(), isUsable: () => true };
-    const tracker = new Tracker({ applicationId: 'app-id', transport: spyTransport });
+    const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
+    const tracker = new Tracker({ applicationId: 'app-id', transport: LogTransport });
 
     const Component = () => {
       const trackNonInteractiveEvent = useNonInteractiveEventTracker();
@@ -47,8 +47,8 @@ describe('NonInteractiveEvent', () => {
       </TrackingContextProvider>
     );
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'NonInteractiveEvent' }));
+    expect(LogTransport.handle).toHaveBeenCalledTimes(1);
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'NonInteractiveEvent' }));
   });
 
   it('should track an NonInteractiveEvent (hook with custom tracker and location)', () => {

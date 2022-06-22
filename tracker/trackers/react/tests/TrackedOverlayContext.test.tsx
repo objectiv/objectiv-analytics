@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
+import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render, screen } from '@testing-library/react';
 import React, { createRef } from 'react';
@@ -35,9 +35,9 @@ describe('TrackedOverlayContext', () => {
   });
 
   it('should wrap the given Component in an OverlayContext', () => {
-    const spyTransport = new SpyTransport();
-    jest.spyOn(spyTransport, 'handle');
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
@@ -49,14 +49,14 @@ describe('TrackedOverlayContext', () => {
 
     fireEvent.click(getByText(container, /trigger event/i));
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(2);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         _type: 'ApplicationLoadedEvent',
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
         _type: 'PressEvent',
@@ -71,9 +71,9 @@ describe('TrackedOverlayContext', () => {
   });
 
   it('should allow disabling id normalization', () => {
-    const spyTransport = new SpyTransport();
-    jest.spyOn(spyTransport, 'handle');
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
     const TrackedButton = ({ children }: { children: React.ReactNode }) => {
       const trackPressEvent = usePressEventTracker();
@@ -94,14 +94,14 @@ describe('TrackedOverlayContext', () => {
     fireEvent.click(getByText(container, /trigger event 1/i));
     fireEvent.click(getByText(container, /trigger event 2/i));
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(3);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         _type: 'ApplicationLoadedEvent',
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
         _type: 'PressEvent',
@@ -113,7 +113,7 @@ describe('TrackedOverlayContext', () => {
         ]),
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       3,
       expect.objectContaining({
         _type: 'PressEvent',
@@ -129,7 +129,7 @@ describe('TrackedOverlayContext', () => {
 
   it('should console.error if an id cannot be automatically generated', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
 
     render(
       <ObjectivProvider tracker={tracker}>
@@ -148,9 +148,9 @@ describe('TrackedOverlayContext', () => {
   });
 
   it('should not track an HiddenEvent when initialized with isVisible=false', () => {
-    const spyTransport = new SpyTransport();
-    jest.spyOn(spyTransport, 'handle');
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
     render(
       <ObjectivProvider tracker={tracker}>
@@ -160,7 +160,7 @@ describe('TrackedOverlayContext', () => {
       </ObjectivProvider>
     );
 
-    expect(spyTransport.handle).not.toHaveBeenCalledWith(
+    expect(logTransport.handle).not.toHaveBeenCalledWith(
       expect.objectContaining({
         _type: 'HiddenEvent',
       })
@@ -168,9 +168,9 @@ describe('TrackedOverlayContext', () => {
   });
 
   it('should track an VisibleEvent when isVisible switches from false to true and vice-versa a HiddenEvent', () => {
-    const spyTransport = new SpyTransport();
-    jest.spyOn(spyTransport, 'handle');
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
     const { rerender } = render(
       <ObjectivProvider tracker={tracker}>
@@ -180,7 +180,7 @@ describe('TrackedOverlayContext', () => {
       </ObjectivProvider>
     );
 
-    expect(spyTransport.handle).not.toHaveBeenCalledWith(
+    expect(logTransport.handle).not.toHaveBeenCalledWith(
       expect.objectContaining({
         _type: 'HiddenEvent',
       })
@@ -196,8 +196,8 @@ describe('TrackedOverlayContext', () => {
       </ObjectivProvider>
     );
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenCalledWith(
       expect.objectContaining({
         _type: 'VisibleEvent',
       })
@@ -213,8 +213,8 @@ describe('TrackedOverlayContext', () => {
       </ObjectivProvider>
     );
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenCalledWith(
       expect.objectContaining({
         _type: 'HiddenEvent',
       })
@@ -222,7 +222,7 @@ describe('TrackedOverlayContext', () => {
   });
 
   it('should allow forwarding the id property', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
 
     render(
       <ObjectivProvider tracker={tracker}>
@@ -240,7 +240,7 @@ describe('TrackedOverlayContext', () => {
   });
 
   it('should allow forwarding refs', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
     const ref = createRef<HTMLDivElement>();
 
     render(

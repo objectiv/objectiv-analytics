@@ -22,8 +22,8 @@ describe('LocationContextWrapper', () => {
   });
 
   it('LocationTree should be called on mount and re-synced on re-render', () => {
-    const spyTransport = { transportName: 'SpyTransport', handle: jest.fn(), isUsable: () => true };
-    const tracker = new Tracker({ applicationId: 'app-id', transport: spyTransport });
+    const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
+    const tracker = new Tracker({ applicationId: 'app-id', transport: LogTransport });
 
     if (globalThis.objectiv.devTools) {
       jest.spyOn(globalThis.objectiv.devTools.LocationTree, 'add');

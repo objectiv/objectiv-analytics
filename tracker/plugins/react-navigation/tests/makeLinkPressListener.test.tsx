@@ -27,12 +27,12 @@ describe('makePressListener', () => {
     jest.resetAllMocks();
   });
 
-  const spyTransport = { transportName: 'SpyTransport', handle: jest.fn(), isUsable: () => true };
+  const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
 
   it('should correctly generate LinkContext for the pressed BottomTabItems', async () => {
     const tracker = new ReactNativeTracker({
       applicationId: 'app-id',
-      transport: spyTransport,
+      transport: LogTransport,
     });
     const Tab = createBottomTabNavigator();
 
@@ -70,15 +70,15 @@ describe('makePressListener', () => {
     fireEvent.press(getByTestId('TabB'));
     fireEvent.press(getByTestId('TabA'));
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(3);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(LogTransport.handle).toHaveBeenCalledTimes(3);
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         _type: 'ApplicationLoadedEvent',
         global_contexts: [expect.objectContaining({ _type: GlobalContextName.ApplicationContext, id: 'app-id' })],
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
         _type: 'PressEvent',
@@ -89,7 +89,7 @@ describe('makePressListener', () => {
         ],
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(
       3,
       expect.objectContaining({
         _type: 'PressEvent',
@@ -105,7 +105,7 @@ describe('makePressListener', () => {
   it('should console.error if an id cannot be automatically generated', () => {
     const tracker = new ReactNativeTracker({
       applicationId: 'app-id',
-      transport: spyTransport,
+      transport: LogTransport,
     });
     const trackingContext: TrackingContext = {
       locationStack: [],

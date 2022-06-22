@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
+import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render, screen } from '@testing-library/react';
 import React, { createRef } from 'react';
@@ -30,9 +30,9 @@ describe('TrackedMediaPlayerContext', () => {
   });
 
   it('should wrap the given Component in a MediaPlayerContext', () => {
-    const spyTransport = new SpyTransport();
-    jest.spyOn(spyTransport, 'handle');
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
     const TrackedButton = () => {
       const trackPressEvent = usePressEventTracker();
@@ -49,14 +49,14 @@ describe('TrackedMediaPlayerContext', () => {
 
     fireEvent.click(getByText(container, /trigger event/i));
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(2);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         _type: 'ApplicationLoadedEvent',
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
         _type: 'PressEvent',
@@ -71,9 +71,9 @@ describe('TrackedMediaPlayerContext', () => {
   });
 
   it('should allow disabling id normalization', () => {
-    const spyTransport = new SpyTransport();
-    jest.spyOn(spyTransport, 'handle');
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
     const TrackedButton = ({ children }: { children: React.ReactNode }) => {
       const trackPressEvent = usePressEventTracker();
@@ -94,14 +94,14 @@ describe('TrackedMediaPlayerContext', () => {
     fireEvent.click(getByText(container, /trigger event 1/i));
     fireEvent.click(getByText(container, /trigger event 2/i));
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(3);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(3);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         _type: 'ApplicationLoadedEvent',
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
         _type: 'PressEvent',
@@ -113,7 +113,7 @@ describe('TrackedMediaPlayerContext', () => {
         ]),
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       3,
       expect.objectContaining({
         _type: 'PressEvent',
@@ -129,7 +129,7 @@ describe('TrackedMediaPlayerContext', () => {
 
   it('should console.error if an id cannot be automatically generated', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
 
     render(
       <ObjectivProvider tracker={tracker}>
@@ -148,7 +148,7 @@ describe('TrackedMediaPlayerContext', () => {
   });
 
   it('should allow forwarding the id property', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
 
     render(
       <ObjectivProvider tracker={tracker}>
@@ -166,7 +166,7 @@ describe('TrackedMediaPlayerContext', () => {
   });
 
   it('should allow forwarding refs', () => {
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
     const ref = createRef<HTMLDivElement>();
 
     render(

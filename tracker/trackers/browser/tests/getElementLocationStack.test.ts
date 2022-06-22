@@ -3,7 +3,7 @@
  */
 
 import { PathContextFromURLPlugin } from '@objectiv/plugin-path-context-from-url';
-import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
+import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import { generateUUID, LocationStack, makeContentContext, TrackerPluginInterface } from '@objectiv/tracker-core';
 import { BrowserTracker, getElementLocationStack, TaggableElement } from '../src';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
@@ -59,7 +59,7 @@ describe('getElementLocationStack', () => {
 
   describe('Should reconstruct the Location Stack including the Plugins', () => {
     const applicationId = 'app';
-    const transport = new SpyTransport();
+    const transport = new LogTransport();
     const plugins: TrackerPluginInterface[] = [new PathContextFromURLPlugin()];
     const tracker = new BrowserTracker({ applicationId, transport, plugins, trackRootLocationContextFromURL: false });
 
@@ -84,7 +84,7 @@ describe('getElementLocationStack', () => {
 
   describe('Should reconstruct the Location Stack including the Tracker Location Stack and Plugins', () => {
     const applicationId = 'app';
-    const transport = new SpyTransport();
+    const transport = new LogTransport();
     const location_stack: LocationStack = [makeContentContext({ id: 'root' })];
     const plugins: TrackerPluginInterface[] = [new PathContextFromURLPlugin()];
     const tracker = new BrowserTracker({
