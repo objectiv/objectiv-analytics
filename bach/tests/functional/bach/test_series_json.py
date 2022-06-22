@@ -69,25 +69,26 @@ def test_json_get_single_value(engine, dtype):
     assert a == {'a': 'b', 'c': {'a': 'c'}}
 
 
-@pytest.mark.skip_bigquery
-def test_json_compare(engine, dtype):
-    # These less-than-or-equals compares check that the left hand is contained in the right hand, on
-    # Postgres. On` BigQuery we cannot support this, so we skip this function for BQ on purpose.
-    # TODO: maybe get rid of the Postgres support too?
+def test_json_array_contains(engine, dtype):
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
-    bts = {"a": "b"} <= bt.mixed_column
+
+    # for bigquery order of keys should be the same as in the data
+    bts = bt.list_column.json.array_contains({"_type":"SectionContext","id":"home"})
+
     assert_equals_data(
         bts,
-        expected_columns=['_index_row', 'mixed_column'],
+        expected_columns=['_index_row', 'list_column'],
         expected_data=[
-            [0, True],
+            [0, False],
             [1, False],
-            [2, True],
-            [3, False],
+            [2, False],
+            [3, True],
             [4, None]
         ]
     )
-    bts = ["a"] <= bt.mixed_column
+
+    # mixed column
+    bts = bt.mixed_column.json.array_contains('a')
     assert_equals_data(
         bts,
         expected_columns=['_index_row', 'mixed_column'],
@@ -100,47 +101,45 @@ def test_json_compare(engine, dtype):
         ]
     )
 
+    # dict_column column
+    bts = bt.dict_column.json.array_contains({"a": "b"})
+    assert_equals_data(
+        bts,
+        expected_columns=['_index_row', 'dict_column'],
+        expected_data=[
+            [0, False],
+            [1, False],
+            [2, False],
+            [3, False],
+            [4, None]
+        ]
+    )
+
 
 def test_json_getitem(engine, dtype):
-    # TODO: make this a one-query test
     bt = get_df_with_json_data(engine=engine, dtype=dtype)
-    bts = bt.mixed_column.json[0]
+    bt = bt[['mixed_column']]
+    bt['get_0'] = bt.mixed_column.json[0]
+    bt['get_min3'] = bt.mixed_column.json[-3]
+    bt['get_min4'] = bt.mixed_column.json[-4]  # Should be the same as json[0] for row 0 and 4
+    bt['get_min5'] = bt.mixed_column.json[-5]  # -5 doesn't exist, we expect to get `None`
+    bt['get_a'] = bt.mixed_column.json["a"]
+    bt = bt.drop(columns=['mixed_column'])
     assert_equals_data(
-        bts,
+        bt,
         use_to_pandas=True,
-        expected_columns=['_index_row', 'mixed_column'],
+        expected_columns=['_index_row', 'get_0', 'get_min3', 'get_min4', 'get_min5', 'get_a'],
         expected_data=[
-            [0, None],
-            [1, "a"],
-            [2, None],
-            [3, {"_type": "WebDocumentContext", "id": "#document"}],
-            [4, None]
-        ]
-    )
-    bts = bt.mixed_column.json[-2]
-    assert_equals_data(
-        bts,
-        use_to_pandas=True,
-        expected_columns=['_index_row', 'mixed_column'],
-        expected_data=[
-            [0, None],
-            [1, "c"],
-            [2, None],
-            [3, {"_type": "SectionContext", "id": "top-10"}],
-            [4, None]
-        ]
-    )
-    bts = bt.mixed_column.json["a"]
-    assert_equals_data(
-        bts,
-        use_to_pandas=True,
-        expected_columns=['_index_row', 'mixed_column'],
-        expected_data=[
-            [0, "b"],
-            [1, None],
-            [2, "b"],
-            [3, None],
-            [4, None]
+            [0, None, None, None, None, "b"],
+            [1, "a", "b", "a", None, None],
+            [2, None, None, None, None, "b"],
+            [3,
+             {"_type": "WebDocumentContext", "id": "#document"},
+             {"_type": "SectionContext", "id": "home"},
+             {"_type": "WebDocumentContext", "id": "#document"},
+             None,
+             None],
+            [4, None, None, None, None, None]
         ]
     )
 
@@ -250,7 +249,6 @@ def test_json_getitem_query(engine, dtype):
     bts = bt.list_column.json[{"_type": "SectionContext"}: ]
     assert_equals_data(
         bts,
-        use_to_pandas=True,
         expected_columns=['_index_row', 'list_column'],
         expected_data=[
             [0, []],
@@ -259,40 +257,36 @@ def test_json_getitem_query(engine, dtype):
             [3, [{"_type": "SectionContext", "id": "home"}, {"_type": "SectionContext", "id": "top-10"},
                  {"_type": "ItemContext", "id": "5o7Wv5Q5ZE"}]],
             [4, []]
-        ]
+        ],
+        use_to_pandas=True,
     )
-
-@pytest.mark.skip_postgres
-def test_json_same_start_end_slicing(engine, dtype):
-    # TODO: Postgres is generating wrong results, it is considering end of slicing as inclusive
-    bt = get_df_with_json_data(engine=engine, dtype=dtype)
     bts = bt.list_column.json[1:{"id": "d"}]
     assert_equals_data(
         bts,
-        use_to_pandas=True,
         expected_columns=['_index_row', 'list_column'],
         expected_data=[
             [0, []],
             [1, []],
-            [2, []],
+            [2, [{"_type": "c", "id": "d"}]],
             [3, []],
             [4, []]
-        ]
+        ],
+        use_to_pandas=True,
     )
-
     bts = bt.list_column.json[{'_type': 'a'}: {'id': 'd'}]
     assert_equals_data(
         bts,
-        use_to_pandas=True,
         expected_columns=['_index_row', 'list_column'],
         expected_data=[
             [0, []],
             [1, []],
-            [2, [{"_type": "a", "id": "b"}]],
+            [2, [{"_type": "a", "id": "b"}, {"_type": "c", "id": "d"}]],
             [3, []],
             [4, []]
-        ]
+        ],
+        use_to_pandas=True,
     )
+
 
 def test_json_get_array_length(engine, dtype):
     df = get_df_with_json_data(engine=engine, dtype=dtype)
