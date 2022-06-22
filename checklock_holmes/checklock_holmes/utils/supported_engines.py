@@ -15,7 +15,7 @@ class SupportedEngine(str, Enum):
         """
         Returns supported engines based on cli provided param
         """
-        if len(engines_to_check) == 1 and engines_to_check[0] == 'all':
+        if 'all' in engines_to_check:
             return [cls(eng) for eng in cls if eng != 'all']
 
-        return [cls(e_check) for e_check in engines_to_check if e_check != 'all']
+        return [cls(e_check) for e_check in engines_to_check]

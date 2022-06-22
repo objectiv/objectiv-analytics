@@ -13,6 +13,15 @@ Options:
     --dump_nb_scripts_dir<nbs_dir>  Directory where to dump notebook scripts.
     -t --timeit                     Time each cell
 
+Before running checks, please define .env file. Must include the following variables per engine:
+
+- Postgres
+PG_DB__DSN
+
+- BigQuery
+BQ_DB__DSN
+BQ_DB__CREDENTIALS_PATH
+
 Copyright 2022 Objectiv B.V.
 """
 from docopt import docopt
@@ -22,6 +31,7 @@ from checklock_holmes.models.nb_checker_models import (
     NoteBookCheckSettings, NoteBookMetadata
 )
 from checklock_holmes.nb_checker import NoteBookChecker
+from checklock_holmes.settings import settings
 from checklock_holmes.utils.constants import (
     DEFAULT_GITHUB_ISSUES_DIR, DEFAULT_NOTEBOOKS_DIR, NOTEBOOK_EXTENSION
 )
@@ -33,6 +43,13 @@ from checklock_holmes.utils.supported_engines import SupportedEngine
 
 
 def check_notebooks(check_settings: NoteBookCheckSettings, exit_on_fail: bool) -> None:
+    if not settings.engine_env_var_mapping:
+        print(
+            'Cannot run checks, nothing to be done if you do not define '
+            'any environmental variable for any engine. Goodbye!'
+        )
+        return
+
     checks = []
     github_issues_file_path = f'{check_settings.github_issues_dir}/{get_github_issue_filename()}'
 

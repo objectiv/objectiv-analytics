@@ -97,9 +97,10 @@ class NoteBookMetadata(BaseModel):
 
 class NoteBookCheck(BaseModel):
     metadata: NoteBookMetadata
-    completed: bool
     engine: str
-    error: Optional[CellError]
-    failing_block: Optional[str]
-    elapsed_time: float
-    elapsed_time_per_cell: List[CellTiming]
+    completed: bool = False
+    skipped: bool = False
+    error: Optional[CellError] = None
+    failing_block: Optional[str] = None
+    elapsed_time: Optional[float] = None
+    elapsed_time_per_cell: Optional[List[CellTiming]] = None

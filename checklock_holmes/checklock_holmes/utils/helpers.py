@@ -63,26 +63,34 @@ def display_check_results(
     data_to_show = []
     failed_checks = 0
     success_checks = 0
+    skipped_checks = 0
 
     headers = constants.REPORT_HEADERS.copy()
     if display_cell_timings:
         headers.append(constants.ELAPSED_TIME_CELL_HEADER)
 
     for check in nb_checks:
+        if check.error:
+            failed_checks += 1
+            status = 'failed'
+        elif check.skipped:
+            skipped_checks += 1
+            status = 'skipped'
+        else:
+            success_checks += 1
+            status = 'success'
+
         row = [
             check.metadata.name,
             check.engine,
-            'success' if check.completed else 'failed',
+            status,
             check.error.number if check.error else '',
-            check.elapsed_time,
+            check.elapsed_time or '',
         ]
-        if display_cell_timings:
+        if display_cell_timings and check.elapsed_time_per_cell:
             row.append('\n'.join(f'#{ct.number} - {ct.time}' for ct in check.elapsed_time_per_cell))
+
         data_to_show.append(row)
-        if check.error:
-            failed_checks += 1
-        else:
-            success_checks += 1
 
     print(tabulate(data_to_show, headers=headers, tablefmt="simple", floatfmt=".4f"))
 
@@ -90,6 +98,12 @@ def display_check_results(
         perc_success = round(success_checks/len(nb_checks) * 100, 2)
         print(constants.SUCCESS_CHECK_MESSAGE.format(
             success_checks=success_checks, perc_success=perc_success,
+        ))
+
+    if skipped_checks:
+        perc_skipped = round(skipped_checks/len(nb_checks) * 100, 2)
+        print(constants.SKIPPED_CHECK_MESSAGE.format(
+            skipped_checks=skipped_checks, perc_skipped=perc_skipped,
         ))
 
     if failed_checks:

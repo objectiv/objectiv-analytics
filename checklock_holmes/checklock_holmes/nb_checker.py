@@ -47,6 +47,14 @@ class NoteBookChecker:
 
         Returns a generated report based on the execution.
         """
+        # skip checks for engines without env variables
+        if engine not in settings.engine_env_var_mapping:
+            return NoteBookCheck(
+                metadata=self.metadata,
+                engine=engine,
+                skipped=True,
+            )
+
         self._cell_timings = []
         wrapped_script = self.get_script(engine, is_execution=True)
         completed = True

@@ -1,6 +1,7 @@
 """
 Copyright 2022 Objectiv B.V.
 """
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -20,11 +21,11 @@ class BaseEnvModel(BaseModel):
 
 
 class BaseDBEnvModel(BaseEnvModel):
-    dsn: str
+    dsn: Optional[str] = None
 
 
 class BigQueryEnvModel(BaseDBEnvModel):
-    google_application_credentials: str = Field(None, alias='credentials_path')
+    google_application_credentials: Optional[str] = Field(None, alias='credentials_path')
 
 
 class MetaBaseEnvModel(BaseEnvModel):

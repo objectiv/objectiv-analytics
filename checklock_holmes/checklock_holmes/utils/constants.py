@@ -59,6 +59,7 @@ DEFAULT_GITHUB_ISSUES_DIR = 'github_nb_issues'
 REPORT_HEADERS = ['notebook', 'engine', 'status', 'failing cell', 'elapsed_time (seconds)']
 ELAPSED_TIME_CELL_HEADER = 'elapsed_time per cell (seconds)'
 SUCCESS_CHECK_MESSAGE = colored('Successful checks: {success_checks} ({perc_success}%)', 'green')
+SKIPPED_CHECK_MESSAGE = colored('Skipped checks: {skipped_checks} ({perc_skipped}%)', 'yellow')
 FAILED_CHECK_MESSAGE = colored('Failed checks: {failed_checks} ({perc_failed}%)', 'red')
 MORE_INFORMATION_MESSAGE = (
     'Dear Watson, for more information about failed checks, please see: '
