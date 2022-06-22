@@ -1,0 +1,14 @@
+# dev and styling
+pydantic==1.9.1
+python-dotenv
+isort==5.10.1
+mypy==0.961
+pycodestyle==2.8.0
+docopt==0.6.2
+tqdm==4.64.0
+tabulate
+termcolor==1.1.0
+
+# notebooks and bq requirements
+-r ../notebooks/requirements.txt
+-r ../bach/requirements-bigquery.txt
