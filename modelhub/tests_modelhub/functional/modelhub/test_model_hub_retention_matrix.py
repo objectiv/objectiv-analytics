@@ -16,11 +16,11 @@ def test_retention_matrix():
     event_type = 'ClickEvent'
 
     # yearly
-    data = modelhub.map.retention_matrix(df,
-                                         time_period='yearly',
-                                         event_type=event_type,
-                                         percentage=False,
-                                         display=False)
+    data = modelhub.aggregate.retention_matrix(df,
+                                               time_period='yearly',
+                                               event_type=event_type,
+                                               percentage=False,
+                                               display=False)
 
     assert_equals_data(
         data,
@@ -32,11 +32,11 @@ def test_retention_matrix():
     )
 
     # monthly
-    data = modelhub.map.retention_matrix(df,
-                                         time_period='monthly',
-                                         event_type=event_type,
-                                         percentage=False,
-                                         display=False)
+    data = modelhub.aggregate.retention_matrix(df,
+                                               time_period='monthly',
+                                               event_type=event_type,
+                                               percentage=False,
+                                               display=False)
 
     # filling nan values with -999 in order to be able to do the check
     # (nan values are causing a trouble)
@@ -52,11 +52,11 @@ def test_retention_matrix():
     )
 
     # weekly
-    data = modelhub.map.retention_matrix(df,
-                                         time_period='weekly',
-                                         event_type=event_type,
-                                         percentage=False,
-                                         display=False)
+    data = modelhub.aggregate.retention_matrix(df,
+                                               time_period='weekly',
+                                               event_type=event_type,
+                                               percentage=False,
+                                               display=False)
     assert_equals_data(
         data,
         expected_columns=['first_cohort', '_0'],
@@ -67,11 +67,11 @@ def test_retention_matrix():
     )
 
     # daily
-    data = modelhub.map.retention_matrix(df,
-                                         time_period='daily',
-                                         event_type=event_type,
-                                         percentage=False,
-                                         display=False)
+    data = modelhub.aggregate.retention_matrix(df,
+                                               time_period='daily',
+                                               event_type=event_type,
+                                               percentage=False,
+                                               display=False)
 
     data = data.fillna(value=-999)
     assert_equals_data(
@@ -88,25 +88,25 @@ def test_retention_matrix():
 
     # not supported time_period
     with pytest.raises(ValueError, match='biweekly time_period is not available.'):
-        modelhub.map.retention_matrix(df,
-                                      event_type=event_type,
-                                      time_period='biweekly',
-                                      display=False)
+        modelhub.aggregate.retention_matrix(df,
+                                            event_type=event_type,
+                                            time_period='biweekly',
+                                            display=False)
 
     # non-existing event type
-    data = modelhub.map.retention_matrix(df,
-                                         event_type='some_event',
-                                         display=False)
+    data = modelhub.aggregate.retention_matrix(df,
+                                               event_type='some_event',
+                                               display=False)
 
     assert list(data.index.keys()) == ['first_cohort']
     assert data.columns == []
 
     # all events
-    data = modelhub.map.retention_matrix(df,
-                                         time_period='yearly',
-                                         event_type=None,
-                                         percentage=False,
-                                         display=False)
+    data = modelhub.aggregate.retention_matrix(df,
+                                               time_period='yearly',
+                                               event_type=None,
+                                               percentage=False,
+                                               display=False)
 
     assert_equals_data(
         data,
@@ -118,11 +118,11 @@ def test_retention_matrix():
     )
 
     # percentage
-    data = modelhub.map.retention_matrix(df,
-                                         time_period='monthly',
-                                         event_type=event_type,
-                                         percentage=True,
-                                         display=False)
+    data = modelhub.aggregate.retention_matrix(df,
+                                              time_period='monthly',
+                                              event_type=event_type,
+                                              percentage=True,
+                                              display=False)
 
     data = data.fillna(value=-999.0)
     assert_equals_data(
@@ -136,12 +136,12 @@ def test_retention_matrix():
     )
 
     # start_date
-    data = modelhub.map.retention_matrix(df,
-                                         time_period='daily',
-                                         event_type=event_type,
-                                         start_date='2021-11-30',
-                                         percentage=False,
-                                         display=False)
+    data = modelhub.aggregate.retention_matrix(df,
+                                               time_period='daily',
+                                               event_type=event_type,
+                                               start_date='2021-11-30',
+                                               percentage=False,
+                                               display=False)
 
     data = data.fillna(value=-999)
     assert_equals_data(
@@ -156,12 +156,12 @@ def test_retention_matrix():
     )
 
     # end_date
-    data = modelhub.map.retention_matrix(df,
-                                         time_period='daily',
-                                         event_type=event_type,
-                                         end_date='2021-12-02',
-                                         percentage=False,
-                                         display=False)
+    data = modelhub.aggregate.retention_matrix(df,
+                                               time_period='daily',
+                                               event_type=event_type,
+                                               end_date='2021-12-02',
+                                               percentage=False,
+                                               display=False)
 
     assert_equals_data(
         data,
@@ -174,13 +174,13 @@ def test_retention_matrix():
     )
 
     # start_date and end_date
-    data = modelhub.map.retention_matrix(df,
-                                         time_period='daily',
-                                         event_type=event_type,
-                                         start_date='2021-11-30',
-                                         end_date='2021-12-02',
-                                         percentage=False,
-                                         display=False)
+    data = modelhub.aggregate.retention_matrix(df,
+                                               time_period='daily',
+                                               event_type=event_type,
+                                               start_date='2021-11-30',
+                                               end_date='2021-12-02',
+                                               percentage=False,
+                                               display=False)
 
     assert_equals_data(
         data,
@@ -193,18 +193,18 @@ def test_retention_matrix():
 
     # wrong start_date
     with pytest.raises(ValueError, match="time data '2021-11' does not match format '%Y-%m-%d"):
-        modelhub.map.retention_matrix(df,
-                                      time_period='daily',
-                                      event_type=event_type,
-                                      start_date='2021-11',
-                                      percentage=False,
-                                      display=False)
+        modelhub.aggregate.retention_matrix(df,
+                                            time_period='daily',
+                                            event_type=event_type,
+                                            start_date='2021-11',
+                                            percentage=False,
+                                            display=False)
 
     # wrong end_date
     with pytest.raises(ValueError, match="time data '2021-11' does not match format '%Y-%m-%d"):
-        modelhub.map.retention_matrix(df,
-                                      time_period='daily',
-                                      event_type=event_type,
-                                      end_date='2021-11',
-                                      percentage=False,
-                                      display=False)
+        modelhub.aggregate.retention_matrix(df,
+                                            time_period='daily',
+                                            event_type=event_type,
+                                            end_date='2021-11',
+                                            percentage=False,
+                                            display=False)
