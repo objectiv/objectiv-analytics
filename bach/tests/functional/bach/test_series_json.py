@@ -73,13 +73,14 @@ def test_json_array_contains(engine, dtype):
     # custom test data instead.
     test_data = [
         [0, '["a", "b", "c", "d"]'],
-        [1, '[1, 2, 3, 4]'],
-        [2, '[true, true, true, true]'],
-        [3, '[true, false, true, true]'],
-        [4, '[1.1, 1.337, 4.123, 123.456]'],
-        [5, '[-1.1, -1.337, -4.123, -123.456]'],
-        [6, '["a", true, 3, -1.337]'],
-        [7, None]
+        [1, '[0, 1, 2, 3, 4]'],
+        [2, '[true, true, true, true, true]'],
+        [3, '[true, true, false, true, true]'],
+        [4, '[0.1, 1.1, 1.337, 4.123, 123.456]'],
+        [5, '[-0.1, -1.1, -1.337, -4.123, -123.456]'],
+        [6, '["a", true, 3, -1.337, null]'],
+        [7, None],
+        [8, '[]'],
     ]
     pdf = pandas.DataFrame.from_records(test_data, columns=['index', 'column'])
     pdf.set_index(pdf.columns[0], drop=True, inplace=True)
@@ -99,20 +100,22 @@ def test_json_array_contains(engine, dtype):
     df['false'] = df.column.json.array_contains(False)
     df['f1_1'] = df.column.json.array_contains(1.1)
     df['f_1_337'] = df.column.json.array_contains(-1.337)
+    df['none'] = df.column.json.array_contains(None)
     df = df.drop(columns=['column'])
     assert_equals_data(
         df,
         expected_columns=['_index_index',
-                          'a', 'b', 'e', 'one', 'three', 'five', 'true', 'false', 'f1_1', 'f_1_337'],
+                          'a', 'b', 'e', 'one', 'three', 'five', 'true', 'false', 'f1_1', 'f_1_337', 'none'],
         expected_data=[
-            [0, True,  True,  False, False, False, False, False, False, False, False],
-            [1, False, False, False, True,  True,  False, False, False, False, False],
-            [2, False, False, False, False, False, False, True,  False, False, False],
-            [3, False, False, False, False, False, False, True,  True,  False, False],
-            [4, False, False, False, False, False, False, False, False, True,  False],
-            [5, False, False, False, False, False, False, False, False, False, True],
-            [6, True,  False, False, False, True,  False, True,  False, False, True],
-            [7, None, None, None, None, None, None, None, None, None, None]
+            [0, True,  True,  False, False, False, False, False, False, False, False, False],
+            [1, False, False, False, True,  True,  False, False, False, False, False, False],
+            [2, False, False, False, False, False, False, True,  False, False, False, False],
+            [3, False, False, False, False, False, False, True,  True,  False, False, False],
+            [4, False, False, False, False, False, False, False, False, True,  False, False],
+            [5, False, False, False, False, False, False, False, False, False, True,  False],
+            [6, True,  False, False, False, True,  False, True,  False, False, True,  True ],
+            [7, None,  None,  None,  None,  None,  None,  None,  None,  None,  None,  None ],
+            [8, False, False, False, False, False, False, False, False, False, False, False]
         ]
     )
 

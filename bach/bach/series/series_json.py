@@ -402,7 +402,7 @@ class JsonAccessor(Generic[TSeriesJson]):
         # So for now we have a dedicated len function for arrays.
         return self._implementation.get_array_length()
 
-    def array_contains(self, item: Union[int, float, bool, str]) -> 'SeriesBoolean':
+    def array_contains(self, item: Union[int, float, bool, str, None]) -> 'SeriesBoolean':
         """
         Find if item is contained in the array.
 
