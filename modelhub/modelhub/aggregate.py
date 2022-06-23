@@ -250,6 +250,8 @@ class Aggregate:
         else:
             data['__feature_nice_name'] = data.location_stack.ls.nice_name
 
+        data = data.materialize(node_name='extract_application_and_feature_nice_name')
+
         # reduce the amount of data to be considered
         groupby_col = ['__application', '__feature_nice_name', 'event_type']
         data = data.dropna(subset=groupby_col)
