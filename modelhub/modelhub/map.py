@@ -5,7 +5,7 @@ from enum import Enum
 
 import bach
 from bach.partitioning import WindowFrameBoundary, WindowFrameMode
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List
 
 from sql_models.util import is_bigquery
 
