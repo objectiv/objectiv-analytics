@@ -324,6 +324,11 @@ class Aggregate:
         :param display: if display==True visualize the retention matrix as a heat map
 
         :returns: retention matrix bach DataFrame.
+
+        .. vimeoplayer:: 
+            :videoid: 723381969
+            :trackingid: product-demo-retention-matrix
+            :paddingbottom: 58.25%
         """
 
         available_formats = {'daily', 'weekly', 'monthly', 'yearly'}
