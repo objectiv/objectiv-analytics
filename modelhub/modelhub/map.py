@@ -251,8 +251,8 @@ class Map:
 
         One can calculate the retention matrix for a given time range, for that
         one can specify start_date a/o end_date.
-        N.B. the users' activity starts to be traced from start_date specified in
-        modelhub where we load the data.
+        N.B. the users' activity starts to be traced from first date the user is seen in the `data`.
+
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param time_period: can be 'daily', 'weekly', 'monthly' or 'yearly'.
@@ -282,7 +282,7 @@ class Map:
             try:
                 _start_date = datetime.strptime(start_date, '%Y-%m-%d')
             except Exception as e:
-                print('Please provide correct start_date.')
+                print('Please provide correct start_date formatted as "YYYY-MM-DD".')
                 raise e
 
         _end_date = None
@@ -290,7 +290,7 @@ class Map:
             try:
                 _end_date = datetime.strptime(end_date, '%Y-%m-%d')
             except Exception as e:
-                print('Please provide correct end_date.')
+                print('Please provide correct end_date formatted as "YYYY-MM-DD".')
                 raise e
 
         self._mh._check_data_is_objectiv_data(data)
@@ -307,69 +307,64 @@ class Map:
 
         # get the first cohort
         cohorts = data.groupby('user_id')['moment'].min().reset_index()
-        cohorts = cohorts.rename(columns={'moment': 'first_cohort'})
+        cohorts = cohorts.rename(columns={'moment': 'first_cohort_ts'})
 
         # add first cohort to our data DataFrame
-        data = data.merge(cohorts, on='user_id', how='left')
+        data = data.merge(cohorts, on='user_id')
 
+        # help mypy
         from bach import SeriesTimestamp, SeriesTimedelta
         moment = cast(SeriesTimestamp, data['moment'])
-        first_cohort = cast(SeriesTimestamp, data['first_cohort'])
+        first_cohort_ts = cast(SeriesTimestamp, data['first_cohort_ts'])
 
         # calculate cohort distance
         if time_period == 'yearly':
             data['cohort'] = moment.dt.strftime('%Y').astype(dtype=int)
-            data['first_cohort'] = first_cohort.dt.strftime('%Y').astype(dtype=int)
-            data['cohort_distance'] = data['cohort'] - data['first_cohort']
+            data['first_cohort_yearly'] = first_cohort_ts.dt.strftime('%Y').astype(dtype=int)
+            data['cohort_distance'] = data['cohort'] - data['first_cohort_yearly']
 
+            data['first_cohort'] = first_cohort_ts.dt.strftime('%Y')
         elif time_period == 'monthly':
             data['cohort_year'] = moment.dt.strftime('%Y').astype(dtype=int)
-            data['first_cohort_year'] = first_cohort.dt.strftime('%Y').astype(dtype=int)
+            data['first_cohort_year'] = first_cohort_ts.dt.strftime('%Y').astype(dtype=int)
             data['cohort_year_diff'] = data['cohort_year'] - data['first_cohort_year']
 
             data['cohort_month'] = moment.dt.strftime('%m').astype(dtype=int)
-            data['first_cohort_month'] = first_cohort.dt.strftime('%m').astype(dtype=int)
+            data['first_cohort_month'] = first_cohort_ts.dt.strftime('%m').astype(dtype=int)
             data['cohort_month_diff'] = data['cohort_month'] - data['first_cohort_month']
 
             n_months = 12
             data['cohort_distance'] = data['cohort_year_diff'] * n_months + data['cohort_month_diff']
 
+            data['first_cohort'] = first_cohort_ts.dt.strftime('%Y-%m')
         elif time_period == 'weekly':
             n_days = 7.0
 
             data['cohort'] = moment.dt.date_trunc('week').astype('timestamp')
-            data['first_cohort'] = first_cohort.dt.date_trunc('week')
-            cohort_distance = cast(SeriesTimedelta, data['cohort'] - data['first_cohort'])
+            data['first_cohort_weekly'] = first_cohort_ts.dt.date_trunc('week')
+            cohort_distance = cast(SeriesTimedelta, data['cohort'] - data['first_cohort_weekly'])
             data['cohort_distance'] = cohort_distance.dt.days
             data['cohort_distance'] = data['cohort_distance'] / n_days
 
+            pretty_name = cast(SeriesTimestamp, data['first_cohort_weekly']).dt.strftime('%Y-%m-%d')
+            data['first_cohort'] = pretty_name
         else:
             # daily
-            data['cohort_distance'] = data['moment'] - data['first_cohort']
+            data['cohort_distance'] = data['moment'] - data['first_cohort_ts']
             data['cohort_distance'] = cast(SeriesTimedelta, data['cohort_distance']).dt.days
+            data['first_cohort'] = first_cohort_ts.dt.strftime('%Y-%m-%d')
 
         # applying start date filter
         if _start_date is not None:
-            if time_period == 'yearly':
-                _filter = data['first_cohort'] >= _start_date.year
-            else:
-                _filter = data['first_cohort'] >= _start_date
-            data = data[_filter]
+            data = data[data['first_cohort_ts'] >= _start_date]
 
         # applying end date filter
         if _end_date is not None:
             data = data[data['moment'] < _end_date]
 
-        # make the first_cohort pretty
-        if time_period == 'monthly':
-            data['first_cohort'] = cast(SeriesTimestamp, data['first_cohort']).dt.strftime('%Y-%m')
-        if time_period == 'weekly' or time_period == 'daily':
-            data['first_cohort'] = cast(SeriesTimestamp, data['first_cohort']).dt.strftime('%Y-%m-%d')
-        data['first_cohort'] = data['first_cohort'].astype(dtype=str)
-        data['cohort_distance'] = data['cohort_distance'].astype(dtype=str)
-
         # in BigQuery columns cannot start with numbers
         data['cohort_distance_prefix'] = '_'
+        data['cohort_distance'] = data['cohort_distance'].astype(dtype=str)
         data['cohort_distance'] = data['cohort_distance_prefix'] + data['cohort_distance']
 
         retention_matrix = data.groupby(['first_cohort',
@@ -388,12 +383,12 @@ class Map:
         # for BigQuery we need sorting
         retention_matrix = retention_matrix.sort_index()
 
-        if percentage:
+        if percentage and len(columns):
             first_column = retention_matrix[columns[0]]
             for col in columns:
                 retention_matrix[col] = (retention_matrix[col] / first_column) * 100
 
-        if display:
+        if display and len(columns):
             import matplotlib.pyplot as plt
             import seaborn as sns
             fig, ax = plt.subplots(figsize=(20, 8))
