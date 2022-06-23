@@ -325,7 +325,7 @@ class Aggregate:
 
         :returns: retention matrix bach DataFrame.
 
-        .. vimeoplayer:: 
+        .. vimeoplayer::
             :videoid: 723381969
             :trackingid: product-demo-retention-matrix
             :paddingbottom: 58.25%
