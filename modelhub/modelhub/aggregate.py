@@ -281,7 +281,6 @@ class Aggregate:
             node_name='extract_application_and_feature_nice_name', inplace=True,
         )
 
-        # reduce the amount of data to be considered
         groupby_col = ['__application', '__feature_nice_name', 'event_type']
         converted_users_features = self._mh.agg.unique_users(converted_users_filtered,
                                                              groupby=groupby_col)
