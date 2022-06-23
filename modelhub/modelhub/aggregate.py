@@ -250,25 +250,38 @@ class Aggregate:
         else:
             data['__feature_nice_name'] = data.location_stack.ls.nice_name
 
-        self._mh.map.add_is_conversion_event(data, '__conversion', name)
-        self._mh.map.add_conversions_in_time(data, '__conversions_in_time',
-                                             '__conversion', partition='session_id')
-        self._mh.map._conversions_counter(data, partition='session_id')
-
-        # label sessions with a conversion
-        data['converted_users'] = data['__converted'] >= 1
-
-        data.materialize(inplace=True)
-        # label hits where at that point in time, there are 0 conversions in the session
-        data['zero_conversions_at_moment'] = data['__conversions_in_time'] == 0
-
-        # filter on above created labels
-        converted_users = data[(data.converted_users & data.zero_conversions_at_moment)]
+        # temporary workaround, we should not call private constants and methods from Map
+        # replace this after having a better solution
+        from modelhub.map import _CalculatedConversionSeries
 
         # select only user interactions
-        converted_users_filtered = converted_users[
-            converted_users.stack_event_types.json.array_contains(event_type)
+        events_with_user_interactions = data[
+            data.stack_event_types.json.array_contains(event_type)
         ]
+
+        # get conversion information
+        # conversions_counter, is_conversion_event, conversions_in_time
+        conversions_df = self._mh.map._get_calculated_conversion_df(
+            series_to_calculate=_CalculatedConversionSeries.CONVERSIONS_COUNTER,
+            data=events_with_user_interactions,
+            name=name,
+            partition='session_id',
+        )
+
+        # label sessions with a conversion
+        conversions_df['converted_users'] = conversions_df['__converted'] >= 1
+
+        # label hits where at that point in time, there are 0 conversions in the session
+        conversions_df['zero_conversions_at_moment'] = conversions_df['__conversions_in_time'] == 0
+
+        # filter on above created labels
+        converted_mask = (conversions_df.converted_users & conversions_df.zero_conversions_at_moment)
+        converted_users_filtered = conversions_df[converted_mask]
+
+        # merge back to data in order to include groupby_col series in filtered users df
+        converted_users_filtered = converted_users_filtered.merge(
+            events_with_user_interactions, on='event_id',
+        )
 
         groupby_col = ['__application', '__feature_nice_name', 'event_type']
         converted_users_features = self._mh.agg.unique_users(converted_users_filtered,

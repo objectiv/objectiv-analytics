@@ -1,16 +1,46 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+from enum import Enum
+
 import bach
-from bach import SeriesBoolean
-from bach.expression import Expression
 from bach.partitioning import WindowFrameBoundary, WindowFrameMode
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 from sql_models.util import is_bigquery
 
 if TYPE_CHECKING:
     from modelhub import ModelHub
+
+
+class _CalculatedConversionSeries(str, Enum):
+    IS_CONVERSION_EVENT = 'is_conversion_event'
+    CONVERSIONS_IN_TIME = 'conversions_in_time'
+    CONVERSIONS_COUNTER = 'converted'
+    PRE_CONVERSION_HIT_NUMBER = 'pre_conversion_hit_number'
+
+    @property
+    def private_name(self) -> str:
+        return f'__{self}'
+
+    @property
+    def public_name(self) -> str:
+        return self.value
+
+
+_DEPENDENCIES_PER_CONVERSION_SERIES: Dict[_CalculatedConversionSeries, List[_CalculatedConversionSeries]] = {
+    _CalculatedConversionSeries.CONVERSIONS_IN_TIME: [
+        _CalculatedConversionSeries.IS_CONVERSION_EVENT,
+    ],
+    _CalculatedConversionSeries.CONVERSIONS_COUNTER: [
+        _CalculatedConversionSeries.IS_CONVERSION_EVENT,
+        _CalculatedConversionSeries.CONVERSIONS_IN_TIME,
+    ],
+    _CalculatedConversionSeries.PRE_CONVERSION_HIT_NUMBER: [
+        _CalculatedConversionSeries.IS_CONVERSION_EVENT,
+        _CalculatedConversionSeries.CONVERSIONS_IN_TIME,
+    ]
+}
 
 
 class Map:
@@ -85,34 +115,7 @@ class Map:
         is_new_user_series = is_new_user_series.copy_override_type(bach.SeriesBoolean)
         return is_new_user_series.copy_override(name='is_new_user').materialize()
 
-    def add_is_conversion_event(self,
-                                data: bach.DataFrame,
-                                column_name_to_add: str,
-                                name: str):
-        """
-        Labels a hit True if it is a conversion event, all other hits are labeled False.
-
-        :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param column_name_to_add: name of the column that is added to `data`
-        :param name: the name of the conversion to label as set in
-            :py:attr:`ModelHub.conversion_events`.
-        """
-
-        if name not in self._mh._conversion_events:
-            raise KeyError(f"Key {name} is not labeled as a conversion")
-
-        conversion_stack, conversion_event = self._mh._conversion_events[name]
-
-        if conversion_stack is None:
-            series = data.event_type == conversion_event
-        elif conversion_event is None:
-            series = conversion_stack.json.get_array_length() > 0
-        else:
-            series = ((conversion_stack.json.get_array_length() > 0) & (data.event_type == conversion_event))
-
-        data[column_name_to_add] = series
-
-    def is_conversion_event(self, data: bach.DataFrame, name: str) -> bach.Series:
+    def is_conversion_event(self, data: bach.DataFrame, name: str) -> bach.SeriesBoolean:
         """
         Labels a hit True if it is a conversion event, all other hits are labeled False.
 
@@ -122,33 +125,24 @@ class Map:
         :returns: :py:class:`bach.SeriesBoolean` with the same index as ``data``.
         """
 
-        self._mh._check_data_is_objectiv_data(data)
-        data = data.copy()
+        series_to_calculate = _CalculatedConversionSeries.IS_CONVERSION_EVENT
+        conversion_df = self._get_calculated_conversion_df(
+            series_to_calculate=series_to_calculate,
+            data=data,
+            name=name,
+        )
 
-        self.add_is_conversion_event(data, column_name_to_add='__conversion', name=name)
-
-        return data['__conversion'].copy_override(name='is_conversion_event')
-
-    def _conversions_counter(self,
-                             data: bach.DataFrame,
-                             partition: str):
-
-        """
-        requires
-            `add_is_conversion_event`
-            `add_conversions_in_time`
-
-        creates
-            `__converted`
-        """
-        data.materialize(inplace=True)
-        window = data.groupby(partition).window(end_boundary=WindowFrameBoundary.FOLLOWING)
-        data['__converted'] = window['__conversions_in_time'].max()
+        series = conversion_df[series_to_calculate.private_name]
+        return (
+            series
+            .copy_override(name=series_to_calculate.public_name, index=data.index)
+            .copy_override_type(bach.SeriesBoolean)
+        )
 
     def conversions_counter(self,
                             data: bach.DataFrame,
                             name: str,
-                            partition: str = 'session_id'):
+                            partition: str = 'session_id') -> bach.SeriesInt64:
         """
         Counts the total number of conversions given a partition (ie session_id
         or user_id).
@@ -160,57 +154,28 @@ class Map:
         :returns: :py:class:`bach.SeriesBoolean` with the same index as ``data``.
         """
 
-        self._mh._check_data_is_objectiv_data(data)
-        data = data.copy()
+        series_to_calculate = _CalculatedConversionSeries.CONVERSIONS_COUNTER
+        conversion_df = self._get_calculated_conversion_df(
+            series_to_calculate=series_to_calculate,
+            data=data,
+            name=name,
+            partition=partition,
+        )
 
-        self.add_is_conversion_event(data, '__conversion', name)
-        self.add_conversions_in_time(data, '__conversions_in_time', '__conversion',
-                                     partition=partition)
-        self._conversions_counter(data, partition=partition)
-
-        return data['__converted'].copy_override(name='converted',
-                                                 index=data.index)
+        series = conversion_df[series_to_calculate.private_name]
+        return (
+            series
+            .copy_override(name=series_to_calculate.public_name, index=data.index)
+            .copy_override_type(bach.SeriesInt64)
+        )
 
     def conversion_count(self, *args, **kwargs):
         raise NotImplementedError('function is renamed please use `conversions_in_time`')
 
-    def add_conversions_in_time(self,
-                                data: bach.DataFrame,
-                                column_name_to_add,
-                                is_conversion_event_column,
-                                partition: str = 'session_id'):
-        """
-        Counts the number of time a user is converted at a moment in time given a partition (ie 'session_id'
-        or 'user_id').
-
-        :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param column_name_to_add: name of the column that is added to `data`
-        :param is_conversion_event_column: column created by `add_is_conversion_event`
-        :param partition: the partition over which the number of conversions are counted. Can be any column
-            in ``data``.
-        """
-
-        column_name_to_add_conversion_counter = '__conversion_counter'
-
-        data[column_name_to_add_conversion_counter] = 0
-        data.loc[data[is_conversion_event_column], column_name_to_add_conversion_counter] = 1
-
-        # make the query more clean, just require these series
-        if is_bigquery(data.engine):
-            # group by materializes for BQ, window will make reference to column
-            data.materialize(node_name='conversion_counter_bq', inplace=True)
-
-        window = data.sort_values([partition, 'moment']).groupby(partition).window()
-        data[column_name_to_add] = (
-            data[column_name_to_add_conversion_counter].copy_override_type(bach.SeriesInt64).sum(window)
-        )
-
-        del(data[column_name_to_add_conversion_counter])
-
     def conversions_in_time(self,
                             data: bach.DataFrame,
                             name: str,
-                            partition: str = 'session_id') -> bach.Series:
+                            partition: str = 'session_id') -> bach.SeriesInt64:
         """
         Counts the number of time a user is converted at a moment in time given a partition (ie 'session_id'
         or 'user_id').
@@ -222,56 +187,27 @@ class Map:
             in ``data``.
         :returns: :py:class:`bach.SeriesInt64` with the same index as ``data``.
         """
-
-        self._mh._check_data_is_objectiv_data(data)
-        data = data.copy()
-
-        self.add_is_conversion_event(data, '__conversion', name)
-        self.add_conversions_in_time(data, '__conversions_in_time', '__conversion',
-                                     partition=partition)
-
-        return data['__conversions_in_time'].copy_override(name='conversions_in_time').materialize(
-            node_name='conversions_in_time')
-
-    def _pre_conversion_hit_number(self,
-                                   data: bach.DataFrame,
-                                   partition: str):
-        """
-        requires in `data`
-            `add_is_conversion_event`
-            `add_conversions_in_time`
-
-        creates
-
-
-        """
-
-        # sort all windows by session id and hit number
-        sort_by = ['session_id', 'session_hit_number']
-
-        window = data.sort_values(sort_by, ascending=False).groupby(partition).window()
-        max_number_of_conversions = data['__conversions_in_time'].max(window)
-        data['__is_converted'] = True
-        data.loc[max_number_of_conversions == 0, '__is_converted'] = False
-
-        data.materialize(inplace=True)
-
-        window = data.sort_values(sort_by, ascending=False).groupby(partition).window()
-
-        # number all rows except where __is_converted is NULL and _conversions == 0
-        pch_mask = (data['__is_converted']) & (data['__conversions_in_time'] == 0)
-        data['__pre_conversion_hit_number'] = 1
-        data.loc[~pch_mask, '__pre_conversion_hit_number'] = None
-        pre_conversion_hit_number = (
-            data['__pre_conversion_hit_number']
-            .astype('int64').copy_override_type(bach.SeriesInt64)  # None is parsed as string
+        series_to_calculate = _CalculatedConversionSeries.CONVERSIONS_IN_TIME
+        conversion_df = self._get_calculated_conversion_df(
+            series_to_calculate=series_to_calculate,
+            data=data,
+            name=name,
+            partition=partition,
         )
-        data['__pre_conversion_hit_number'] = pre_conversion_hit_number.sum(window)
 
-    def pre_conversion_hit_number(self,
-                                  data: bach.DataFrame,
-                                  name: str,
-                                  partition: str = 'session_id') -> bach.SeriesInt64:
+        series = conversion_df[series_to_calculate.private_name]
+        return (
+            series
+            .copy_override(name=series_to_calculate.public_name)
+            .copy_override_type(bach.SeriesInt64)
+        )
+
+    def pre_conversion_hit_number(
+        self,
+        data: bach.DataFrame,
+        name: str,
+        partition: str = 'session_id',
+    ) -> bach.SeriesInt64:
         """
         Returns a count backwards from the first conversion, given the partition. I.e. first hit before
         converting is 1, second hit before converting 2, etc. Returns None if there are no conversions
@@ -285,14 +221,173 @@ class Map:
         :returns: :py:class:`bach.SeriesInt64` with the same index as ``data``.
         """
 
+        series_to_calculate = _CalculatedConversionSeries.PRE_CONVERSION_HIT_NUMBER
+        conversion_df = self._get_calculated_conversion_df(
+            series_to_calculate=series_to_calculate,
+            data=data,
+            name=name,
+            partition=partition,
+        )
+
+        series = conversion_df[series_to_calculate.private_name]
+
+        return (
+            series.copy_override(name=series_to_calculate.public_name).
+            copy_override_type(bach.SeriesInt64)
+        )
+
+    @staticmethod
+    def _check_conversion_dependencies(
+        data: bach.DataFrame, series_to_calculate: _CalculatedConversionSeries
+    ) -> None:
+        """
+        Helper function that checks if dataframe contains all dependent series required
+        for calculating series_to_calculate
+        """
+        if series_to_calculate not in _DEPENDENCIES_PER_CONVERSION_SERIES:
+            return None
+
+        for dep in _DEPENDENCIES_PER_CONVERSION_SERIES[series_to_calculate]:
+            if dep.private_name not in data.data_columns:
+                raise Exception(f'{dep} is required for calculating {series_to_calculate} series')
+
+    def _get_calculated_conversion_df(
+        self,
+        *,
+        series_to_calculate: _CalculatedConversionSeries,
+        data: bach.DataFrame,
+        **kwargs,
+    ) -> bach.DataFrame:
+        """
+        Generates a dataframe containing all required conversion series based on series_to_calculate param.
+        All new series will contain private names.
+        """
         self._mh._check_data_is_objectiv_data(data)
-        data = data.copy()
 
-        self.add_is_conversion_event(data, '__conversion', name)
-        self.add_conversions_in_time(data, '__conversions_in_time', '__conversion',
-                                     partition=partition)
+        # consider only required series for calculations
+        all_required_series = ['event_type', 'session_id', 'moment', 'session_id', 'session_hit_number']
+        if 'partition' in kwargs:
+            all_required_series.append(kwargs['partition'])
+
+        data = data[all_required_series]
+
+        dependencies = _DEPENDENCIES_PER_CONVERSION_SERIES.get(series_to_calculate, [])
+        variables_to_calc = dependencies + [series_to_calculate]
+
+        # independent variables
+        if _CalculatedConversionSeries.IS_CONVERSION_EVENT in variables_to_calc:
+            data = self._calculate_is_conversion_event(data, **kwargs)
+
+        # dependent variables (order matters)
+        if _CalculatedConversionSeries.CONVERSIONS_IN_TIME in variables_to_calc:
+            data = self._calculate_conversions_in_time(data, **kwargs)
+
+        if _CalculatedConversionSeries.CONVERSIONS_COUNTER in variables_to_calc:
+            data = self._calculate_conversions_counter(data, **kwargs)
+
+        if _CalculatedConversionSeries.PRE_CONVERSION_HIT_NUMBER in variables_to_calc:
+            data = self._calculate_pre_conversion_hit_number(data, **kwargs)
+
+        calculated_series = [var.private_name for var in variables_to_calc]
+        return data[calculated_series]
+
+    def _calculate_is_conversion_event(self, data: bach.DataFrame, name: str, **kwargs) -> bach.DataFrame:
+        """ For documentation, see function :meth:`Map.is_conversion_event()` """
+
+        series_to_calculate = _CalculatedConversionSeries.IS_CONVERSION_EVENT
+        self._check_conversion_dependencies(data, series_to_calculate)
+
+        if name not in self._mh._conversion_events:
+            raise KeyError(f"Key {name} is not labeled as a conversion")
+
+        conversion_stack, conversion_event = self._mh._conversion_events[name]
+
+        if conversion_stack is None:
+            series = data.event_type == conversion_event
+        elif conversion_event is None:
+            series = conversion_stack.json.get_array_length() > 0
+        else:
+            series = ((conversion_stack.json.get_array_length() > 0) & (data.event_type == conversion_event))
+
+        data[series_to_calculate.private_name] = series
+        return data
+
+    def _calculate_conversions_in_time(
+        self, data: bach.DataFrame, partition: str, *args, **kwargs,
+    ) -> bach.DataFrame:
+        """ For documentation, see function :meth:`Map.conversions_in_time()` """
+        series_to_calculate = _CalculatedConversionSeries.CONVERSIONS_IN_TIME
+        self._check_conversion_dependencies(data, series_to_calculate)
+
+        is_conversion_event_column = _CalculatedConversionSeries.IS_CONVERSION_EVENT.private_name
+        column_name_to_add_conversion_counter = '__conversion_counter'
+        data[column_name_to_add_conversion_counter] = 0
+        data.loc[data[is_conversion_event_column], column_name_to_add_conversion_counter] = 1
+
+        if is_bigquery(data.engine):
+            # group by materializes for BQ, window will make reference to column
+            data.materialize(node_name='conversion_counter_bq', inplace=True)
+
+        window = data.sort_values([partition, 'moment']).groupby(partition).window()
+
+        series = (
+            data[column_name_to_add_conversion_counter]
+            .copy_override_type(bach.SeriesInt64).sum(window)
+        )
+        data[series_to_calculate.private_name] = series
+
+        # conversions_in_time requires materialization due to window
+        return data.materialize(f'{series_to_calculate}_calculation')
+
+    def _calculate_conversions_counter(
+        self, data: bach.DataFrame, partition: str, **kwargs,
+    ) -> bach.DataFrame:
+        """ For documentation, see function :meth:`Map.conversions_counter()` """
+
+        series_to_calculate = _CalculatedConversionSeries.CONVERSIONS_COUNTER
+        self._check_conversion_dependencies(data, series_to_calculate)
+
+        conversions_in_time_column = _CalculatedConversionSeries.CONVERSIONS_IN_TIME.private_name
+        window = data.groupby(partition).window(end_boundary=WindowFrameBoundary.FOLLOWING)
+        data[series_to_calculate.private_name] = window[conversions_in_time_column].max()
+
+        # conversions_counter requires materialization due to window
+        return data.materialize(node_name=f'{series_to_calculate}_calculation')
+
+    def _calculate_pre_conversion_hit_number(
+        self, data: bach.DataFrame, partition: str, **kwargs,
+    ) -> bach.DataFrame:
+        """ For documentation, see function :meth:`Map.pre_conversion_hit_number()` """
+
+        series_to_calculate = _CalculatedConversionSeries.PRE_CONVERSION_HIT_NUMBER
+        self._check_conversion_dependencies(data, series_to_calculate)
+
+        conversions_in_time_column = _CalculatedConversionSeries.CONVERSIONS_IN_TIME.private_name
+
+        # sort all windows by session id and hit number
+        sort_by = ['session_id', 'session_hit_number']
+
+        window = data.sort_values(sort_by, ascending=False).groupby(partition).window()
+        max_number_of_conversions = data[conversions_in_time_column].max(window)
+        data['__is_converted'] = True
+        data.loc[max_number_of_conversions == 0, '__is_converted'] = False
+
         data.materialize(inplace=True)
-        self._pre_conversion_hit_number(data, partition=partition)
 
-        return data['__pre_conversion_hit_number'].copy_override(
-            name='pre_conversion_hit_number').materialize().copy_override_type(bach.SeriesInt64)
+        window = data.sort_values(sort_by, ascending=False).groupby(partition).window()
+
+        # number all rows except where __is_converted is NULL and _conversions == 0
+        pch_mask = (data['__is_converted']) & (data[conversions_in_time_column] == 0)
+
+        calc_series_name = series_to_calculate.private_name
+        data[calc_series_name] = 1
+        data.loc[~pch_mask, calc_series_name] = None
+
+        pre_conversion_hit_number = (
+            data[calc_series_name].astype('int64')
+            .copy_override_type(bach.SeriesInt64)  # None is parsed as string
+        )
+        data[calc_series_name] = pre_conversion_hit_number.sum(window)
+
+        # pre_conversion_hit_number requires materialization due to window
+        return data.materialize(node_name=f'{series_to_calculate}_calculation')
