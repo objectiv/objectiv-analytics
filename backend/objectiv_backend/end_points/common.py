@@ -19,7 +19,8 @@ def get_json_response(status: int, msg: str) -> Response:
     if cookie_config:
         cookie_id = get_cookie_id()
         response.set_cookie(key=cookie_config.name, value=f'{cookie_id}',
-                            max_age=cookie_config.duration, samesite='Lax')
+                            max_age=cookie_config.duration, samesite=cookie_config.samesite,
+                            secure=cookie_config.secure)
     return response
 
 

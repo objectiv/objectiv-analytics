@@ -237,20 +237,10 @@ class SeriesJson(Series):
         return cast('SeriesBoolean', result)  # we told _binary_operation to return dtype='bool'
 
     def __le__(self, other: Union['Series', AllSupportedLiteralTypes]) -> 'SeriesBoolean':
-        if is_postgres(self.engine):
-            return self._comparator_operation(other, "<@")
-        message_override = f'Operator <= is not supported for type json on database {self.engine.name}'
-        raise DatabaseNotSupportedException(self.engine, message_override=message_override)
+        raise NotImplementedError()
 
     def __ge__(self, other: Union['Series', AllSupportedLiteralTypes]) -> 'SeriesBoolean':
-        if is_postgres(self.engine):
-            return self._comparator_operation(other, "@>")
-        if is_bigquery(self.engine):
-            # there is no operator for "@>", it needs to be simulated
-            return self.json.array_contains(other)
-
-        message_override = f'Operator >= is not supported for type json on database {self.engine.name}'
-        raise DatabaseNotSupportedException(self.engine, message_override=message_override)
+        raise NotImplementedError()
 
     def min(self, partition: WrappedPartition = None, skipna: bool = True):
         """ INTERNAL: Only here to not trigger errors from describe """
@@ -412,17 +402,18 @@ class JsonAccessor(Generic[TSeriesJson]):
         # So for now we have a dedicated len function for arrays.
         return self._implementation.get_array_length()
 
-    def array_contains(self, item: Union['Series', AllSupportedLiteralTypes]) -> 'SeriesBoolean':
+    def array_contains(self, item: Union[int, float, bool, str]) -> 'SeriesBoolean':
         """
-        Find if an object or list of objects are contained in the array.
+        Find if item is contained in the array.
 
-        :param item: items to be verified if it is contained by the array.
+        :param item: item to be verified if it is contained by the array.
 
-        :returns: boolean series indicating if the array contains all elements.
+        :returns: boolean series indicating if the array contains the element.
 
         This assumes the top-level item in the json is an array. Will result in an exception (later on) if
         that's not the case!
         """
+
         return self._implementation.array_contains(item)
 
 
@@ -505,8 +496,8 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
         if not isinstance(filtering_slice, dict):
             raise TypeError(f'key should be a dict, actual type: {type(filtering_slice)}')
 
-        # this way we can reuse code from the accesor without duplicating.
-        # 'element' will filled by iterating over the json array in the query below.
+        # this way we can reuse code from the accessor without duplicating.
+        # 'element' will be filled by iterating over the json array in the query below.
         element_json = self._series_object.copy_override(
             expression=Expression.construct('element'),
         )
@@ -524,15 +515,21 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
         return Expression.construct(fmt, slicing_mask, self._series_object)
 
     def get_array_item(self, key: int) -> 'TSeriesJson':
-        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
-        if key >= 0:
+        """
+        Returns an item from the json array.
+        The key is treated as a 0-based index. If negative this will count from the end of the array (one
+            based). If the index does not exist this will render None/NULL.
+        This assumes the top-level item in the json is an array
+        """
+        if key < 0:
+            # BigQuery doesn't (yet) natively support this, so we emulate this by reversing the array
+            key = abs(key)
+            expression = Expression.construct(
+                f'ARRAY_REVERSE(JSON_QUERY_ARRAY({{}}))[SAFE_ORDINAL({key})]',
+                self._series_object
+            )
+        else:
             expression = Expression.construct(f'''JSON_QUERY({{}}, '$[{key}]')''', self._series_object)
-            return self._series_object.copy_override(expression=expression)
-        # case key < 0
-        # BigQuery doesn't (yet) natively support this, so we emulate this.
-        array_len = self.get_array_length()
-        expr_offset = Expression.construct(f'OFFSET({{}} {key})', array_len)
-        expression = Expression.construct('JSON_QUERY_ARRAY({})[{}]', self._series_object, expr_offset)
         return self._series_object.copy_override(expression=expression)
 
     def get_dict_item(self, key: str) -> 'TSeriesJson':
@@ -540,8 +537,7 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
         return cast('TSeriesJson', self.get_value(key=key, as_str=False))
 
     def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'TSeriesJson']:
-        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
-        # TODO: as_str is never used?
+        """ For documentation, see function :meth:`JsonAccessor.get_value()` """
         # Special characters are tricky. According to the latests jsonpath spec draft we should use the
         # index selector [1] (e.g. `$['key with special characters']`). But BigQuery only supports the dot
         # selector [2][3]. However BigQuery does allow us to quote the key when using the dot selector [4],
@@ -576,7 +572,7 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
         ).copy_override_type(SeriesString)
 
     def get_array_length(self) -> 'SeriesInt64':
-        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        """ For documentation, see function :meth:`JsonAccessor.get_array_length()` """
         # Implementing a more generic __len__() function is not trivial as a json object can be (among
         # others) an array, a dict, or a string, all of which should be supported by a generic __len__().
         # So for now we have a dedicated len function for arrays.
@@ -586,24 +582,13 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
             .copy_override_type(SeriesInt64) \
             .copy_override(expression=expression)
 
-    def array_contains(self, item: Union['Series', AllSupportedLiteralTypes]) -> 'SeriesBoolean':
+    def array_contains(self, item: Union[int, float, bool, str]) -> 'SeriesBoolean':
         """ For documentation, see implementation in class :class:`JsonAccessor` """
         # Implementing __ge__ for BigQuery, since @> operator is not supported, we need to
         # simulate it by verifying if all searched items exist in the array.
         # all items are converted into string by using json.dumps
-        # therefore be aware that if you are searching for a dict type object, the order
-        # of the keys MATTER and will only match when both compared values have the same
-        # keys and values
 
-        if not isinstance(item, list):
-            items_to_search = [item]
-        else:
-            items_to_search = item
-
-        if any(isinstance(item, Series) for item in items_to_search):
-            raise NotImplementedError('json.array_contains for Series types is not supported.')
-
-        to_search_expr = Expression.string_value(json.dumps(items_to_search))
+        to_search_expr = Expression.string_value(json.dumps([item]))
         # get all the searching values that exist in the array
         search_stmt = (
             'select searching_value '
@@ -624,7 +609,7 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
         )
 
         # verify if the length of contained items is the same as requested.
-        found_all = num_found_series == len(items_to_search)
+        found_all = num_found_series == len([item])
         return found_all.copy_override_type(SeriesBoolean)
 
 
@@ -699,7 +684,12 @@ class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
             )
 
     def get_array_item(self, key: int) -> 'TSeriesJson':
-        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        """
+        Returns an item from the json array.
+        The key is treated as a 0-based index. If negative this will count from the end of the array (one
+            based). If the index does not exist this will render None/NULL.
+        This assumes the top-level item in the json is an array
+        """
         return self._series_object \
             .copy_override(expression=Expression.construct(f'{{}}->{key}', self._series_object))
 
@@ -708,7 +698,7 @@ class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
         return cast('TSeriesJson', self.get_value(key=key, as_str=False))
 
     def get_value(self, key: str, as_str: bool = False) -> Union['SeriesString', 'TSeriesJson']:
-        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        """ For documentation, see function :meth:`JsonAccessor.get_value()` """
 
         if '"' in key:
             raise ValueError(f'key values containing double quotes are not supported. key: {key}')
@@ -726,13 +716,13 @@ class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
         return result
 
     def get_array_length(self) -> 'SeriesInt64':
-        """ For documentation, see implementation in parent class :class:`JsonAccessor` """
+        """ For documentation, see function :meth:`JsonAccessor.get_array_length()` """
         from bach.series import SeriesInt64
         expression = Expression.construct('jsonb_array_length({})', self._series_object)
         return self._series_object \
             .copy_override_type(SeriesInt64) \
             .copy_override(expression=expression)
 
-    def array_contains(self, item: Union['Series', AllSupportedLiteralTypes]) -> 'SeriesBoolean':
-        # TODO: Postgres
-        raise NotImplementedError()
+    def array_contains(self, item: Union[int, float, bool, str]) -> 'SeriesBoolean':
+        """ For documentation, see implementation in class :class:`JsonAccessor` """
+        return self._series_object._comparator_operation([item], "@>")
