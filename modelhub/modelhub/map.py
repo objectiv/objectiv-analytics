@@ -235,7 +235,7 @@ class Map:
                          display=True) -> bach.DataFrame:
 
         """
-        It finds the number of users in a given cohort who are active at a given time
+        Finds the number of users in a given cohort who are active at a given time
         period, where time is computed with respect to the beginning of each cohort.
         The "active user" is the user who made an action that we are interested in
         that time period.
@@ -244,9 +244,10 @@ class Map:
         when they made their first action that we are interested in.
 
         Returns the retention matrix dataframe, it represents users retained across cohorts:
-            - index value represents the cohort
-            - columns represent the number of given date period since the current cohort
-            - values represent number of unique active users of a given cohort
+
+        - index value represents the cohort
+        - columns represent the number of given date period since the current cohort
+        - values represent number of unique active users of a given cohort
 
         One can calculate the retention matrix for a given time range, for that
         one can specify start_date a/o end_date.
