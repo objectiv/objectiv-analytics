@@ -1318,7 +1318,7 @@ class DataFrame:
             group_by=GroupBy(list(aligned_index.values())) if value.group_by else None,
         )
 
-        df = self.merge(
+        df = self.materialize(node_name='pre_set_with_merge').merge(
             other,
             left_index=True,
             right_index=True,
