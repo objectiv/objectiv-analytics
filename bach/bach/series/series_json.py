@@ -402,7 +402,7 @@ class JsonAccessor(Generic[TSeriesJson]):
         # So for now we have a dedicated len function for arrays.
         return self._implementation.get_array_length()
 
-    def array_contains(self, item: Union[int, float, bool, str]) -> 'SeriesBoolean':
+    def array_contains(self, item: Union[int, float, bool, str, None]) -> 'SeriesBoolean':
         """
         Find if item is contained in the array.
 
@@ -580,7 +580,7 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
             .copy_override_type(SeriesInt64) \
             .copy_override(expression=expression)
 
-    def array_contains(self, item: Union[int, float, bool, str]) -> 'SeriesBoolean':
+    def array_contains(self, item: Union[int, float, bool, str, None]) -> 'SeriesBoolean':
         """ For documentation, see implementation in class :class:`JsonAccessor` """
         item_json = json.dumps(item)
         in_expr = Expression.construct(
@@ -705,6 +705,6 @@ class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
             .copy_override_type(SeriesInt64) \
             .copy_override(expression=expression)
 
-    def array_contains(self, item: Union[int, float, bool, str]) -> 'SeriesBoolean':
+    def array_contains(self, item: Union[int, float, bool, str, None]) -> 'SeriesBoolean':
         """ For documentation, see implementation in class :class:`JsonAccessor` """
         return self._series_object._comparator_operation([item], "@>")
