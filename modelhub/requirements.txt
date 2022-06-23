@@ -1,5 +1,7 @@
 # modelhub:
 objectiv-bach
+matplotlib
+seaborn
 
 # metabase
 requests
