@@ -9,6 +9,7 @@ from typing import Optional, Any, Mapping, Dict, NamedTuple
 
 from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
+from sql_models.model import SqlModel, CustomSqlModelBuilder
 from sql_models.util import is_bigquery, is_postgres
 from sqlalchemy.engine import Engine
 
@@ -98,15 +99,15 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         super().__init__(engine, table_name)
         self._taxonomy_column = _get_taxonomy_column_definition(engine)
 
-        # check if table has all required columns for pipeline
-        dtypes = bach.from_database.get_dtypes_from_table(
-            engine=self._engine,
-            table_name=self._table_name,
-        )
-        self._validate_data_dtypes(
-            expected_dtypes=dict(self._get_base_dtypes()),
-            current_dtypes=dtypes,
-        )
+        # # check if table has all required columns for pipeline
+        # dtypes = bach.from_database.get_dtypes_from_table(
+        #     engine=self._engine,
+        #     table_name=self._table_name,
+        # )
+        # self._validate_data_dtypes(
+        #     expected_dtypes=dict(self._get_base_dtypes()),
+        #     current_dtypes=dtypes,
+        # )
 
     def _get_pipeline_result(self, **kwargs) -> bach.DataFrame:
         """
@@ -143,6 +144,43 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         }
 
     def _get_initial_data(self) -> bach.DataFrame:
+        if is_bigquery(self._engine):
+            # TODO: this is a total hack as a proof of concept
+            extracted_data = CustomSqlModelBuilder(
+                '''
+                  SELECT
+                      CAST(`contexts_io_objectiv_taxonomy_1_0_0`[OFFSET(0)].`event_id` AS STRING) AS event_id,
+                      CAST(CAST(`contexts_io_objectiv_taxonomy_1_0_0`[OFFSET(0)].`time` as STRING) as INT64) as `time`,
+                      contexts_io_objectiv_taxonomy_1_0_0 AS contexts_io_objectiv_taxonomy_1_0_0
+                  FROM `{table_name}`
+                ''',
+            )
+            number_rows_model = CustomSqlModelBuilder(
+                '''
+                SELECT
+                    event_id as `event_id`,
+                    ROW_NUMBER() OVER (partition BY `event_id` ORDER BY `time`) AS `row_number`,
+                    `contexts_io_objectiv_taxonomy_1_0_0` as `contexts_io_objectiv_taxonomy_1_0_0`
+                FROM {{extracted_data}}
+                '''
+            )
+            unique_event_models = CustomSqlModelBuilder(
+                '''
+                SELECT contexts_io_objectiv_taxonomy_1_0_0
+                FROM {{number_rows_model}} WHERE row_number = 1
+                '''
+            )
+            model = unique_event_models(
+                number_rows_model=number_rows_model(
+                    extracted_data=extracted_data(table_name=self._table_name)  # TODO: proper escaping tablename
+                )
+            )
+            return bach.DataFrame.from_model(
+                engine=self._engine,
+                model=model,
+                index=[],
+                all_dtypes=self._get_base_dtypes(),
+            )
         return bach.DataFrame.from_table(
             table_name=self._table_name,
             engine=self._engine,
