@@ -390,15 +390,17 @@ class Map:
         if percentage:
             first_column = retention_matrix[columns[0]]
             for col in columns:
-                retention_matrix[col] /= first_column
+                retention_matrix[col] = (retention_matrix[col] / first_column) * 100
 
         if display:
             import matplotlib.pyplot as plt
             import seaborn as sns
             fig, ax = plt.subplots(figsize=(20, 8))
-            fmt = '.1%' if percentage else ''
             sns.heatmap(retention_matrix.to_pandas(), annot=True, square=True, ax=ax,
-                        linewidths=.5, cmap=sns.cubehelix_palette(rot=-.4), fmt=fmt)
+                        linewidths=.5, cmap=sns.cubehelix_palette(rot=-.4), fmt='.1f')
+            if percentage:
+                [t.set_text(f'{t.get_text()}%') for t in ax.texts]
+
             plt.title('Cohort Analysis')
 
             nice_name = {
