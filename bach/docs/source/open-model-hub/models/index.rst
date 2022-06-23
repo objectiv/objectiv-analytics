@@ -38,7 +38,6 @@ model hub instance.
     conversions_counter
     conversions_in_time
     pre_conversion_hit_number
-    retention_matrix
 
 
 .. toctree::
@@ -63,6 +62,7 @@ product analytics metrics. Always return aggregated data in some form from the
     unique_sessions
     session_duration
     frequency
+    retention_matrix
     top_product_features
     top_product_features_before_conversion
 

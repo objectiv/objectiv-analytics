@@ -80,7 +80,7 @@ N.B. the users' activity starts to be traced from start_date specified in modelh
 
 .. code-block:: python
 
-    retention_matrix = modelhub.map.retention_matrix(df, time_period='monthly', percentage=True, display=True)
+    retention_matrix = modelhub.aggregate.retention_matrix(df, time_period='monthly', percentage=True, display=True)
 
 
 **Drilling down cohorts**

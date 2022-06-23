@@ -28,7 +28,6 @@ model hub instance.
     conversions_counter
     conversions_in_time
     pre_conversion_hit_number
-    retention_matrix
 
 
 
