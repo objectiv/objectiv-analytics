@@ -581,7 +581,7 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
             .copy_override_type(SeriesInt64) \
             .copy_override(expression=expression)
 
-    def array_contains(self, item: Union[int, float, bool, str]) -> 'SeriesBoolean':
+    def array_contains(self, item: Union[int, float, bool, str, None]) -> 'SeriesBoolean':
         """ For documentation, see implementation in class :class:`JsonAccessor` """
         # Implementing __ge__ for BigQuery, since @> operator is not supported, we need to
         # simulate it by verifying if all searched items exist in the array.
@@ -722,6 +722,6 @@ class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
             .copy_override_type(SeriesInt64) \
             .copy_override(expression=expression)
 
-    def array_contains(self, item: Union[int, float, bool, str]) -> 'SeriesBoolean':
+    def array_contains(self, item: Union[int, float, bool, str, None]) -> 'SeriesBoolean':
         """ For documentation, see implementation in class :class:`JsonAccessor` """
         return self._series_object._comparator_operation([item], "@>")
