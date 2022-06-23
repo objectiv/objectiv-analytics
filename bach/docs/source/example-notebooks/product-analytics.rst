@@ -65,9 +65,53 @@ default time_aggregation is overridden by using a different `groupby`.
     montly_users = modelhub.aggregate.unique_users(df, groupby=modelhub.time_agg(df, '%Y-%m'))
     users_root = modelhub.aggregate.unique_users(df, groupby=['application', 'root_location'])
 
+Retention
+---------
+To measure how well we are doing at keeping the users with us after the first interaction, we can use a retention matrix.
+
+To calculate the retention matrix, we need to distribute the users into mutually exclusive cohorts based on the `time_period` (it can be `daily`, `weekly`, `monthly`, or `yearly`) when they first interacted.
+
+In the retention matrix:
+    - each row represents a cohort,
+    - each column represents a time range, where time is calculated with respect to the cohort start time,
+    - the values of the matrix elements are the number or percentage (depending on `percentage` parameter) of users in a given cohort that returned again in a given time range.
+
+N.B. the users' activity starts to be traced from start_date specified in modelhub where we load the data: `modelhub.get_objectiv_dataframe(start_date='2022-02-02')`.
+
+.. code-block:: python
+
+    retention_matrix = modelhub.aggregate.retention_matrix(df, time_period='monthly', percentage=True, display=True)
+
+
+**Drilling down cohorts**
+
+From our retention matrix, we can see that in the second cohort there is a drop in retained users in the next month, just 3.6% came back. We can try to zoom in on the different cohorts and see what is the difference.
+
+.. code-block:: python
+
+    # calculate the first cohort
+    cohorts = df[['user_id', 'moment']].groupby('user_id')['moment'].min().reset_index()
+    cohorts = cohorts.rename(columns={'moment': 'first_cohort'})
+
+    # add first cohort of the users to our DataFrame
+    df = df.merge(cohorts, on='user_id', how='left')
+
+    # filter data where users belong to # 0 cohort
+    cohort0_filter = (df['first_cohort'] > datetime(2022, 2, 1)) & (df['first_cohort'] < datetime(2022, 3, 1))
+    df[cohort0_filter]['event_type'].value_counts().head()
+
+    # filter data where users belong to # 1 cohort (the problematic one)
+    cohort1_filter = (df['first_cohort'] > datetime(2022, 3, 1)) & (df['first_cohort'] < datetime(2022, 4, 1))
+    df[cohort1_filter]['event_type'].value_counts().head()
+
+It is interesting to see that we have relatively more `VisibleEvent` in the first cohort than in second 'problematic' one.
+
+This is  just a simple example to demonstrate the differences you can find between the cohorts, one can do similar tests e.g. with `top product features
+<https://objectiv.io/docs/modeling/open-model-hub/models/aggregation/top_product_features/>`_, or develop more in-depth analysis depending on the product needs.
+
 User time spent
 ---------------
-Similarly we can calculate the average session duration for time intervals. `duration_root_month` gives the
+We can also calculate the average session duration for time intervals. `duration_root_month` gives the
 average time spent per root location per month.
 
 .. code-block:: python
