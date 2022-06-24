@@ -105,7 +105,7 @@ export const makeHttpContext = (props: {
  * @param {Object} props - factory properties
  * @param {string} props.id - A unique string identifier to be combined with the Context Type (`_type`)
  *         for Context instance uniqueness.
- * @param {string} props.name - The identity source, e.g. backend, authentication, email, etc.
+ * @param {string} props.name - The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`
  * @returns {IdentityContext} - IdentityContext: A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.
  */
 export const makeIdentityContext = (props: { id: string; name: string }): IdentityContext => ({

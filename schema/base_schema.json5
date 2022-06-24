@@ -249,7 +249,7 @@
       "parents": ["AbstractGlobalContext"],
       "properties": {
         "name": {
-          "description": "The identity source, e.g. backend, authentication, email, etc.",
+          "description": "The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`",
           "type": "string"
         }
       }

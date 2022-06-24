@@ -254,7 +254,7 @@ class IdentityContext(AbstractGlobalContext):
 
         Attributes:
         name (str):
-                The identity source, e.g. backend, authentication, email, etc.
+                The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`
         id (str):
                 A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
@@ -264,7 +264,7 @@ class IdentityContext(AbstractGlobalContext):
     def __init__(self, name: str, id: str, **kwargs: Optional[Any]):
         """
         :param name: 
-            The identity source, e.g. backend, authentication, email, etc.
+            The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`
         :param id: 
             A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.

@@ -147,7 +147,7 @@ export interface IdentityContext extends AbstractGlobalContext {
   readonly _type: 'IdentityContext';
 
   /**
-   * The identity source, e.g. backend, authentication, email, etc.
+   * The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`
    */
   name: string;
 }
