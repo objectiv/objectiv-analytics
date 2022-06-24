@@ -288,15 +288,15 @@ describe('ReactTracker', () => {
       expectGlobalContextsToContainIdentityContext(trackedEvent3.global_contexts);
 
       /**
-       * Test #3 - Rely on IdentityContextPlugin to generate the IdentityContext when enriching before transport
+       * Test #4 - Rely on IdentityContextPlugin to generate the IdentityContext when enriching before transport
        */
-      const testTracker3 = new ReactTracker({
+      const testTracker4 = new ReactTracker({
         applicationId: 'app-id',
         transport: new DebugTransport(),
         plugins: [new IdentityContextPlugin(identityMetadata)],
       });
       const successEvent4 = makeSuccessEvent({ message: 'login successful' });
-      const trackedEvent4 = await testTracker3.trackEvent(successEvent4);
+      const trackedEvent4 = await testTracker4.trackEvent(successEvent4);
       expectGlobalContextsToContainIdentityContext(trackedEvent4.global_contexts);
     });
   });
