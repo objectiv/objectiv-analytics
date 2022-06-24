@@ -203,8 +203,14 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         if is_postgres(self._engine):
             return df_cp
 
+        # remove taxonomy column, no longer needed
+        df_cp = df_cp.drop(columns=[self._taxonomy_column.name])
+
         # this materialization is to generate a readable query
-        df_cp = df_cp.materialize(node_name='bq_moment_day_extraction')
+        df_cp = df_cp.materialize(node_name='bq_extra_processing')
+
+        # remove duplicated event_ids
+        df_cp = df_cp.drop_duplicates(subset=['event_id'], sort_by=['time'], keep='first')
 
         # BQ data source has no moment and day columns, therefore we need to generate them
         # based on the time value from the taxonomy column

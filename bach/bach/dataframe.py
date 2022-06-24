@@ -2839,15 +2839,19 @@ class DataFrame:
 
             if dedup_sort:
                 df = df.sort_values(by=dedup_sort, ascending=ascending)
-            window = df.groupby(by=dedup_on).window(end_boundary=end_boundary, end_value=None)
-            agg_series = df[dedup_data]._apply_func_to_series(func=func_to_apply, window=window)
 
-            for name, new_series in zip(dedup_data, agg_series):
-                df._data[name] = new_series.copy_override(name=name)
+            df = df.groupby(by=dedup_on).window(end_boundary=end_boundary, end_value=None)
+            df = df[dedup_data].agg(func=func_to_apply).reset_index(drop=False)
+            df = df.rename(columns={f'{ddd}_{func_to_apply}': ddd for ddd in dedup_data})
+            # consider sorting only in window
+            df._order_by = []
 
         # we need to just apply distinct for 'first' and 'last'.
         if keep:
-            df = df.materialize(distinct=True)
+            node_name = f'drop_duplicates_' + '_'.join(dedup_on)
+            df = df.materialize(distinct=True, node_name=node_name)
+            # respect initial order by
+            df._order_by = self._order_by
 
         df = df if ignore_index else df.set_index(keys=self.index_columns)
         return df
