@@ -1563,6 +1563,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@objectiv/plugin-identity-context@workspace:plugins/identity-context":
+  version: 0.0.0-use.local
+  resolution: "@objectiv/plugin-identity-context@workspace:plugins/identity-context"
+  dependencies:
+    "@objectiv/developer-tools": ^0.0.21-3
+    "@objectiv/testing-tools": ^0.0.21-3
+    "@types/jest": ^27.4.1
+    jest: ^27.5.1
+    jest-standard-reporter: ^2.0.0
+    prettier: ^2.5.1
+    ts-jest: ^27.1.3
+    tsup: ^5.12.0
+    typescript: ^4.6.2
+  peerDependencies:
+    "@objectiv/tracker-core": ^0.0.21-3
+  languageName: unknown
+  linkType: soft
+
 "@objectiv/plugin-path-context-from-url@^0.0.21-3, @objectiv/plugin-path-context-from-url@workspace:plugins/path-context-from-url":
   version: 0.0.0-use.local
   resolution: "@objectiv/plugin-path-context-from-url@workspace:plugins/path-context-from-url"

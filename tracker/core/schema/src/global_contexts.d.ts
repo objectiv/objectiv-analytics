@@ -135,3 +135,19 @@ export interface MarketingContext extends AbstractGlobalContext {
    */
   marketing_tactic: string | null;
 }
+
+/**
+ * A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.
+ * Inheritance: IdentityContext -> AbstractGlobalContext -> AbstractContext
+ */
+export interface IdentityContext extends AbstractGlobalContext {
+  /**
+   * Typescript discriminator
+   */
+  readonly _type: 'IdentityContext';
+
+  /**
+   * The identity source, e.g. backend, authentication, email, etc.
+   */
+  name: string;
+}

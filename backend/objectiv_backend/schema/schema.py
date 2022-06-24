@@ -248,6 +248,30 @@ class MarketingContext(AbstractGlobalContext):
                                        **kwargs)
 
 
+class IdentityContext(AbstractGlobalContext):
+    """
+        A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.
+
+        Attributes:
+        name (str):
+                The identity source, e.g. backend, authentication, email, etc.
+        id (str):
+                A unique string identifier to be combined with the Context Type (`_type`)
+                for Context instance uniqueness.
+    """
+    _type = 'IdentityContext'
+
+    def __init__(self, name: str, id: str, **kwargs: Optional[Any]):
+        """
+        :param name: 
+            The identity source, e.g. backend, authentication, email, etc.
+        :param id: 
+            A unique string identifier to be combined with the Context Type (`_type`)
+            for Context instance uniqueness.
+        """
+        AbstractGlobalContext.__init__(self, name=name, id=id, **kwargs)
+
+
 class AbstractLocationContext(AbstractContext, ABC):
     """
         AbstractLocationContext are the abstract parents of all Location Contexts. Location Contexts are meant to describe where an event originated from in the visual UI.
@@ -1288,6 +1312,8 @@ def make_context(_type: str, **kwargs) -> AbstractContext:
         return SessionContext(**kwargs)
     if _type == "MarketingContext":
         return MarketingContext(**kwargs)
+    if _type == "IdentityContext":
+        return IdentityContext(**kwargs)
     if _type == "AbstractLocationContext":
         return AbstractLocationContext(**kwargs)
     if _type == "InputContext":
