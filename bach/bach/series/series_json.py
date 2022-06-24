@@ -402,16 +402,14 @@ class JsonAccessor(Generic[TSeriesJson]):
         # So for now we have a dedicated len function for arrays.
         return self._implementation.get_array_length()
 
-    def array_contains(self, item: Union[int, float, bool, str]) -> 'SeriesBoolean':
+    def array_contains(self, item: Union[int, float, bool, str, None]) -> 'SeriesBoolean':
         """
         Find if item is contained in the array.
 
-        :param item: item to be verified if it is contained by the array.
-
+        :param item: item to be verified if it is contained by the array. Only supports scalar values.
         :returns: boolean series indicating if the array contains the element.
 
-        This assumes the top-level item in the json is an array. Will result in an exception (later on) if
-        that's not the case!
+        This assumes the top-level item in the json is an array.
         """
 
         return self._implementation.array_contains(item)
@@ -582,35 +580,19 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
             .copy_override_type(SeriesInt64) \
             .copy_override(expression=expression)
 
-    def array_contains(self, item: Union[int, float, bool, str]) -> 'SeriesBoolean':
+    def array_contains(self, item: Union[int, float, bool, str, None]) -> 'SeriesBoolean':
         """ For documentation, see implementation in class :class:`JsonAccessor` """
-        # Implementing __ge__ for BigQuery, since @> operator is not supported, we need to
-        # simulate it by verifying if all searched items exist in the array.
-        # all items are converted into string by using json.dumps
-
-        to_search_expr = Expression.string_value(json.dumps([item]))
-        # get all the searching values that exist in the array
-        search_stmt = (
-            'select searching_value '
-            f'from UNNEST(JSON_QUERY_ARRAY({{}})) as searching_value '
-            f'where searching_value in UNNEST(JSON_QUERY_ARRAY({{}}))'
+        item_json = json.dumps(item)
+        in_expr = Expression.construct(
+            '(SELECT {} IN UNNEST(JSON_QUERY_ARRAY({})))',
+            Expression.string_value(item_json),
+            self._series_object
         )
-        # get the amount of contained items
-        num_found_expr = Expression.construct(
-            f'CASE WHEN {{}} THEN (select array_length(array({search_stmt}))) END',
-            self._series_object.notnull(),
-            to_search_expr,
-            self._series_object,
-        )
-        from bach.series import SeriesInt64, SeriesBoolean
-        num_found_series = (
-            self._series_object.copy_override(expression=num_found_expr)
-            .copy_override_type(SeriesInt64)
-        )
-
-        # verify if the length of contained items is the same as requested.
-        found_all = num_found_series == len([item])
-        return found_all.copy_override_type(SeriesBoolean)
+        expression = Expression.construct('IF({} IS NULL, NULL, {})', self._series_object, in_expr)
+        from bach.series import SeriesBoolean
+        return self._series_object\
+            .copy_override(expression=expression)\
+            .copy_override_type(SeriesBoolean)
 
 
 class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
@@ -723,6 +705,6 @@ class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
             .copy_override_type(SeriesInt64) \
             .copy_override(expression=expression)
 
-    def array_contains(self, item: Union[int, float, bool, str]) -> 'SeriesBoolean':
+    def array_contains(self, item: Union[int, float, bool, str, None]) -> 'SeriesBoolean':
         """ For documentation, see implementation in class :class:`JsonAccessor` """
         return self._series_object._comparator_operation([item], "@>")
