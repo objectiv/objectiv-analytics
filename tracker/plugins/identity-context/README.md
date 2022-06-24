@@ -7,12 +7,12 @@ Plugin for Objectiv trackers. Factors an `IdentityContext` that is attached to e
 To install the most recent stable version:
 
 ```sh
-yarn add @objectiv/identity-context
+yarn add @objectiv/plugin-identity-context
 ```
 
 ### or
 ```sh
-npm install @objectiv/identity-context
+npm install @objectiv/plugin-identity-context
 ```
 
 # Usage
