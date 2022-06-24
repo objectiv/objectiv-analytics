@@ -2,12 +2,9 @@
 Copyright 2021 Objectiv B.V.
 """
 import bach
-from bach import SeriesBoolean
-from bach.expression import Expression
 from bach.partitioning import WindowFrameBoundary, WindowFrameMode
 from typing import TYPE_CHECKING
 
-from sql_models.util import is_bigquery
 
 if TYPE_CHECKING:
     from modelhub import ModelHub
@@ -69,13 +66,6 @@ class Map:
 
         window = data_cp.groupby('user_id').window(**frame_args)
         window_ta = data_cp.groupby(['time_agg', 'user_id']).window(**frame_args)
-
-        # for BigQuery, window.base_node != ta_window.base_node
-        # as bach.DataFrame.groupby materializes for this engine
-        # therefore time_agg will be referenced as a column in window expression
-        # materialization is needed since time_agg is not a column in  current data_cp.base_node
-        if window.base_node != window_ta.base_node:
-            data_cp = data_cp.materialize(node_name='time_agg_window')
 
         session_id_series = data_cp['session_id']
         is_first_session = session_id_series.min(partition=window)
@@ -166,10 +156,6 @@ class Map:
 
         # make the query more clean, just require these series
         data = data[[partition, 'moment', '__conversion_counter']]
-        if is_bigquery(data.engine):
-            # group by materializes for BQ, window will make reference to column
-            data = data.materialize(node_name='conversion_counter_bq')
-
         window = data.sort_values([partition, 'moment']).groupby(partition).window()
         data['conversions_in_time'] = (
             data['__conversion_counter'].copy_override_type(bach.SeriesInt64).sum(window)
