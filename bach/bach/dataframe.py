@@ -1666,45 +1666,8 @@ class DataFrame:
         # This is the normal group-by case
         by_mypy = cast(Union[str, 'Series',
                              List[DataFrame._GroupBySingleType], None], by)
-        group_by_columns = df._partition_by_series(by_mypy)
-
-        has_group_by_expressions = any(
-            gbc.expression != Expression.column_reference(gbc.name) for gbc in group_by_columns
-        )
-        if not (is_bigquery(self.engine) and has_group_by_expressions):
-            # normal path
-            group_by = GroupBy(group_by_columns=group_by_columns)
-            return DataFrame._groupby_to_frame(df, group_by)
-
-        # Remaining case, handled by the code below:
-        #  * a regular groupby on one or more columns and/or expressions
-        #  * is_bigquery(self.engine) is True
-        #  * has_group_by_expressions is True, i.e. at least one of the `by` is an expression
-        #
-        # BigQuery allows grouping by an expression (other than just a column-reference), but then that
-        # expression cannot be in the select (unless all columns that are in the expression are also
-        # grouped on). However, we always include all expressions that are grouped on in the result, as
-        # that is the new index. So this presents a problem.
-        # To prevent problems with this we add the group-by expressions to the frame, materialize them,
-        # and then create the group-by.
-        # TODO: situations with more than one expression that refers the same column (for all databases)
-        #   e.g. df.groupby([df.x >= 0, df.x == 0])
-        #   See https://github.com/objectiv/objectiv-analytics/issues/616
-        df_new = df.copy()
-        gbc_names = []
-        for gbc in group_by_columns:
-            gbc_names.append(gbc.name)
-            df_new[gbc.name] = gbc
-
-        df_new = df_new.materialize(node_name='bq_materialize_before_groupby')
-        group_by_columns = df_new._partition_by_series(gbc_names)
-        group_by = GroupBy(group_by_columns=group_by_columns)
-
-        # grouped dataframe should contain original order by property,
-        # else it will cause conflicts with window functions
-        grouped_df = DataFrame._groupby_to_frame(df_new, group_by)
-        grouped_df._order_by = df._order_by
-        return grouped_df
+        group_by = GroupBy(group_by_columns=df._partition_by_series(by_mypy))
+        return DataFrame._groupby_to_frame(df, group_by)
 
     def window(self, **frame_args) -> 'DataFrame':
         """
@@ -1983,27 +1946,44 @@ class DataFrame:
         Get a properly formatted order by expression based on this df's order_by.
         Will return an empty Expression in case ordering is not requested.
         """
-        if self._order_by:
-            exprs = []
-            fmtstr = []
+        if not self._order_by:
+            return Expression.construct('')
 
-            for sc in self._order_by:
-                # pandas sorts by default all nulls last
-                fmt = f"{{}} {'asc' if sc.asc else 'desc'} nulls last"
-                if not sc.expression.has_multi_level_expressions:
-                    exprs.append(sc.expression)
-                    fmtstr.append(fmt)
-                    continue
+        dialect = self.engine.dialect
+        all_series_expr = {s.expression.to_sql(dialect): s.name for s in self.all_series.values()}
+        if (
+            self.group_by and
+            not all(
+                ob.expression.to_sql(dialect) in all_series_expr for ob in self._order_by
+            )
+        ):
+            raise Exception(
+                'Current order by clause is referencing expressions that are neither '
+                'aggregated or grouped. Please call DataFrame.sort_value or DataFrame.sort_index '
+                'and try materializing again.'
+            )
 
+        exprs = []
+        fmtstr = []
+
+        for sc in self._order_by:
+            # pandas sorts by default all nulls last
+            fmt = f"{{}} {'asc' if sc.asc else 'desc'} nulls last"
+            if sc.expression.has_multi_level_expressions:
                 multi_lvl_exprs = [
                     level_expr for level_expr in sc.expression.data if isinstance(level_expr, Expression)
                 ]
                 exprs.extend(multi_lvl_exprs)
                 fmtstr.extend([fmt] * len(multi_lvl_exprs))
+                continue
 
-            return Expression.construct(f'order by {", ".join(fmtstr)}', *exprs)
-        else:
-            return Expression.construct('')
+            expr = sc.expression
+            if self.group_by and is_bigquery(self.engine):
+                expr = Expression.column_reference(all_series_expr[expr.to_sql(dialect)])
+            exprs.append(expr)
+            fmtstr.append(fmt)
+
+        return Expression.construct(f'order by {", ".join(fmtstr)}', *exprs)
 
     def get_current_node(
         self,
@@ -2058,7 +2038,6 @@ class DataFrame:
         column_exprs = []
         column_names: List[str] = []
 
-        non_group_by_series = self.all_series
         if self.group_by:
             not_aggregated = [
                 s.name for s in self._data.values()
@@ -2078,12 +2057,8 @@ class DataFrame:
 
             if group_by_column_expr:
                 group_by_clause = Expression.construct('group by {}', group_by_column_expr)
-                expr_mapping = self.group_by.get_index_column_expressions(construct_multi_levels)
-                column_exprs = list(expr_mapping.values())
-                column_names = list(expr_mapping.keys())
-                non_group_by_series = self.data
 
-        for s in non_group_by_series.values():
+        for s in self.all_series.values():
             if not construct_multi_levels and isinstance(s, SeriesAbstractMultiLevel):
                 column_names += [s.name for s in s.levels.values()]
                 column_exprs += [s.get_column_expression() for s in s.levels.values()]
@@ -3298,6 +3273,7 @@ class DataFrame:
         df = df.rename(columns={col: col.replace(f'_{aggregation}', '') for col in df.data_columns})
 
         # materialization is needed since df might be sorted by columns that no longer exist
+        df._order_by = []
         df = df.materialize('unstack')
         df = df[new_columns]
 
