@@ -449,6 +449,18 @@ class Window(GroupBy):
         else:
             return Expression.construct('')
 
+    def get_index_expressions(self) -> List[Expression]:
+        from bach.series import SeriesAbstractMultiLevel
+        exprs = []
+        for idx in self.index.values():
+            if isinstance(idx, SeriesAbstractMultiLevel):
+                exprs += idx.level_expressions
+                continue
+
+            exprs.append(idx.expression)
+
+        return exprs
+
     def get_window_expression(self, window_func: Expression) -> Expression:
         """
         Given the window_func generate a statement like:
