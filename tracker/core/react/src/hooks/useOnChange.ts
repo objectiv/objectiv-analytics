@@ -3,7 +3,6 @@
  */
 
 import { useEffect, useRef } from 'react';
-import isEqual from 'fast-deep-equal';
 import { OnChangeEffectCallback } from '../types';
 
 /**
@@ -16,7 +15,7 @@ export const useOnChange = <T>(state: T, effect: OnChangeEffectCallback<T>) => {
   latestEffectRef.current = effect;
 
   useEffect(() => {
-    if (!isEqual(previousStateRef.current, state)) {
+    if (JSON.stringify(previousStateRef.current) !== JSON.stringify(state)) {
       effect(previousStateRef.current, state);
       previousStateRef.current = state;
     }
