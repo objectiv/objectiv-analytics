@@ -8,7 +8,7 @@ from sqlalchemy.engine import Dialect
 from sql_models.graph_operations import find_nodes, FoundNode
 from sql_models.model import SqlModel, REFERENCE_UNIQUE_FIELD, Materialization
 from sql_models.sql_query_parser import raw_sql_to_selects
-from sql_models.util import quote_identifier, is_postgres, is_bigquery
+from sql_models.util import quote_identifier, is_postgres, is_bigquery, DatabaseNotSupportedException
 
 
 class GeneratedSqlStatement(NamedTuple):
@@ -127,6 +127,7 @@ def _materialize(dialect: Dialect, sql_query: str, model: SqlModel) -> str:
             return f'create temporary table {quoted_name} on commit drop as {sql_query}'
         if is_bigquery(dialect):
             return f'CREATE TEMP TABLE {quoted_name} as {sql_query}'
+        raise DatabaseNotSupportedException(dialect, f'Cannot create temporary table for {dialect.name}')
     if materialization == Materialization.VIRTUAL_NODE:
         return ''
     raise Exception(f'Unsupported Materialization value: {materialization}')

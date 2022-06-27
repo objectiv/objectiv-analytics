@@ -47,7 +47,10 @@ class Materialization(Enum):
     QUERY = MaterializationType('query', True, True)
     VIEW = MaterializationType('view', True, False)
     TABLE = MaterializationType('table', True, False)
-    """ TEMP TABLE is a temporary table that is limited to the current session. """
+    """
+    TEMP TABLE is a temporary table that is limited to the current session, or a table that is guaranteed to
+    be cleaned up by the database at some later time.
+    """
     TEMP_TABLE = MaterializationType('temp_table', True, False)
     """ A VIRTUAL_NODE will not be turned into a statement, nor generate any CTEs"""
     VIRTUAL_NODE = MaterializationType('virtual', False, False)

@@ -233,7 +233,7 @@ class Savepoints:
         """
         Generate the sql for all save-points
         :param dialect: SQL Dialect
-        :return: List of GeneratedSql statements, each representing one savepoint
+        :return: List of GeneratedSqlStatement, each representing one savepoint
         """
         graph = self._get_combined_graph()
         sqls = to_sql_materialized_nodes(dialect=dialect, start_node=graph, include_start_node=False)
