@@ -127,7 +127,7 @@ set. We can use the model hub for this. `fillna` is used to fill missing values.
 .. code-block:: python
 
     import datetime
-    features_unstacked['session_duration'] = df.mh.agg.session_duration(groupby='user_id').fillna(datetime.timedelta(0))
+    features_unstacked['session_duration'] = modelhub.agg.session_duration(df, groupby='user_id').fillna(datetime.timedelta(0))
 
 Export to pandas for sklearn
 ----------------------------
