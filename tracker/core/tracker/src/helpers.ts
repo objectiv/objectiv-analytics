@@ -39,7 +39,7 @@ export function isNonEmptyArray<T>(array: T[]): array is NonEmptyArray<T> {
  *  > 181a434e63b00000000000000000
  *
  *  Would result in a UUID like this:
- *  > 181a434e63b0-63b0-4000-8000-000000000000
+ *  > 181a434e-63b0-4000-8000-000000000000
  *
  *  Still more than fine for our use-case.
  */
