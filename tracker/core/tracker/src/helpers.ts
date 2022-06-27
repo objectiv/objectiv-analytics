@@ -1,7 +1,6 @@
 /*
  * Copyright 2021-2022 Objectiv B.V.
  */
-import { v4 as uuid } from 'uuid';
 
 /**
  * A TypeScript friendly Object.keys
@@ -21,9 +20,33 @@ export function isNonEmptyArray<T>(array: T[]): array is NonEmptyArray<T> {
 }
 
 /**
- * A UUID v4 generator
+ * A client-only valid UUID v4 generator. Does not guarantee 100% uniqueness, but it's good enough for what we need.
+ *
+ * The random string we use for building the UUID is composed by:
+ *
+ * 1. Current timestamp converted to hex string.
+ *
+ * 2. Math.random() converted to hex string. Note that:
+ *   - It can return numbers ending with one or more 0s, thus .toString(16) will generate variable length strings.
+ *   - It can return 0, which results in .toString(16) to simply return '0'.
+ *
+ * 3. We add 16 padding zeros at the end to compensate for Math.random() generating variable length strings.
+ *   - We could make this yet another random string, but the edge case is so rare that I don't think it's worth it.
+ *
+ * Example of worst edge case, where Math.random() returns a 0:
+ *
+ *  rng = Date.now().toString(16) + '0' + '0'.repeat(16);
+ *  > 181a434e63b00000000000000000
+ *
+ *  Would result in a UUID like this:
+ *  > 181a434e63b0-63b0-4000-8000-000000000000
+ *
+ *  Still more than fine for our use-case.
  */
-export const generateUUID = () => uuid();
+export const generateUUID = () => {
+  const rng = Date.now().toString(16) + Math.random().toString(16) + '0'.repeat(16);
+  return [rng.substring(0, 8), rng.substring(8, 12), '4000-8' + rng.substring(13, 16), rng.substring(16, 28)].join('-');
+};
 
 /**
  * Executes the given predicate every `intervalMs` for a maximum of `timeoutMs`.

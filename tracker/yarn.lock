@@ -1776,7 +1776,6 @@ __metadata:
     ts-jest: ^27.1.3
     tsup: ^5.12.0
     typescript: ^4.6.2
-    uuid: ^8.3.2
   languageName: unknown
   linkType: soft
 
@@ -1823,7 +1822,6 @@ __metadata:
     jest-standard-reporter: ^2.0.0
     prettier: ^2.5.1
     react-native: ^0.67.3
-    react-native-get-random-values: ^1.7.2
     react-test-renderer: ^17.0.2
     tsup: ^5.12.0
     typescript: ^4.6.2
@@ -4964,13 +4962,6 @@ __metadata:
     snapdragon: ^0.8.1
     to-regex: ^3.0.1
   checksum: a41531b8934735b684cef5e8c5a01d0f298d7d384500ceca38793a9ce098125aab04ee73e2d75d5b2901bc5dddd2b64e1b5e3bf19139ea48bac52af4a92f1d00
-  languageName: node
-  linkType: hard
-
-"fast-base64-decode@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "fast-base64-decode@npm:1.0.0"
-  checksum: 4c59eb1775a7f132333f296c5082476fdcc8f58d023c42ed6d378d2e2da4c328c7a71562f271181a725dd17cdaa8f2805346cc330cdbad3b8e4b9751508bd0a3
   languageName: node
   linkType: hard
 
@@ -9045,17 +9036,6 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
-"react-native-get-random-values@npm:^1.7.2":
-  version: 1.7.2
-  resolution: "react-native-get-random-values@npm:1.7.2"
-  dependencies:
-    fast-base64-decode: ^1.0.0
-  peerDependencies:
-    react-native: ">=0.56"
-  checksum: 45782003973b2ceca90b1f73462021e1aa2fc7e00c830ccafbb6f8a6ef7de34989cfc05d49b0f670b399ba1ead5de117a9c69d250fdc0390ca54e38b9f828385
-  languageName: node
-  linkType: hard
-
 "react-native-safe-area-context@npm:^4.1.2":
   version: 4.2.1
   resolution: "react-native-safe-area-context@npm:4.2.1"
@@ -11100,15 +11080,6 @@ typescript@~3.8.3:
   bin:
     uuid: ./bin/uuid
   checksum: 58de2feed61c59060b40f8203c0e4ed7fd6f99d42534a499f1741218a1dd0c129f4aa1de797bcf822c8ea5da7e4137aa3673431a96dae729047f7aca7b27866f
-  languageName: node
-  linkType: hard
-
-"uuid@npm:^8.3.2":
-  version: 8.3.2
-  resolution: "uuid@npm:8.3.2"
-  bin:
-    uuid: dist/bin/uuid
-  checksum: 5575a8a75c13120e2f10e6ddc801b2c7ed7d8f3c8ac22c7ed0c7b2ba6383ec0abda88c905085d630e251719e0777045ae3236f04c812184b7c765f63a70e58df
   languageName: node
   linkType: hard
 

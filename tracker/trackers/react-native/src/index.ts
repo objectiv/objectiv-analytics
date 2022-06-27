@@ -1,8 +1,6 @@
 /*
  * Copyright 2022 Objectiv B.V.
  */
-import 'react-native-get-random-values';
-
 export * from '@objectiv/tracker-react-core';
 
 export * from './common/factories/makeReactNativeTrackerDefaultPluginsList';
