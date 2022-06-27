@@ -20,7 +20,8 @@ export function isNonEmptyArray<T>(array: T[]): array is NonEmptyArray<T> {
 }
 
 /**
- * A client-only valid UUID v4 generator. Does not guarantee 100% uniqueness, but it's good enough for what we need.
+ * A client-only valid UUID v4 generator. Does not use cryptographically-strong random values, but it's good enough
+ * for what we need.
  *
  * The random string we use for building the UUID is composed by:
  *
