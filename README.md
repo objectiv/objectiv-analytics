@@ -3,12 +3,13 @@
 
 [Objectiv](https://objectiv.io/) is open-source product analytics infrastructure, built around a [generic taxonomy](https://www.objectiv.io/docs/taxonomy).
 
-* Collect rich, validated user behavior data with a generic event structure
-* Feed it directly into your data warehouse without cleaning & transformation
-* Take & run pre-built models off the shelf to speed up data projects
-* Reuse and share any model between teams, products and platforms
+* Collect validated user behavior data with an event structure designed for modeling
+* Send it into your SQL datastore of choice without stopovers
+* Model on the raw data without cleaning & transformation 
+* Build models on one dataset, deploy and run them on another 
 * Use pandas-like operations that run on the full SQL dataset
-* Instantly convert models to SQL to feed all data consumers from a single source of truth
+* Stack pre-built models and functions to build in-depth analyses quickly
+* Convert models to SQL to feed dashboards, BI tools, pipelines etc. from one source
 
 Self-hosted, 100% free to use and fully open source.
 
@@ -35,9 +36,9 @@ Enables a [generic way to collect & structure rich analytics events](https://www
 
 [![taxonomy](https://user-images.githubusercontent.com/82152911/162000133-1eea0192-c882-4121-a866-8c1a3f8ffee3.svg)](https://www.objectiv.io/docs/taxonomy)
 
-* Used for validation of data collection and debugging of instrumentation
+* Used for data validation and debugging of instrumentation
 * Designed to ensure collected data is model-ready without cleaning, transformation or tracking plans
-* Enables models to be shared and reused as a result of consistent data collection
+* Results in consistent data: models can be shared/reused between teams, products & (data)platforms
 
 Supports a wide range of product analytics use cases. We're currently working on extending the range of marketing related use cases.
 
@@ -45,16 +46,16 @@ Supports a wide range of product analytics use cases. We're currently working on
 
 Supports front-end engineers to [implement tracking instrumentation](https://www.objectiv.io/docs/tracking) that embraces the open analytics taxonomy.
 
-* Provides guidance and validation to help setting up error-free instrumentation
+* Provides guidance, validation & E2E esting to help setting up error-free instrumentation
 * Support for React, React Native, Angular and Browser
  
 ### Open model hub
 
-A [growing collection of pre-built models](https://objectiv.io/docs/modeling/open-model-hub/) that you run, combine or customize to quickly build in-depth analyses.
+A [growing collection of pre-built models and functions](https://objectiv.io/docs/modeling/open-model-hub/) to run, combine or customize for quick, in-depth analyses.
 
-* All models work with any dataset that embraces the open analytics taxonomy
-* Currently covers common product analytics operations
-* More advanced models coming soon (i.e. impact attribution of product features on conversion)
+* Covers a wide range of use cases: from basic product analytics to predictive analysis with ML
+* Works with any dataset that embraces the open analytics taxonomy
+* New models & functions are added continuously (coming up: impact attribution of product features on conversion)
 
 ### Bach modeling library
 
