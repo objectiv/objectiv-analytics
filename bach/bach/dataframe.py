@@ -1958,15 +1958,15 @@ class DataFrame:
             )
         ):
             raise Exception(
-                'Current order by clause is referencing expressions that are neither '
-                'aggregated or grouped. Please call DataFrame.sort_value or DataFrame.sort_index '
-                'and try materializing again.'
+                'Current order by clause is referencing expressions that are neither aggregated or grouped,'
+                ' while the DataFrame itself is grouped.'
+                ' Please call DataFrame.sort_values or DataFrame.sort_index and try materializing again.'
             )
 
         exprs = []
         fmtstr = []
 
-        for sc in self._order_by:
+        for sc in self.order_by:
             # pandas sorts by default all nulls last
             fmt = f"{{}} {'asc' if sc.asc else 'desc'} nulls last"
             if sc.expression.has_multi_level_expressions:
