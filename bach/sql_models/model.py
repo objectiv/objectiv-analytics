@@ -35,25 +35,27 @@ class MaterializationType(NamedTuple):
     is_cte:
         True indicates that a SqlModel with this materialization can be used as a CTE by another SqlModel.
         False indicates that a SqlModel with this materialization cannot be used as a CTE
+    has_lasting_effect: true iff the materialization is a permanent table or view
     """
     type_name: str
     is_statement: bool
     is_cte: bool
+    has_lasting_effect: bool
 
 
 class Materialization(Enum):
-    CTE = MaterializationType('cte', False, True)
+    CTE = MaterializationType('cte', False, True, False)
     """ A QUERY can be used as a CTE, but is also a stand-alone query."""
-    QUERY = MaterializationType('query', True, True)
-    VIEW = MaterializationType('view', True, False)
-    TABLE = MaterializationType('table', True, False)
+    QUERY = MaterializationType('query', True, True, False)
+    VIEW = MaterializationType('view', True, False, True)
+    TABLE = MaterializationType('table', True, False, True)
     """
     TEMP TABLE is a temporary table that is limited to the current session, or a table that is guaranteed to
     be cleaned up by the database at some later time.
     """
-    TEMP_TABLE = MaterializationType('temp_table', True, False)
+    TEMP_TABLE = MaterializationType('temp_table', True, False, False)
     """ A VIRTUAL_NODE will not be turned into a statement, nor generate any CTEs"""
-    VIRTUAL_NODE = MaterializationType('virtual', False, False)
+    VIRTUAL_NODE = MaterializationType('virtual', False, False, False)
 
     @property
     def type_name(self) -> str:
@@ -70,10 +72,7 @@ class Materialization(Enum):
 
     @property
     def has_lasting_effect(self) -> bool:
-        """ Return true if the materialization is a permanent table or view."""
-        # TODO: make these functions consistent, e.g. have a field in value for this, or remove those from
-        # others
-        return self in (Materialization.VIEW, Materialization.TABLE)
+        return self.value.has_lasting_effect
 
     @classmethod
     def get_by_name(cls, type_name) -> 'Materialization':
