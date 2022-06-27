@@ -23,17 +23,17 @@ def test_simple_to_sql(dialect):
 
     # assert that output of to_sql_materialized_nodes() matched to_sql()
     expected_view = GeneratedSqlStatement(
-        name='JoinModel___72375bcf8a25de05a031b9b40b871b7e',
+        name='JoinModel___2c6ab23e2f26eec98c57470d04d05cbf',
         sql=sql_view,
         materialization=Materialization.VIEW
     )
     expected_table = GeneratedSqlStatement(
-        name='JoinModel___ba94544f10ddca3e10485ffc73a35215',
+        name='JoinModel___9141afd6d19376e1c7d2025997f249b7',
         sql=sql_table,
         materialization=Materialization.TABLE
     )
     expected_temp_table = GeneratedSqlStatement(
-        name='JoinModel___873a21bbc5cca01b28d8794d0e96eb3e',
+        name='JoinModel___440ba69f7e973ec9a376255c3fd16edc',
         sql=sql_temp_table,
         materialization=Materialization.TEMP_TABLE
     )
@@ -43,17 +43,17 @@ def test_simple_to_sql(dialect):
 
     # assert that the sql generate for the table is correct
     expected_sql_table = '''
-        create table "JoinModel___ba94544f10ddca3e10485ffc73a35215"
-        as with "ValueModel___a51a289cdeb34824db00b4f82b33a4fb" as (
+        create table "JoinModel___9141afd6d19376e1c7d2025997f249b7"
+        as with "ValueModel___02030afa3603fd134cde7518272d1076" as (
             select 'a' as key, 1 as value
-        ), "RefModel___4baad8d19279117cdf36a9fb054d94d2" as (
-            select * from "ValueModel___a51a289cdeb34824db00b4f82b33a4fb"
-        ), "ValueModel___39ec2678bd193588e7aa47444a87ffd2" as (
+        ), "RefModel___b24f07393e1432fcb37d0bc96d4eb407" as (
+            select * from "ValueModel___02030afa3603fd134cde7518272d1076"
+        ), "ValueModel___97e2f0126c5b60ef0a61a64cb166011e" as (
             select 'a' as key, 2 as value
         )
         select l.key, l.value + r.value as value
-        from "RefModel___4baad8d19279117cdf36a9fb054d94d2" as l
-        inner join "ValueModel___39ec2678bd193588e7aa47444a87ffd2" as r on l.key=r.key
+        from "RefModel___b24f07393e1432fcb37d0bc96d4eb407" as l
+        inner join "ValueModel___97e2f0126c5b60ef0a61a64cb166011e" as r on l.key=r.key
     '''
     if is_bigquery(dialect):
         expected_sql_table = expected_sql_table.replace('"', '`')
@@ -84,11 +84,11 @@ def test_edge_node_materialization(dialect):
     assert len(result) == 3
     expected_query = '''
         select l.key, l.value + r.value as value
-        from "ValueModel___0cf6df2c76283647c26101b0e472e617" as l
-        inner join "ValueModel___5d92f18dfba41ab7101110d9679b9faf" as r on l.key=r.key
+        from "ValueModel___130be867558e4620e86279b05dfbacd5" as l
+        inner join "ValueModel___c51ebb544836be4d838c7e20080c3496" as r on l.key=r.key
     '''
-    expected_table = 'create table "ValueModel___5d92f18dfba41ab7101110d9679b9faf" as select \'a\' as key, 2 as value'
-    expected_view = 'create view "ValueModel___0cf6df2c76283647c26101b0e472e617" as select \'a\' as key, 1 as value'
+    expected_table = 'create table "ValueModel___c51ebb544836be4d838c7e20080c3496" as select \'a\' as key, 2 as value'
+    expected_view = 'create view "ValueModel___130be867558e4620e86279b05dfbacd5" as select \'a\' as key, 1 as value'
     if is_bigquery(dialect):
         expected_query = expected_query.replace('"', '`')
         expected_table = expected_table.replace('"', '`')
@@ -114,17 +114,17 @@ def test_non_edge_node_materialization(dialect):
     assert len(result) == 2
     # TODO: the naming of these views and tables in the generated sql is something we need to improve
     jm_expected_sql = '''
-        create view "JoinModel___2303c02e10ed1183d253c6ce249f6f4b" as
-        with "ValueModel___a51a289cdeb34824db00b4f82b33a4fb" as (
+        create view "JoinModel___325a4dbda493ad13c52f92cce0db2df4" as
+        with "ValueModel___02030afa3603fd134cde7518272d1076" as (
             select 'a' as key, 1 as value
-        ), "ValueModel___39ec2678bd193588e7aa47444a87ffd2" as (
+        ), "ValueModel___97e2f0126c5b60ef0a61a64cb166011e" as (
             select 'a' as key, 2 as value
         )
         select l.key, l.value + r.value as value
-        from "ValueModel___a51a289cdeb34824db00b4f82b33a4fb" as l
-        inner join "ValueModel___39ec2678bd193588e7aa47444a87ffd2" as r on l.key=r.key
+        from "ValueModel___02030afa3603fd134cde7518272d1076" as l
+        inner join "ValueModel___97e2f0126c5b60ef0a61a64cb166011e" as r on l.key=r.key
     '''
-    graph_expected_sql = 'select * from "JoinModel___2303c02e10ed1183d253c6ce249f6f4b"'
+    graph_expected_sql = 'select * from "JoinModel___325a4dbda493ad13c52f92cce0db2df4"'
     if is_bigquery(dialect):
         jm_expected_sql = jm_expected_sql.replace('"', '`')
         graph_expected_sql = graph_expected_sql.replace('"', '`')

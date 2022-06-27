@@ -26,7 +26,7 @@ from sql_models.util import extract_format_fields
 
 class MaterializationType(NamedTuple):
     """
-    name: unique identifier
+    type_name: unique identifier
     is_statement:
         True indicates that a SqlModel with this materialization should be turned into a sql statement,
             either query or a create statement
@@ -36,7 +36,7 @@ class MaterializationType(NamedTuple):
         True indicates that a SqlModel with this materialization can be used as a CTE by another SqlModel.
         False indicates that a SqlModel with this materialization cannot be used as a CTE
     """
-    name: str
+    type_name: str
     is_statement: bool
     is_cte: bool
 
@@ -56,6 +56,11 @@ class Materialization(Enum):
     VIRTUAL_NODE = MaterializationType('virtual', False, False)
 
     @property
+    def type_name(self) -> str:
+        """ Materialization type unique name e.g. 'cte' or 'table' """
+        return self.value.type_name
+
+    @property
     def is_statement(self) -> bool:
         return self.value.is_statement
 
@@ -71,11 +76,11 @@ class Materialization(Enum):
         return self in (Materialization.VIEW, Materialization.TABLE)
 
     @classmethod
-    def get_by_name(cls, name) -> 'Materialization':
+    def get_by_name(cls, type_name) -> 'Materialization':
         for mat in cls:
-            if mat.value.name == name:
+            if mat.type_name == type_name:
                 return mat
-        raise KeyError(f'no such Materialization: "{name}"')
+        raise KeyError(f'no such Materialization: "{type_name}"')
 
     @classmethod
     def normalize(cls, materialization: Union['Materialization', str]) -> 'Materialization':
@@ -421,7 +426,7 @@ class SqlModel(Generic[T]):
             'generic_name': self.generic_name,
             'sql': self.sql,
             'properties': self.placeholders_formatted,
-            'materialization': self.materialization.value,
+            'materialization': self.materialization.type_name,
             'references': {
                 ref_name: model.hash for ref_name, model in self.references.items()
             }

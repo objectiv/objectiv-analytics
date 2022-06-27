@@ -91,10 +91,10 @@ def test_execute_multi_statement_sql_materialization(pg_engine):
     assert len(sql_statements) == 5
     result = run_queries(engine=pg_engine, sql_statements=sql_statements)
     assert result == {
-        'JoinModel___e0bab08e339f02ef255537649ef13be1': None,
-        'JoinModel___e716b40925362305c0dda48e7bb5bd06': None,
-        'RefValueModel___b67e68430810f9b67ae041ce0119c479': None,
-        'RefValueModel___c32fc33ab9d72eccd40c53ba2bf71ab8': (
+        'JoinModel___217a4aca3f6eb18bcd833bb6d8fc4953': None,
+        'JoinModel___3e090538453c4ba34d586639715a3db2': None,
+        'RefValueModel___58764d28c32cf9c71fee32f9055194f2': None,
+        'RefValueModel___f1f66ce5c1f6c9cf2539f09daace1565': (
             ['key', 'value'],
             [['a', 6]]
         ),
