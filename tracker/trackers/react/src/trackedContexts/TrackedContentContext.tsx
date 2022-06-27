@@ -26,9 +26,9 @@ export const TrackedContentContext = React.forwardRef<HTMLElement, TrackedContex
   };
 
   if (!contentId) {
-    if (globalThis.objectiv) {
-      const locationPath = globalThis.objectiv.getLocationPath(locationStack);
-      globalThis.objectiv.TrackerConsole.error(
+    if (globalThis.objectiv.devTools) {
+      const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
+      globalThis.objectiv.devTools.TrackerConsole.error(
         `｢objectiv｣ Could not generate a valid id for ContentContext @ ${locationPath}. Please provide the \`id\` property.`
       );
     }

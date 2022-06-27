@@ -25,8 +25,8 @@ export const TrackedRootLocationContext = React.forwardRef<HTMLElement, TrackedC
   };
 
   if (!rootId) {
-    if (globalThis.objectiv) {
-      globalThis.objectiv.TrackerConsole.error(
+    if (globalThis.objectiv.devTools) {
+      globalThis.objectiv.devTools.TrackerConsole.error(
         `｢objectiv｣ Could not generate a valid id for RootLocationContext. Please provide the \`id\` property.`
       );
     }

@@ -27,8 +27,8 @@ describe('trackMediaLoad', () => {
   });
 
   it('should track a MediaLoadEvent (hook relying on TrackingContextProvider)', () => {
-    const spyTransport = { transportName: 'SpyTransport', handle: jest.fn(), isUsable: () => true };
-    const tracker = new Tracker({ applicationId: 'app-id', transport: spyTransport });
+    const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
+    const tracker = new Tracker({ applicationId: 'app-id', transport: LogTransport });
 
     const Component = () => {
       const trackMediaLoadEvent = useMediaLoadEventTracker();
@@ -43,8 +43,8 @@ describe('trackMediaLoad', () => {
       </TrackingContextProvider>
     );
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'MediaLoadEvent' }));
+    expect(LogTransport.handle).toHaveBeenCalledTimes(1);
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'MediaLoadEvent' }));
   });
 
   it('should track a MediaLoadEvent (hook with custom tracker and location)', () => {

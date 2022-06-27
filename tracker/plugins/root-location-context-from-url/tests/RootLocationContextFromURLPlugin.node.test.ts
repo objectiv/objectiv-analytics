@@ -7,9 +7,14 @@ import { TrackerEvent } from '@objectiv/tracker-core';
 import { RootLocationContextFromURLPlugin } from '../src';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('RootLocationContextFromURLPlugin - node', () => {
+  beforeEach(() => {
+    globalThis.objectiv.TrackerRepository.trackersMap.clear();
+    globalThis.objectiv.TrackerRepository.defaultTracker = undefined;
+  });
+
   it('should instantiate as unusable', () => {
     const testRootLocationContextFromURLPlugin = new RootLocationContextFromURLPlugin();
     expect(testRootLocationContextFromURLPlugin.isUsable()).toBe(false);
@@ -28,7 +33,7 @@ describe('RootLocationContextFromURLPlugin - node', () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      globalThis.objectiv = undefined;
+      globalThis.objectiv.devTools = undefined;
     });
 
     afterEach(() => {

@@ -4,6 +4,7 @@
 
 import { matchUUID } from '@objectiv/testing-tools';
 import {
+  generateUUID,
   GlobalContextName,
   LocationContextName,
   makeApplicationContext,
@@ -11,6 +12,7 @@ import {
   makeCookieIdContext,
   makeExpandableContext,
   makeHttpContext,
+  makeIdentityContext,
   makeInputContext,
   makeLinkContext,
   makeMarketingContext,
@@ -153,6 +155,21 @@ describe('Context Factories', () => {
       source_platform: 'test-source-platform',
       creative_format: 'test-creative-format',
       marketing_tactic: 'test-marketing-tactic',
+    });
+  });
+
+  it(GlobalContextName.IdentityContext, () => {
+    expect(
+      makeIdentityContext({
+        id: generateUUID(),
+        name: 'backend',
+      })
+    ).toStrictEqual({
+      __instance_id: matchUUID,
+      __global_context: true,
+      _type: GlobalContextName.IdentityContext,
+      id: matchUUID,
+      name: 'backend',
     });
   });
 

@@ -27,8 +27,8 @@ describe('trackMediaPause', () => {
   });
 
   it('should track a MediaPauseEvent (hook relying on TrackingContextProvider)', () => {
-    const spyTransport = { transportName: 'SpyTransport', handle: jest.fn(), isUsable: () => true };
-    const tracker = new Tracker({ applicationId: 'app-id', transport: spyTransport });
+    const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
+    const tracker = new Tracker({ applicationId: 'app-id', transport: LogTransport });
 
     const Component = () => {
       const trackMediaPauseEvent = useMediaPauseEventTracker();
@@ -43,8 +43,8 @@ describe('trackMediaPause', () => {
       </TrackingContextProvider>
     );
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'MediaPauseEvent' }));
+    expect(LogTransport.handle).toHaveBeenCalledTimes(1);
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'MediaPauseEvent' }));
   });
 
   it('should track a MediaPauseEvent (hook with custom tracker and location)', () => {

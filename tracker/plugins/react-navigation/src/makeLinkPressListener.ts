@@ -42,7 +42,7 @@ export const makeLinkPressListener = ({ trackingContext, navigation, id }: makeL
     const linkContextHref = `/${navigationState.routes.find(({ key }) => key === target)?.name}`;
 
     if (!linkContextId) {
-      globalThis.objectiv?.TrackerConsole.error(
+      globalThis.objectiv.devTools?.TrackerConsole.error(
         `｢objectiv:makePressListener｣ Could not retrieve a valid id for LinkContext in ${
           navigationState.type
         } navigator with routes: ${navigationState.routeNames.join(', ')}. Please provide the \`id\` parameter.`

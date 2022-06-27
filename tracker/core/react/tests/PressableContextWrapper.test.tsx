@@ -17,9 +17,9 @@ describe('PressableContextWrapper', () => {
   });
 
   it('should wrap the given children in a PressableContext (trigger via Component)', () => {
-    const spyTransport = { transportName: 'SpyTransport', handle: jest.fn(), isUsable: () => true };
-    const tracker = new Tracker({ applicationId: 'app-id', transport: spyTransport });
-    jest.spyOn(spyTransport, 'handle');
+    const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
+    const tracker = new Tracker({ applicationId: 'app-id', transport: LogTransport });
+    jest.spyOn(LogTransport, 'handle');
 
     const buttonContextProps = { id: 'test-button' };
     const TrackedButton = () => {
@@ -38,8 +38,8 @@ describe('PressableContextWrapper', () => {
 
     fireEvent.click(getByText(container, /trigger event/i));
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(LogTransport.handle).toHaveBeenCalledTimes(1);
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         _type: 'PressEvent',
@@ -54,9 +54,9 @@ describe('PressableContextWrapper', () => {
   });
 
   it('should wrap the given children in a PressableContext (trigger via render-props)', () => {
-    const spyTransport = { transportName: 'SpyTransport', handle: jest.fn(), isUsable: () => true };
-    const tracker = new Tracker({ applicationId: 'app-id', transport: spyTransport });
-    jest.spyOn(spyTransport, 'handle');
+    const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
+    const tracker = new Tracker({ applicationId: 'app-id', transport: LogTransport });
+    jest.spyOn(LogTransport, 'handle');
 
     const buttonContextProps = { id: 'test-button' };
     const { container } = render(
@@ -71,8 +71,8 @@ describe('PressableContextWrapper', () => {
 
     fireEvent.click(getByText(container, /trigger event/i));
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(LogTransport.handle).toHaveBeenCalledTimes(1);
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         _type: 'PressEvent',

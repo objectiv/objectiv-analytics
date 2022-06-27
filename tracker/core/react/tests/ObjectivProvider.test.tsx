@@ -16,7 +16,8 @@ import React from 'react';
 import { ObjectivProvider, useTrackingContext } from '../src';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.EventRecorder.configure({ enabled: false });
 
 describe('ObjectivProvider', () => {
   beforeEach(() => {
@@ -151,6 +152,21 @@ describe('ObjectivProvider', () => {
     jest.spyOn(tracker, 'trackEvent');
 
     render(<ObjectivProvider tracker={tracker}>app</ObjectivProvider>);
+
+    expect(tracker.trackEvent).toHaveBeenCalledTimes(1);
+    expect(tracker.trackEvent).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining(makeApplicationLoadedEvent()),
+      undefined
+    );
+  });
+
+  it('should track an ApplicationLoadedEvent once', () => {
+    const tracker = new Tracker({ applicationId: 'app-id' });
+    jest.spyOn(tracker, 'trackEvent');
+
+    const { rerender } = render(<ObjectivProvider tracker={tracker}>app</ObjectivProvider>);
+    rerender(<ObjectivProvider tracker={tracker}>app</ObjectivProvider>);
 
     expect(tracker.trackEvent).toHaveBeenCalledTimes(1);
     expect(tracker.trackEvent).toHaveBeenNthCalledWith(

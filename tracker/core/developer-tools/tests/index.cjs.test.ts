@@ -6,6 +6,6 @@ describe('index (cjs)', () => {
   it('Should create the objectiv global', async () => {
     expect(globalThis.objectiv).toBeUndefined();
     require('../src');
-    expect(globalThis.objectiv).not.toBeUndefined();
+    expect(globalThis.objectiv.devTools).not.toBeUndefined();
   });
 });

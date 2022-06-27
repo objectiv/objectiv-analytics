@@ -3,7 +3,7 @@
  */
 
 import { RootLocationContextFromURLPlugin } from '@objectiv/plugin-root-location-context-from-url';
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
+import { expectToThrow, MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import {
   GlobalContextName,
   TrackerEvent,
@@ -12,14 +12,14 @@ import {
   TrackerQueueMemoryStore,
   TrackerTransportRetry,
 } from '@objectiv/tracker-core';
-import { DebugTransport } from '@objectiv/transport-debug';
 import { defaultFetchFunction, FetchTransport } from '@objectiv/transport-fetch';
 import fetchMock from 'jest-fetch-mock';
 import { clear, mockUserAgent } from 'jest-useragent-mock';
 import { BrowserTracker } from '../src/';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.EventRecorder.configure({ enabled: false });
 
 describe('BrowserTracker', () => {
   beforeEach(() => {
@@ -35,16 +35,16 @@ describe('BrowserTracker', () => {
   });
 
   it('should not instantiate without either `transport` or `endpoint`', () => {
-    expect(
+    expectToThrow(
       () =>
         new BrowserTracker({
           applicationId: 'app-id',
         })
-    ).toThrow();
+    );
   });
 
   it('should not instantiate with both `endpoint` and `transport`', () => {
-    expect(
+    expectToThrow(
       () =>
         new BrowserTracker({
           applicationId: 'app-id',
@@ -53,7 +53,7 @@ describe('BrowserTracker', () => {
             endpoint: 'localhost',
           }),
         })
-    ).toThrow();
+    );
   });
 
   it('should instantiate with `applicationId` and `endpoint`', () => {
@@ -97,16 +97,16 @@ describe('BrowserTracker', () => {
   it('should instantiate with given `transport`', () => {
     const testTracker = new BrowserTracker({
       applicationId: 'app-id',
-      transport: new FetchTransport({ endpoint: 'localhost' }),
+      transport: new LogTransport(),
     });
     expect(testTracker).toBeInstanceOf(BrowserTracker);
-    expect(testTracker.transport).toBeInstanceOf(FetchTransport);
+    expect(testTracker.transport).toBeInstanceOf(LogTransport);
   });
 
   it('should instantiate with given `queue`', () => {
     const testTracker = new BrowserTracker({
       applicationId: 'app-id',
-      endpoint: 'localhost',
+      transport: new LogTransport(),
       queue: new TrackerQueue({ store: new TrackerQueueMemoryStore() }),
     });
     expect(testTracker).toBeInstanceOf(BrowserTracker);
@@ -115,7 +115,7 @@ describe('BrowserTracker', () => {
 
   describe('Default Plugins', () => {
     it('should have some Web Plugins configured by default when no `plugins` have been specified', () => {
-      const testTracker = new BrowserTracker({ applicationId: 'app-id', endpoint: 'localhost' });
+      const testTracker = new BrowserTracker({ applicationId: 'app-id', transport: new LogTransport() });
       expect(testTracker).toBeInstanceOf(BrowserTracker);
       expect(testTracker.plugins?.plugins).toEqual(
         expect.arrayContaining([
@@ -130,7 +130,7 @@ describe('BrowserTracker', () => {
     it('should allow disabling all plugins, exception made for OpenTaxonomyValidationPlugin ', () => {
       const testTracker = new BrowserTracker({
         applicationId: 'app-id',
-        endpoint: 'localhost',
+        transport: new LogTransport(),
         trackApplicationContext: false,
         trackHttpContext: false,
         trackPathContextFromURL: false,
@@ -145,7 +145,7 @@ describe('BrowserTracker', () => {
     it('should allow customizing a plugin, without affecting the existing ones', () => {
       const testTracker = new BrowserTracker({
         applicationId: 'app-id',
-        endpoint: 'localhost',
+        transport: new LogTransport(),
         plugins: [
           new RootLocationContextFromURLPlugin({
             idFactoryFunction: () => 'test',
@@ -165,11 +165,11 @@ describe('BrowserTracker', () => {
     it('should allow customizing the plugin set', () => {
       const testTracker = new BrowserTracker({
         applicationId: 'app-id',
-        endpoint: 'localhost',
+        transport: new LogTransport(),
       });
       const trackerClone = new BrowserTracker({
         applicationId: 'app-id',
-        endpoint: 'localhost',
+        transport: new LogTransport(),
         plugins: new TrackerPlugins({ tracker: testTracker, plugins: testTracker.plugins.plugins }),
       });
 
@@ -198,7 +198,7 @@ describe('BrowserTracker', () => {
     });
 
     it('should auto-track Application and Path Contexts by default', async () => {
-      const testTracker = new BrowserTracker({ applicationId: 'app-id', transport: new DebugTransport() });
+      const testTracker = new BrowserTracker({ applicationId: 'app-id', transport: new LogTransport() });
       const testEvent = new TrackerEvent({ _type: 'test-event' });
       expect(testTracker).toBeInstanceOf(BrowserTracker);
       expect(testEvent.global_contexts).toHaveLength(0);

@@ -14,6 +14,8 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'CookieIdContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
       HttpContext:
         'HttpContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
+      IdentityContext:
+        'IdentityContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
       MarketingContext:
         'MarketingContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -28,6 +30,8 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'Only one CookieIdContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
       HttpContext:
         'Only one HttpContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
+      IdentityContext:
+        'Only one IdentityContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
       MarketingContext:
         'Only one MarketingContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -44,6 +48,8 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'CookieIdContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
       HttpContext:
         'HttpContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
+      IdentityContext:
+        'IdentityContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
       MarketingContext:
         'MarketingContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -58,6 +64,8 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'Only one CookieIdContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
       HttpContext:
         'Only one HttpContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
+      IdentityContext:
+        'Only one IdentityContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
       MarketingContext:
         'Only one MarketingContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -74,6 +82,8 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'CookieIdContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
       HttpContext:
         'HttpContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
+      IdentityContext:
+        'IdentityContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
       MarketingContext:
         'MarketingContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -88,6 +98,8 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'Only one CookieIdContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
       HttpContext:
         'Only one HttpContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
+      IdentityContext:
+        'Only one IdentityContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
       MarketingContext:
         'Only one MarketingContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -104,6 +116,8 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'CookieIdContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
       HttpContext:
         'HttpContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
+      IdentityContext:
+        'IdentityContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
       MarketingContext:
         'MarketingContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -118,6 +132,8 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'Only one CookieIdContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
       HttpContext:
         'Only one HttpContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
+      IdentityContext:
+        'Only one IdentityContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
       MarketingContext:
         'Only one MarketingContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -134,6 +150,8 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'CookieIdContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
       HttpContext:
         'HttpContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
+      IdentityContext:
+        'IdentityContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
       MarketingContext:
         'MarketingContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -148,6 +166,8 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'Only one CookieIdContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/CookieIdContext.',
       HttpContext:
         'Only one HttpContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
+      IdentityContext:
+        'Only one IdentityContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
       MarketingContext:
         'Only one MarketingContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:

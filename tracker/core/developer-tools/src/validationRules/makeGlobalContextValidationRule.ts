@@ -4,6 +4,7 @@
 
 import { GlobalContextValidationRuleFactory, TrackerEvent } from '@objectiv/tracker-core';
 import { GlobalContextErrorMessages } from '../ContextErrorMessages';
+import { EventRecorder } from '../EventRecorder';
 import { TrackerConsole } from '../TrackerConsole';
 import { GlobalContextErrorType } from '../types';
 
@@ -50,8 +51,11 @@ export const makeGlobalContextValidationRule: GlobalContextValidationRuleFactory
         const errorMessagePrefix = `｢objectiv${this.logPrefix ? ':' + this.logPrefix : ''}｣`;
         const errorMessageTemplate = GlobalContextErrorMessages[this.platform][errorType][this.contextName];
         const errorMessageBody = errorMessageTemplate.replace(/{{eventName}}/g, event._type);
+        const errorMessage = `%c${errorMessagePrefix} Error: ${errorMessageBody}`;
 
-        TrackerConsole.groupCollapsed(`%c${errorMessagePrefix} Error: ${errorMessageBody}`, 'color:red');
+        EventRecorder.error(errorMessage);
+
+        TrackerConsole.groupCollapsed(errorMessage, 'color:red');
         TrackerConsole.group(`Event:`);
         TrackerConsole.log(event);
         TrackerConsole.groupEnd();

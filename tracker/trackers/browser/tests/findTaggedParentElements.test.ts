@@ -6,7 +6,7 @@ import { MockConsoleImplementation } from '@objectiv/testing-tools';
 import { findParentTaggedElements, isParentTaggedElement, isTaggedElement, TaggingAttribute } from '../src';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('findTaggedParentElements', () => {
   afterEach(() => {
@@ -140,7 +140,7 @@ describe('findTaggedParentElements', () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      globalThis.objectiv = undefined;
+      globalThis.objectiv.devTools = undefined;
     });
 
     afterEach(() => {

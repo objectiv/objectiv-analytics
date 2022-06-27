@@ -19,8 +19,8 @@ describe('HiddenEvent', () => {
   });
 
   it('should track an HiddenEvent (hook relying on TrackingContextProvider)', () => {
-    const spyTransport = { transportName: 'SpyTransport', handle: jest.fn(), isUsable: () => true };
-    const tracker = new Tracker({ applicationId: 'app-id', transport: spyTransport });
+    const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
+    const tracker = new Tracker({ applicationId: 'app-id', transport: LogTransport });
 
     const Component = () => {
       const trackHiddenEvent = useHiddenEventTracker();
@@ -35,8 +35,8 @@ describe('HiddenEvent', () => {
       </TrackingContextProvider>
     );
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'HiddenEvent' }));
+    expect(LogTransport.handle).toHaveBeenCalledTimes(1);
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'HiddenEvent' }));
   });
 
   it('should track an HiddenEvent (hook with custom tracker and location)', () => {
