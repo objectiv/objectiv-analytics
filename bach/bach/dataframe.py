@@ -1960,7 +1960,8 @@ class DataFrame:
             raise Exception(
                 'Current order by clause is referencing expressions that are neither aggregated or grouped,'
                 ' while the DataFrame itself is grouped.'
-                ' Please call DataFrame.sort_values or DataFrame.sort_index and try materializing again.'
+                ' Please call DataFrame.sort_values([]) or DataFrame.sort_index() for removing'
+                ' sorting and try again.'
             )
 
         exprs = []
