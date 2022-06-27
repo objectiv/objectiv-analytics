@@ -75,7 +75,7 @@ class Materialization(Enum):
         return self.value.has_lasting_effect
 
     @classmethod
-    def get_by_name(cls, type_name) -> 'Materialization':
+    def get_by_type_name(cls, type_name) -> 'Materialization':
         for mat in cls:
             if mat.type_name == type_name:
                 return mat
@@ -84,7 +84,7 @@ class Materialization(Enum):
     @classmethod
     def normalize(cls, materialization: Union['Materialization', str]) -> 'Materialization':
         if isinstance(materialization, str):
-            return Materialization.get_by_name(materialization)
+            return Materialization.get_by_type_name(materialization)
         if isinstance(materialization, Materialization):
             return materialization
         raise ValueError(f'materialization must be of type str or Materialization, '
