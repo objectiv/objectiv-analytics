@@ -141,33 +141,28 @@ class GroupBy:
                 for n in self._index.keys())
         )
 
-    def get_index_column_expressions(self, construct_multi_levels: bool = False) -> Dict[str, Expression]:
-        """
-        returns a mapping between column name and expression
-        """
-        if construct_multi_levels:
-            return {g.name: g.get_column_expression() for g in self._index.values()}
-
-        from bach.series import SeriesAbstractMultiLevel
-        exprs = {}
-        for g in self._index.values():
-            if not isinstance(g, SeriesAbstractMultiLevel):
-                exprs[g.name] = g.get_column_expression()
-                continue
-            for lvl in g.levels.values():
-                exprs[lvl.name] = lvl.get_column_expression()
-
-        return exprs
-
     def get_index_expressions(self) -> List[Expression]:
         from bach.series import SeriesAbstractMultiLevel
-        exprs = [
-            [g.expression]
-            if not isinstance(g, SeriesAbstractMultiLevel)
-            else g.level_expressions
-            for g in self.index.values()
-        ]
-        return list(itertools.chain.from_iterable(exprs))
+        exprs = []
+        for idx in self.index.values():
+            if isinstance(idx, SeriesAbstractMultiLevel):
+                exprs += idx.level_expressions
+                continue
+
+            # BigQuery MUST use a reference for considering expression in GROUP BY clause
+            # for example:
+            # a) SELECT `x` + 1 as `x`, sum(y) from table GROUP BY `x`
+            # is not equivalent to:
+            # b) SELECT `x` + 1 as `x`, sum(y) from table GROUP BY `x` + 1
+            # GROUP BY expression from b) actually is (`x` + 1) + 1
+            # meanwhile GROUP BY expression from a) is (`x` + 1)
+            # this logic does not applies in Postgres
+            if is_bigquery(idx.engine):
+                exprs.append(Expression.column_reference(idx.name))
+            else:
+                exprs.append(idx.expression)
+
+        return exprs
 
     def get_group_by_column_expression(self) -> Optional[Expression]:
         """
@@ -453,6 +448,18 @@ class Window(GroupBy):
             return Expression.construct(f'order by {", ".join(fmtstr)}', *exprs)
         else:
             return Expression.construct('')
+
+    def get_index_expressions(self) -> List[Expression]:
+        from bach.series import SeriesAbstractMultiLevel
+        exprs = []
+        for idx in self.index.values():
+            if isinstance(idx, SeriesAbstractMultiLevel):
+                exprs += idx.level_expressions
+                continue
+
+            exprs.append(idx.expression)
+
+        return exprs
 
     def get_window_expression(self, window_func: Expression) -> Expression:
         """
