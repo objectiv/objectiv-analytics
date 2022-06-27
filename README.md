@@ -55,7 +55,7 @@ A [growing collection of pre-built models and functions](https://objectiv.io/doc
 
 * Covers a wide range of use cases: from basic product analytics to predictive analysis with ML
 * Works with any dataset that embraces the open analytics taxonomy
-* New models & functions are added continuously (coming up: impact attribution of product features on conversion)
+* New models & functions are added continuously
 
 ### Bach modeling library
 
