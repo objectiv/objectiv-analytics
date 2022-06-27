@@ -128,10 +128,7 @@ def test_group_by_expression(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)
     btg = bt.groupby(bt['city'].str[:1])
     result_bt = btg.nunique()
-
-    if is_postgres(engine):
-        # On Postgres assert that no materialization has taken place yet. On BigQuery we have to materialize
-        assert result_bt.base_node == bt.base_node
+    assert result_bt.base_node == bt.base_node
 
     for d in result_bt.data.values():
         assert not d.expression.is_single_value
@@ -707,11 +704,9 @@ def test_groupby_w_multi_level_series(engine):
     )
     bt = bt[['range', 'municipality', 'inhabitants', 'skating_order']].reset_index(drop=True)
 
-    if is_postgres(engine):
-        # BQ already materializes when doing groupby
-        with pytest.raises(ValueError, match=r'Level in multi-level series has a constant expression'):
-            bt.groupby(by=['range', 'municipality'])
-        bt = bt.materialize()
+    with pytest.raises(ValueError, match=r'Level in multi-level series has a constant expression'):
+        bt.groupby(by=['range', 'municipality'])
+    bt = bt.materialize()
 
     expected = bt.to_pandas().groupby(by=['range', 'municipality']).sum()
     result = bt.groupby(by=['range', 'municipality']).sum(numeric_only=True).sort_index()

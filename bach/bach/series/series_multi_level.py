@@ -179,12 +179,6 @@ class SeriesAbstractMultiLevel(Series, ABC):
         """ INTERNAL: Returns a list with each level expression"""
         return [level.expression for level in self.levels.values()]
 
-    def get_all_level_column_expression(self, table_alias: str = None) -> List[Expression]:
-        """
-        INTERNAL: Returns a list with each level column expression
-        """
-        return [level.get_column_expression(table_alias) for level in self.levels.values()]
-
     @abstractmethod
     def get_column_expression(self, table_alias: str = None) -> Expression:
         """

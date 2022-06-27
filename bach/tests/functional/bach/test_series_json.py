@@ -1,29 +1,27 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+import pandas
+
+from bach import DataFrame
 from sql_models.util import is_postgres, is_bigquery
 from tests.functional.bach.test_data_and_utils import get_df_with_json_data, assert_equals_data
 import pytest
 
 # We want to run all tests here for all supported databases, and thus we have the 'engine' argument on all
-# tests. Or at least soon we'll have that, for now we use 'pg_engine'.
+# tests.
 # Additionally, on Postgres we have two json dtypes: 'json' and 'jsonb' that should support the same
 # operations. Therefore, we also have the 'dtype' argument. On all other databases than postgres we skip
 # the tests for dtype 'jsonb' as those databases only support 'json'
 
+pytestmark = [pytest.mark.parametrize('dtype', ('json', 'json_postgres'), indirect=True)]
 
-pytestmark = [pytest.mark.parametrize('dtype', ('json', 'json_postgres'))]
 
-
-@pytest.fixture(autouse=True, scope='function')
-def skip_jsonb_if_not_postgres(request):
-    try:
-        # TODO: remove this try-except when we support json on BigQuery and stop using 'pg_engine' here
-        engine = request.getfixturevalue('engine')
-    except pytest.FixtureLookupError:
-        engine = request.getfixturevalue('pg_engine')
-    if request.getfixturevalue('dtype') == 'json_postgres' and not is_postgres(engine):
+@pytest.fixture()
+def dtype(engine, request):
+    if request.param == 'json_postgres' and not is_postgres(engine):
         pytest.skip(msg='json_postgres dtype is only supported on Postgres. Skipping for other databases')
+    return request.param
 
 
 def test_json_get_value(engine, dtype):
@@ -70,48 +68,54 @@ def test_json_get_single_value(engine, dtype):
 
 
 def test_json_array_contains(engine, dtype):
-    bt = get_df_with_json_data(engine=engine, dtype=dtype)
+    # Setting up custom test data
+    # The data from `get_df_with_json_data` only contains one row with an array with scalars, so we use this
+    # custom test data instead.
+    test_data = [
+        [0, '["a", "b", "c", "d"]'],
+        [1, '[0, 1, 2, 3, 4]'],
+        [2, '[true, true, true, true, true]'],
+        [3, '[true, true, false, true, true]'],
+        [4, '[0.1, 1.1, 1.337, 4.123, 123.456]'],
+        [5, '[-0.1, -1.1, -1.337, -4.123, -123.456]'],
+        [6, '["a", true, 3, -1.337, null]'],
+        [7, None],
+        [8, '[]'],
+    ]
+    pdf = pandas.DataFrame.from_records(test_data, columns=['index', 'column'])
+    pdf.set_index(pdf.columns[0], drop=True, inplace=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+    df['column'] = df.column.astype(dtype)
+    df = df.materialize()
+    # Done setting up custom test data
 
-    # for bigquery order of keys should be the same as in the data
-    bts = bt.list_column.json.array_contains({"_type":"SectionContext","id":"home"})
-
+    # Actual test below
+    df['a'] = df.column.json.array_contains('a')
+    df['b'] = df.column.json.array_contains('b')
+    df['e'] = df.column.json.array_contains('e')
+    df['one'] = df.column.json.array_contains(1)
+    df['three'] = df.column.json.array_contains(3)
+    df['five'] = df.column.json.array_contains(5)
+    df['true'] = df.column.json.array_contains(True)
+    df['false'] = df.column.json.array_contains(False)
+    df['f1_1'] = df.column.json.array_contains(1.1)
+    df['f_1_337'] = df.column.json.array_contains(-1.337)
+    df['none'] = df.column.json.array_contains(None)
+    df = df.drop(columns=['column'])
     assert_equals_data(
-        bts,
-        expected_columns=['_index_row', 'list_column'],
+        df,
+        expected_columns=['_index_index',
+                          'a', 'b', 'e', 'one', 'three', 'five', 'true', 'false', 'f1_1', 'f_1_337', 'none'],
         expected_data=[
-            [0, False],
-            [1, False],
-            [2, False],
-            [3, True],
-            [4, None]
-        ]
-    )
-
-    # mixed column
-    bts = bt.mixed_column.json.array_contains('a')
-    assert_equals_data(
-        bts,
-        expected_columns=['_index_row', 'mixed_column'],
-        expected_data=[
-            [0, False],
-            [1, True],
-            [2, False],
-            [3, False],
-            [4, None]
-        ]
-    )
-
-    # dict_column column
-    bts = bt.dict_column.json.array_contains({"a": "b"})
-    assert_equals_data(
-        bts,
-        expected_columns=['_index_row', 'dict_column'],
-        expected_data=[
-            [0, False],
-            [1, False],
-            [2, False],
-            [3, False],
-            [4, None]
+            [0, True,  True,  False, False, False, False, False, False, False, False, False],
+            [1, False, False, False, True,  True,  False, False, False, False, False, False],
+            [2, False, False, False, False, False, False, True,  False, False, False, False],
+            [3, False, False, False, False, False, False, True,  True,  False, False, False],
+            [4, False, False, False, False, False, False, False, False, True,  False, False],
+            [5, False, False, False, False, False, False, False, False, False, True,  False],
+            [6, True,  False, False, False, True,  False, True,  False, False, True,  True ],
+            [7, None,  None,  None,  None,  None,  None,  None,  None,  None,  None,  None ],
+            [8, False, False, False, False, False, False, False, False, False, False, False]
         ]
     )
 

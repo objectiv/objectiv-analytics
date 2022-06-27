@@ -203,8 +203,22 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         if is_postgres(self._engine):
             return df_cp
 
+        # remove taxonomy column, no longer needed
+        df_cp = df_cp.drop(columns=[self._taxonomy_column.name])
+
         # this materialization is to generate a readable query
-        df_cp = df_cp.materialize(node_name='bq_moment_day_extraction')
+        df_cp = df_cp.materialize(node_name='bq_extra_processing')
+
+        # Remove duplicated event_ids
+        # Unfortunately, some events might share an event ID due to
+        # browser pre-cachers or scraping bots sending the same event multiple time. Although,
+        # legitimate clients might try to send the same events multiple times,
+        # in an attempt to make sure that events do not get lost in case of connection problems
+        # and/or app reloads. We can easily recognize these events as they'll have non-unique event-ids.
+        # In all cases we are only interested in the first event. On postgres we achieve this by having a
+        # primary key index on event-id. On BigQuery such indexes are not possible. Instead, we here filter
+        # out duplicate event-ids, keeping the first event with each id.
+        df_cp = df_cp.drop_duplicates(subset=['event_id'], sort_by=['time'], keep='first')
 
         # BQ data source has no moment and day columns, therefore we need to generate them
         # based on the time value from the taxonomy column

@@ -169,9 +169,6 @@ def test_get_item_mixed_groupby(engine):
 
     # check that it's illegal to mix different groupings in filters
     expected_message = "Can not apply aggregated BooleanSeries with non matching group_by"
-    if is_bigquery(engine):
-        # on bigquery we have materialized grouped_other. This results in a different error message
-        expected_message = "Cannot apply Boolean series with a different base_node to DataFrame"
 
     with pytest.raises(ValueError, match=expected_message):
             grouped[grouped_other_sum > 50000]

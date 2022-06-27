@@ -7,7 +7,6 @@ import bach
 from bach.partitioning import WindowFrameBoundary, WindowFrameMode
 from typing import TYPE_CHECKING, Dict, List
 
-from sql_models.util import is_bigquery
 
 if TYPE_CHECKING:
     from modelhub import ModelHub
@@ -99,13 +98,6 @@ class Map:
 
         window = data_cp.groupby('user_id').window(**frame_args)
         window_ta = data_cp.groupby(['time_agg', 'user_id']).window(**frame_args)
-
-        # for BigQuery, window.base_node != ta_window.base_node
-        # as bach.DataFrame.groupby materializes for this engine
-        # therefore time_agg will be referenced as a column in window expression
-        # materialization is needed since time_agg is not a column in  current data_cp.base_node
-        if window.base_node != window_ta.base_node:
-            data_cp = data_cp.materialize(node_name='time_agg_window')
 
         session_id_series = data_cp['session_id']
         is_first_session = session_id_series.min(partition=window)
