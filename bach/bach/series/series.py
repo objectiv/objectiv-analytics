@@ -1566,7 +1566,6 @@ class Series(ABC):
         if partition:
             raise ValueError('Can not use group_by in combination with unique(). Materialize() first.')
 
-        # TODO: remove this when Series.loc is supported
         df = self.to_frame().reset_index(drop=True)
 
         if skipna:
