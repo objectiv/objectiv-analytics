@@ -3255,7 +3255,7 @@ class DataFrame:
         if isinstance(self.index[index_to_unstack], SeriesAbstractMultiLevel):
             raise IndexError(f'"{level}" cannot be unstacked, since it is a MultiLevel series.')
 
-        values = self.index[index_to_unstack].unique().to_numpy()
+        values = self.index[index_to_unstack].unique(skipna=False).to_numpy()
 
         if None in values or numpy.nan in values:
             raise ValueError("index contains empty values, cannot be unstacked")

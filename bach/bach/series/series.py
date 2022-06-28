@@ -1563,15 +1563,20 @@ class Series(ABC):
         :param skipna: only ``skipna=True`` supported. This means NULL values are ignored.
         :returns: a new Series with the aggregation applied
         """
-        from bach.partitioning import GroupBy
         if partition:
             raise ValueError('Can not use group_by in combination with unique(). Materialize() first.')
-        series = self.copy_override(name=f'{self.name}_unique')
-        return series._derived_agg_func(
-            partition=GroupBy([self]),
-            expression=AggregateFunctionExpression(self.expression),
-            skipna=skipna
-        )
+
+        # TODO: remove this when Series.loc is supported
+        df = self.to_frame().reset_index(drop=True)
+
+        if skipna:
+            df = df.dropna()
+        df = df.materialize(distinct=True)
+
+        df[f'{self.name}_unique'] = df[self.name]
+        df = df.set_index(self.name)
+
+        return df[f'{self.name}_unique']
 
     # Window functions applicable for all types of data, but only with a window
     # TODO more specific docs
