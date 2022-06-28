@@ -1560,7 +1560,7 @@ class Series(ABC):
         Return all unique values in this Series.
 
         :param partition: The partition or window to apply.
-        :param skipna: only ``skipna=True`` supported. This means NULL values are ignored.
+        :param skipna: If true, all NULL values are ignored.
         :returns: a new Series with the aggregation applied
         """
         if partition:
