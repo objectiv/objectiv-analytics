@@ -316,10 +316,6 @@ class Map:
         data[column_name_to_add_conversion_counter] = 0
         data.loc[data[is_conversion_event_column], column_name_to_add_conversion_counter] = 1
 
-        if is_bigquery(data.engine):
-            # group by materializes for BQ, window will make reference to column
-            data.materialize(node_name='conversion_counter_bq', inplace=True)
-
         window = data.sort_values([partition, 'moment']).groupby(partition).window()
 
         series = (
