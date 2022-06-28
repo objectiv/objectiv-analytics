@@ -111,7 +111,7 @@ Google Colab / Hex / Deepnote
 
 
 *For Deepnote specifically:*
-As very first step: create a requirements.txt, add below and restart the machine:
+as very first step: create a requirements.txt, add below and restart the machine:
 
 .. code-block:: python
 
