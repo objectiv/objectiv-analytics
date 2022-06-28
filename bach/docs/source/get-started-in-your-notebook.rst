@@ -63,7 +63,8 @@ Google Colab / Hex / Deepnote
 
 	modelhub = ModelHub(time_aggregation='%Y-%m-%d')
 
-4) Optionally: create an SSH tunnel:
+4) Optionally: create an SSH tunnel to the Postgres database server:
+
 
 .. code-block:: python
 	
