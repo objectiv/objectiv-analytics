@@ -243,28 +243,43 @@ class Aggregate:
         if not name:
             raise ValueError('Conversion event label is not provided.')
 
-        data['__application'] = data.global_contexts.gc.application
+        # temporary workaround, we should not call private constants and methods from Map
+        # replace this after having a better solution
 
-        if location_stack is not None:
-            data['__feature_nice_name'] = location_stack.ls.nice_name
-        else:
-            data['__feature_nice_name'] = data.location_stack.ls.nice_name
+        from modelhub.map import _CalculatedConversionSeries
+        # get conversion information
+        # conversions_counter, is_conversion_event, conversions_in_time
+        conversions_df = self._mh.map._get_calculated_conversion_df(
+            series_to_calculate=_CalculatedConversionSeries.CONVERSIONS_COUNTER,
+            data=data,
+            name=name,
+            partition='session_id',
+        )
 
         # label sessions with a conversion
-        data['converted_users'] = self._mh.map.conversions_counter(data,
-                                                                   name=name) >= 1
+        converted_users = conversions_df['__converted'] >= 1
 
         # label hits where at that point in time, there are 0 conversions in the session
-        data['zero_conversions_at_moment'] = self._mh.map.conversions_in_time(data,
-                                                                              name) == 0
-
-        # filter on above created labels
-        converted_users = data[(data.converted_users & data.zero_conversions_at_moment)]
+        zero_conversions_at_moment = conversions_df['__conversions_in_time'] == 0
+        conversions_df = conversions_df[converted_users & zero_conversions_at_moment]
 
         # select only user interactions
-        converted_users_filtered = converted_users[
-            converted_users.stack_event_types.json.array_contains(event_type)
-        ]
+        data = data[data.stack_event_types.json.array_contains(event_type)]
+
+        # merge with filtered conversion interactive events
+        converted_users_filtered = data.merge(conversions_df, on='event_id')
+        converted_users_filtered['__application'] = converted_users_filtered.global_contexts.gc.application
+
+        if location_stack is not None:
+            converted_users_filtered['__feature_nice_name'] = location_stack.ls.nice_name
+        else:
+            converted_users_filtered['__feature_nice_name'] = (
+                converted_users_filtered.location_stack.ls.nice_name
+            )
+
+        converted_users_filtered.materialize(
+            node_name='extract_application_and_feature_nice_name', inplace=True,
+        )
 
         groupby_col = ['__application', '__feature_nice_name', 'event_type']
         converted_users_features = self._mh.agg.unique_users(converted_users_filtered,
