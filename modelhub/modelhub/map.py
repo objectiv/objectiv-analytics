@@ -127,7 +127,7 @@ class Map:
         series = conversion_df[series_to_calculate.private_name]
         return (
             series
-            .copy_override(name=series_to_calculate.public_name, index=data.index)
+            .copy_override(name=series_to_calculate.public_name)
             .copy_override_type(bach.SeriesBoolean)
         )
 
@@ -157,7 +157,7 @@ class Map:
         series = conversion_df[series_to_calculate.private_name]
         return (
             series
-            .copy_override(name=series_to_calculate.public_name, index=data.index)
+            .copy_override(name=series_to_calculate.public_name)
             .copy_override_type(bach.SeriesInt64)
         )
 
