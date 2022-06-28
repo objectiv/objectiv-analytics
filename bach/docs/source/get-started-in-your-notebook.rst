@@ -103,7 +103,7 @@ Google Colab / Hex / Deepnote
 
 .. code-block:: python
 
-	port = connect_tunnel(ssh_host='SSH_HOSTNAME', db_port=PORT)
+	port = connect_tunnel(ssh_host=SSH_HOSTNAME, db_port=PORT)
 	df = modelhub.get_objectiv_dataframe(db_url=f'postgresql://USER:PASSWORD@localhost:{port}/DATABASE,
 	start_date='2022-06-01',
 				end_date='2022-06-30',
