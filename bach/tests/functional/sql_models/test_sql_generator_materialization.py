@@ -9,7 +9,7 @@ from sqlalchemy.engine import Engine
 
 from sql_models.graph_operations import find_node, replace_node_in_graph
 from sql_models.model import Materialization
-from sql_models.sql_generator import to_sql_materialized_nodes
+from sql_models.sql_generator import to_sql_materialized_nodes, GeneratedSqlStatement
 from tests.unit.sql_models.util import ValueModel, RefModel, JoinModel, RefValueModel
 
 
@@ -145,7 +145,7 @@ def test_materialized_shared_ctes(pg_engine):
 
 def run_queries(
     engine: Engine,
-    sql_statements: Dict[str, str]
+    sql_statements: List[GeneratedSqlStatement]
 ) -> Dict[str, Optional[Tuple[List[str], List[List[Any]]]]]:
     """
     Execute all sql statements and return a dictionary with the result of each. The statements will be
@@ -167,7 +167,9 @@ def run_queries(
 
     with engine.connect() as conn:
         with conn.begin() as transaction:
-            for name, sql in sql_statements.items():
+            for sql_statement in sql_statements:
+                name = sql_statement.name
+                sql = sql_statement.sql
                 print(f'\n{sql}\n')
                 # escape sql, as conn.execute will think that '%' indicates a parameter
                 sql = sql.replace('%', '%%')
