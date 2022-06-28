@@ -110,7 +110,12 @@ Google Colab / Hex / Deepnote
 				table_name='data')
 
 
-*For Deepnote specifically: as very first step: create a requirements.txt, add pandas==1.4.1 and restart the machine.*
+*For Deepnote specifically:*
+As very first step: create a requirements.txt, add below and restart the machine:
+
+.. code-block:: python
+
+	pandas==1.4.1
 
 Next steps
 ---------------
