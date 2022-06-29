@@ -44,18 +44,18 @@ class MaterializationType(NamedTuple):
 
 
 class Materialization(Enum):
-    CTE = MaterializationType('cte', False, True, False)
+    CTE = MaterializationType('cte', is_statement=False, is_cte=True, has_lasting_effect=False)
     """ A QUERY can be used as a CTE, but is also a stand-alone query."""
-    QUERY = MaterializationType('query', True, True, False)
-    VIEW = MaterializationType('view', True, False, True)
-    TABLE = MaterializationType('table', True, False, True)
+    QUERY = MaterializationType('query', is_statement=True, is_cte=True, has_lasting_effect=False)
+    VIEW = MaterializationType('view', is_statement=True, is_cte=False, has_lasting_effect=True)
+    TABLE = MaterializationType('table', is_statement=True, is_cte=False, has_lasting_effect=True)
     """
     TEMP TABLE is a temporary table that is limited to the current session, or a table that is guaranteed to
     be cleaned up by the database at some later time.
     """
-    TEMP_TABLE = MaterializationType('temp_table', True, False, False)
+    TEMP_TABLE = MaterializationType('temp_table', is_statement=True, is_cte=False, has_lasting_effect=False)
     """ A VIRTUAL_NODE will not be turned into a statement, nor generate any CTEs"""
-    VIRTUAL_NODE = MaterializationType('virtual', False, False, False)
+    VIRTUAL_NODE = MaterializationType('virtual', is_statement=False, is_cte=False, has_lasting_effect=False)
 
     @property
     def type_name(self) -> str:
