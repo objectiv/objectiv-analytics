@@ -45,20 +45,20 @@ def test_format_injection_composed_models(dialect):
     model = mb(a="'{{y}}'")
     mb = CustomSqlModelBuilder('select {a} from {{x}}')
     result = to_sql(dialect=dialect, model=mb(a='y', x=model))
-    expected = 'with "CustomSqlModel___1415e9e145b7bdd712c6fadaac5a6483" as (select \'{{y}}\' from x)\n' \
-               'select y from "CustomSqlModel___1415e9e145b7bdd712c6fadaac5a6483"'
+    expected = 'with "CustomSqlModel___cdc8d7087835e90c219061949951b631" as (select \'{{y}}\' from x)\n' \
+               'select y from "CustomSqlModel___cdc8d7087835e90c219061949951b631"'
     expected = dialect_expected(expected)
     assert result == expected
 
     result = to_sql(dialect=dialect, model=mb(a="'{y}'", x=model))
-    expected = 'with "CustomSqlModel___1415e9e145b7bdd712c6fadaac5a6483" as (select \'{{y}}\' from x)\n' \
-               "select '{y}' from \"CustomSqlModel___1415e9e145b7bdd712c6fadaac5a6483\""
+    expected = 'with "CustomSqlModel___cdc8d7087835e90c219061949951b631" as (select \'{{y}}\' from x)\n' \
+               "select '{y}' from \"CustomSqlModel___cdc8d7087835e90c219061949951b631\""
     expected = dialect_expected(expected)
     assert result == expected
 
     result = to_sql(dialect=dialect, model=mb(a="'{{y}}'", x=model))
-    expected = 'with "CustomSqlModel___1415e9e145b7bdd712c6fadaac5a6483" as (select \'{{y}}\' from x)\n' \
-               "select '{{y}}' from \"CustomSqlModel___1415e9e145b7bdd712c6fadaac5a6483\""
+    expected = 'with "CustomSqlModel___cdc8d7087835e90c219061949951b631" as (select \'{{y}}\' from x)\n' \
+               "select '{{y}}' from \"CustomSqlModel___cdc8d7087835e90c219061949951b631\""
     expected = dialect_expected(expected)
     assert result == expected
 
@@ -139,17 +139,17 @@ def test_model_thrice_simple():
     )
     result = to_sql(dialect=dialect, model=model)
     expected = '''
-        with "Source ""Table""___a4a63d6f66f547fb2994ed020c76db56" as (
+        with "Source ""Table""___8767445ba1af5136eeffd5341e01045d" as (
             select 1 as val
-        ), "Double___160c435d2dd8220f87ab1d2a1e3e6c5b" as (
+        ), "Double___f121c8a22ad316abde7720951c3289dc" as (
             select (val * 2) as val
-            from "Source ""Table""___a4a63d6f66f547fb2994ed020c76db56"
-        ), "Double___3a93a6eda1f771832d32e871fe86498f" as (
+            from "Source ""Table""___8767445ba1af5136eeffd5341e01045d"
+        ), "Double___82474fb08efe26024ac77a358a288af8" as (
             select (val * 2) as val
-            from "Double___160c435d2dd8220f87ab1d2a1e3e6c5b"
+            from "Double___f121c8a22ad316abde7720951c3289dc"
         )
         select (val * 2) as val
-        from "Double___3a93a6eda1f771832d32e871fe86498f"
+        from "Double___82474fb08efe26024ac77a358a288af8"
     '''
     assert_roughly_equal_sql(result, expected)
 
