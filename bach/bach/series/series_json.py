@@ -15,6 +15,7 @@ from bach.series.series import WrappedPartition, ToPandasInfo
 from bach.sql_model import BachSqlModel
 from bach.types import DtypeOrAlias, StructuredDtype, AllSupportedLiteralTypes, Dtype
 from sql_models.constants import DBDialect
+from sql_models.model import Materialization
 from sql_models.util import quote_string, is_postgres, DatabaseNotSupportedException, is_bigquery
 
 if TYPE_CHECKING:
@@ -313,6 +314,7 @@ class SeriesJsonPostgres(SeriesJson):
             node_name='manual_materialize',
             limit: Any = None,
             distinct: bool = False,
+            materialization: Union[Materialization, str] = Materialization.CTE
     ):
         """
         Instance of this Series cannot be materialized, as the base expression is not just the column name
