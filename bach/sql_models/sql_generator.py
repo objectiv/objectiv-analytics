@@ -126,7 +126,7 @@ def _materialize(dialect: Dialect, sql_query: str, model: SqlModel) -> str:
         if is_postgres(dialect):
             return f'create temporary table {quoted_name} on commit drop as {sql_query}'
         if is_bigquery(dialect):
-            return f'CREATE TEMP TABLE {quoted_name} as {sql_query}'
+            return f'CREATE TEMP TABLE {quoted_name} AS {sql_query}'
         raise DatabaseNotSupportedException(dialect, f'Cannot create temporary table for {dialect.name}')
     if materialization == Materialization.VIRTUAL_NODE:
         return ''

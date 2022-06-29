@@ -754,21 +754,39 @@ class SeriesTimedelta(SeriesAbstractDateTime):
                 .copy_override_type(SeriesTimedelta)
             )
 
-        # calculate quantiles based on total microseconds
-        # using total seconds might lose precision,
+        result = calculate_quantiles(series=self.dt.total_seconds, partition=partition, q=q)
+
+        # result must be a timedelta
+        return self._convert_total_seconds_to_timedelta(result.copy_override_type(SeriesFloat64))
+
+    def mode(self, partition: WrappedPartition = None, skipna: bool = True) -> 'SeriesTimedelta':
+        if not is_bigquery(self.engine):
+            return super().mode(partition, skipna)
+
+        # APPROX_TOP_COUNT does not support INTERVALS. So, we should calculate the mode based
+        # on the total seconds
+        total_seconds_mode = self.dt.total_seconds.mode(partition, skipna)
+        return self._convert_total_seconds_to_timedelta(total_seconds_mode)
+
+    def _convert_total_seconds_to_timedelta(
+        self, total_seconds_series: 'SeriesFloat64',
+    ) -> 'SeriesTimedelta':
+        """
+        helper function for converting series representing total seconds (epoch) to timedelta series.
+
+        returns a SeriesTimedelta
+        """
+
+        # convert total seconds into microseconds
         # since TIMESTAMP_SECONDS accepts only integers, therefore
         # microseconds will be lost due to rounding
         total_microseconds_series = (
-            self.dt.total_seconds / _TOTAL_SECONDS_PER_DATE_PART[DatePart.MICROSECOND]
+            total_seconds_series / _TOTAL_SECONDS_PER_DATE_PART[DatePart.MICROSECOND]
         )
-        total_microseconds_series = total_microseconds_series.copy_override_type(SeriesFloat64)
-        result = calculate_quantiles(series=total_microseconds_series, partition=partition, q=q)
-
-        # result must be a timedelta
-        result = result.copy_override(
+        result = total_microseconds_series.copy_override(
             expression=Expression.construct(
                 f"TIMESTAMP_MICROS({{}}) - CAST('1970-01-01' AS TIMESTAMP)",
-                result.astype('int64'),
+                total_microseconds_series.astype('int64'),
             ),
             name=self.name,
         )

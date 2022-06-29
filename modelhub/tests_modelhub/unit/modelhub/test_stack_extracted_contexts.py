@@ -49,7 +49,8 @@ def test_get_base_dtypes(db_params) -> None:
                     'location_stack': 'json',
                     'time': 'int64',
                 }
-            ]
+            ],
+            'collector_tstamp': 'timestamp',
         }
     else:
         raise Exception()
