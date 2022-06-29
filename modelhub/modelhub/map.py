@@ -119,6 +119,7 @@ class Map:
             :py:attr:`ModelHub.conversion_events`.
         :returns: :py:class:`bach.SeriesBoolean` with the same index as ``data``.
         """
+
         series_to_calculate = _CalculatedConversionSeries.IS_CONVERSION_EVENT
         conversion_df = self._get_calculated_conversion_df(
             series_to_calculate=series_to_calculate,
@@ -151,6 +152,7 @@ class Map:
             of the ObjectivFrame
         :returns: :py:class:`bach.SeriesBoolean` with the same index as ``data``.
         """
+
         series_to_calculate = _CalculatedConversionSeries.CONVERSIONS_COUNTER
         conversion_df = self._get_calculated_conversion_df(
             series_to_calculate=series_to_calculate,
@@ -158,6 +160,7 @@ class Map:
             name=name,
             partition=partition,
         )
+
         series = conversion_df[series_to_calculate.private_name]
         return (
             series
