@@ -30,7 +30,7 @@ class BaseDataPipeline:
 
     @classmethod
     @abstractmethod
-    def validate_pipeline_result(cls, result: bach.DataFrame) -> None:
+    def validate_pipeline_result(cls, result: bach.DataFrame, **kwargs) -> None:
         raise NotImplementedError()
 
     @abstractmethod
