@@ -186,7 +186,7 @@ class DescribeOperation:
 
         )
         original_series_names = stat_df.data_columns
-        stat_df = stat_df.agg(func=stat.value).materialize()
+        stat_df = stat_df.agg(func=stat.value).materialize(node_name='describe_calculate_stat')
 
         # original column names should remain
         stat_df = stat_df.rename(

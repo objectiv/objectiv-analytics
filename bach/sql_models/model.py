@@ -47,6 +47,10 @@ class Materialization(Enum):
     QUERY = MaterializationType('query', True, True)
     VIEW = MaterializationType('view', True, False)
     TABLE = MaterializationType('table', True, False)
+    """
+    TEMP TABLE is a temporary table that is limited to the current session, or a table that is guaranteed to
+    be cleaned up by the database at some later time.
+    """
     TEMP_TABLE = MaterializationType('temp_table', True, False)
     """ A VIRTUAL_NODE will not be turned into a statement, nor generate any CTEs"""
     VIRTUAL_NODE = MaterializationType('virtual', False, False)
@@ -58,6 +62,13 @@ class Materialization(Enum):
     @property
     def is_cte(self) -> bool:
         return self.value.is_cte
+
+    @property
+    def has_lasting_effect(self) -> bool:
+        """ Return true if the materialization is a permanent table or view."""
+        # TODO: make these functions consistent, e.g. have a field in value for this, or remove those from
+        # others
+        return self in (Materialization.VIEW, Materialization.TABLE)
 
     @classmethod
     def get_by_name(cls, name) -> 'Materialization':

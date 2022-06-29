@@ -92,6 +92,17 @@ def test_timedelta(engine):
         use_to_pandas=True,
     )
 
+    r4 = gb[['delta']].groupby().mode()
+    assert_equals_data(
+        r4,
+        expected_columns=['delta_mode'],
+        expected_data=[
+            [datetime.timedelta(days=365, seconds=9877)]
+        ],
+        use_to_pandas=True,
+    )
+
+
 
 def test_to_pandas(engine):
     bt = get_df_with_test_data(engine)
