@@ -10,5 +10,6 @@ describe('index (cjs - extension)', () => {
     require('../src');
     // @ts-ignore
     expect(globalThis.objectiv.someOtherGlobal).toBe('value');
+    expect(globalThis.objectiv.devTools).not.toBeUndefined();
   });
 });

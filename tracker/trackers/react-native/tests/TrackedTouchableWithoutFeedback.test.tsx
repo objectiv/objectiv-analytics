@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
+import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
@@ -16,12 +16,12 @@ import {
 } from '../src';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedTouchableWithoutFeedback', () => {
-  const spyTransport = new SpyTransport();
-  jest.spyOn(spyTransport, 'handle');
-  const tracker = new ReactNativeTracker({ applicationId: 'app-id', transport: spyTransport });
+  const logTransport = new LogTransport();
+  jest.spyOn(logTransport, 'handle');
+  const tracker = new ReactNativeTracker({ applicationId: 'app-id', transport: logTransport });
 
   const TestTrackedTouchableWithoutFeedback = (props: TrackedTouchableWithoutFeedbackProps & { testID?: string }) => (
     <TrackingContextProvider tracker={tracker}>
@@ -46,8 +46,8 @@ describe('TrackedTouchableWithoutFeedback', () => {
 
     fireEvent.press(getByTestId('test-touchable-without-feedback'));
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenCalledWith(
       expect.objectContaining({
         _type: 'PressEvent',
         location_stack: expect.arrayContaining([
@@ -72,7 +72,7 @@ describe('TrackedTouchableWithoutFeedback', () => {
 
     fireEvent.press(getByTestId('test-touchable-highlight'));
 
-    expect(spyTransport.handle).not.toHaveBeenCalled();
+    expect(logTransport.handle).not.toHaveBeenCalled();
   });
 
   it('should TrackerConsole.error if PressableContext id cannot be auto-detected', () => {
@@ -106,7 +106,7 @@ describe('TrackedTouchableWithoutFeedback', () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      globalThis.objectiv = undefined;
+      globalThis.objectiv.devTools = undefined;
     });
 
     afterEach(() => {

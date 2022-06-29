@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2022 Objectiv B.V.
+ * Copyright 2022 Objectiv B.V.
  */
 
 export * from './common/factories/makeTitleFromChildren';
@@ -53,12 +53,16 @@ export * from './hooks/eventTrackers/useVisibilityTracker';
 
 export * from './hooks/useOnChange';
 export * from './hooks/useOnMount';
+export * from './hooks/useOnMountOnce';
 export * from './hooks/useOnToggle';
 export * from './hooks/useOnUnmount';
+export * from './hooks/useOnUnmountOnce';
 export * from './hooks/useTrackOnChange';
 export * from './hooks/useTrackOnMount';
+export * from './hooks/useTrackOnMountOnce';
 export * from './hooks/useTrackOnToggle';
 export * from './hooks/useTrackOnUnmount';
+export * from './hooks/useTrackOnUnmountOnce';
 
 export * from './locationWrappers/ContentContextWrapper';
 export * from './locationWrappers/ExpandableContextWrapper';

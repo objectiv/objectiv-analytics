@@ -3,8 +3,8 @@
  */
 
 import { makeIdFromString } from '@objectiv/tracker-core';
-import { ExpandableContextWrapper, trackVisibility, useLocationStack, useOnChange } from '@objectiv/tracker-react-core';
-import React, { useState } from 'react';
+import { ExpandableContextWrapper, trackVisibility, useLocationStack } from '@objectiv/tracker-react-core';
+import React, { useRef } from 'react';
 import { TrackedShowableContextProps } from '../types';
 
 /**
@@ -12,16 +12,14 @@ import { TrackedShowableContextProps } from '../types';
  * Automatically tracks HiddenEvent and VisibleEvent based on the given `isVisible` prop.
  */
 export const TrackedExpandableContext = React.forwardRef<HTMLElement, TrackedShowableContextProps>((props, ref) => {
-  const [wasVisible, setWasVisible] = useState<boolean>(false);
   const { id, Component, forwardId = false, isVisible = false, normalizeId = true, ...otherProps } = props;
+  const wasVisible = useRef<boolean>(isVisible);
   const locationStack = useLocationStack();
 
   let expandableId: string | null = id;
   if (normalizeId) {
     expandableId = makeIdFromString(expandableId);
   }
-
-  useOnChange(isVisible, () => setWasVisible(isVisible));
 
   const componentProps = {
     ...otherProps,
@@ -30,9 +28,9 @@ export const TrackedExpandableContext = React.forwardRef<HTMLElement, TrackedSho
   };
 
   if (!expandableId) {
-    if (globalThis.objectiv) {
-      const locationPath = globalThis.objectiv.getLocationPath(locationStack);
-      globalThis.objectiv.TrackerConsole.error(
+    if (globalThis.objectiv.devTools) {
+      const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
+      globalThis.objectiv.devTools.TrackerConsole.error(
         `｢objectiv｣ Could not generate a valid id for ExpandableContext @ ${locationPath}. Please provide the \`id\` property.`
       );
     }
@@ -42,7 +40,8 @@ export const TrackedExpandableContext = React.forwardRef<HTMLElement, TrackedSho
   return (
     <ExpandableContextWrapper id={expandableId}>
       {(trackingContext) => {
-        if ((wasVisible && !isVisible) || (!wasVisible && isVisible)) {
+        if ((wasVisible.current && !isVisible) || (!wasVisible.current && isVisible)) {
+          wasVisible.current = isVisible;
           trackVisibility({ isVisible, ...trackingContext });
         }
         return React.createElement(Component, componentProps);

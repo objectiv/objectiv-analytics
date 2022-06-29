@@ -25,8 +25,8 @@ export type TrackerProviderProps = TrackerProviderContext & {
  * @see ObjectivProvider
  */
 export const TrackerProvider = ({ children, tracker }: TrackerProviderProps) => {
-  if (globalThis.objectiv) {
-    globalThis.objectiv.LocationTree.clear();
+  if (globalThis.objectiv.devTools) {
+    globalThis.objectiv.devTools.LocationTree.clear();
   }
 
   return (

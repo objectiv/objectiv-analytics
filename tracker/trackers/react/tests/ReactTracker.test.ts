@@ -2,10 +2,14 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { IdentityContextPlugin } from '@objectiv/plugin-identity-context';
 import { RootLocationContextFromURLPlugin } from '@objectiv/plugin-root-location-context-from-url';
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
+import { AbstractGlobalContext } from '@objectiv/schema';
+import { expectToThrow, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
   GlobalContextName,
+  makeIdentityContext,
+  makeSuccessEvent,
   TrackerEvent,
   TrackerPlugins,
   TrackerQueue,
@@ -16,10 +20,11 @@ import { DebugTransport } from '@objectiv/transport-debug';
 import { defaultFetchFunction, FetchTransport } from '@objectiv/transport-fetch';
 import fetchMock from 'jest-fetch-mock';
 import { clear, mockUserAgent } from 'jest-useragent-mock';
-import { ReactTracker } from '../src/';
+import { ReactTracker, trackSuccessEvent } from '../src/';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.EventRecorder.configure({ enabled: false });
 
 describe('ReactTracker', () => {
   beforeEach(() => {
@@ -27,16 +32,16 @@ describe('ReactTracker', () => {
   });
 
   it('should not instantiate without either `transport` or `endpoint`', () => {
-    expect(
+    expectToThrow(
       () =>
         new ReactTracker({
           applicationId: 'app-id',
         })
-    ).toThrow();
+    );
   });
 
   it('should not instantiate with both `endpoint` and `transport`', () => {
-    expect(
+    expectToThrow(
       () =>
         new ReactTracker({
           applicationId: 'app-id',
@@ -45,7 +50,7 @@ describe('ReactTracker', () => {
             endpoint: 'localhost',
           }),
         })
-    ).toThrow();
+    );
   });
 
   it('should instantiate with `applicationId` and `endpoint`', () => {
@@ -214,6 +219,85 @@ describe('ReactTracker', () => {
           }),
         ])
       );
+    });
+
+    it('should allow attaching arbitrary global contexts', async () => {
+      /**
+       * Mocked identity metadata we will use to enrich the event, via IdentityContext
+       */
+      const identityMetadata = {
+        id: '123abc',
+        name: 'authentication',
+      };
+
+      /**
+       * Our assertion helper function. The three tests below will expect the same result as verified here.
+       */
+      const expectGlobalContextsToContainIdentityContext = (globalContexts: AbstractGlobalContext[]) => {
+        expect(globalContexts).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ _type: GlobalContextName.HttpContext }),
+            expect.objectContaining({ _type: GlobalContextName.ApplicationContext }),
+            expect.objectContaining({ _type: GlobalContextName.PathContext }),
+            expect.objectContaining({ _type: GlobalContextName.IdentityContext, ...identityMetadata }),
+          ])
+        );
+      };
+
+      /**
+       * Test #1 - The IdentityContext is already part of the Tracker instance
+       */
+      const testTracker1 = new ReactTracker({ applicationId: 'app-id', transport: new DebugTransport() });
+      testTracker1.global_contexts.push(makeIdentityContext(identityMetadata));
+      expect(testTracker1.global_contexts).toHaveLength(2);
+      expect(testTracker1.global_contexts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ _type: GlobalContextName.HttpContext }),
+          expect.objectContaining({ _type: GlobalContextName.IdentityContext, ...identityMetadata }),
+        ])
+      );
+      const successEvent1 = makeSuccessEvent({
+        message: 'login successful',
+      });
+      const trackedEvent1 = await testTracker1.trackEvent(successEvent1);
+      expectGlobalContextsToContainIdentityContext(trackedEvent1.global_contexts);
+
+      /**
+       * Test #2 - Add the IdentityContext to any Event Tracker method
+       */
+      const testTracker2 = new ReactTracker({ applicationId: 'app-id', transport: new DebugTransport() });
+      expect(testTracker2.global_contexts).toHaveLength(1);
+      expect(testTracker2.global_contexts).toEqual(
+        expect.arrayContaining([expect.objectContaining({ _type: GlobalContextName.HttpContext })])
+      );
+      const trackedEvent2 = await trackSuccessEvent({
+        tracker: testTracker2,
+        message: 'Login successful',
+        globalContexts: [makeIdentityContext(identityMetadata)],
+      });
+      expectGlobalContextsToContainIdentityContext(trackedEvent2.global_contexts);
+
+      /**
+       * Test #3 - Third method, add the IdentityContext to any Event Factory
+       */
+      const successEvent3 = makeSuccessEvent({
+        message: 'login successful',
+        global_contexts: [makeIdentityContext(identityMetadata)],
+      });
+      const trackedEvent3 = await testTracker1.trackEvent(successEvent3);
+      expectGlobalContextsToContainIdentityContext(trackedEvent3.global_contexts);
+
+      /**
+       * Test #4 - Rely on IdentityContextPlugin to generate the IdentityContext when enriching before transport
+       */
+      const testTracker4 = new ReactTracker({
+        applicationId: 'app-id',
+        transport: new DebugTransport(),
+        plugins: [new IdentityContextPlugin(identityMetadata)],
+      });
+      const successEvent4 = makeSuccessEvent({ message: 'login successful' });
+      const trackedEvent4 = await testTracker4.trackEvent(successEvent4);
+      expectGlobalContextsToContainIdentityContext(trackedEvent4.global_contexts);
     });
   });
 });

@@ -29,13 +29,13 @@ export class ApplicationContextPlugin implements TrackerPluginInterface {
 
     this.initialized = true;
 
-    if (globalThis.objectiv) {
-      globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:${this.pluginName}｣ Initialized`);
-      globalThis.objectiv.TrackerConsole.log(`Application ID: ${tracker.applicationId}`);
-      globalThis.objectiv.TrackerConsole.group(`Application Context:`);
-      globalThis.objectiv.TrackerConsole.log(this.applicationContext);
-      globalThis.objectiv.TrackerConsole.groupEnd();
-      globalThis.objectiv.TrackerConsole.groupEnd();
+    if (globalThis.objectiv.devTools) {
+      globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(`｢objectiv:${this.pluginName}｣ Initialized`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Application ID: ${tracker.applicationId}`);
+      globalThis.objectiv.devTools.TrackerConsole.group(`Application Context:`);
+      globalThis.objectiv.devTools.TrackerConsole.log(this.applicationContext);
+      globalThis.objectiv.devTools.TrackerConsole.groupEnd();
+      globalThis.objectiv.devTools.TrackerConsole.groupEnd();
     }
   }
 
@@ -44,7 +44,7 @@ export class ApplicationContextPlugin implements TrackerPluginInterface {
    */
   enrich(contexts: Required<ContextsConfig>): void {
     if (!this.initialized) {
-      globalThis.objectiv?.TrackerConsole.error(
+      globalThis.objectiv.devTools?.TrackerConsole.error(
         `｢objectiv:${this.pluginName}｣ Cannot enrich. Make sure to initialize the plugin first.`
       );
     }

@@ -18,11 +18,11 @@ export const defaultFetchFunction = async ({
   options?: typeof defaultFetchOptions;
 }): Promise<Response> => {
   return new Promise(function (resolve, reject) {
-    if (globalThis.objectiv) {
-      globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:FetchTransport｣ Sending`);
-      globalThis.objectiv.TrackerConsole.log(`Events:`);
-      globalThis.objectiv.TrackerConsole.log(events);
-      globalThis.objectiv.TrackerConsole.groupEnd();
+    if (globalThis.objectiv.devTools) {
+      globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(`｢objectiv:FetchTransport｣ Sending`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Events:`);
+      globalThis.objectiv.devTools.TrackerConsole.log(events);
+      globalThis.objectiv.devTools.TrackerConsole.groupEnd();
     }
 
     fetch(endpoint, {
@@ -36,32 +36,35 @@ export const defaultFetchFunction = async ({
     })
       .then((response) => {
         if (response.status === 200) {
-          if (globalThis.objectiv) {
-            globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:FetchTransport｣ Succeeded`);
-            globalThis.objectiv.TrackerConsole.log(`Events:`);
-            globalThis.objectiv.TrackerConsole.log(events);
-            globalThis.objectiv.TrackerConsole.groupEnd();
+          if (globalThis.objectiv.devTools) {
+            globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(`｢objectiv:FetchTransport｣ Succeeded`);
+            globalThis.objectiv.devTools.TrackerConsole.log(`Events:`);
+            globalThis.objectiv.devTools.TrackerConsole.log(events);
+            globalThis.objectiv.devTools.TrackerConsole.groupEnd();
           }
 
           resolve(response);
         } else {
-          if (globalThis.objectiv) {
-            globalThis.objectiv.TrackerConsole.groupCollapsed(`%c｢objectiv:FetchTransport｣ Failed`, 'color:red');
-            globalThis.objectiv.TrackerConsole.log(`Events:`);
-            globalThis.objectiv.TrackerConsole.log(events);
-            globalThis.objectiv.TrackerConsole.log(`Response: ${response}`);
-            globalThis.objectiv.TrackerConsole.groupEnd();
+          if (globalThis.objectiv.devTools) {
+            globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(
+              `%c｢objectiv:FetchTransport｣ Failed`,
+              'color:red'
+            );
+            globalThis.objectiv.devTools.TrackerConsole.log(`Events:`);
+            globalThis.objectiv.devTools.TrackerConsole.log(events);
+            globalThis.objectiv.devTools.TrackerConsole.log(`Response: ${response}`);
+            globalThis.objectiv.devTools.TrackerConsole.groupEnd();
           }
 
           reject(makeTransportSendError());
         }
       })
       .catch(() => {
-        if (globalThis.objectiv) {
-          globalThis.objectiv.TrackerConsole.groupCollapsed(`%c｢objectiv:FetchTransport｣ Error`, 'color:red');
-          globalThis.objectiv.TrackerConsole.log(`Events:`);
-          globalThis.objectiv.TrackerConsole.log(events);
-          globalThis.objectiv.TrackerConsole.groupEnd();
+        if (globalThis.objectiv.devTools) {
+          globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(`%c｢objectiv:FetchTransport｣ Error`, 'color:red');
+          globalThis.objectiv.devTools.TrackerConsole.log(`Events:`);
+          globalThis.objectiv.devTools.TrackerConsole.log(events);
+          globalThis.objectiv.devTools.TrackerConsole.groupEnd();
         }
 
         reject(makeTransportSendError());

@@ -29,7 +29,7 @@ export const getOrMakeTracker = (trackerConfig: BrowserTrackerConfig): BrowserTr
 
   // We found a Tracker instance but, before returning it, ensure its config matches the given configuration
   if (!compareTrackerConfigs(tracker.trackerConfig, trackerConfig)) {
-    globalThis.objectiv?.TrackerConsole.error(
+    globalThis.objectiv.devTools?.TrackerConsole.error(
       `Tracker \`${trackerId}\` exists but its configuration doesn't match the given one. This means getOrMakeTracker has been called twice with different configs.`
     );
   }

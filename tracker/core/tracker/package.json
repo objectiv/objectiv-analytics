@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/tracker-core",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "Core functionality for Objectiv JavaScript trackers",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
@@ -40,7 +40,7 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --legacy-output --minify --dts --sourcemap --clean",
     "prettify": "prettier --write .",
-    "prettify:generated": "yarn prettier --write ./src/ContextFactories.ts ./src/ContextNames.ts ./src/EventFactories.ts",
+    "prettify:generated": "yarn prettier --write ./src/ContextFactories.ts ./src/ContextNames.ts ./src/EventFactories.ts ./src/EventNames.ts",
     "tsc": "tsc --noEmit",
     "test": "jest --silent --runInBand",
     "test:ci": "jest --silent --ci --runInBand",
@@ -50,7 +50,7 @@
     "npm-publish:verdaccio": "npm publish --tag=$TAG"
   },
   "devDependencies": {
-    "@objectiv/testing-tools": "^0.0.20",
+    "@objectiv/testing-tools": "^0.0.21",
     "@types/jest": "^27.4.1",
     "@types/uuid": "^8.3.4",
     "jest": "^27.5.1",
@@ -62,9 +62,9 @@
     "typescript": "^4.6.2"
   },
   "dependencies": {
-    "@objectiv/developer-tools": "^0.0.20",
-    "@objectiv/plugin-application-context": "^0.0.20",
-    "@objectiv/schema": "^0.0.20",
+    "@objectiv/developer-tools": "^0.0.21",
+    "@objectiv/plugin-application-context": "^0.0.21",
+    "@objectiv/schema": "^0.0.21",
     "uuid": "^8.3.2"
   }
 }

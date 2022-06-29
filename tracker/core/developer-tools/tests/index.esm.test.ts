@@ -6,6 +6,6 @@ import('../src');
 
 describe('index (esm)', () => {
   it('Should have created the objectiv global', async () => {
-    expect(globalThis.objectiv).not.toBeUndefined();
+    expect(globalThis.objectiv.devTools).not.toBeUndefined();
   });
 });

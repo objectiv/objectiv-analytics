@@ -21,7 +21,7 @@ from sql_models.constants import NotSet, not_set
 from sql_models.graph_operations import update_placeholders_in_graph, get_all_placeholders
 from sql_models.model import SqlModel, Materialization, CustomSqlModelBuilder, RefPath
 
-from sql_models.sql_generator import to_sql
+from sql_models.sql_generator import to_sql, to_sql_materialized_nodes
 from sql_models.util import quote_identifier, is_bigquery, DatabaseNotSupportedException, is_postgres
 
 if TYPE_CHECKING:
@@ -990,6 +990,7 @@ class DataFrame:
         inplace=False,
         limit: Any = None,
         distinct: bool = False,
+        materialization: Union[Materialization, str] = Materialization.CTE
     ) -> 'DataFrame':
         """
         Create a copy of this DataFrame with as base_node the current DataFrame's state.
@@ -998,7 +999,12 @@ class DataFrame:
         the size of the generated SQL query. But this can be useful if the current DataFrame contains
         expressions that you want to evaluate before further expressions are build on top of them. This might
         make sense for very large expressions, or for non-deterministic expressions (e.g. see
-        :py:meth:`SeriesUuid.sql_gen_random_uuid`).
+        :py:meth:`SeriesUuid.sql_gen_random_uuid`). Additionally, materializing as a temporary table can
+        improve performance in some instances.
+
+        Note this function does NOT query the database or materializes any data in the database. It merely
+        changes the underlying SqlModel graph, which gets executed by data transfer functions (e.g.
+        :meth:`to_pandas()`)
 
         TODO: a known problem is that DataFrames with 'json_postgres' columns cannot be fully materialized.
 
@@ -1006,6 +1012,8 @@ class DataFrame:
         :param inplace: Perform operation on self if ``inplace=True``, or create a copy.
         :param limit: The limit (slice, int) to apply.
         :param distinct: Apply distinct statement if ``distinct=True``
+        :param materialization: Set the materialization of the SqlModel in the graph. Only
+            Materialization.CTE / 'cte' and Materialization.TEMP_TABLE / 'temp_table' are supported.
         :returns: DataFrame with the current DataFrame's state as base_node
 
         .. note::
@@ -1015,6 +1023,9 @@ class DataFrame:
         index_dtypes = {k: v.instance_dtype for k, v in self.index.items()}
         series_dtypes = {k: v.instance_dtype for k, v in self.data.items()}
         node = self.get_current_node(name=node_name, limit=limit, distinct=distinct)
+        materialization = Materialization.normalize(materialization)
+        assert materialization in (Materialization.CTE, Materialization.TEMP_TABLE)
+        node = node.copy_set_materialization(materialization=materialization)
 
         df = self.get_instance(
             engine=self.engine,
@@ -1666,45 +1677,8 @@ class DataFrame:
         # This is the normal group-by case
         by_mypy = cast(Union[str, 'Series',
                              List[DataFrame._GroupBySingleType], None], by)
-        group_by_columns = df._partition_by_series(by_mypy)
-
-        has_group_by_expressions = any(
-            gbc.expression != Expression.column_reference(gbc.name) for gbc in group_by_columns
-        )
-        if not (is_bigquery(self.engine) and has_group_by_expressions):
-            # normal path
-            group_by = GroupBy(group_by_columns=group_by_columns)
-            return DataFrame._groupby_to_frame(df, group_by)
-
-        # Remaining case, handled by the code below:
-        #  * a regular groupby on one or more columns and/or expressions
-        #  * is_bigquery(self.engine) is True
-        #  * has_group_by_expressions is True, i.e. at least one of the `by` is an expression
-        #
-        # BigQuery allows grouping by an expression (other than just a column-reference), but then that
-        # expression cannot be in the select (unless all columns that are in the expression are also
-        # grouped on). However, we always include all expressions that are grouped on in the result, as
-        # that is the new index. So this presents a problem.
-        # To prevent problems with this we add the group-by expressions to the frame, materialize them,
-        # and then create the group-by.
-        # TODO: situations with more than one expression that refers the same column (for all databases)
-        #   e.g. df.groupby([df.x >= 0, df.x == 0])
-        #   See https://github.com/objectiv/objectiv-analytics/issues/616
-        df_new = df.copy()
-        gbc_names = []
-        for gbc in group_by_columns:
-            gbc_names.append(gbc.name)
-            df_new[gbc.name] = gbc
-
-        df_new = df_new.materialize(node_name='bq_materialize_before_groupby')
-        group_by_columns = df_new._partition_by_series(gbc_names)
-        group_by = GroupBy(group_by_columns=group_by_columns)
-
-        # grouped dataframe should contain original order by property,
-        # else it will cause conflicts with window functions
-        grouped_df = DataFrame._groupby_to_frame(df_new, group_by)
-        grouped_df._order_by = df._order_by
-        return grouped_df
+        group_by = GroupBy(group_by_columns=df._partition_by_series(by_mypy))
+        return DataFrame._groupby_to_frame(df, group_by)
 
     def window(self, **frame_args) -> 'DataFrame':
         """
@@ -1983,27 +1957,45 @@ class DataFrame:
         Get a properly formatted order by expression based on this df's order_by.
         Will return an empty Expression in case ordering is not requested.
         """
-        if self._order_by:
-            exprs = []
-            fmtstr = []
+        if not self._order_by:
+            return Expression.construct('')
 
-            for sc in self._order_by:
-                # pandas sorts by default all nulls last
-                fmt = f"{{}} {'asc' if sc.asc else 'desc'} nulls last"
-                if not sc.expression.has_multi_level_expressions:
-                    exprs.append(sc.expression)
-                    fmtstr.append(fmt)
-                    continue
+        dialect = self.engine.dialect
+        all_series_expr = {s.expression.to_sql(dialect): s.name for s in self.all_series.values()}
+        if (
+            self.group_by and
+            not all(
+                ob.expression.to_sql(dialect) in all_series_expr for ob in self._order_by
+            )
+        ):
+            raise Exception(
+                'Current order by clause is referencing expressions that are neither aggregated or grouped,'
+                ' while the DataFrame itself is grouped.'
+                ' Please call DataFrame.sort_values([]) or DataFrame.sort_index() for removing'
+                ' sorting and try again.'
+            )
 
+        exprs = []
+        fmtstr = []
+
+        for sc in self.order_by:
+            # pandas sorts by default all nulls last
+            fmt = f"{{}} {'asc' if sc.asc else 'desc'} nulls last"
+            if sc.expression.has_multi_level_expressions:
                 multi_lvl_exprs = [
                     level_expr for level_expr in sc.expression.data if isinstance(level_expr, Expression)
                 ]
                 exprs.extend(multi_lvl_exprs)
                 fmtstr.extend([fmt] * len(multi_lvl_exprs))
+                continue
 
-            return Expression.construct(f'order by {", ".join(fmtstr)}', *exprs)
-        else:
-            return Expression.construct('')
+            expr = sc.expression
+            if self.group_by and is_bigquery(self.engine):
+                expr = Expression.column_reference(all_series_expr[expr.to_sql(dialect)])
+            exprs.append(expr)
+            fmtstr.append(fmt)
+
+        return Expression.construct(f'order by {", ".join(fmtstr)}', *exprs)
 
     def get_current_node(
         self,
@@ -2058,7 +2050,6 @@ class DataFrame:
         column_exprs = []
         column_names: List[str] = []
 
-        non_group_by_series = self.all_series
         if self.group_by:
             not_aggregated = [
                 s.name for s in self._data.values()
@@ -2078,12 +2069,8 @@ class DataFrame:
 
             if group_by_column_expr:
                 group_by_clause = Expression.construct('group by {}', group_by_column_expr)
-                expr_mapping = self.group_by.get_index_column_expressions(construct_multi_levels)
-                column_exprs = list(expr_mapping.values())
-                column_names = list(expr_mapping.keys())
-                non_group_by_series = self.data
 
-        for s in non_group_by_series.values():
+        for s in self.all_series.values():
             if not construct_multi_levels and isinstance(s, SeriesAbstractMultiLevel):
                 column_names += [s.name for s in s.levels.values()]
                 column_exprs += [s.get_column_expression() for s in s.levels.values()]
@@ -2123,7 +2110,13 @@ class DataFrame:
             variable_values=self.variables
         )
         model = update_placeholders_in_graph(start_node=model, placeholder_values=placeholder_values)
-        return to_sql(dialect=self.engine.dialect, model=model)
+        sql_statements = to_sql_materialized_nodes(
+            dialect=self.engine.dialect, start_node=model
+        )
+        sql_statements = [sql_stat for sql_stat in sql_statements
+                          if not sql_stat.materialization.has_lasting_effect]
+        sql = ';\n'.join(sql_stat.sql for sql_stat in sql_statements)
+        return sql
 
     def merge(
         self,
@@ -2864,15 +2857,19 @@ class DataFrame:
 
             if dedup_sort:
                 df = df.sort_values(by=dedup_sort, ascending=ascending)
-            window = df.groupby(by=dedup_on).window(end_boundary=end_boundary, end_value=None)
-            agg_series = df[dedup_data]._apply_func_to_series(func=func_to_apply, window=window)
 
-            for name, new_series in zip(dedup_data, agg_series):
-                df._data[name] = new_series.copy_override(name=name)
+            df = df.groupby(by=dedup_on).window(end_boundary=end_boundary, end_value=None)
+            df = df[dedup_data].agg(func=func_to_apply).reset_index(drop=False)
+            df = df.rename(columns={f'{ddd}_{func_to_apply}': ddd for ddd in dedup_data})
+            # consider sorting only in window
+            df._order_by = []
 
         # we need to just apply distinct for 'first' and 'last'.
         if keep:
-            df = df.materialize(distinct=True)
+            node_name = f'drop_duplicates_' + '_'.join(dedup_on)
+            df = df.materialize(distinct=True, node_name=node_name)
+            # respect initial order by
+            df._order_by = self._order_by
 
         df = df if ignore_index else df.set_index(keys=self.index_columns)
         return df
@@ -3275,7 +3272,7 @@ class DataFrame:
         if isinstance(self.index[index_to_unstack], SeriesAbstractMultiLevel):
             raise IndexError(f'"{level}" cannot be unstacked, since it is a MultiLevel series.')
 
-        values = self.index[index_to_unstack].unique().to_numpy()
+        values = self.index[index_to_unstack].unique(skipna=False).to_numpy()
 
         if None in values or numpy.nan in values:
             raise ValueError("index contains empty values, cannot be unstacked")
@@ -3298,6 +3295,7 @@ class DataFrame:
         df = df.rename(columns={col: col.replace(f'_{aggregation}', '') for col in df.data_columns})
 
         # materialization is needed since df might be sorted by columns that no longer exist
+        df._order_by = []
         df = df.materialize('unstack')
         df = df[new_columns]
 

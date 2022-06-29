@@ -95,7 +95,10 @@ def test_write_to_db_create_objects():
     expected_columns = ['_index_skating_order', 'skating_order', 'city', 'founding', 'x']
     expected_data = [[1, 1, 'Ljouwert', 1285, 12345]]
 
-    assert sps.to_sql(dialect)['sp_final_point'].replace('\n', '') == \
+    generated_statements = sps.to_sql(dialect)
+    name_to_sql = {stat.name: stat.sql for stat in generated_statements}
+
+    assert name_to_sql['sp_final_point'].replace('\n', '') == \
            'select ' \
            '"_index_skating_order" as "_index_skating_order", ' \
            '"skating_order" as "skating_order", ' \

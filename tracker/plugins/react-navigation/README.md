@@ -12,12 +12,12 @@ It includes:
 To install the most recent stable version:
 
 ```sh
-yarn add @objectiv/plugin-react-navigatiomn
+yarn add @objectiv/plugin-react-navigation
 ```
 
 ### or
 ```sh
-npm install @objectiv/plugin-react-navigatiomn
+npm install @objectiv/plugin-react-navigation
 ```
 
 # Usage

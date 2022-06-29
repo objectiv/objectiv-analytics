@@ -7,12 +7,12 @@ Plugin for Objectiv web trackers. Detects user_agents and referrer via document 
 To install the most recent stable version:
 
 ```sh
-yarn add @objectiv/http-context
+yarn add @objectiv/plugin-http-context
 ```
 
 ### or
 ```sh
-npm install @objectiv/http-context
+npm install @objectiv/plugin-http-context
 ```
 
 # Usage

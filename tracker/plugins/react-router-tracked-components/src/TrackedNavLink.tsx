@@ -32,9 +32,9 @@ export const TrackedNavLink = React.forwardRef<HTMLAnchorElement, TrackedNavLink
   // If we couldn't generate an `id`, log the issue and return a regular Link component.
   const locationStack = useLocationStack();
   if (!linkContextId) {
-    if (globalThis.objectiv) {
-      const locationPath = globalThis.objectiv.getLocationPath(locationStack);
-      globalThis.objectiv.TrackerConsole.error(
+    if (globalThis.objectiv.devTools) {
+      const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
+      globalThis.objectiv.devTools.TrackerConsole.error(
         `｢objectiv｣ Could not generate id for LinkContext @ ${locationPath}. Either add the \`title\` prop or specify an id manually via the  \`id\` option of the \`objectiv\` prop.`
       );
     }

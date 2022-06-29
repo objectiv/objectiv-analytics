@@ -29,15 +29,15 @@ export class TrackerTransportSwitch implements TrackerTransportInterface {
   constructor(config: TrackerTransportSwitchConfig) {
     this.firstUsableTransport = config.transports.find((trackerTransport) => trackerTransport.isUsable());
 
-    if (globalThis.objectiv) {
-      globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:${this.transportName}｣ Initialized`);
-      globalThis.objectiv.TrackerConsole.log(
+    if (globalThis.objectiv.devTools) {
+      globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(`｢objectiv:${this.transportName}｣ Initialized`);
+      globalThis.objectiv.devTools.TrackerConsole.log(
         `Transports: ${config.transports.map((transport) => transport.transportName).join(', ')}`
       );
-      globalThis.objectiv.TrackerConsole.log(
+      globalThis.objectiv.devTools.TrackerConsole.log(
         `First usable Transport: ${this.firstUsableTransport?.transportName ?? 'none'}`
       );
-      globalThis.objectiv.TrackerConsole.groupEnd();
+      globalThis.objectiv.devTools.TrackerConsole.groupEnd();
     }
   }
 

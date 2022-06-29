@@ -18,7 +18,7 @@ import {
 import { OpenTaxonomyValidationPlugin } from '../src/OpenTaxonomyValidationPlugin';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 const coreTracker = new Tracker({ applicationId: 'app-id' });
 
@@ -204,7 +204,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      globalThis.objectiv = undefined;
+      globalThis.objectiv.devTools = undefined;
     });
 
     afterEach(() => {

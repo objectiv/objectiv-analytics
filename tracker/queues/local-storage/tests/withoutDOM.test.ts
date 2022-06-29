@@ -3,11 +3,13 @@
  * @jest-environment node
  */
 
+import { expectToThrow } from '@objectiv/testing-tools';
 import { LocalStorageQueueStore } from '../src';
 
 describe('Without DOM', () => {
   it('should throw if LocalStorageQueueStore gets constructed', async () => {
-    expect(() => new LocalStorageQueueStore({ trackerId: 'app-id' })).toThrow(
+    expectToThrow(
+      () => new LocalStorageQueueStore({ trackerId: 'app-id' }),
       'LocalStorageQueueStore: failed to initialize: localStorage is not available.'
     );
   });

@@ -56,18 +56,18 @@ export class TrackerTransportRetryAttempt implements TrackerTransportRetryAttemp
     this.attemptCount = 1;
     this.startTime = Date.now();
 
-    if (globalThis.objectiv) {
-      globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:TrackerTransportRetryAttempt｣ Created`);
-      globalThis.objectiv.TrackerConsole.log(`Transport: ${this.transport.transportName}`);
-      globalThis.objectiv.TrackerConsole.log(`Max Attempts: ${this.maxAttempts}`);
-      globalThis.objectiv.TrackerConsole.log(`Max Retry (ms): ${this.maxRetryMs}`);
-      globalThis.objectiv.TrackerConsole.log(`Min Timeout (ms): ${this.minTimeoutMs}`);
-      globalThis.objectiv.TrackerConsole.log(`Max Timeout (ms): ${this.maxTimeoutMs}`);
-      globalThis.objectiv.TrackerConsole.log(`Retry Factor: ${this.retryFactor}`);
-      globalThis.objectiv.TrackerConsole.group(`Events:`);
-      globalThis.objectiv.TrackerConsole.log(this.events);
-      globalThis.objectiv.TrackerConsole.groupEnd();
-      globalThis.objectiv.TrackerConsole.groupEnd();
+    if (globalThis.objectiv.devTools) {
+      globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(`｢objectiv:TrackerTransportRetryAttempt｣ Created`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Transport: ${this.transport.transportName}`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Max Attempts: ${this.maxAttempts}`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Max Retry (ms): ${this.maxRetryMs}`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Min Timeout (ms): ${this.minTimeoutMs}`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Max Timeout (ms): ${this.maxTimeoutMs}`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Retry Factor: ${this.retryFactor}`);
+      globalThis.objectiv.devTools.TrackerConsole.group(`Events:`);
+      globalThis.objectiv.devTools.TrackerConsole.log(this.events);
+      globalThis.objectiv.devTools.TrackerConsole.groupEnd();
+      globalThis.objectiv.devTools.TrackerConsole.groupEnd();
     }
   }
 
@@ -95,38 +95,40 @@ export class TrackerTransportRetryAttempt implements TrackerTransportRetryAttemp
       return Promise.reject(this.errors);
     }
 
-    if (globalThis.objectiv) {
-      globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:TrackerTransportRetryAttempt｣ Running`);
-      globalThis.objectiv.TrackerConsole.log(`Attempt Count: ${this.attemptCount}`);
-      globalThis.objectiv.TrackerConsole.log(`Events:`);
-      globalThis.objectiv.TrackerConsole.log(this.events);
-      globalThis.objectiv.TrackerConsole.groupEnd();
+    if (globalThis.objectiv.devTools) {
+      globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(`｢objectiv:TrackerTransportRetryAttempt｣ Running`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Attempt Count: ${this.attemptCount}`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Events:`);
+      globalThis.objectiv.devTools.TrackerConsole.log(this.events);
+      globalThis.objectiv.devTools.TrackerConsole.groupEnd();
     }
 
     // Attempt to transport the given Events. Catch any rejections and have `retry` handle them.
     return this.transport
       .handle(...this.events)
       .then((response) => {
-        if (globalThis.objectiv) {
-          globalThis.objectiv.TrackerConsole.groupCollapsed(`｢objectiv:TrackerTransportRetryAttempt｣ Succeeded`);
-          globalThis.objectiv.TrackerConsole.log(`Response:`);
-          globalThis.objectiv.TrackerConsole.log(response);
-          globalThis.objectiv.TrackerConsole.groupEnd();
+        if (globalThis.objectiv.devTools) {
+          globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(
+            `｢objectiv:TrackerTransportRetryAttempt｣ Succeeded`
+          );
+          globalThis.objectiv.devTools.TrackerConsole.log(`Response:`);
+          globalThis.objectiv.devTools.TrackerConsole.log(response);
+          globalThis.objectiv.devTools.TrackerConsole.groupEnd();
         }
 
         return response;
       })
       .catch((error) => {
-        if (globalThis.objectiv) {
-          globalThis.objectiv.TrackerConsole.groupCollapsed(
+        if (globalThis.objectiv.devTools) {
+          globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(
             `%c｢objectiv:TrackerTransportRetryAttempt｣ Failed`,
             'color:red'
           );
-          globalThis.objectiv.TrackerConsole.log(`Error:`);
-          globalThis.objectiv.TrackerConsole.log(error);
-          globalThis.objectiv.TrackerConsole.log(`Events:`);
-          globalThis.objectiv.TrackerConsole.log(this.events);
-          globalThis.objectiv.TrackerConsole.groupEnd();
+          globalThis.objectiv.devTools.TrackerConsole.log(`Error:`);
+          globalThis.objectiv.devTools.TrackerConsole.log(error);
+          globalThis.objectiv.devTools.TrackerConsole.log(`Events:`);
+          globalThis.objectiv.devTools.TrackerConsole.log(this.events);
+          globalThis.objectiv.devTools.TrackerConsole.groupEnd();
         }
 
         // Retry TransportSendErrors
@@ -152,18 +154,18 @@ export class TrackerTransportRetryAttempt implements TrackerTransportRetryAttemp
     // Increment number of attempts
     this.attemptCount++;
 
-    if (globalThis.objectiv) {
-      globalThis.objectiv.TrackerConsole.groupCollapsed(
+    if (globalThis.objectiv.devTools) {
+      globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(
         `%c｢objectiv:TrackerTransportRetryAttempt｣ Retrying`,
         'color:orange'
       );
-      globalThis.objectiv.TrackerConsole.log(`Attempt Count: ${this.attemptCount}`);
-      globalThis.objectiv.TrackerConsole.log(`Waited: ${nextTimeoutMs}`);
-      globalThis.objectiv.TrackerConsole.log(`Error:`);
-      globalThis.objectiv.TrackerConsole.log(error);
-      globalThis.objectiv.TrackerConsole.log(`Events:`);
-      globalThis.objectiv.TrackerConsole.log(this.events);
-      globalThis.objectiv.TrackerConsole.groupEnd();
+      globalThis.objectiv.devTools.TrackerConsole.log(`Attempt Count: ${this.attemptCount}`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Waited: ${nextTimeoutMs}`);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Error:`);
+      globalThis.objectiv.devTools.TrackerConsole.log(error);
+      globalThis.objectiv.devTools.TrackerConsole.log(`Events:`);
+      globalThis.objectiv.devTools.TrackerConsole.log(this.events);
+      globalThis.objectiv.devTools.TrackerConsole.groupEnd();
     }
 
     // Run again

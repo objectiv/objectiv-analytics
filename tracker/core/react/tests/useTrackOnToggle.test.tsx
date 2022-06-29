@@ -18,9 +18,9 @@ describe('useTrackOnToggle', () => {
     jest.resetAllMocks();
   });
 
-  const spyTransport = { transportName: 'SpyTransport', handle: jest.fn(), isUsable: () => true };
+  const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
   const renderSpy = jest.fn();
-  const tracker = new Tracker({ applicationId: 'app-id', transport: spyTransport });
+  const tracker = new Tracker({ applicationId: 'app-id', transport: LogTransport });
 
   const Index = () => {
     return (
@@ -56,7 +56,7 @@ describe('useTrackOnToggle', () => {
   it('should not execute on mount', () => {
     render(<Index />);
 
-    expect(spyTransport.handle).not.toHaveBeenCalled();
+    expect(LogTransport.handle).not.toHaveBeenCalled();
   });
 
   it('should not execute on unmount', () => {
@@ -64,7 +64,7 @@ describe('useTrackOnToggle', () => {
 
     unmount();
 
-    expect(spyTransport.handle).not.toHaveBeenCalled();
+    expect(LogTransport.handle).not.toHaveBeenCalled();
   });
 
   it('should not execute on rerender', () => {
@@ -74,7 +74,7 @@ describe('useTrackOnToggle', () => {
     rerender(<Index />);
 
     expect(renderSpy).toHaveBeenCalledTimes(3);
-    expect(spyTransport.handle).not.toHaveBeenCalled();
+    expect(LogTransport.handle).not.toHaveBeenCalled();
   });
 
   it('should execute on state change', () => {
@@ -86,15 +86,15 @@ describe('useTrackOnToggle', () => {
     fireEvent.click(toggleMenuButton);
     fireEvent.click(toggleMenuButton);
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(3);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'VisibleEvent' }));
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(2, expect.objectContaining({ _type: 'HiddenEvent' }));
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(3, expect.objectContaining({ _type: 'VisibleEvent' }));
+    expect(LogTransport.handle).toHaveBeenCalledTimes(3);
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'VisibleEvent' }));
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(2, expect.objectContaining({ _type: 'HiddenEvent' }));
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(3, expect.objectContaining({ _type: 'VisibleEvent' }));
   });
 
   it('should allow overriding the tracker with a custom one', () => {
-    const spyTransport2 = { transportName: 'spyTransport2', handle: jest.fn(), isUsable: () => true };
-    const anotherTracker = new Tracker({ applicationId: 'app-id', transport: spyTransport2 });
+    const LogTransport2 = { transportName: 'LogTransport2', handle: jest.fn(), isUsable: () => true };
+    const anotherTracker = new Tracker({ applicationId: 'app-id', transport: LogTransport2 });
     const { rerender } = renderHook(
       (state) =>
         useTrackOnToggle({
@@ -109,9 +109,9 @@ describe('useTrackOnToggle', () => {
     rerender(true);
     rerender(false);
 
-    expect(spyTransport.handle).not.toHaveBeenCalled();
-    expect(spyTransport2.handle).toHaveBeenCalledTimes(2);
-    expect(spyTransport2.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'VisibleEvent' }));
-    expect(spyTransport2.handle).toHaveBeenNthCalledWith(2, expect.objectContaining({ _type: 'HiddenEvent' }));
+    expect(LogTransport.handle).not.toHaveBeenCalled();
+    expect(LogTransport2.handle).toHaveBeenCalledTimes(2);
+    expect(LogTransport2.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'VisibleEvent' }));
+    expect(LogTransport2.handle).toHaveBeenNthCalledWith(2, expect.objectContaining({ _type: 'HiddenEvent' }));
   });
 });

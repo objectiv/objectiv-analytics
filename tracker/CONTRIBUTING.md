@@ -27,8 +27,9 @@ This is a complete list of the currently available packages.
 | @objectiv/tracker-react-core                     | core      | /core/react                              | [README](/tracker/core/react/README.md)                              |
 | @objectiv/testing-tools                          | core      | /core/testing-tools                      | [README](/tracker/core/testing-tools/README.md)                      |
 | @objectiv/utilities                              | core      | /core/utilities                          | [README](/tracker/core/utilities/README.md)                          |
-| @objectiv/http-context                           | plugin    | /plugins/http-context                    | [README](/tracker/plugins/http-context/README.md)                    | 
 | @objectiv/plugin-application-context             | plugin    | /plugins/application-context             | [README](/tracker/plugins/application-context/README.md)             |
+| @objectiv/plugin-http-context                    | plugin    | /plugins/http-context                    | [README](/tracker/plugins/http-context/README.md)                    | 
+| @objectiv/plugin-identity-context                | plugin    | /plugins/identity-context                | [README](/tracker/plugins/identity-context/README.md)                | 
 | @objectiv/plugin-path-context-from-url           | plugin    | /plugins/path-context-from-url           | [README](/tracker/plugins/path-context-from-url/README.md)           |
 | @objectiv/plugin-react-navigation                | plugin    | /plugins/react-navigation                | [README](/tracker/plugins/react-navigation/README.md)                |
 | @objectiv/plugin-react-router-tracked-components | plugin    | /plugins/react-router-tracked-components | [README](/tracker/plugins/react-router-tracked-components/README.md) |

@@ -1,4 +1,4 @@
-# Objectiv HttpContext Plugin
+# Objectiv ApplicationContext Plugin
 
 Plugin for Objectiv trackers. Factors an `ApplicationContext` that is attached to each `TrackerEvent`'s `global_contexts`.
 
@@ -7,12 +7,12 @@ Plugin for Objectiv trackers. Factors an `ApplicationContext` that is attached t
 To install the most recent stable version:
 
 ```sh
-yarn add @objectiv/application-context
+yarn add @objectiv/plugin-application-context
 ```
 
 ### or
 ```sh
-npm install @objectiv/application-context
+npm install @objectiv/plugin-application-context
 ```
 
 # Usage

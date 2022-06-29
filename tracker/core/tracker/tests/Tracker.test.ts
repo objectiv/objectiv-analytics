@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { LogTransport, matchUUID, MockConsoleImplementation, UnusableTransport } from '@objectiv/testing-tools';
+import { ConfigurableMockTransport, LogTransport, matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
   ContextsConfig,
   generateUUID,
@@ -17,7 +17,8 @@ import {
 } from '../src';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.EventRecorder.configure({ enabled: false });
 
 describe('Tracker', () => {
   beforeEach(() => {
@@ -398,7 +399,7 @@ describe('Tracker', () => {
     });
 
     it("should not send the Event via the given TrackerTransport if it's not usable", () => {
-      const unusableTransport = new UnusableTransport();
+      const unusableTransport = new ConfigurableMockTransport({ isUsable: false });
       expect(unusableTransport.isUsable()).toEqual(false);
       jest.spyOn(unusableTransport, 'handle');
       const testTracker = new Tracker({ applicationId: 'app-id', transport: unusableTransport });
@@ -542,7 +543,7 @@ describe('Tracker', () => {
     });
 
     it('should not initialize the queue runner if the given transport is not usable', () => {
-      const logTransport = new UnusableTransport();
+      const logTransport = new ConfigurableMockTransport({ isUsable: false });
       jest.spyOn(logTransport, 'handle');
       const trackerQueue = new TrackerQueue();
       trackerQueue.setProcessFunction(processFunctionSpy);
@@ -661,7 +662,7 @@ describe('Without developer tools', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    globalThis.objectiv = undefined;
+    globalThis.objectiv.devTools = undefined;
   });
 
   afterEach(() => {

@@ -3,13 +3,13 @@
  */
 
 import { PathContextFromURLPlugin } from '@objectiv/plugin-path-context-from-url';
-import { MockConsoleImplementation } from '@objectiv/testing-tools';
+import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import { generateUUID, LocationStack, makeContentContext, TrackerPluginInterface } from '@objectiv/tracker-core';
 import { BrowserTracker, getElementLocationStack, TaggableElement } from '../src';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('getElementLocationStack', () => {
   const mainSection = makeTaggedElement(generateUUID(), 'main', 'section');
@@ -50,7 +50,7 @@ describe('getElementLocationStack', () => {
     expectedPathsByElement.forEach(([element, expectedLocationPath]) => {
       it(`element: ${element.dataset.objectivElementId}: ${expectedLocationPath}`, () => {
         const locationStack = getElementLocationStack({ element });
-        const locationPath = globalThis.objectiv?.getLocationPath(locationStack);
+        const locationPath = globalThis.objectiv.devTools?.getLocationPath(locationStack);
 
         expect(locationPath).toBe(expectedLocationPath);
       });
@@ -59,9 +59,9 @@ describe('getElementLocationStack', () => {
 
   describe('Should reconstruct the Location Stack including the Plugins', () => {
     const applicationId = 'app';
-    const endpoint = 'http://test';
+    const transport = new LogTransport();
     const plugins: TrackerPluginInterface[] = [new PathContextFromURLPlugin()];
-    const tracker = new BrowserTracker({ applicationId, endpoint, plugins, trackRootLocationContextFromURL: false });
+    const tracker = new BrowserTracker({ applicationId, transport, plugins, trackRootLocationContextFromURL: false });
 
     const expectedPathsByElement: [TaggableElement, string][] = [
       [mainSection, 'Content:main'],
@@ -75,7 +75,7 @@ describe('getElementLocationStack', () => {
     expectedPathsByElement.forEach(([element, expectedLocationPath]) => {
       it(`element: ${element.dataset.objectivElementId}: ${expectedLocationPath}`, () => {
         const locationStack = getElementLocationStack({ element, tracker });
-        const locationPath = globalThis.objectiv?.getLocationPath(locationStack);
+        const locationPath = globalThis.objectiv.devTools?.getLocationPath(locationStack);
 
         expect(locationPath).toBe(expectedLocationPath);
       });
@@ -84,12 +84,12 @@ describe('getElementLocationStack', () => {
 
   describe('Should reconstruct the Location Stack including the Tracker Location Stack and Plugins', () => {
     const applicationId = 'app';
-    const endpoint = 'http://test';
+    const transport = new LogTransport();
     const location_stack: LocationStack = [makeContentContext({ id: 'root' })];
     const plugins: TrackerPluginInterface[] = [new PathContextFromURLPlugin()];
     const tracker = new BrowserTracker({
       applicationId,
-      endpoint,
+      transport,
       plugins,
       location_stack,
       trackRootLocationContextFromURL: false,
@@ -107,7 +107,7 @@ describe('getElementLocationStack', () => {
     expectedPathsByElement.forEach(([element, expectedLocationPath]) => {
       it(`element: ${element.dataset.objectivElementId}: ${expectedLocationPath}`, () => {
         const locationStack = getElementLocationStack({ element, tracker });
-        const locationPath = globalThis.objectiv?.getLocationPath(locationStack);
+        const locationPath = globalThis.objectiv.devTools?.getLocationPath(locationStack);
 
         expect(locationPath).toBe(expectedLocationPath);
       });
@@ -119,7 +119,7 @@ describe('getElementLocationStack', () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      globalThis.objectiv = undefined;
+      globalThis.objectiv.devTools = undefined;
     });
 
     afterEach(() => {

@@ -2,10 +2,10 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { TrackerDeveloperToolsInterface } from './TrackerDeveloperToolsInterface';
+import { TrackerGlobalsInterface } from './TrackerGlobalsInterface';
 
 declare global {
-  var objectiv: undefined | TrackerDeveloperToolsInterface;
+  var objectiv: TrackerGlobalsInterface;
 }
 
 export * from './cleanObjectFromInternalProperties';
@@ -14,8 +14,11 @@ export * from './ContextFactories';
 export * from './ContextNames';
 export * from './ContextValidationRules';
 export * from './EventFactories';
+export * from './EventNames';
+export * from './EventRecorderInterface';
 export * from './helpers';
 export * from './LocationTreeInterface';
+export * from './RecordedEventsInterface';
 export * from './Tracker';
 export * from './TrackerConsoleInterface';
 export * from './TrackerDeveloperToolsInterface';

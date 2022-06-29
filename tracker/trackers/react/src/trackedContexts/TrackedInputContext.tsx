@@ -44,9 +44,9 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedCon
     };
 
     if (!inputId) {
-      if (globalThis.objectiv) {
-        const locationPath = globalThis.objectiv.getLocationPath(locationStack);
-        globalThis.objectiv.TrackerConsole.error(
+      if (globalThis.objectiv.devTools) {
+        const locationPath = globalThis.objectiv.devTools.getLocationPath(locationStack);
+        globalThis.objectiv.devTools.TrackerConsole.error(
           `｢objectiv｣ Could not generate a valid id for InputContext @ ${locationPath}. Please provide the \`id\` property.`
         );
       }

@@ -971,6 +971,23 @@ class DocusaurusTranslator(Translator):
         self.depth.ascend(node_name)
 
 
+    ################################################################################
+    # Videos
+
+    def visit_vimeo_player(self, node):
+        """Adds a VimeoPlayer component."""
+        video_id = str(node.attributes['videoid'])
+        tracking_id = str(node.attributes['trackingid']) if 'trackingid' in node.attributes else 'video-'+video_id
+        padding_bottom = str(node.attributes['paddingbottom'])
+        self.add("\n\nimport VimeoPlayer from '@site/src/components/vimeo-player';\n\n")
+        self.add('<VimeoPlayer id="' + tracking_id + '" videoId="' + video_id + '" paddingBottom="' + padding_bottom + '" />\n\n')
+
+
+    def depart_vimeo_player(self, node):
+        """Adds a VimeoPlayer component."""
+        pass
+
+
 class FrontMatterPositionDirective(SphinxDirective):
     """Directive to set a specific position in the sidebar for the document in its frontmatter"""
     required_arguments = 1
@@ -1025,6 +1042,30 @@ class FrontMatterSlugDirective(SphinxDirective):
         return [empty_node]
 
 
+class vimeo_player(nodes.Inline, nodes.TextElement):
+    '''This node class is a no-op -- just a way to define the `vimeo_player` node.
+    '''
+    pass
+
+
+class VimeoPlayer(SphinxDirective):
+    '''Directive to add a `vimeo_player` node.
+    '''
+    required_arguments = 0
+    optional_arguments = 0
+    option_spec = {'paddingbottom': directives.unchanged,
+                   'videoid': directives.nonnegative_int,
+                   'trackingid': directives.unchanged,
+                   }
+    has_content = True
+    def run(self):
+        thenode = vimeo_player(text='')
+        thenode.attributes['videoid'] = self.options['videoid']
+        thenode.attributes['paddingbottom'] = self.options['paddingbottom']
+        thenode.attributes['trackingid'] = self.options['trackingid'] if 'trackingid' in self.options else None
+        return [thenode]
+
+
 class DocusaurusWriter(Writer):
     """Class to write to Docusaurus-compatible MDX documentation from Sphinx.
 
@@ -1034,4 +1075,5 @@ class DocusaurusWriter(Writer):
     directives.register_directive('frontmatterposition', FrontMatterPositionDirective)
     directives.register_directive('frontmattersidebartitle', FrontMatterSidebarTitleDirective)
     directives.register_directive('frontmatterslug', FrontMatterSlugDirective)
+    directives.register_directive('vimeoplayer', VimeoPlayer)
     translator_class = DocusaurusTranslator

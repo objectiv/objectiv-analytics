@@ -7,7 +7,7 @@ import { makePressableContext } from '@objectiv/tracker-core';
 import { isTaggedElement, processTagChildrenElement, tagContent, TaggingAttribute, tagPressable } from '../src';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('processChildrenTrackingElement', () => {
   beforeEach(() => {

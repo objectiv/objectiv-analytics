@@ -739,8 +739,8 @@ if (discriminators_content) {
 }
 
 // Generate ContextNames.ts enum definitions in Core Tracker
-const filename = `${core_tracker_package_dir}ContextNames.ts`;
-let content = '';
+const contextNamesTsFile = `${core_tracker_package_dir}ContextNames.ts`;
+let contentContextNamesTsFile = '';
 
 Object.keys(object_declarations).forEach((definition_type) => {
   // generate context names enum if we are writing core tracker location_contexts or global_contexts definitions
@@ -749,17 +749,46 @@ Object.keys(object_declarations).forEach((definition_type) => {
     const contextNames = Object.keys(object_declarations[definition_type]).sort();
 
     // generate enum
-    content += `export enum ${enumName} { 
+    contentContextNamesTsFile += `export enum ${enumName} { 
       ${contextNames.map((name) => `${name} = '${name}'`).join(',\n')}
     }\n\n`;
+
+    // generate set
+    contentContextNamesTsFile += `export type Any${enumName} = '${contextNames.join("' | '")}';\n\n`;
   }
 });
 
 // write ContextNames.ts to file, if we have any
-if (content) {
-  fs.writeFileSync(filename, COPYRIGHT);
-  fs.appendFileSync(filename, content);
-  console.log(`Written Context Names Enums definitions to ${filename}`);
+if (contentContextNamesTsFile) {
+  fs.writeFileSync(contextNamesTsFile, COPYRIGHT);
+  fs.appendFileSync(contextNamesTsFile, contentContextNamesTsFile);
+  console.log(`Written Context Names Enums definitions to ${contextNamesTsFile}`);
+}
+
+// Generate EventNames.ts enum definitions in Core Tracker
+const eventNamesTsFile = `${core_tracker_package_dir}EventNames.ts`;
+let contentEventNamesTsFile = '';
+
+Object.keys(object_declarations).forEach((definition_type) => {
+  // generate event names enum if we are writing core tracker events
+  if (definition_type === 'events') {
+    const eventNames = Object.keys(object_declarations[definition_type]).sort();
+
+    // generate enum
+    contentEventNamesTsFile += `export enum EventName { 
+      ${eventNames.map((name) => `${name} = '${name}'`).join(',\n')}
+    }\n\n`;
+
+    // generate set
+    contentEventNamesTsFile += `export type AnyEventName = '${eventNames.join("' | '")}';\n\n`;
+  }
+});
+
+// write EventNames.ts to file, if we have any
+if (contentEventNamesTsFile) {
+  fs.writeFileSync(eventNamesTsFile, COPYRIGHT);
+  fs.appendFileSync(eventNamesTsFile, contentEventNamesTsFile);
+  console.log(`Written Event Names Enum definitions to ${eventNamesTsFile}`);
 }
 
 // generate index for all declarations

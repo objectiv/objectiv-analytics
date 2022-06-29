@@ -50,7 +50,7 @@ demonstrate in this example.
     # do the clustering using the pandas DataFrame and set the labels as a column to that DataFrame
     est = cluster.KMeans(n_clusters=3)
     est.fit(pdf)
-    df['cluster'] = est.labels_
+    pdf['cluster'] = est.labels_
 
 Now you can use the created clusters on your entire data set again if you add it back to your DataFrame.
 This is simple, as Bach and pandas are cooperating nicely. Your original Objectiv data now has a 'cluster'
@@ -58,7 +58,7 @@ column.
 
 .. code-block:: python
 
-    kfeatures_unstacked['cluster'] = pdf['cluster']
+    features_unstacked['cluster'] = pdf['cluster']
     df_with_cluster_results = df.merge(features_unstacked[['cluster']], on='user_id')
 
 You can use this column, just as any other. For example you can now use your created clusters to group models
@@ -66,7 +66,7 @@ from the model hub by:
 
 .. code-block:: python
 
-    df_with_cluster.mh.agg.session_duration(groupby='cluster').head()
+    modelhub.agg.session_duration(df_with_cluster_results, groupby='cluster').head()
     # Expected output:
     # cluster
     # 0   0 days 00:09:18.204353

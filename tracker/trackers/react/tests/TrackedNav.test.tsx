@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
+import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, getByText, render } from '@testing-library/react';
 import React from 'react';
@@ -16,11 +16,13 @@ import {
 } from '../src';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedNav', () => {
   beforeEach(() => {
     jest.resetAllMocks();
+    globalThis.objectiv.TrackerRepository.trackersMap.clear();
+    globalThis.objectiv.TrackerRepository.defaultTracker = undefined;
   });
 
   afterEach(() => {
@@ -28,9 +30,9 @@ describe('TrackedNav', () => {
   });
 
   it('should wrap the given Component in a NavigationContext', () => {
-    const spyTransport = new SpyTransport();
-    jest.spyOn(spyTransport, 'handle');
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
     const TrackedButton = () => {
       const trackPressEvent = usePressEventTracker();
@@ -49,8 +51,8 @@ describe('TrackedNav', () => {
 
     fireEvent.click(getByText(container, /trigger event/i));
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenCalledWith(
       expect.objectContaining({
         _type: 'PressEvent',
         location_stack: expect.arrayContaining([
@@ -64,9 +66,9 @@ describe('TrackedNav', () => {
   });
 
   it('should allow disabling id normalization', () => {
-    const spyTransport = new SpyTransport();
-    jest.spyOn(spyTransport, 'handle');
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
     const TrackedButton = ({ children }: { children: React.ReactNode }) => {
       const trackPressEvent = usePressEventTracker();
@@ -89,8 +91,8 @@ describe('TrackedNav', () => {
     fireEvent.click(getByText(container, /trigger event 1/i));
     fireEvent.click(getByText(container, /trigger event 2/i));
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(2);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(2);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         _type: 'PressEvent',
@@ -102,7 +104,7 @@ describe('TrackedNav', () => {
         ]),
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
         _type: 'PressEvent',
@@ -118,7 +120,7 @@ describe('TrackedNav', () => {
 
   it('should console.error if an id cannot be automatically generated', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new SpyTransport() });
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: new LogTransport() });
 
     render(
       <ObjectivProvider tracker={tracker}>
@@ -137,9 +139,9 @@ describe('TrackedNav', () => {
   });
 
   it('should allow specifying a custom id', () => {
-    const spyTransport = new SpyTransport();
-    jest.spyOn(spyTransport, 'handle');
-    const tracker = new ReactTracker({ applicationId: 'app-id', transport: spyTransport });
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
 
     const TrackedButton = () => {
       const trackPressEvent = usePressEventTracker();
@@ -158,8 +160,8 @@ describe('TrackedNav', () => {
 
     fireEvent.click(getByText(container, /trigger event/i));
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenCalledWith(
       expect.objectContaining({
         _type: 'PressEvent',
         location_stack: expect.arrayContaining([

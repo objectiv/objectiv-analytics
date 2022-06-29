@@ -15,7 +15,8 @@ import React from 'react';
 import { LocationProvider, TrackingContextProvider, useLocationStack, useTracker, useTrackingContext } from '../src';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.EventRecorder.configure({ enabled: false });
 
 describe('TrackingContextProvider', () => {
   beforeEach(() => {

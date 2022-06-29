@@ -1,0 +1,26 @@
+# Objectiv IdentityContext Plugin
+
+Plugin for Objectiv trackers. Factors an `IdentityContext` that is attached to each `TrackerEvent`'s `global_contexts`.
+
+---
+## Package Installation
+To install the most recent stable version:
+
+```sh
+yarn add @objectiv/plugin-identity-context
+```
+
+### or
+```sh
+npm install @objectiv/plugin-identity-context
+```
+
+# Usage
+For a detailed usage guide, see the documentation: [https://objectiv.io/docs](https://objectiv.io/docs)
+
+# Copyright and license
+Licensed and distributed under the Apache 2.0 License (An OSI Approved License).
+
+Copyright (c) 2022 Objectiv B.V.
+
+All rights reserved.

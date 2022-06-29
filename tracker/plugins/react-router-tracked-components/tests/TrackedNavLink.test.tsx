@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { MockConsoleImplementation, SpyTransport } from '@objectiv/testing-tools';
+import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import { LocationContextName, Tracker } from '@objectiv/tracker-core';
 import {
   ObjectivProvider,
@@ -16,11 +16,12 @@ import { BrowserRouter } from 'react-router-dom';
 import { TrackedNavLink, TrackedNavLinkProps } from '../src/TrackedNavLink';
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedNavLink', () => {
-  const spyTransport = { transportName: 'SpyTransport', handle: jest.fn(), isUsable: () => true };
-  const tracker = new Tracker({ applicationId: 'app-id', transport: spyTransport });
+  const logTransport = new LogTransport();
+  jest.spyOn(logTransport, 'handle');
+  const tracker = new Tracker({ applicationId: 'app-id', transport: logTransport });
 
   const cases: [TrackedNavLinkProps, { id: string; href: string }][] = [
     [
@@ -93,8 +94,8 @@ describe('TrackedNavLink', () => {
 
       fireEvent.click(getByTestId(container, 'test'));
 
-      expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-      expect(spyTransport.handle).toHaveBeenCalledWith(
+      expect(logTransport.handle).toHaveBeenCalledTimes(1);
+      expect(logTransport.handle).toHaveBeenCalledWith(
         expect.objectContaining({
           _type: 'PressEvent',
           location_stack: [
@@ -176,12 +177,12 @@ describe('TrackedNavLink', () => {
   it('should wait until tracked', async () => {
     jest.useFakeTimers();
     const clickSpy = jest.fn();
-    const spyTransport = new SpyTransport();
+    const logTransport = new LogTransport();
     jest
-      .spyOn(spyTransport, 'handle')
+      .spyOn(logTransport, 'handle')
       .mockImplementation(async () => new Promise((resolve) => setTimeout(resolve, 100)));
-    const tracker = new Tracker({ applicationId: 'app-id', transport: spyTransport });
-    jest.spyOn(spyTransport, 'handle');
+    const tracker = new Tracker({ applicationId: 'app-id', transport: logTransport });
+    jest.spyOn(logTransport, 'handle');
 
     const { container } = render(
       <BrowserRouter>
@@ -199,8 +200,8 @@ describe('TrackedNavLink', () => {
 
     await waitFor(() => expect(clickSpy).toHaveBeenCalledTimes(1));
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(1);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         _type: 'PressEvent',

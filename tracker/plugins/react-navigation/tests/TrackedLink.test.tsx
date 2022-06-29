@@ -23,14 +23,16 @@ type TestParamList = {
 };
 
 require('@objectiv/developer-tools');
-globalThis.objectiv?.TrackerConsole.setImplementation(MockConsoleImplementation);
+globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('TrackedLink', () => {
   beforeEach(() => {
+    globalThis.objectiv.TrackerRepository.trackersMap.clear();
+    globalThis.objectiv.TrackerRepository.defaultTracker = undefined;
     jest.resetAllMocks();
   });
 
-  const spyTransport = { transportName: 'SpyTransport', handle: jest.fn(), isUsable: () => true };
+  const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
 
   const cases: [
     TrackedLinkProps<TestParamList>,
@@ -75,7 +77,7 @@ describe('TrackedLink', () => {
       const navigationContainerRef = createNavigationContainerRef();
       const tracker = new ReactNativeTracker({
         applicationId: 'app-id',
-        transport: spyTransport,
+        transport: LogTransport,
         plugins: [new ContextsFromReactNavigationPlugin({ navigationContainerRef })],
       });
       const Stack = createStackNavigator();
@@ -94,8 +96,8 @@ describe('TrackedLink', () => {
 
       fireEvent.press(getByTestId('test'));
 
-      expect(spyTransport.handle).toHaveBeenCalledTimes(2);
-      expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      expect(LogTransport.handle).toHaveBeenCalledTimes(2);
+      expect(LogTransport.handle).toHaveBeenNthCalledWith(
         1,
         expect.objectContaining({
           _type: 'ApplicationLoadedEvent',
@@ -108,7 +110,7 @@ describe('TrackedLink', () => {
           ],
         })
       );
-      expect(spyTransport.handle).toHaveBeenNthCalledWith(
+      expect(LogTransport.handle).toHaveBeenNthCalledWith(
         2,
         expect.objectContaining({
           _type: 'PressEvent',
@@ -126,7 +128,7 @@ describe('TrackedLink', () => {
   });
 
   it('should console.error if an id cannot be automatically generated', () => {
-    const tracker = new ReactNativeTracker({ applicationId: 'app-id', transport: spyTransport });
+    const tracker = new ReactNativeTracker({ applicationId: 'app-id', transport: LogTransport });
 
     const Stack = createStackNavigator();
     const HomeScreen = () => (
@@ -156,7 +158,7 @@ describe('TrackedLink', () => {
   });
 
   it('should execute the given onPress as well', async () => {
-    const tracker = new ReactNativeTracker({ applicationId: 'app-id', transport: spyTransport });
+    const tracker = new ReactNativeTracker({ applicationId: 'app-id', transport: LogTransport });
     const onPressSpy = jest.fn();
 
     const Stack = createStackNavigator();
@@ -241,7 +243,7 @@ describe('TrackedLink', () => {
     const navigationContainerRef = createNavigationContainerRef();
     const tracker = new ReactNativeTracker({
       applicationId: 'app-id',
-      transport: spyTransport,
+      transport: LogTransport,
       plugins: [new ContextsFromReactNavigationPlugin({ navigationContainerRef })],
     });
     const Tab = createBottomTabNavigator();
@@ -302,8 +304,8 @@ describe('TrackedLink', () => {
 
     fireEvent.press(getByTestId('go-to-home-from-messages'));
 
-    expect(spyTransport.handle).toHaveBeenCalledTimes(2);
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(LogTransport.handle).toHaveBeenCalledTimes(2);
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         _type: 'ApplicationLoadedEvent',
@@ -314,7 +316,7 @@ describe('TrackedLink', () => {
         location_stack: [expect.objectContaining({ _type: LocationContextName.RootLocationContext, id: 'Messages' })],
       })
     );
-    expect(spyTransport.handle).toHaveBeenNthCalledWith(
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
         _type: 'PressEvent',
@@ -335,7 +337,7 @@ describe('TrackedLink', () => {
 
     beforeEach(() => {
       jest.clearAllMocks();
-      globalThis.objectiv = undefined;
+      globalThis.objectiv.devTools = undefined;
     });
 
     afterEach(() => {
@@ -343,7 +345,7 @@ describe('TrackedLink', () => {
     });
 
     it('should fail silently if an id cannot be automatically generated', () => {
-      const tracker = new ReactNativeTracker({ applicationId: 'app-id', transport: spyTransport });
+      const tracker = new ReactNativeTracker({ applicationId: 'app-id', transport: LogTransport });
 
       const Stack = createStackNavigator();
       const HomeScreen = () => (

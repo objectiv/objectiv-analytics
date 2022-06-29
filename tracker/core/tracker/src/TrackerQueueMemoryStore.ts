@@ -16,7 +16,10 @@ export class TrackerQueueMemoryStore implements TrackerQueueStoreInterface {
   events: TrackerEvent[] = [];
 
   constructor() {
-    globalThis.objectiv?.TrackerConsole.log(`%c｢objectiv:${this.queueStoreName}｣ Initialized`, 'font-weight: bold');
+    globalThis.objectiv.devTools?.TrackerConsole.log(
+      `%c｢objectiv:${this.queueStoreName}｣ Initialized`,
+      'font-weight: bold'
+    );
   }
 
   async read(size?: number, filterPredicate?: (event: TrackerEvent) => boolean): Promise<TrackerEvent[]> {
