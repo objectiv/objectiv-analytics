@@ -194,6 +194,8 @@ def test_get_unsampled_multiple_nodes(engine):
 
 
 def test_sample_grouped(engine):
+    # TODO: create additional tests here. Perhaps we should always materialize the dataframe before
+    #   sampling. Currently we sample the base_node, which doesn't always match the state of the DataFrame
     bt = get_df_with_test_data(engine, True)
     seed = _get_seed(engine)
     bt = bt[['municipality', 'inhabitants', 'founding']]
