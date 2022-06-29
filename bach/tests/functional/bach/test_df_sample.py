@@ -27,8 +27,6 @@ def test_get_sample(engine):
     # We cannot know the exact rows in df_sample, as that's random.
     # However, the columns should match, and additionally, since df has 33 rows, we can be _very_ sure
     # that df_sample has at least a row and less than 33.
-    print(df_sample.view_sql())
-    return
     pdf_sample = df_sample.to_pandas()
     assert pdf_sample.index.name == '_index_skating_order'
     assert list(pdf_sample.columns) == ['skating_order', 'city', 'municipality', 'inhabitants', 'founding']
