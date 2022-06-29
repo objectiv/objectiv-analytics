@@ -138,10 +138,11 @@ All results from the model hub are in the form of Bach DataFrames or Series. Thi
 
 .. code-block:: python
 
-    # We'll do a lot of operations on the data in the `df` DataFrame. To make this easier for the database (especially
-    # BigQuery), we tell Bach to materialize the current DataFrame as temporary table. This statement has no direct
-    # effect, but any invocation of head() on the dataframe later on will consist of two queries: one to create a
-    # temporary table with the current state of `df`, and one that queries that table and does following operations
+    # We'll do a lot of operations on the data in the df DataFrame. To make this easier for the
+    # database (especially BigQuery), we tell Bach to materialize the current DataFrame as temporary
+    # table. This statement has no direct effect, but any invocation of head() on the dataframe later
+    # on will consist of two queries: one to create a temporary table with the current state of the
+    # dataframe, and one that queries that table and does subsequent operations
     df = df.materialize(materialization='temp_table')
 
 .. code-block:: python
