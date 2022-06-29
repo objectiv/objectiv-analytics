@@ -10,10 +10,6 @@ from sql_models.util import is_bigquery, is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
-# For now skip all tests for BigQuery. The next commit or PR will fix this again.
-pytestmark = [pytest.mark.skip_bigquery]
-
-
 def test_get_sample(engine):
     # For reliable asserts (see below) we need more rows than the standard dataset of 11 rows has.
     # Therefore we append the dataset to itself two times to get 33 rows in total.
@@ -194,6 +190,8 @@ def test_get_unsampled_multiple_nodes(engine):
 
 
 def test_sample_grouped(engine):
+    # TODO: create additional tests here. Perhaps we should always materialize the dataframe before
+    #   sampling. Currently we sample the base_node, which doesn't always match the state of the DataFrame
     bt = get_df_with_test_data(engine, True)
     seed = _get_seed(engine)
     bt = bt[['municipality', 'inhabitants', 'founding']]
