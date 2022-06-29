@@ -117,8 +117,8 @@ def test_string_replace(engine) -> None:
     municipality = bt['municipality'].sort_index()
     assert isinstance(municipality, SeriesString)
 
-    municipalities = municipality.to_numpy()
-    replace_pat = ['-', 'west', 'ee', 'ú', 'â']
+    municipalities = ['Leeuwarden', 'Súdwest-Fryslân', 'Súdwest-Fryslân']
+    replace_pat = ['-', 'west', 'ee', 'ú', 'â', 'e']
 
     result_df = municipality.to_frame()
 
