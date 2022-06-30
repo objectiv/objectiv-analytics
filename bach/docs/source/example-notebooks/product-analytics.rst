@@ -28,7 +28,7 @@ First we look at the data.
 
 The columns 'global_contexts' and the 'location_stack' contain most of the event specific data. These columns
 are json type columns and we can extract data from it based on the keys of the json objects using
-:doc:`get_from_context_with_type_series <../open-model-hub/api-reference/SeriesGlobalContexts/modelhub.SeriesGlobalContexts.objectiv>`. 
+:doc:`get_from_context_with_type_series <../open-model-hub/api-reference/SeriesGlobalContexts/modelhub.SeriesGlobalContexts.objectiv>`.
 Or use methods specific to the :ref:`location_stack` or :ref:`global_contexts` to extract the data.
 
 
@@ -41,7 +41,7 @@ Or use methods specific to the :ref:`location_stack` or :ref:`global_contexts` t
 
 Now we will go though a selection of basic analytics metrics. We can use models from the :ref:`models
 <models>`
-for this purpose or use :ref:`Bach <bach>` to do data analysis directly on the data stored in the SQL database using 
+for this purpose or use :ref:`Bach <bach>` to do data analysis directly on the data stored in the SQL database using
 pandas-like syntax.
 
 For each example, `head()`, `to_pandas()` or `to_numpy()` can be used to execute the generated SQL and get
@@ -100,15 +100,15 @@ From our retention matrix, we can see that in the second cohort there is a drop 
     cohorts = cohorts.rename(columns={'moment': 'first_cohort'})
 
     # add first cohort of the users to our DataFrame
-    df = df.merge(cohorts, on='user_id')
+    df_with_cohorts = df.merge(cohorts, on='user_id')
 
     # filter data where users belong to # 0 cohort
-    cohort0_filter = (df['first_cohort'] > datetime(2022, 2, 1)) & (df['first_cohort'] < datetime(2022, 3, 1))
-    df[cohort0_filter]['event_type'].value_counts().head()
+    cohort0_filter = (df_with_cohorts['first_cohort'] > datetime(2022, 2, 1)) & (df_with_cohorts['first_cohort'] < datetime(2022, 3, 1))
+    df_with_cohorts[cohort0_filter]['event_type'].value_counts().head()
 
     # filter data where users belong to # 1 cohort (the problematic one)
-    cohort1_filter = (df['first_cohort'] > datetime(2022, 3, 1)) & (df['first_cohort'] < datetime(2022, 4, 1))
-    df[cohort1_filter]['event_type'].value_counts().head()
+    cohort1_filter = (df_with_cohorts['first_cohort'] > datetime(2022, 3, 1)) & (df_with_cohorts['first_cohort'] < datetime(2022, 4, 1))
+    df_with_cohorts[cohort1_filter]['event_type'].value_counts().head()
 
 It is interesting to see that we have relatively more `VisibleEvent` in the first cohort than in second 'problematic' one.
 
@@ -136,7 +136,7 @@ created series contains aggregated data, and it is not allowed to aggregate that
 
 Top used product features
 -------------------------
-Let's get the top used features in the product by our users, for that we can call the `top_product_features` function from the model hub. 
+Let's get the top used features in the product by our users, for that we can call the `top_product_features` function from the model hub.
 
 .. code-block:: python
 
@@ -267,7 +267,7 @@ We can calculate what users did _before_ converting.
 
 .. code-block:: python
 
-    top_features_before_conversion = modelhub.agg.top_product_features_before_conversion(df)
+    top_features_before_conversion = modelhub.agg.top_product_features_before_conversion(df, name='github_press')
     top_features_before_conversion.head()
 
 At last we want to know how much time users that converted spent on our site before they converted.
