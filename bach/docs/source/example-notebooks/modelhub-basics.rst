@@ -131,18 +131,19 @@ As mentioned, all operations and models performed on the DataFrame are run on th
 
     display_sql_as_markdown(new_user_share)
 
-2. Export to metabase
-~~~~~~~~~~~~~~~~~~~~~
-Aggregation model results can be exported to Metabase, to visualize and share your results. This is done for the unique new users:
+
+2. Further data crunching using the Bach Modeling Library
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+All results from the model hub are in the form of Bach DataFrames or Series. This makes the model hub and Bach work seamlessly together.
 
 .. code-block:: python
 
-    modelhub.to_metabase(modelhub.agg.unique_users(df[df.is_new_user]),
-                         config={'name': 'Unique New Users'})
-
-3. Further data crunching using the Bach Modeling Library
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-All results from the model hub are in the form of Bach DataFrames or Series. This makes the model hub and Bach work seamlessly together.
+    # We'll do a lot of operations on the data in the df DataFrame. To make this easier for the
+    # database (especially BigQuery), we tell Bach to materialize the current DataFrame as temporary
+    # table. This statement has no direct effect, but any invocation of head() on the dataframe later
+    # on will consist of two queries: one to create a temporary table with the current state of the
+    # dataframe, and one that queries that table and does subsequent operations
+    df = df.materialize(materialization='temp_table')
 
 .. code-block:: python
 
@@ -167,7 +168,7 @@ Show the results, now the underlying query is executed.
 There is another :ref:`example <bach_examples>` that demonstrates what you can do with the Bach modeling
 library, or head over to the :ref:`Bach API reference <bach_api_reference>` for a complete overview of the possibilities.
 
-4. Export DataFrame and model hub results to pandas DataFrame
+3. Export DataFrame and model hub results to pandas DataFrame
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Bach DataFrames and/or model hub results can always be exported to pandas. Since Bach DataFrame operation run on the full dataset in the SQL database, it is recommended to export to pandas if data small enough; ie by aggregation or selection.
 By exporting the data to pandas you can use all the options from pandas as well as pandas compatible ML packages.

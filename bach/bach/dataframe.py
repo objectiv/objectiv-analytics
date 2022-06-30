@@ -21,7 +21,7 @@ from sql_models.constants import NotSet, not_set
 from sql_models.graph_operations import update_placeholders_in_graph, get_all_placeholders
 from sql_models.model import SqlModel, Materialization, CustomSqlModelBuilder, RefPath
 
-from sql_models.sql_generator import to_sql
+from sql_models.sql_generator import to_sql, to_sql_materialized_nodes
 from sql_models.util import quote_identifier, is_bigquery, DatabaseNotSupportedException, is_postgres
 
 if TYPE_CHECKING:
@@ -990,6 +990,7 @@ class DataFrame:
         inplace=False,
         limit: Any = None,
         distinct: bool = False,
+        materialization: Union[Materialization, str] = Materialization.CTE
     ) -> 'DataFrame':
         """
         Create a copy of this DataFrame with as base_node the current DataFrame's state.
@@ -998,7 +999,12 @@ class DataFrame:
         the size of the generated SQL query. But this can be useful if the current DataFrame contains
         expressions that you want to evaluate before further expressions are build on top of them. This might
         make sense for very large expressions, or for non-deterministic expressions (e.g. see
-        :py:meth:`SeriesUuid.sql_gen_random_uuid`).
+        :py:meth:`SeriesUuid.sql_gen_random_uuid`). Additionally, materializing as a temporary table can
+        improve performance in some instances.
+
+        Note this function does NOT query the database or materializes any data in the database. It merely
+        changes the underlying SqlModel graph, which gets executed by data transfer functions (e.g.
+        :meth:`to_pandas()`)
 
         TODO: a known problem is that DataFrames with 'json_postgres' columns cannot be fully materialized.
 
@@ -1006,6 +1012,8 @@ class DataFrame:
         :param inplace: Perform operation on self if ``inplace=True``, or create a copy.
         :param limit: The limit (slice, int) to apply.
         :param distinct: Apply distinct statement if ``distinct=True``
+        :param materialization: Set the materialization of the SqlModel in the graph. Only
+            Materialization.CTE / 'cte' and Materialization.TEMP_TABLE / 'temp_table' are supported.
         :returns: DataFrame with the current DataFrame's state as base_node
 
         .. note::
@@ -1015,6 +1023,9 @@ class DataFrame:
         index_dtypes = {k: v.instance_dtype for k, v in self.index.items()}
         series_dtypes = {k: v.instance_dtype for k, v in self.data.items()}
         node = self.get_current_node(name=node_name, limit=limit, distinct=distinct)
+        materialization = Materialization.normalize(materialization)
+        assert materialization in (Materialization.CTE, Materialization.TEMP_TABLE)
+        node = node.copy_set_materialization(materialization=materialization)
 
         df = self.get_instance(
             engine=self.engine,
@@ -2099,7 +2110,13 @@ class DataFrame:
             variable_values=self.variables
         )
         model = update_placeholders_in_graph(start_node=model, placeholder_values=placeholder_values)
-        return to_sql(dialect=self.engine.dialect, model=model)
+        sql_statements = to_sql_materialized_nodes(
+            dialect=self.engine.dialect, start_node=model
+        )
+        sql_statements = [sql_stat for sql_stat in sql_statements
+                          if not sql_stat.materialization.has_lasting_effect]
+        sql = ';\n'.join(sql_stat.sql for sql_stat in sql_statements)
+        return sql
 
     def merge(
         self,
@@ -3255,7 +3272,7 @@ class DataFrame:
         if isinstance(self.index[index_to_unstack], SeriesAbstractMultiLevel):
             raise IndexError(f'"{level}" cannot be unstacked, since it is a MultiLevel series.')
 
-        values = self.index[index_to_unstack].unique().to_numpy()
+        values = self.index[index_to_unstack].unique(skipna=False).to_numpy()
 
         if None in values or numpy.nan in values:
             raise ValueError("index contains empty values, cannot be unstacked")
