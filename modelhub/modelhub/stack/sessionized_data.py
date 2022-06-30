@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 import bach
 from sqlalchemy.engine import Engine

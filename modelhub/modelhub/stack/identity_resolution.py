@@ -33,9 +33,13 @@ class IdentityResolutionPipeline(BaseDataPipeline):
             and name values from the first IdentityContext value found for the event
             under the global_contexts series json. Returns a DataFrame considering the last
             registered identity for each user_id. If no identity was found, user_id is not considered.
-        4. _resolve_old_user_ids: Replaces original user_ids with the ones extracted from previous step,
-            if identity was not found, user will be considered as anonymous (user_id value will be replaced
-            with NULL)
+        4. _resolve_original_user_ids: Replaces original user_ids with the ones extracted from previous step,
+            only if an identity was found for it.
+        5. get_sessionized_data (Optional): If required, sessionized data will be calculated based on
+            the new values from user_id series.
+        6. _anonymize_user_ids_without_identity: If user_id has no identity, original value will be replaced
+            with NULL. This step is required after getting sessionized data, since it's required to treat
+            anonymous users as individual users.
         5. _convert_dtypes: Will convert all required identity series to their correct dtype
 
     Final bach DataFrame will be later validated, it must include:
@@ -58,23 +62,30 @@ class IdentityResolutionPipeline(BaseDataPipeline):
 
         self._validate_extracted_context_df(context_df)
 
+        # TODO: make user_id dtype default to str as identity resolution will always return str values
+        context_df[ObjectivSupportedColumns.USER_ID.value] = (
+            context_df[ObjectivSupportedColumns.USER_ID.value].astype(bach.SeriesString.dtype)
+        )
         identity_context_df = self._extract_identities_from_global_contexts(context_df)
 
-        df_to_resolve = context_df
+        context_df = self._resolve_original_user_ids(context_df, identity_context_df)
         if with_sessionized_data:
-            df_to_resolve = get_sessionized_data(
+            result = get_sessionized_data(
                 engine=self._engine,
                 table_name=self._table_name,
                 set_index=False,
-                extracted_contexts_df=df_to_resolve,
+                extracted_contexts_df=context_df,
                 **kwargs,
             )
+        else:
+            result = context_df.copy()
 
-        final_columns = df_to_resolve.data_columns
+        # anonymize user ids
+        result = self._anonymize_user_ids_without_identity(result)
+        result = result.drop(columns=[self.RESOLVED_USER_ID_SERIES_NAME])
 
-        df_to_resolve = self._resolve_old_user_ids(df_to_resolve, identity_context_df)
-        df_to_resolve = self._convert_dtypes(df=df_to_resolve)
-        return df_to_resolve[final_columns]
+        df = self._convert_dtypes(df=result)
+        return df
 
     @classmethod
     def validate_pipeline_result(
@@ -154,28 +165,51 @@ class IdentityResolutionPipeline(BaseDataPipeline):
 
         identity_context_df = identity_context_df.materialize(node_name='extracted_id_and_name')
 
-        # sort users by moment and keep the last valid identity
-        identity_context_df = identity_context_df.sort_values(moment_series_name, ascending=True)
+        # keep the last registered identity for the user
+        identity_context_df = identity_context_df.drop_duplicates(
+            subset=[user_id_series_name], keep='last', sort_by=moment_series_name, ascending=True,
+        )
+        return identity_context_df[[user_id_series_name, self.RESOLVED_USER_ID_SERIES_NAME]]
 
-        # keep the last registered identities for the user
-        identity_context_df = identity_context_df[[user_id_series_name, self.RESOLVED_USER_ID_SERIES_NAME]]
-        return identity_context_df.drop_duplicates(subset=[user_id_series_name], keep='last')
-
-    def _resolve_old_user_ids(
+    def _resolve_original_user_ids(
         self, df_to_resolve: bach.DataFrame, identity_context_df: bach.DataFrame,
     ) -> bach.DataFrame:
         """
-        Replaces values from original user_id series with the extracted identites. If user has no identity,
-        its user_id will be replaced with a NULL value.
+        Replaces values from original user_id series with the extracted identities
+        iff the identity is not NULL, otherwise original value is kept.
+
+        Returns a DataFrame with updated user_ids and a new series for identity_user_id.
         """
         user_id_series_name = ObjectivSupportedColumns.USER_ID.value
 
         df_to_resolve = df_to_resolve.merge(
             identity_context_df, on=[user_id_series_name], how='left',
         )
-        df_to_resolve[user_id_series_name] = df_to_resolve[self.RESOLVED_USER_ID_SERIES_NAME]
+
+        # replace user_ids with respective identity
+        has_identity = df_to_resolve[self.RESOLVED_USER_ID_SERIES_NAME].notnull()
+        df_to_resolve.loc[has_identity, user_id_series_name] = (
+            df_to_resolve[self.RESOLVED_USER_ID_SERIES_NAME]
+        )
 
         return df_to_resolve
+
+    def _anonymize_user_ids_without_identity(self, df: bach.DataFrame) -> bach.DataFrame:
+        """
+        If user_id has not identity, then it will be anonymized by replacing original value with NULL.
+        """
+        if self.RESOLVED_USER_ID_SERIES_NAME not in df.data_columns:
+            raise Exception(
+                (
+                    f'Cannot anonymize user ids if {self.RESOLVED_USER_ID_SERIES_NAME} series '
+                    'is not present in DataFrame data columns.'
+                )
+            )
+
+        df = df.copy()
+        has_no_identity = df[self.RESOLVED_USER_ID_SERIES_NAME].isnull()
+        df.loc[has_no_identity, ObjectivSupportedColumns.USER_ID.value] = None
+        return df
 
 
 def get_identity_resolution_data(
