@@ -16,17 +16,6 @@ class GeneratedSqlStatement(NamedTuple):
     materialization: Materialization
     sql: str
 
-#
-# def to_sql(dialect: Dialect, model: SqlModel) -> str:
-#     """
-#     Give the sql to query the given model
-#     :param dialect: SQL Dialect
-#     :param model: model to convert to sql
-#     :return: executable select query
-#     """
-#     compiler_cache: Dict[str, List['SemiCompiledTuple']] = {}
-#     return _to_sql_materialized_node(dialect=dialect, model=model, compiler_cache=compiler_cache)
-
 
 def to_sql(dialect: Dialect, model: SqlModel) -> str:
     """
