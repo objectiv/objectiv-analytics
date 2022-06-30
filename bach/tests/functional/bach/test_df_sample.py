@@ -127,7 +127,6 @@ def test_sample_operations_filter(engine):
 
     all_data_bt = bt_sample.get_unsampled()
     all_data_bt['extra_ppl'] = all_data_bt.inhabitants + 5
-    print(bt_sample.view_sql())
     assert_equals_data(
         all_data_bt,
         expected_columns=_EXPECTED_COLUMNS_OPERATIONS,
