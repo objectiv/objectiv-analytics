@@ -110,3 +110,24 @@ def test_get_dummies(engine) -> None:
             [3, 1, 0, 0]
         ],
     )
+
+
+def test_string_replace(engine) -> None:
+    bt = get_df_with_test_data(engine)
+    municipality = bt['municipality'].sort_index()
+    assert isinstance(municipality, SeriesString)
+
+    municipalities = ['Leeuwarden', 'Súdwest-Fryslân', 'Súdwest-Fryslân']
+    replace_pat = ['-', 'west', 'ee', 'ú', 'â', 'e']
+
+    result_df = municipality.to_frame()
+
+    expected_columns = ['_index_skating_order', 'municipality']
+    expected_data = [[idx + 1, mun] for idx, mun in enumerate(municipalities)]
+    for idx, pat in enumerate(replace_pat):
+        result_df[f'repl_{idx}'] = municipality.str.replace(pat=pat, repl='_')
+        expected_columns.append(f'repl_{idx}')
+        for idx, m in enumerate(municipalities):
+            expected_data[idx].append(m.replace(pat, '_'))
+
+    assert_equals_data(result_df, expected_columns=expected_columns, expected_data=expected_data)
