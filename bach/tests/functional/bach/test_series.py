@@ -265,11 +265,6 @@ def test_type_agnostic_aggregation_functions():
 def test_unique(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)
     uq = bt.municipality.unique()
-    assert not uq.expression.is_single_value
-
-    muni_single = bt.municipality[:1]
-    uq_single = muni_single.unique()
-    assert uq_single.expression.is_single_value == muni_single.expression.is_single_value == True
 
     with pytest.raises(ValueError, match='dtypes of indexes should be the same'):
         # the uq series have an index with different dtypes
