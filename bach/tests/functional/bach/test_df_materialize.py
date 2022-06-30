@@ -1,19 +1,23 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+from typing import Union
 from unittest.mock import ANY
 
 import pytest
+from sqlalchemy.engine import Engine
 
 from bach import SeriesUuid
 from sql_models.graph_operations import get_graph_nodes_info
+from sql_models.model import Materialization
 from sql_models.util import is_bigquery, is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data, \
     get_df_with_json_data
 
 
 @pytest.mark.parametrize("inplace", [False, True])
-def test_materialize(inplace: bool, engine):
+@pytest.mark.parametrize("materialization", [Materialization.CTE, 'temp_table'])
+def test_materialize(inplace: bool, materialization: Union[Materialization, str], engine: Engine):
     bt = get_df_with_test_data(engine)[['city', 'founding']]
     bt['city'] = bt['city'] + ' '
     bt['uuid'] = SeriesUuid.sql_gen_random_uuid(bt)
@@ -31,9 +35,9 @@ def test_materialize(inplace: bool, engine):
 
     if inplace:
         bt_materialized = bt.copy()
-        bt_materialized.materialize(node_name='node', inplace=True)
+        bt_materialized.materialize(node_name='node', inplace=True, materialization=materialization)
     else:
-        bt_materialized = bt.materialize(node_name='node')
+        bt_materialized = bt.materialize(node_name='node', materialization=materialization)
     # The materialized DataFrame should result in the exact same data
     assert_equals_data(bt_materialized, expected_columns=expected_columns, expected_data=expected_data)
 
@@ -45,8 +49,6 @@ def test_materialize(inplace: bool, engine):
         if is_postgres(engine):
             expected_to_sql = f'"{series_name}"'
         elif is_bigquery(engine):
-            # TODO: This path is never taken, as we only test with Postgres dialect/engine.
-            # We use uuids in this test, which we need to support in Biguery before we can port this test.
             expected_to_sql = f'`{series_name}`'
         else:
             raise Exception('we need to expand this test')
@@ -54,11 +56,15 @@ def test_materialize(inplace: bool, engine):
         assert bt_materialized[series_name].expression.to_sql(engine.dialect) == expected_to_sql
 
     # The materialized graph should have one extra node
+    # If the materialization was temp_table, then the node before that was changed too: its materialization
+    # will be different
     node_info_orig = get_graph_nodes_info(bt.get_current_node('node'))
     node_info_mat = get_graph_nodes_info(bt_materialized.get_current_node('node'))
     assert len(node_info_orig) + 1 == len(node_info_mat)
     previous_node_mat = list(bt_materialized.get_current_node('node').references.values())[0]
-    assert previous_node_mat == bt.get_current_node('node')
+    node_before_mat = bt.get_current_node('node')
+    node_before_mat = node_before_mat.copy_set_materialization(Materialization.normalize(materialization))
+    assert previous_node_mat == node_before_mat
 
 
 @pytest.mark.parametrize("inplace", [False, True])

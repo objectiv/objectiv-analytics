@@ -9,7 +9,7 @@ from sqlalchemy.engine import Engine
 
 from sql_models.graph_operations import find_node, replace_node_in_graph
 from sql_models.model import Materialization
-from sql_models.sql_generator import to_sql_materialized_nodes
+from sql_models.sql_generator import to_sql_materialized_nodes, GeneratedSqlStatement
 from tests.unit.sql_models.util import ValueModel, RefModel, JoinModel, RefValueModel
 
 
@@ -91,10 +91,10 @@ def test_execute_multi_statement_sql_materialization(pg_engine):
     assert len(sql_statements) == 5
     result = run_queries(engine=pg_engine, sql_statements=sql_statements)
     assert result == {
-        'JoinModel___e0bab08e339f02ef255537649ef13be1': None,
-        'JoinModel___e716b40925362305c0dda48e7bb5bd06': None,
-        'RefValueModel___b67e68430810f9b67ae041ce0119c479': None,
-        'RefValueModel___c32fc33ab9d72eccd40c53ba2bf71ab8': (
+        'JoinModel___217a4aca3f6eb18bcd833bb6d8fc4953': None,
+        'JoinModel___3e090538453c4ba34d586639715a3db2': None,
+        'RefValueModel___58764d28c32cf9c71fee32f9055194f2': None,
+        'RefValueModel___f1f66ce5c1f6c9cf2539f09daace1565': (
             ['key', 'value'],
             [['a', 6]]
         ),
@@ -145,7 +145,7 @@ def test_materialized_shared_ctes(pg_engine):
 
 def run_queries(
     engine: Engine,
-    sql_statements: Dict[str, str]
+    sql_statements: List[GeneratedSqlStatement]
 ) -> Dict[str, Optional[Tuple[List[str], List[List[Any]]]]]:
     """
     Execute all sql statements and return a dictionary with the result of each. The statements will be
@@ -167,7 +167,9 @@ def run_queries(
 
     with engine.connect() as conn:
         with conn.begin() as transaction:
-            for name, sql in sql_statements.items():
+            for sql_statement in sql_statements:
+                name = sql_statement.name
+                sql = sql_statement.sql
                 print(f'\n{sql}\n')
                 # escape sql, as conn.execute will think that '%' indicates a parameter
                 sql = sql.replace('%', '%%')
