@@ -190,8 +190,6 @@ def test_get_unsampled_multiple_nodes(engine):
 
 
 def test_sample_grouped(engine):
-    # TODO: create additional tests here. Perhaps we should always materialize the dataframe before
-    #   sampling. Currently we sample the base_node, which doesn't always match the state of the DataFrame
     bt = get_df_with_test_data(engine, True)
     seed = _get_seed(engine)
     bt = bt[['municipality', 'inhabitants', 'founding']]
@@ -199,19 +197,22 @@ def test_sample_grouped(engine):
     btg = bt.groupby('municipality').sort_values('municipality')
     btg_min = btg.min()
 
-    btg_sample = btg.get_sample(table_name='test_df_sample__sample_grouped',
-                                sample_percentage=50,
-                                seed=seed,
-                                overwrite=True)
-    btg_sample_max = btg_sample.max()
+    with pytest.raises(ValueError, match='contains Series that have no aggregation function yet'):
+        btg_sample = btg.get_sample(table_name='test_df_sample__sample_grouped',
+                                    sample_percentage=50,
+                                    seed=seed,
+                                    overwrite=True)
+
+    btg_max = btg.max()
+    btg_sample_max = btg_max.get_sample(table_name='test_df_sample__sample_grouped',
+                                    sample_percentage=50,
+                                    seed=seed,
+                                    overwrite=True)
     btg_sample_max = btg_sample_max[['founding_century_max']]
     btg_sample_max['founding_century_max_plus_10'] = btg_sample_max['founding_century_max'] + 10
     del btg_sample_max['founding_century_max']
 
     btg_unsampled_max = btg_sample_max.get_unsampled()
-    # btg_sample_max was grouped at the moment that we unsample it. Make sure that the unsampled df
-    # is grouped in the same way
-    assert btg_unsampled_max.group_by.index.keys() == btg_sample_max.group_by.index.keys()
 
     btg_unsampled_max['after_unsample_plus_20'] = btg_unsampled_max.founding_century_max_plus_10 + 10
     btg_unsampled_max['founding_century_min'] = btg_min['founding_century_min']
@@ -228,8 +229,9 @@ def test_sample_grouped(engine):
             btg_sample_max,
             expected_columns=['municipality', 'founding_century_max_plus_10'],
             expected_data=[
-                ['De Friese Meren', 25.0],
-                ['Súdwest-Fryslân', 23.0]
+                ['Leeuwarden', 23.0],
+                ['Noardeast-Fryslân', 23.0],
+                ['Waadhoeke', 24.0]
             ]
         )
 
