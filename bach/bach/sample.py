@@ -7,7 +7,7 @@ from bach import DataFrame
 from bach.dataframe import escape_parameter_characters
 from bach.sql_model import SampleSqlModel
 from sql_models.graph_operations import find_node, replace_node_in_graph
-from sql_models.model import CustomSqlModelBuilder
+from sql_models.model import CustomSqlModelBuilder, Materialization
 from sql_models.sql_generator import to_sql
 from sql_models.util import quote_identifier, is_postgres, is_bigquery, DatabaseNotSupportedException
 
@@ -39,6 +39,9 @@ def get_sample(df: DataFrame,
         message_override = f'The `seed` parameter is not supported for database dialect "{dialect.name}".'
         raise DatabaseNotSupportedException(dialect, message_override=message_override)
 
+    if not df.is_materialized:
+        df = df.materialize('get_sample')
+
     original_node = df.base_node
     if filter is not None:
         sample_percentage = None
@@ -46,62 +49,35 @@ def get_sample(df: DataFrame,
         if not isinstance(filter, SeriesBoolean):
             raise TypeError('Filter parameter needs to be a SeriesBoolean instance.')
         df = df[filter]
+    if sample_percentage:
+        if seed is not None:
+            # We'll use `tablesample bernoulli` with `repeatable`. This can only be used when selecting from
+            # a table, so we have to take some extra steps:
+            # 1. Materializes the state of the DataFrame as a temporary table
+            # 2. Get SqlModel that queries that temporary table with `tablesample`
+            # 3. Build a new DataFrame that uses the model from step 2 as base_node.
+            temp_table_model = original_node.copy_set_materialization(Materialization.TEMP_TABLE)
+            model_builder = CustomSqlModelBuilder(
+                sql='select * from {{table}} tablesample bernoulli({sample_percentage}) repeatable ({seed})',
+                name='get_sample'
+            )
+            model = model_builder(table=temp_table_model, sample_percentage=sample_percentage, seed=seed)
 
-    if is_postgres(dialect):
-        with df.engine.connect() as conn:
-            if overwrite:
-                sql = f'DROP TABLE IF EXISTS {quote_identifier(dialect, table_name)}'
-                sql = escape_parameter_characters(conn, sql)
-                conn.execute(sql)
-
-            if sample_percentage:
-                repeatable = f'repeatable ({seed})' if seed else ''
-
-                sql = f'''
-                    create temporary table tmp_table_name on commit drop as
-                    ({to_sql(dialect, df.base_node)});
-                    create temporary table {quote_identifier(dialect, table_name)} as
-                    (select * from tmp_table_name
-                    tablesample bernoulli({sample_percentage}) {repeatable})
-                '''
-            else:
-                sql = f'create temporary table {quote_identifier(dialect, table_name)} as ({df.view_sql()})'
-            sql = escape_parameter_characters(conn, sql)
-            conn.execute(sql)
-    elif is_bigquery(dialect):
-        with df.engine.connect() as conn:
-            if overwrite:
-                sql = f'DROP TABLE IF EXISTS {quote_identifier(dialect, table_name)}'
-                sql = escape_parameter_characters(conn, sql)
-                conn.execute(sql)
-            if sample_percentage:
-                # BigQuery does support ` TABLESAMPLE SYSTEM({sample_percentage} PERCENT)`, but that
-                # does not work on 'small' tables according to [1]:
-                #       "Typically, BigQuery splits tables or table partitions into blocks if they are
-                #       larger than about 1 GB. Smaller tables might consist of a single data block. In that
-                #       case, the TABLESAMPLE clause reads the entire table"
-                # We want reliable sampling for 'small' tables too, so we use RAND() instead.
-                #
-                # [1] https://cloud.google.com/bigquery/docs/table-sampling
-
-                # TODO: supprort SeriesFloat64.get_random() or something like that, and use that instead of
-                #   raw sql here
-                # TODO: add function for creating tables directly in DataFrame.
-                model_builder = CustomSqlModelBuilder(
-                    sql='SELECT * FROM {{dataframe}} WHERE RAND() < {sample_cutoff}', name='filtered_model'
-                )
-                filtered_model = model_builder(dataframe=df.base_node, sample_cutoff=sample_percentage / 100)
-                sql = f'''
-                    CREATE TABLE {quote_identifier(dialect, table_name)} AS
-                    ({to_sql(dialect, filtered_model)})
-                '''
-
-            else:
-                sql = f'CREATE TABLE {quote_identifier(dialect, table_name)} AS ({df.view_sql()})'
-            sql = escape_parameter_characters(conn, sql)
-            conn.execute(sql)
-    else:
-        raise DatabaseNotSupportedException(dialect)
+            all_dtypes = {**df.index_dtypes, **df.dtypes}
+            df = DataFrame.from_model(
+                engine=df.engine,
+                model=model,
+                index=list(df.index.keys()),
+                all_dtypes=all_dtypes
+            )
+        else:
+            # We use random floats for the row selection. This works cross database unlike
+            # `tablesample bernoulli`, which is not supported on BigQuery[1]. Additionally, this is simpler
+            # and doesn't require us to create a temporary table like `tablesample` does.
+            from bach import SeriesFloat64
+            sample_cutoff = sample_percentage / 100
+            df = df[SeriesFloat64.random(base=df) < sample_cutoff]
+    df.database_create_table(table_name=table_name, overwrite=overwrite)
 
     # Use SampleSqlModel, that way we can keep track of the current_node and undo this sampling
     # in get_unsampled() by switching this new node for the old node again.

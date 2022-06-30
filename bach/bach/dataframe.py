@@ -959,7 +959,7 @@ class DataFrame:
         Changes to data, index, sorting, grouping etc. on the copy will not affect the original.
         The savepoints on the other hand will be shared by the original and the copy.
 
-        If you want to create a snapshot of the data, have a look at :py:meth:`get_sample()`
+        If you want to create a snapshot of the data, have a look at :py:meth:`create_database_table()`
 
         Calling `copy(df)` will invoke this copy function, i.e. `copy(df)` is implemented as df.copy()
 
@@ -1074,6 +1074,8 @@ class DataFrame:
         Use :py:meth:`get_unsampled` to switch back to the unsampled data later on. This returns a new
         DataFrame with all operations that have been done on the sample, applied to that DataFrame.
 
+        Will materialize the DataFrame if it is not in a materialized state.
+
         :param table_name: the name of the underlying sql table that stores the sampled data.
         :param filter: a filter to apply to the dataframe before creating the sample. If a filter is applied,
             sample_percentage is ignored and thus the bernoulli sample creation is skipped.
@@ -1081,7 +1083,7 @@ class DataFrame:
             Between 0-100.
         :param overwrite: if True, the sample data is written to table_name, even if that table already
             exists.
-        :param seed: optional seed number used to generate the sample.
+        :param seed: optional seed number used to generate the sample. Only supported on Postgres
         :returns: a sampled DataFrame of the current DataFrame.
 
         .. note::
@@ -1113,6 +1115,49 @@ class DataFrame:
         """
         from bach.sample import get_unsampled
         return get_unsampled(df=self)
+
+    def database_create_table(self, table_name: str, overwrite: bool = False, ) -> 'DataFrame':
+        """
+        Write the current state of the DataFrame to a database table.
+
+        The DataFrame that's returned will query from the written table for any further operations.
+
+        :param table_name: Name of the table to write to. Can include project_id and dataset
+                on BigQuery, e.g. project_id.dataset.table_name
+        :param overwrite: if True, the sample data is written to table_name, even if that table already
+            exists.
+
+        :return: New DataFrame; the base_node consists of a query on the newly created table.
+
+        .. note::
+            This function queries the database.
+        .. note::
+            This function writes to the database.
+        """
+        # TODO: tests
+        dialect = self.engine.dialect
+        model = self.get_current_node(name='database_create_table')
+        model = model.copy_set_materialization(Materialization.TABLE)
+        model = model.copy_set_materialization_name(materialization_name=table_name)
+
+        placeholder_values = get_variable_values_sql(dialect=dialect, variable_values=self.variables)
+        model = update_placeholders_in_graph(start_node=model, placeholder_values=placeholder_values)
+
+        sql = to_sql(dialect=dialect, model=model)
+        with self.engine.connect() as conn:
+            if overwrite:
+                sql = f'DROP TABLE IF EXISTS {quote_identifier(dialect, table_name)}; {sql}'
+
+            sql = escape_parameter_characters(conn, sql)
+            conn.execute(sql)
+
+        all_dtypes = {**self.index_dtypes, **self.dtypes}
+        return self.from_table(
+            engine=self.engine,
+            table_name=table_name,
+            index=list(self.index.keys()),
+            all_dtypes=all_dtypes
+        )
 
     @overload
     def __getitem__(self, key: str) -> 'Series':
@@ -2059,7 +2104,7 @@ class DataFrame:
                 raise ValueError(
                     f'The df has groupby set, but contains Series that have no aggregation '
                     f'function yet. Please make sure to first: remove these from the frame, '
-                    f'setup aggregation through agg(), or on all individual series.'
+                    f'setup aggregation through agg(), or on all individual series. '
                     f'Unaggregated series: {not_aggregated}'
                 )
 
@@ -2102,20 +2147,15 @@ class DataFrame:
         :param limit: the limit to apply, either as a max amount of rows or a slice of the data.
         :returns: SQL query
         """
-
+        dialect = self.engine.dialect
         # we need to construct each multi-level series, since it should resemble the final result
         model = self.get_current_node('view_sql', limit=limit, construct_multi_levels=True)
-        placeholder_values = get_variable_values_sql(
-            dialect=self.engine.dialect,
-            variable_values=self.variables
-        )
+        model = model.copy_set_materialization(Materialization.QUERY)
+
+        placeholder_values = get_variable_values_sql(dialect=dialect, variable_values=self.variables)
         model = update_placeholders_in_graph(start_node=model, placeholder_values=placeholder_values)
-        sql_statements = to_sql_materialized_nodes(
-            dialect=self.engine.dialect, start_node=model
-        )
-        sql_statements = [sql_stat for sql_stat in sql_statements
-                          if not sql_stat.materialization.has_lasting_effect]
-        sql = ';\n'.join(sql_stat.sql for sql_stat in sql_statements)
+
+        sql = to_sql(dialect=dialect, model=model)
         return sql
 
     def merge(

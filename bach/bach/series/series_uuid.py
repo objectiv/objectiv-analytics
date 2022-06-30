@@ -96,6 +96,7 @@ class SeriesUuid(Series):
         materialize()), before adding any columns that reference a column that's created with
         this function.
         """
+        # TODO: rename this to `random()` to be more consistent with SeriesFloat64.random()?
         if is_postgres(base.engine):
             expr_str = 'gen_random_uuid()'
         elif is_bigquery(base.engine):
