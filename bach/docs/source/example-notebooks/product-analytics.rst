@@ -186,7 +186,7 @@ We create a copy of the original df, as to not clutter our original df with colu
     df_acquisition['utm_term'] = df_acquisition.global_contexts.gc.get_from_context_with_type_series(type='MarketingContext', key='term')
 
 User origin
------------
+~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -194,7 +194,7 @@ User origin
     modelhub.agg.unique_users(df_acquisition, groupby='referrer').sort_values(ascending=False).head()
 
 Marketing
----------
+~~~~~~~~~
 Calculate the number of users per campaign.
 
 .. code-block:: python
