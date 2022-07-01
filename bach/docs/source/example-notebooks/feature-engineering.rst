@@ -49,6 +49,9 @@ the root location from the location stack. This indicates what parts of our webs
 .. code-block:: python
 
     df['root'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
+    # root series is later unstacked and its values might contain dashes
+    # which are not allowed in BigQuery column names, lets replace them
+    df['root'] = df['root'].str.replace('-', '_')
     df.root.unique().to_numpy()
 
 `['jobs', 'docs', 'home'...]` etc is returned, the sections of the objectiv.io website.
