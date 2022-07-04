@@ -68,7 +68,7 @@ Google Colab / Hex / Deepnote
 
 .. code-block:: python
 	
-	pip install sshtunnel
+    pip install sshtunnel
 
     from sshtunnel import SSHTunnelForwarder
     import os
