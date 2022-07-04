@@ -71,7 +71,7 @@ Google Colab / Hex / Deepnote
     pip install sshtunnel
 
     from sshtunnel import SSHTunnelForwarder
-    import os
+    import os, stat
 
     # SSH tunnel configuration
     ssh_host = ''
