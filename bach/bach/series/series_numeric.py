@@ -404,7 +404,6 @@ class SeriesFloat64(SeriesAbstractNumeric):
         :param base: DataFrame or Series from which the newly created Series' engine, base_node and index
             parameters are copied.
         """
-        # TODO: tests
         if is_postgres(base.engine):
             expr_str = 'random()'
         elif is_bigquery(base.engine):
