@@ -70,42 +70,44 @@ Google Colab / Hex / Deepnote
 	
 	pip install sshtunnel
 
-	from sshtunnel import SSHTunnelForwarder
-	import os, stat
+    from sshtunnel import SSHTunnelForwarder
+    import os
 
-	def connect_tunnel(ssh_host: str, db_host: str = 'localhost', db_port: int = PORT) -> int:    
-		try:
+    # SSH tunnel configuration
+    ssh_host = ''
+    ssh_port = 22
+    ssh_username = ''
+    ssh_passphrase = ''
+    ssh_private_key= ''
+    db_host = ''
+    db_port = 5432
 
-			ssh_username= SSH_USER
-			ssh_passphrase=SSH_PASSWORD
-			ssh_private_key= SSH_KEY
+    try:
+        pk_path = '._super_s3cret_pk1'
+        with open(pk_path, 'a') as pkf:
+            pkf.write(ssh_private_key)
+            os.chmod(pk_path, stat.S_IREAD)
 
-			pk_path = '._super_s3cret_pk1'
-			with open(pk_path, 'a') as pkf:
-				pkf.write(ssh_private_key)
-				os.chmod(pk_path, stat.S_IREAD)
+        ssh_tunnel = SSHTunnelForwarder(
+            (ssh_host, ssh_port),
+            ssh_username=ssh_username,
+            ssh_private_key=pk_path,
+            ssh_private_key_password=ssh_passphrase,
+            remote_bind_address=(db_host, db_port)
+        )
+        ssh_tunnel.start()
+        os.remove(pk_path)
+        tunnel_port = ssh_tunnel.local_bind_port
 
-			ssh_tunnel = SSHTunnelForwarder(
-					(ssh_host),
-					ssh_username=ssh_username,
-					ssh_private_key=pk_path,
-					ssh_private_key_password=ssh_passphrase,
-					remote_bind_address=(db_host, db_port)
-				)
-			ssh_tunnel.start()  
-			os.remove(pk_path)
-			return ssh_tunnel.local_bind_port
-
-		except Exception as e:
-			os.remove(pk_path)
-			raise(e)
+    except Exception as e:
+        os.remove(pk_path)
+        raise(e)
 
 5) Setup the db connection
 
 .. code-block:: python
 
-	port = connect_tunnel(ssh_host=SSH_HOSTNAME, db_port=PORT)
-	df = modelhub.get_objectiv_dataframe(db_url=f'postgresql://USER:PASSWORD@localhost:{port}/DATABASE,
+	df = modelhub.get_objectiv_dataframe(db_url=f'postgresql://USER:PASSWORD@localhost:{tunnel_port}/DATABASE,
 	start_date='2022-06-01',
 				end_date='2022-06-30',
 				table_name='data')
