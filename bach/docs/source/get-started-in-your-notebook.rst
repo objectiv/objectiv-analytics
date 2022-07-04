@@ -107,8 +107,8 @@ Google Colab / Hex / Deepnote
 
 .. code-block:: python
 
-	df = modelhub.get_objectiv_dataframe(
-	    db_url=f'postgresql://USER:PASSWORD@localhost:{tunnel_port}/DATABASE,
+    df = modelhub.get_objectiv_dataframe(
+        db_url=f'postgresql://USER:PASSWORD@localhost:{tunnel_port}/DATABASE,
         start_date='2022-06-01',
         end_date='2022-06-30',
         table_name='data')
