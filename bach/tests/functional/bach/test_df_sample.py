@@ -15,7 +15,6 @@ def test_get_sample(engine):
     # Therefore we append the dataset to itself two times to get 33 rows in total.
     df = get_df_with_test_data(engine, True)
     df = df.append([df, df])
-    df = df.materialize()
 
     df_sample = df.get_sample(table_name='test_df_sample__get_sample',
                               sample_percentage=50,
@@ -35,7 +34,7 @@ def test_get_sample_seed(engine):
     bt = get_df_with_test_data(engine, True)
     bt_sample = bt.get_sample(table_name='test_df_sample__get_sample_seed',
                               sample_percentage=50,
-                              seed=200,
+                              seed=_get_seed(engine),
                               overwrite=True)
 
     assert_equals_data(
@@ -100,15 +99,6 @@ def test_sample_operations(engine):
     )
 
 
-def _get_seed(engine) -> Optional[int]:
-    """ Return 200 if the database supports seeding. """
-    if is_bigquery(engine):
-        return None
-    if is_postgres(engine):
-        return 200
-    raise Exception()
-
-
 def test_sample_operations_filter(engine):
     bt = get_df_with_test_data(engine, True)
     bt_sample = bt.get_sample(table_name='test_df_sample__sample_operations_filter',
@@ -123,7 +113,6 @@ def test_sample_operations_filter(engine):
 
     all_data_bt = bt_sample.get_unsampled()
     all_data_bt['extra_ppl'] = all_data_bt.inhabitants + 5
-    print(bt_sample.view_sql())
     assert_equals_data(
         all_data_bt,
         expected_columns=_EXPECTED_COLUMNS_OPERATIONS,
@@ -285,3 +274,12 @@ def test_sample_operations_variable(engine):
     assert not all_data_bt.is_materialized  # this used to raise an exception
     all_data_bt = all_data_bt.materialize()
     assert all_data_bt.is_materialized
+
+
+def _get_seed(engine) -> Optional[int]:
+    """ Return 200 if the database supports seeding. """
+    if is_bigquery(engine):
+        return None
+    if is_postgres(engine):
+        return 200
+    raise Exception()
