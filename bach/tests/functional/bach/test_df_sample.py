@@ -178,6 +178,26 @@ def test_get_unsampled_multiple_nodes(engine):
     )
 
 
+def test_sample_w_temp_tables(engine):
+    # Test to prevent regression: get_sample() should work after materialize(materialization='temp_table')
+    df = get_df_with_test_data(engine, True)
+    df = df.append([df, df])
+
+    # materialize and add some operation
+    df = df.materialize(node_name='first', materialization='temp_table')
+    df['founding'] = df.founding + 1000
+    df = df.materialize(node_name='second', materialization='temp_table')
+
+    df_sample = df.get_sample(table_name='test_df_sample__sample_w_temp_tables',
+                              sample_percentage=50,
+                              overwrite=True)
+    pdf_sample = df_sample.to_pandas()
+    assert pdf_sample.index.name == '_index_skating_order'
+    assert list(pdf_sample.columns) == ['skating_order', 'city', 'municipality', 'inhabitants', 'founding']
+    assert len(pdf_sample) > 0
+    assert len(pdf_sample) < 33
+
+
 def test_sample_grouped(engine):
     bt = get_df_with_test_data(engine, True)
     seed = _get_seed(engine)
