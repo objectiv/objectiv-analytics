@@ -99,7 +99,6 @@ class SeriesUuid(Series):
         :param base: DataFrame or Series from which the newly created Series' engine, base_node and index
             parameters are copied.
         """
-        # TODO: rename this to `random_expression()` to be more consistent with SeriesFloat64.random()?
         if is_postgres(base.engine):
             expr_str = 'gen_random_uuid()'
         elif is_bigquery(base.engine):
