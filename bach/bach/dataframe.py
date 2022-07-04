@@ -959,7 +959,7 @@ class DataFrame:
         Changes to data, index, sorting, grouping etc. on the copy will not affect the original.
         The savepoints on the other hand will be shared by the original and the copy.
 
-        If you want to create a snapshot of the data, have a look at :py:meth:`get_sample()`
+        If you want to create a snapshot of the data, have a look at :py:meth:`database_create_table()`
 
         Calling `copy(df)` will invoke this copy function, i.e. `copy(df)` is implemented as df.copy()
 
@@ -1113,6 +1113,48 @@ class DataFrame:
         """
         from bach.sample import get_unsampled
         return get_unsampled(df=self)
+
+    def database_create_table(self, table_name: str, overwrite: bool = False, ) -> 'DataFrame':
+        """
+        Write the current state of the DataFrame to a database table.
+
+        The DataFrame that's returned will query from the written table for any further operations.
+
+        :param table_name: Name of the table to write to. Can include project_id and dataset
+                on BigQuery, e.g. 'project_id.dataset.table_name'
+        :param overwrite: if True, the sample data is written to table_name, even if that table already
+            exists.
+
+        :return: New DataFrame; the base_node consists of a query on the newly created table.
+
+        .. note::
+            This function queries the database.
+        .. note::
+            This function writes to the database.
+        """
+        dialect = self.engine.dialect
+        model = self.get_current_node(name='database_create_table')
+        model = model.copy_set_materialization(Materialization.TABLE)
+        model = model.copy_set_materialization_name(materialization_name=table_name)
+
+        placeholder_values = get_variable_values_sql(dialect=dialect, variable_values=self.variables)
+        model = update_placeholders_in_graph(start_node=model, placeholder_values=placeholder_values)
+
+        sql = to_sql(dialect=dialect, model=model)
+        with self.engine.connect() as conn:
+            if overwrite:
+                sql = f'DROP TABLE IF EXISTS {quote_identifier(dialect, table_name)}; {sql}'
+
+            sql = escape_parameter_characters(conn, sql)
+            conn.execute(sql)
+
+        all_dtypes = {**self.index_dtypes, **self.dtypes}
+        return self.from_table(
+            engine=self.engine,
+            table_name=table_name,
+            index=list(self.index.keys()),
+            all_dtypes=all_dtypes
+        )
 
     @overload
     def __getitem__(self, key: str) -> 'Series':
