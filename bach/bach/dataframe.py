@@ -959,7 +959,7 @@ class DataFrame:
         Changes to data, index, sorting, grouping etc. on the copy will not affect the original.
         The savepoints on the other hand will be shared by the original and the copy.
 
-        If you want to create a snapshot of the data, have a look at :py:meth:`create_database_table()`
+        If you want to create a snapshot of the data, have a look at :py:meth:`database_create_table()`
 
         Calling `copy(df)` will invoke this copy function, i.e. `copy(df)` is implemented as df.copy()
 
@@ -1123,7 +1123,11 @@ class DataFrame:
         The DataFrame that's returned will query from the written table for any further operations.
 
         :param table_name: Name of the table to write to. Can include project_id and dataset
+<<<<<<< HEAD
                 on BigQuery, e.g. project_id.dataset.table_name
+=======
+                on BigQuery, e.g. 'project_id.dataset.table_name'
+>>>>>>> bach-database-create-table
         :param overwrite: if True, the sample data is written to table_name, even if that table already
             exists.
 
@@ -1134,7 +1138,6 @@ class DataFrame:
         .. note::
             This function writes to the database.
         """
-        # TODO: tests
         dialect = self.engine.dialect
         model = self.get_current_node(name='database_create_table')
         model = model.copy_set_materialization(Materialization.TABLE)

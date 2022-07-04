@@ -49,6 +49,9 @@ the root location from the location stack. This indicates what parts of our webs
 .. code-block:: python
 
     df['root'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
+    # root series is later unstacked and its values might contain dashes
+    # which are not allowed in BigQuery column names, lets replace them
+    df['root'] = df['root'].str.replace('-', '_')
     df.root.unique().to_numpy()
 
 `['jobs', 'docs', 'home'...]` etc is returned, the sections of the objectiv.io website.
@@ -108,11 +111,12 @@ Visualize the data
 .. code-block:: python
 
     from matplotlib import pyplot as plt
-    figure, axis = plt.subplots(2, 4,figsize=(15,10))
+    import math
+
+    figure, axis = plt.subplots(math.ceil(len(features_unstacked.data_columns)/4), 4, figsize=(15,10))
 
     for idx, name in enumerate(features_unstacked.data_columns):
-        df_bins = features_unstacked[name].cut(bins=5)
-        df_bins.value_counts().to_pandas().plot(title = name, kind='bar', ax=axis.flat[idx])
+        features_unstacked[[name]].plot.hist(bins=5, title=name, ax=axis.flat[idx])
     plt.tight_layout()
 
 The histograms show that indeed the higher values seem quite anomalous for most of the root locations. This
