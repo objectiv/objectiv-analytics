@@ -1123,11 +1123,7 @@ class DataFrame:
         The DataFrame that's returned will query from the written table for any further operations.
 
         :param table_name: Name of the table to write to. Can include project_id and dataset
-<<<<<<< HEAD
-                on BigQuery, e.g. project_id.dataset.table_name
-=======
                 on BigQuery, e.g. 'project_id.dataset.table_name'
->>>>>>> bach-database-create-table
         :param overwrite: if True, the sample data is written to table_name, even if that table already
             exists.
 
