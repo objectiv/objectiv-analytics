@@ -377,7 +377,7 @@ class SeriesFloat64(SeriesAbstractNumeric):
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
     @classmethod
-    def random(cls, base: DataFrameOrSeries) -> 'SeriesFloat64':
+    def random_expression(cls, base: DataFrameOrSeries) -> 'SeriesFloat64':
         """
         Create a new Series object with an expression, that will evaluate to a random float in the range
         [0, 1) for each row.
@@ -394,12 +394,15 @@ class SeriesFloat64(SeriesAbstractNumeric):
             df['y'] = df['x']
             df['different'] = df['y'] != df['x']
 
-        The df['different'] column will be True for all rows, because the second statement copies the
-        unevaluated expression, not the result of the expression. So at evaluation time the expression will
-        be evaluated twice for each row, for the 'x' column and the 'y' column, giving different results both
-        times. One way to work around this is to materialize the dataframe in its current state (using
-        materialize()), before adding any columns that reference a column that's created with
+        The df['different'] column will be True for (almost) all rows, because the second statement copies
+        the unevaluated expression, not the result of the expression. So at evaluation time the expression
+        will be evaluated twice for each row, for the 'x' column and the 'y' column, giving different
+        results both times. One way to work around this is to materialize the dataframe in its current state
+        (using materialize()), before adding any columns that reference a column that's created with
         this function.
+
+        :param base: DataFrame or Series from which the newly created Series' engine, base_node and index
+            parameters are copied.
         """
         # TODO: tests
         if is_postgres(base.engine):
@@ -411,7 +414,7 @@ class SeriesFloat64(SeriesAbstractNumeric):
         return cls.get_class_instance(
             engine=base.engine,
             base_node=base.base_node,
-            index=base.engine,
+            index=base.index,
             name='__tmp',
             expression=Expression.construct(expr_str),
             group_by=None,
