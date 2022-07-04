@@ -800,7 +800,7 @@ class Series(ABC):
         the size of the generated SQL query. But this can be useful if the current Series contains
         expressions that you want to evaluate before further expressions are build on top of them. This might
         make sense for very large expressions, or for non-deterministic expressions (e.g. see
-        :py:meth:`SeriesUuid.sql_gen_random_uuid`).
+        :py:meth:`SeriesUuid.random_expression`).
 
         :param node_name: The name of the node that's going to be created
         :param limit: The limit (slice, int) to apply.
