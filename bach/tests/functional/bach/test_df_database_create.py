@@ -26,6 +26,7 @@ def test_database_create_table(engine):
         [3, 3, 'Drylts', 'Súdwest-Fryslân', 3055, 1268, random_value]
     ]
 
+    # First test: write dataframe to table. We expect success
     df_from_table = df.database_create_table(
         table_name='test_df_database_create__test_database_create_table',
         overwrite=True
@@ -41,8 +42,7 @@ def test_database_create_table(engine):
     expected_sql_fragment = f'FROM {quoted_table_name}'
     assert expected_sql_fragment in new_sql
 
-    # Test again, but with overwrite=False. We expect an error
-    random_value = randrange(1_000_000)
+    # Second test: try to write table, but with overwrite=False. We expect an error
     df['y'] = random_value
     # we get a database error, so the exact error is database dependent. Both Postgres and BigQuery should
     # raise an error containing the phrase 'already exists', but with different capitalization
@@ -54,4 +54,11 @@ def test_database_create_table(engine):
     # table should be unchanged after the last failed call
     assert_equals_data(df_from_table, expected_columns=expected_columns, expected_data=expected_data)
 
-
+    # Third test: write table again, with overwrite=True. We expect the table now to have the y column too
+    expected_columns = expected_columns + ['y']
+    expected_data = [row + [random_value] for row in expected_data]
+    df_from_table = df.database_create_table(
+        table_name='test_df_database_create__test_database_create_table',
+        overwrite=True
+    )
+    assert_equals_data(df_from_table, expected_columns=expected_columns, expected_data=expected_data)
