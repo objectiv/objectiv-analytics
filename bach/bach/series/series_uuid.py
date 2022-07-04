@@ -73,7 +73,7 @@ class SeriesUuid(Series):
         raise ValueError(f'cannot convert {source_dtype} to uuid.')
 
     @classmethod
-    def sql_gen_random_uuid(cls, base: DataFrameOrSeries) -> 'SeriesUuid':
+    def random_expression(cls, base: DataFrameOrSeries) -> 'SeriesUuid':
         """
         Create a new Series object with an expression, that will evaluate to a random uuid for each row.
 
@@ -85,7 +85,7 @@ class SeriesUuid(Series):
 
         .. code-block:: python
 
-            df['x'] = SeriesUuid.sql_gen_random_uuid(df)
+            df['x'] = SeriesUuid.random_expression(df)
             df['y'] = df['x']
             df['different'] = df['y'] != df['x']
 
