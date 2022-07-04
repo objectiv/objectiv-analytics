@@ -95,6 +95,9 @@ class SeriesUuid(Series):
         times. One way to work around this is to materialize the dataframe in its current state (using
         materialize()), before adding any columns that reference a column that's created with
         this function.
+
+        :param base: DataFrame or Series from which the newly created Series' engine, base_node and index
+            parameters are copied.
         """
         if is_postgres(base.engine):
             expr_str = 'gen_random_uuid()'
@@ -105,7 +108,7 @@ class SeriesUuid(Series):
         return cls.get_class_instance(
             engine=base.engine,
             base_node=base.base_node,
-            index=base.engine,
+            index=base.index,
             name='__tmp',
             expression=Expression.construct(expr_str),
             group_by=None,
