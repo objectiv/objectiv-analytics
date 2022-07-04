@@ -35,6 +35,7 @@ def test_database_create_table(engine):
     # check that df_from_table actually queries the table
     dialect = engine.dialect
     assert df_from_table.base_node != df.base_node
+    assert len(df_from_table.base_node.references) == 0
     new_sql = to_sql(dialect=dialect, model=df_from_table.base_node)
     quoted_table_name = quote_identifier(dialect, 'test_df_database_create__test_database_create_table')
     expected_sql_fragment = f'FROM {quoted_table_name}'
