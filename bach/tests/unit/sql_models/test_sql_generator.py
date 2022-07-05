@@ -248,9 +248,7 @@ def test_code_deduplication_multiple_reference_many_paths(dialect):
     # The generated graph will have 2^depth possible reference paths. Our initial version produced sql for
     # 2^depth ctes. This test acts as a sort of performance test to see that this both performs well, and
     # that this doesn't generate a big sql output.
-
-    # TODO: optimize the find_nodes() function in this case, and increase depth to 20 again
-    depth = 15
+    depth = 20
     graph = SourceTable.build()
     for _ in range(depth):
         graph = Add.build(
