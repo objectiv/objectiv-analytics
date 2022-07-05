@@ -15,25 +15,25 @@ Here’s how you can use Objectiv in these different notebooks:
 Jupyter
 -------
 
-1) Install the open model hub locally:
+1: Install the open model hub locally
 
 .. code-block:: console
 
 	pip install objectiv-modelhub
 
-2) Import the required packages, at the start of your notebook:
+2: Import the required packages, at the start of your notebook
 
 .. code-block:: python
 
 	from modelhub import ModelHub
 
-3) Instantiate the model hub and set the default time aggregation:
+3: Instantiate the model hub and set the default time aggregation
 
 .. code-block:: python
 
 	modelhub = ModelHub(time_aggregation='%Y-%m-%d')
 
-4) Setup the db connection (optionally first create a local SSH tunnel)
+4: Setup the db connection (optionally first create a local SSH tunnel)
 
 .. code-block:: python
 
@@ -45,25 +45,25 @@ Jupyter
 Google Colab / Hex / Deepnote
 -----------------------------
 
-1) Install the open model hub at the start of your notebook:
+1: Install the open model hub at the start of your notebook
 
 .. code-block:: console
 
 	pip install objectiv-modelhub
 
-2) Import the required packages, next in your notebook:
+2: Import the required packages, next in your notebook
 
 .. code-block:: python
 
 	from modelhub import ModelHub
 
-3) Instantiate the model hub and set the default time aggregation:
+3: Instantiate the model hub and set the default time aggregation
 
 .. code-block:: python
 
 	modelhub = ModelHub(time_aggregation='%Y-%m-%d')
 
-4) Optionally: create an SSH tunnel to the Postgres database server:
+4: Optionally: create an SSH tunnel to the Postgres database server
 
 
 .. code-block:: python
@@ -105,7 +105,7 @@ Google Colab / Hex / Deepnote
         os.remove(pk_path)
         raise(e)
 
-5) Setup the db connection
+5: Setup the db connection
 
 .. code-block:: python
 
