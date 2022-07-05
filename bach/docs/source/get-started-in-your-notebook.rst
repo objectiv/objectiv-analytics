@@ -126,5 +126,5 @@ as very first step: create a requirements.txt, add below and restart the machine
 Next steps
 ---------------
 
-After these steps, you're ready to go! Check out the :doc:`example notebooks <./index>` and the 
+After these steps, you're ready to go! Check out the :doc:`example notebooks <./example-notebooks/>` and the 
 :doc:`open model hub <open-model-hub/index>` for where to take this next.
