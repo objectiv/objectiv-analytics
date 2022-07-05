@@ -121,7 +121,7 @@ class IdentityResolutionPipeline(BaseDataPipeline):
 
     def _extract_identities_from_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
         """
-        Generates a dataframe containing all unique identities per user_id.
+        Generates a dataframe containing the last encountered unique identity per user_id.
 
         This is performed by:
             1. Extract the first IdentityContext from the event's global_contexts.
@@ -196,7 +196,7 @@ class IdentityResolutionPipeline(BaseDataPipeline):
 
     def _anonymize_user_ids_without_identity(self, df: bach.DataFrame) -> bach.DataFrame:
         """
-        If user_id has not identity, then it will be anonymized by replacing original value with NULL.
+        If user_id has no identity, then it will be anonymized by replacing original value with NULL.
         """
         if self.RESOLVED_USER_ID_SERIES_NAME not in df.data_columns:
             raise Exception(

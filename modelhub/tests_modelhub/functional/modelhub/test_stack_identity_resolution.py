@@ -14,6 +14,8 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data
 from modelhub.stack.identity_resolution import IdentityResolutionPipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params
 
+
+# TODO: Add IdentityContexts in tests_modelhub.data_and_utils.data_objectiv.TEST_DATA_OBJECTIV
 _FAKE_DATA = [
     {
         'event_id': '12b55ed5-4295-4fc1-bf1f-88d64d1ac301',
@@ -75,7 +77,8 @@ _FAKE_DATA = [
 ]
 
 
-def _get_identity_resolution_pipeline(db_params) -> IdentityResolutionPipeline:
+@pytest.fixture()
+def pipeline(db_params) -> IdentityResolutionPipeline:
     engine = create_engine_from_db_params(db_params)
     return IdentityResolutionPipeline(
         engine=engine,
@@ -83,15 +86,12 @@ def _get_identity_resolution_pipeline(db_params) -> IdentityResolutionPipeline:
     )
 
 
-@pytest.mark.parametrize('with_sessionized_data', [False, True])
-def test_get_pipeline_result(db_params, monkeypatch, with_sessionized_data: bool) -> None:
-    pipeline = _get_identity_resolution_pipeline(db_params)
-    engine = pipeline._engine
-
+# TODO: test different identities for same user in different sessions
+def test_get_pipeline_result_w_sessionized_data(pipeline: IdentityResolutionPipeline, monkeypatch) -> None:
     pdf = pd.DataFrame(_FAKE_DATA)
 
     context_df = bach.DataFrame.from_pandas(
-        df=pdf, engine=engine, convert_objects=True
+        df=pdf, engine=pipeline._engine, convert_objects=True
     ).reset_index(drop=True)
     context_df['user_id'] = context_df['user_id'].astype('uuid')
     context_df['event_id'] = context_df['event_id'].astype('uuid')
@@ -101,18 +101,93 @@ def test_get_pipeline_result(db_params, monkeypatch, with_sessionized_data: bool
         'modelhub.stack.identity_resolution.get_extracted_contexts_df',
         lambda *args, **kwargs: context_df,
     )
+
+    # patch final validation as we are not including all objectiv columns in tests
     monkeypatch.setattr(
         'modelhub.stack.sessionized_data.SessionizedDataPipeline.validate_pipeline_result',
         lambda *args, **kwargs: None,
     )
 
     result = pipeline._get_pipeline_result(
-        with_sessionized_data=with_sessionized_data,
+        with_sessionized_data=True,
         session_gap_seconds=1800,
     )
 
-    expected_columns = ['event_id', 'user_id', 'moment', 'global_contexts']
-    expected_data = [
+    assert_equals_data(
+        result,
+        expected_columns=[
+            'event_id', 'user_id', 'moment', 'global_contexts', 'session_id', 'session_hit_number',
+        ],
+        expected_data=[
+        [
+            UUID(_FAKE_DATA[0]['event_id']),
+            'user_2@objectiv.io|email',
+            _FAKE_DATA[0]['moment'],
+            json.loads(_FAKE_DATA[0]['global_contexts']),
+            2,
+            1,
+        ],
+        [
+            UUID(_FAKE_DATA[1]['event_id']),
+            'user_2@objectiv.io|email',
+            _FAKE_DATA[1]['moment'],
+            json.loads(_FAKE_DATA[1]['global_contexts']),
+            2,
+            2,
+        ],
+        [
+            UUID(_FAKE_DATA[2]['event_id']),
+            'user_2@objectiv.io|email',
+            _FAKE_DATA[2]['moment'],
+            json.loads(_FAKE_DATA[2]['global_contexts']),
+            2,
+            3,
+        ],
+        [
+            UUID(_FAKE_DATA[3]['event_id']),
+            'user_2@objectiv.io|email',
+            _FAKE_DATA[3]['moment'],
+            json.loads(_FAKE_DATA[3]['global_contexts']),
+            3,
+            1,
+        ],
+        [
+            UUID(_FAKE_DATA[4]['event_id']),
+            None,
+            _FAKE_DATA[4]['moment'],
+            json.loads(_FAKE_DATA[4]['global_contexts']),
+            1,
+            1,
+        ],
+    ],
+        use_to_pandas=True,
+        order_by=['event_id'],
+    )
+
+
+def test_get_pipeline_result_wo_sessionized_data(pipeline: IdentityResolutionPipeline, monkeypatch) -> None:
+    pdf = pd.DataFrame(_FAKE_DATA)
+    context_df = bach.DataFrame.from_pandas(
+        df=pdf, engine=pipeline._engine, convert_objects=True
+    ).reset_index(drop=True)
+    context_df['user_id'] = context_df['user_id'].astype('uuid')
+    context_df['event_id'] = context_df['event_id'].astype('uuid')
+    context_df['global_contexts'] = context_df['global_contexts'].astype('json')
+
+    monkeypatch.setattr(
+        'modelhub.stack.identity_resolution.get_extracted_contexts_df',
+        lambda *args, **kwargs: context_df,
+    )
+
+    result = pipeline._get_pipeline_result(
+        with_sessionized_data=False,
+        session_gap_seconds=1800,
+    )
+
+    assert_equals_data(
+        result,
+        expected_columns=['event_id', 'user_id', 'moment', 'global_contexts'],
+        expected_data=[
         [
             UUID(_FAKE_DATA[0]['event_id']),
             'user_2@objectiv.io|email',
@@ -143,27 +218,13 @@ def test_get_pipeline_result(db_params, monkeypatch, with_sessionized_data: bool
             _FAKE_DATA[4]['moment'],
             json.loads(_FAKE_DATA[4]['global_contexts']),
         ],
-    ]
-    if with_sessionized_data:
-        expected_columns += ['session_id', 'session_hit_number']
-        expected_session_data = [[2, 1], [2, 2], [2, 3], [3, 1], [1, 1]]
-        expected_data = np.c_[
-            # specify dtype for getting rid of numpy's VisibleDeprecationWarning
-            np.array(expected_data, dtype=object),
-            np.array(expected_session_data, dtype=object)
-        ].tolist()
-
-    assert_equals_data(
-        result,
-        expected_columns=expected_columns,
-        expected_data=expected_data,
+    ],
         use_to_pandas=True,
         order_by=['event_id'],
     )
 
 
-def test_extract_identities_from_global_contexts(db_params) -> None:
-    pipeline = _get_identity_resolution_pipeline(db_params)
+def test_extract_identities_from_global_contexts(pipeline: IdentityResolutionPipeline) -> None:
     engine = pipeline._engine
 
     pdf = pd.DataFrame(_FAKE_DATA)
@@ -186,8 +247,8 @@ def test_extract_identities_from_global_contexts(db_params) -> None:
     )
 
 
-def test_resolve_original_user_ids(db_params) -> None:
-    pipeline = _get_identity_resolution_pipeline(db_params)
+# TODO: Test when a user has multiple identities in an event with different names
+def test_resolve_original_user_ids(pipeline: IdentityResolutionPipeline) -> None:
     engine = pipeline._engine
 
     pdf_to_resolve = pd.DataFrame(
@@ -225,8 +286,7 @@ def test_resolve_original_user_ids(db_params) -> None:
     )
 
 
-def test_anonymize_user_ids_without_identity(db_params) -> None:
-    pipeline = _get_identity_resolution_pipeline(db_params)
+def test_anonymize_user_ids_without_identity(pipeline: IdentityResolutionPipeline) -> None:
     engine = pipeline._engine
 
     pdf = pd.DataFrame(
