@@ -91,7 +91,9 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             'moment': bach.SeriesTimestamp.dtype,
             'cookie_id': bach.SeriesUuid.dtype,
         },
-        DBDialect.BIGQUERY: {},
+        DBDialect.BIGQUERY: {
+            'collector_tstamp': bach.SeriesTimestamp.dtype,
+        },
     }
 
     def __init__(self, engine: Engine, table_name: str):
@@ -217,8 +219,9 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         # and/or app reloads. We can easily recognize these events as they'll have non-unique event-ids.
         # In all cases we are only interested in the first event. On postgres we achieve this by having a
         # primary key index on event-id. On BigQuery such indexes are not possible. Instead, we here filter
-        # out duplicate event-ids, keeping the first event with each id.
-        df_cp = df_cp.drop_duplicates(subset=['event_id'], sort_by=['time'], keep='first')
+        # out duplicate event-ids, keeping the first event
+        # based on the time the collector sends it to snowplow.
+        df_cp = df_cp.drop_duplicates(subset=['event_id'], sort_by=['collector_tstamp'], keep='first')
 
         # BQ data source has no moment and day columns, therefore we need to generate them
         # based on the time value from the taxonomy column

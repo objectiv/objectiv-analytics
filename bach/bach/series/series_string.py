@@ -1,7 +1,8 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-from typing import Union, TYPE_CHECKING, Optional
+import re
+from typing import Union, TYPE_CHECKING, Optional, Pattern
 
 from sqlalchemy.engine import Dialect
 
@@ -93,6 +94,44 @@ class StringOperation:
         if isinstance(start, slice):
             return self.__getitem__(start)
         return self.__getitem__(slice(start, stop))
+
+    def replace(
+        self,
+        pat: Union[str, Pattern],
+        repl: str,
+        n: int = -1,
+        case: bool = None,
+        flags: int = 0,
+        regex: bool = False,
+    ) -> 'SeriesString':
+        """
+        replace each occurrence of a pattern in SeriesString.
+
+        :param pat: string or compiled pattern to use for replacement.
+        :param repl: string to use as a replacement for each occurrence
+        :param n: number of occurrences to be replaced. Only n=-1 is supported (all occurrences)
+        :param case: determines if the replace is case insensitive. Considered only when regex=True.
+        :param flags: regex module flags. Considered only when regex=True.
+        :param regex: Determines if provided pattern is a regular expression or not.
+
+        .. note::
+          Replacements based on regular expressions are not supported yet. Therefore:
+              - `pat` parameter must be string type
+              - `case`, `flags`, `regex` will not be considered on replacement
+        """
+        if isinstance(pat, re.Pattern) or regex:
+            raise NotImplementedError('Regex patterns are not supported yet.')
+
+        if n != -1:
+            raise NotImplementedError('Replacement for all occurrences is supported only.')
+
+        expr = Expression.construct(
+            f'REPLACE({{}}, {{}}, {{}})',
+            self._base,
+            Expression.string_value(pat),
+            Expression.string_value(repl),
+        )
+        return self._base.copy_override(expression=expr)
 
 
 class SeriesString(Series):

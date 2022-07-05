@@ -8,6 +8,8 @@ from bach.partitioning import WindowFrameBoundary, WindowFrameMode
 from typing import TYPE_CHECKING, Dict, List
 
 
+from modelhub.decorators import use_only_required_objectiv_series
+
 if TYPE_CHECKING:
     from modelhub import ModelHub
 
@@ -53,6 +55,7 @@ class Map:
     def __init__(self, mh: 'ModelHub'):
         self._mh = mh
 
+    @use_only_required_objectiv_series(required_series=['user_id', 'session_id'])
     def is_first_session(self, data: bach.DataFrame) -> bach.SeriesBoolean:
         """
         Labels all hits in a session True if that session is the first session of that user in the data.
@@ -61,7 +64,6 @@ class Map:
         :returns: :py:class:`bach.SeriesBoolean` with the same index as ``data``.
         """
 
-        self._mh._check_data_is_objectiv_data(data)
         window = data.groupby('user_id').window(
             mode=WindowFrameMode.ROWS,
             start_boundary=WindowFrameBoundary.PRECEDING,
@@ -77,6 +79,7 @@ class Map:
 
         return new_series
 
+    @use_only_required_objectiv_series(required_series=['user_id', 'session_id', 'moment'])
     def is_new_user(self, data: bach.DataFrame, time_aggregation: str = None) -> bach.SeriesBoolean:
         """
         Labels all hits True if the user is first seen in the period given `time_aggregation`.
@@ -87,13 +90,12 @@ class Map:
         :returns: :py:class:`bach.SeriesBoolean` with the same index as ``data``.
         """
 
-        self._mh._check_data_is_objectiv_data(data)
         frame_args = {
             'mode': WindowFrameMode.ROWS,
             'start_boundary': WindowFrameBoundary.PRECEDING,
             'end_boundary': WindowFrameBoundary.FOLLOWING,
         }
-        data_cp = data[['session_id', 'user_id']]
+        data_cp = data.copy()
         data_cp['time_agg'] = self._mh.time_agg(data, time_aggregation)
 
         window = data_cp.groupby('user_id').window(**frame_args)
@@ -107,6 +109,7 @@ class Map:
         is_new_user_series = is_new_user_series.copy_override_type(bach.SeriesBoolean)
         return is_new_user_series.copy_override(name='is_new_user').materialize()
 
+    @use_only_required_objectiv_series(required_series=['event_type'])
     def is_conversion_event(self, data: bach.DataFrame, name: str) -> bach.SeriesBoolean:
         """
         Labels a hit True if it is a conversion event, all other hits are labeled False.
@@ -131,6 +134,10 @@ class Map:
             .copy_override_type(bach.SeriesBoolean)
         )
 
+    @use_only_required_objectiv_series(
+        required_series=['session_id', 'moment', 'event_type'],
+        include_series_from_params=['partition'],
+    )
     def conversions_counter(self,
                             data: bach.DataFrame,
                             name: str,
@@ -164,6 +171,10 @@ class Map:
     def conversion_count(self, *args, **kwargs):
         raise NotImplementedError('function is renamed please use `conversions_in_time`')
 
+    @use_only_required_objectiv_series(
+        required_series=['session_id', 'moment', 'event_type'],
+        include_series_from_params=['partition'],
+    )
     def conversions_in_time(self,
                             data: bach.DataFrame,
                             name: str,
@@ -194,6 +205,10 @@ class Map:
             .copy_override_type(bach.SeriesInt64)
         )
 
+    @use_only_required_objectiv_series(
+        required_series=['session_id', 'session_hit_number', 'moment', 'event_type'],
+        include_series_from_params=['partition'],
+    )
     def pre_conversion_hit_number(
         self,
         data: bach.DataFrame,
@@ -254,15 +269,6 @@ class Map:
         Generates a dataframe containing all required conversion series based on series_to_calculate param.
         All new series will contain private names.
         """
-        self._mh._check_data_is_objectiv_data(data)
-
-        # consider only required series for calculations
-        all_required_series = ['event_type', 'session_id', 'moment', 'session_id', 'session_hit_number']
-        if 'partition' in kwargs:
-            all_required_series.append(kwargs['partition'])
-
-        data = data[all_required_series]
-
         dependencies = _DEPENDENCIES_PER_CONVERSION_SERIES.get(series_to_calculate, [])
         variables_to_calc = dependencies + [series_to_calculate]
 

@@ -6,6 +6,7 @@ import json
 
 import bach
 import pandas as pd
+import pytest
 from sql_models.util import is_bigquery
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
@@ -42,7 +43,12 @@ def _get_parsed_test_data_pandas_df(engine) -> pd.DataFrame:
                 'cookie_id': str(event['cookie_id']),
             }
         ]
-        bq_data.append({'contexts_io_objectiv_taxonomy_1_0_0': taxonomy_data})
+        bq_data.append(
+            {
+                'contexts_io_objectiv_taxonomy_1_0_0': taxonomy_data,
+                'collector_tstamp': datetime.datetime.utcfromtimestamp(event['value']['time'] / 1e3),
+            }
+        )
 
     return pd.DataFrame(bq_data)
 
@@ -104,12 +110,13 @@ def test_get_initial_data(db_params) -> None:
     # need to sort the rows since order is non-deterministic
     result['event_id'] = result[taxonomy_column].elements[0].elements['event_id']
     result = result.sort_values(by='event_id')
-    result = result[[taxonomy_column]]
+    result = result[[taxonomy_column, 'collector_tstamp']]
 
     assert_equals_data(
         result,
-        expected_columns=[taxonomy_column],
+        expected_columns=[taxonomy_column, 'collector_tstamp'],
         expected_data=expected.to_numpy().tolist(),
+        use_to_pandas=True,
     )
 
 
@@ -163,6 +170,44 @@ def test_apply_extra_processing(db_params) -> None:
         result.sort_values(by='event_id')[['day', 'moment']],
         expected_columns=['day', 'moment'],
         expected_data=expected_data,
+        use_to_pandas=True,
+    )
+
+
+@pytest.mark.skip_postgres
+def test_apply_extra_processing_duplicated_event_ids(db_params) -> None:
+    context_pipeline = _get_extracted_contexts_pipeline(db_params)
+    engine = context_pipeline._engine
+
+    default_timestamp = datetime.datetime(2022, 1, 1,  1,  1, 1)
+    pdf = pd.DataFrame(
+        {
+            'event_id': ['1', '2', '3', '1', '4', '1', '4'],
+            'collector_tstamp': [
+                datetime.datetime(2022, 1, 1, 12,  0, 0),
+                default_timestamp,
+                default_timestamp,
+                datetime.datetime(2022, 1, 1, 12,  0, 1),
+                datetime.datetime(2022, 1, 2, 12,  0, 1),
+                datetime.datetime(2022, 1, 1, 11, 59, 59),
+                datetime.datetime(2022, 1, 3, 12, 0, 1),
+            ],
+            'time': [int(default_timestamp.timestamp() * 1e3)] * 7,
+            'contexts_io_objectiv_taxonomy_1_0_0': ['{}'] * 7,
+        }
+    )
+    df = bach.DataFrame.from_pandas(engine, pdf, convert_objects=True).reset_index(drop=True)
+    result = context_pipeline._apply_extra_processing(df)
+
+    assert_equals_data(
+        result.sort_values(by='event_id')[['event_id', 'collector_tstamp']],
+        expected_columns=['event_id', 'collector_tstamp'],
+        expected_data=[
+            ['1', datetime.datetime(2022, 1, 1, 11, 59, 59)],
+            ['2', default_timestamp],
+            ['3', default_timestamp],
+            ['4', datetime.datetime(2022, 1, 2, 12,  0, 1)],
+        ],
         use_to_pandas=True,
     )
 
