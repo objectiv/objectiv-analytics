@@ -90,14 +90,16 @@ solved in a few steps (as it's not possible to simply drop columns from BQ):
 4. Drop the `events` table
 5. Query desired columns:
 ```sql
-SELECT app_id, platform, etl_tstamp, collector_tstamp, event, event_id, 
+
+CREATE TABLE `project.snowplow.events` 
+PARTITION BY date_trunc(load_tstamp, DAY)
+AS SELECT app_id, platform, etl_tstamp, collector_tstamp, event, event_id, 
   v_tracker, v_collector, v_etl, user_ipaddress, network_userid, 
-  page_url, page_urlscheme, page_urlhost, page_urlport, page_urlpath,
+  page_url, page_urlscheme, page_urlhost, page_urlport, page_urlpath, page_urlquery, page_urlfragment,
   useragent, 
   derived_tstamp, event_vendor, event_name, event_format, event_version, event_fingerprint,
-  load_tstamp, 
-  contexts_io_objectiv_taxonomy_1_0_0
-FROM `project.dataset.events_copy`;
+  load_tstamp
+FROM `project.snowplow.events_copy`;
 ```
 6. Now select `Save results as BigQuery table`, and save the data as a new table in the current dataset called `events`. 
 7. Restart the Snowplow bigquery streamloader
