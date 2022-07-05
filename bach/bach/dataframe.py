@@ -1122,11 +1122,15 @@ class DataFrame:
 
         :param table_name: Name of the table to write to. Can include project_id and dataset
                 on BigQuery, e.g. 'project_id.dataset.table_name'
-        :param overwrite: if True, the sample data is written to table_name, even if that table already
-            exists.
-
+        :param overwrite: if True, the data is written to `table_name`, even if that table already
+            exists. Beware, this will drop an existing table if `table_name` already exists. Make sure that
+            `table_name` does not contain any valuable information. Additionally, make sure that it is not a
+            source table of this DataFrame.
         :return: New DataFrame; the base_node consists of a query on the newly created table.
 
+        .. warning::
+            With `overwrite=True`, if a table already exist with the given name, then that table will
+            be dropped and all data lost!
         .. note::
             This function queries the database.
         .. note::
