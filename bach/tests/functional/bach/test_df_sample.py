@@ -1,17 +1,44 @@
 """
 Copyright 2021 Objectiv B.V.
 """
+from typing import Optional
+
 import pytest
 
 from sql_models.graph_operations import get_graph_nodes_info
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data
+from sql_models.util import is_bigquery, is_postgres
+from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
-def test_get_sample():
-    bt = get_bt_with_test_data(True)
-    bt_sample = bt.get_sample(table_name='test_data_sample',
+# For now skip all tests for BigQuery. The next commit or PR will fix this again.
+pytestmark = [pytest.mark.skip_bigquery]
+
+
+def test_get_sample(engine):
+    # For reliable asserts (see below) we need more rows than the standard dataset of 11 rows has.
+    # Therefore we append the dataset to itself two times to get 33 rows in total.
+    df = get_df_with_test_data(engine, True)
+    df = df.append([df, df])
+
+    df_sample = df.get_sample(table_name='test_df_sample__get_sample',
                               sample_percentage=50,
-                              seed=200,
+                              overwrite=True)
+    # We cannot know the exact rows in df_sample, as that's random.
+    # However, the columns should match, and additionally, since df has 33 rows, we can be _very_ sure
+    # that df_sample has at least a row and less than 33.
+    pdf_sample = df_sample.to_pandas()
+    assert pdf_sample.index.name == '_index_skating_order'
+    assert list(pdf_sample.columns) == ['skating_order', 'city', 'municipality', 'inhabitants', 'founding']
+    assert len(pdf_sample) > 0
+    assert len(pdf_sample) < 33
+
+
+@pytest.mark.skip_bigquery('We do not support the seed parameter for bigquery')
+def test_get_sample_seed(engine):
+    bt = get_df_with_test_data(engine, True)
+    bt_sample = bt.get_sample(table_name='test_df_sample__get_sample_seed',
+                              sample_percentage=50,
+                              seed=_get_seed(engine),
                               overwrite=True)
 
     assert_equals_data(
@@ -48,18 +75,23 @@ _EXPECTED_DATA_OPERATIONS = [
 ]
 
 
-def test_sample_operations():
-    bt = get_bt_with_test_data(True)
-    bt_sample = bt.get_sample(table_name='test_data_sample',
+def test_sample_operations(engine):
+    bt = get_df_with_test_data(engine, True)
+    seed = _get_seed(engine)
+    bt_sample = bt.get_sample(table_name='test_df_sample__sample_operations',
                               sample_percentage=50,
-                              seed=200,
+                              seed=seed,
                               overwrite=True)
 
     bt_sample['better_city'] = bt_sample.city + '_better'
     bt_sample['a'] = bt_sample.city.str[:2] + bt_sample.municipality.str[:2]
     bt_sample['big_city'] = bt_sample.inhabitants + 10
     bt_sample['b'] = bt_sample.inhabitants + bt_sample.founding
-    assert bt_sample.skating_order.nunique().value == 3
+
+    # If seed is set, we know what to expect from the 'random' values.
+    # If seed is not set, then the database doesn't support it. We just skip the assert for those databases.
+    if seed is not None:
+        assert bt_sample.skating_order.nunique().value == 3
 
     all_data_bt = bt_sample.get_unsampled()
     all_data_bt['extra_ppl'] = all_data_bt.inhabitants + 5
@@ -71,9 +103,9 @@ def test_sample_operations():
     )
 
 
-def test_sample_operations_filter():
-    bt = get_bt_with_test_data(True)
-    bt_sample = bt.get_sample(table_name='test_data_sample',
+def test_sample_operations_filter(engine):
+    bt = get_df_with_test_data(engine, True)
+    bt_sample = bt.get_sample(table_name='test_df_sample__sample_operations_filter',
                               filter=bt.skating_order % 2 == 0,
                               overwrite=True)
 
@@ -85,7 +117,6 @@ def test_sample_operations_filter():
 
     all_data_bt = bt_sample.get_unsampled()
     all_data_bt['extra_ppl'] = all_data_bt.inhabitants + 5
-
     assert_equals_data(
         all_data_bt,
         expected_columns=_EXPECTED_COLUMNS_OPERATIONS,
@@ -93,12 +124,12 @@ def test_sample_operations_filter():
     )
 
 
-def test_combine_unsampled_with_before_data():
+def test_combine_unsampled_with_before_data(engine):
     # Test that the get_unsampled() df has a base_node and state that is compatible with the base_node and
     # state of the original df
-    dff = get_bt_with_test_data(True)
+    dff = get_df_with_test_data(engine, True)
     dff_s = dff[['municipality', 'city']].get_sample(
-        'sample_example_table', overwrite=True, sample_percentage=50
+        'test_df_sample__combine_unsampled_with_before_data', overwrite=True, sample_percentage=50
     )
     dff_s['e'] = dff_s.city + '_extended'
     new_dff = dff_s.get_unsampled()
@@ -106,21 +137,23 @@ def test_combine_unsampled_with_before_data():
     dff['e'] = new_dff.e
 
 
-def test_get_unsampled_multiple_nodes():
+def test_get_unsampled_multiple_nodes(engine):
     # 1. Start with dataframe with multiple nodes in graph
     # 2. Create sampled dataframe
     # 3. Add node to sampled dataframe
     # 4. Go back to unsampled data
-    bt = get_bt_with_test_data(False)
+    bt = get_df_with_test_data(engine, False)
+    num_start_nodes = len(get_graph_nodes_info(bt.base_node))
     bt = bt[['municipality', 'inhabitants', 'founding']]
     bt['inhabitants_more'] = bt['inhabitants'] + 1000
     bt = bt.materialize()
     bt['inhabitants_more'] = bt['inhabitants_more'] + 1000
-    assert len(get_graph_nodes_info(bt.base_node)) == 2  # assert graph contains multiple nodes
+    # assert graph contains multiple nodes
+    assert len(get_graph_nodes_info(bt.base_node)) >= 2
+    assert len(get_graph_nodes_info(bt.base_node)) == num_start_nodes + 1
 
-    bt_sample = bt.get_sample(table_name='test_data_sample',
+    bt_sample = bt.get_sample(table_name='test_df_sample__get_unsampled_multiple_nodes',
                               sample_percentage=50,
-                              seed=200,
                               overwrite=True)
     # bt_sample is based on newly created table, so there will only be a single node in the graph
     assert len(get_graph_nodes_info(bt_sample.base_node)) == 1
@@ -149,16 +182,19 @@ def test_get_unsampled_multiple_nodes():
     )
 
 
-def test_sample_grouped():
-    bt = get_bt_with_test_data(True)
+def test_sample_grouped(engine):
+    # TODO: create additional tests here. Perhaps we should always materialize the dataframe before
+    #   sampling. Currently we sample the base_node, which doesn't always match the state of the DataFrame
+    bt = get_df_with_test_data(engine, True)
+    seed = _get_seed(engine)
     bt = bt[['municipality', 'inhabitants', 'founding']]
     bt['founding_century'] = (bt['founding'] // 100) + 1
     btg = bt.groupby('municipality').sort_values('municipality')
     btg_min = btg.min()
 
-    btg_sample = btg.get_sample(table_name='test_data_sample',
+    btg_sample = btg.get_sample(table_name='test_df_sample__sample_grouped',
                                 sample_percentage=50,
-                                seed=200,
+                                seed=seed,
                                 overwrite=True)
     btg_sample_max = btg_sample.max()
     btg_sample_max = btg_sample_max[['founding_century_max']]
@@ -179,14 +215,16 @@ def test_sample_grouped():
     # Assert sampled data first.
     # We expect less rows than in the unsampled data. Which rows are returned should be deterministic
     # given the seed and sample_percentage.
-    assert_equals_data(
-        btg_sample_max,
-        expected_columns=['municipality', 'founding_century_max_plus_10'],
-        expected_data=[
-            ['De Friese Meren', 25.0],
-            ['Súdwest-Fryslân', 23.0]
-        ]
-    )
+    # If seed is not set, then the database doesn't support it. We just skip the assert for those databases.
+    if seed is not None:
+        assert_equals_data(
+            btg_sample_max,
+            expected_columns=['municipality', 'founding_century_max_plus_10'],
+            expected_data=[
+                ['De Friese Meren', 25.0],
+                ['Súdwest-Fryslân', 23.0]
+            ]
+        )
 
     # Assert unsampled data.
     # Should have all rows, and a few more columns as we added those after unsampling.
@@ -206,13 +244,14 @@ def test_sample_grouped():
     )
 
 
-def test_sample_operations_variable():
+def test_sample_operations_variable(engine):
     # Test to prevent regression: using variables and materializing them should not change the SqlModel type
     # and then break when calling `is_materialized` after unsample()
-    bt = get_bt_with_test_data(True)
-    bt_sample = bt.get_sample(table_name='test_data_sample',
+    bt = get_df_with_test_data(engine, True)
+    seed = _get_seed(engine)
+    bt_sample = bt.get_sample(table_name='test_df_sample__sample_operations_variable',
                               sample_percentage=50,
-                              seed=200,
+                              seed=seed,
                               overwrite=True)
 
     bt_sample, var = bt_sample.create_variable('var', 10)
@@ -221,7 +260,10 @@ def test_sample_operations_variable():
     bt_sample['big_city'] = bt_sample.inhabitants + var
     bt_sample['b'] = bt_sample.inhabitants + bt_sample.founding
     bt_sample = bt_sample.materialize()
-    assert bt_sample.skating_order.nunique().value == 3
+    # If seed is set, we know what to expect from the 'random' values.
+    # If seed is not set, then the database doesn't support it. We just skip the assert for those databases.
+    if seed is not None:
+        assert bt_sample.skating_order.nunique().value == 3
 
     all_data_bt = bt_sample.get_unsampled()
     all_data_bt['extra_ppl'] = all_data_bt.inhabitants + 5
@@ -234,3 +276,12 @@ def test_sample_operations_variable():
     assert not all_data_bt.is_materialized  # this used to raise an exception
     all_data_bt = all_data_bt.materialize()
     assert all_data_bt.is_materialized
+
+
+def _get_seed(engine) -> Optional[int]:
+    """ Return 200 if the database supports seeding. """
+    if is_bigquery(engine):
+        return None
+    if is_postgres(engine):
+        return 200
+    raise Exception()
