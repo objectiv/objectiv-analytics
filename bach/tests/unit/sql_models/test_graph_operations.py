@@ -234,6 +234,9 @@ def test_find_nodes_path_length():
     assert result == [FoundNode(model=vm2, reference_path=('ref_left', 'ref_left', 'ref_right', 'ref_left'))]
 
 
+# be explicit as this is also a performance test: max 1 sec runtime.
+# But conftests.py should already define limit for all unittests.
+@pytest.mark.timeout(1)
 def test_find_nodes_long_and_short_path_performance():
     # We'll build a graph with a simple structure but with a lot of paths. The number of joins is controlled
     # through the `depth` constant. Schematically the graph looks like this (all joins between 2 and N-1 are
@@ -252,7 +255,8 @@ def test_find_nodes_long_and_short_path_performance():
     #
     # If this test takes longer than a second to run, then that's a regression!
     #
-    depth = 25
+    import time; time.sleep(0.1)
+    depth = 50
     vm = ValueModel.build(key='a', val=1)
     graph = vm
     for _ in range(depth):
