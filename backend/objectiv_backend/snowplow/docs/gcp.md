@@ -104,7 +104,8 @@ AS SELECT app_id, platform, etl_tstamp, collector_tstamp, event, event_id,
   v_tracker, v_collector, v_etl, user_ipaddress, network_userid, 
   page_url, page_urlscheme, page_urlhost, page_urlport, page_urlpath, page_urlquery, page_urlfragment,
   
-  mkt_medium, mkt_source, mkt_term, mkt_content, mkt_campaign,    
+  mkt_medium, mkt_source, mkt_term, mkt_content, mkt_campaign, mkt_network, mkt_clickid,
+  refr_medium, refr_source, refr_term,
   useragent, 
   derived_tstamp, event_vendor, event_name, event_format, event_version, event_fingerprint,
   load_tstamp
