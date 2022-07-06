@@ -2,8 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { makeIdFromString } from '@objectiv/tracker-core';
+import { makeIdFromString, makeInputValueContext } from '@objectiv/tracker-core';
 import {
+  InputChangeEventTrackerParameters,
   InputContextWrapper,
   TrackingContext,
   trackInputChangeEvent,
@@ -13,12 +14,23 @@ import React, { FocusEvent, useState } from 'react';
 import { TrackedContextProps } from '../types';
 
 /**
+ * The props of TrackedInputContext. Extends TrackedContextProps with the optional `trackValue` property.
+ */
+export type TrackedInputContextProps = TrackedContextProps<HTMLInputElement> & {
+  /**
+   * Optional. Whether to track the input value. Default to false.
+   * When enabled, an InputValueContext will be generated and pushed into the Global Contexts of the InputChangeEvent.
+   */
+  trackValue?: boolean;
+};
+
+/**
  * Generates a new React Element already wrapped in an InputContext.
  * Automatically tracks InputChangeEvent when the given Component receives an `onBlur` SyntheticEvent.
  */
-export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedContextProps<HTMLInputElement>>(
+export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInputContextProps>(
   (props, ref) => {
-    const { id, Component, forwardId = false, defaultValue, normalizeId = true, ...otherProps } = props;
+    const { id, Component, forwardId = false, defaultValue, normalizeId = true, trackValue = false, ...otherProps } = props;
     const [previousValue, setPreviousValue] = useState<string>(defaultValue ? defaultValue.toString() : '');
     const locationStack = useLocationStack();
 
@@ -30,7 +42,20 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedCon
     const handleBlur = async (event: FocusEvent<HTMLInputElement>, trackingContext: TrackingContext) => {
       if (previousValue !== event.target.value) {
         setPreviousValue(event.target.value);
-        trackInputChangeEvent(trackingContext);
+
+        let inputChangeEventTrackerParameters: InputChangeEventTrackerParameters = trackingContext;
+
+        // Add InputValueContext if trackValue has been set
+        if (inputId && trackValue) {
+          inputChangeEventTrackerParameters = {
+            ...inputChangeEventTrackerParameters,
+            globalContexts: [
+              makeInputValueContext({id: inputId, value: event.target.value})
+            ]
+          }
+        }
+
+        trackInputChangeEvent(inputChangeEventTrackerParameters);
       }
 
       props.onBlur && props.onBlur(event);
