@@ -184,6 +184,20 @@
         }
       }
     },
+    "InputValueContext": {
+      "description": "A GlobalContext containing the value of a single input element. Multiple InputValueContexts may be present in Global Contexts at the same time.",
+      "parents": ["AbstractGlobalContext"],
+      "properties": {
+        "value": {
+          "description": "The value of the input element",
+          "type": "string"
+        }
+      }
+    },
+    "LocaleContext": {
+      "description": "A GlobalContext describing the locale used by the user. E.g. an ISO 639-1 code.",
+      "parents": ["AbstractGlobalContext"]
+    },
     "PathContext": {
       "description": "A GlobalContext describing the path where the user is when an event is sent.",
       "parents": ["AbstractGlobalContext"]

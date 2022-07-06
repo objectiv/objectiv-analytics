@@ -130,6 +130,50 @@ class HttpContext(AbstractGlobalContext):
                                        **kwargs)
 
 
+class InputValueContext(AbstractGlobalContext):
+    """
+        A GlobalContext containing the value of a single input element. Multiple InputValueContexts may be present in Global Contexts at the same time.
+
+        Attributes:
+        value (str):
+                The value of the input element
+        id (str):
+                A unique string identifier to be combined with the Context Type (`_type`)
+                for Context instance uniqueness.
+    """
+    _type = 'InputValueContext'
+
+    def __init__(self, value: str, id: str, **kwargs: Optional[Any]):
+        """
+        :param value: 
+            The value of the input element
+        :param id: 
+            A unique string identifier to be combined with the Context Type (`_type`)
+            for Context instance uniqueness.
+        """
+        AbstractGlobalContext.__init__(self, value=value, id=id, **kwargs)
+
+
+class LocaleContext(AbstractGlobalContext):
+    """
+        A GlobalContext describing the locale used by the user. E.g. an ISO 639-1 code.
+
+        Attributes:
+        id (str):
+                A unique string identifier to be combined with the Context Type (`_type`)
+                for Context instance uniqueness.
+    """
+    _type = 'LocaleContext'
+
+    def __init__(self, id: str, **kwargs: Optional[Any]):
+        """
+        :param id: 
+            A unique string identifier to be combined with the Context Type (`_type`)
+            for Context instance uniqueness.
+        """
+        AbstractGlobalContext.__init__(self, id=id, **kwargs)
+
+
 class PathContext(AbstractGlobalContext):
     """
         A GlobalContext describing the path where the user is when an event is sent.
@@ -1306,6 +1350,10 @@ def make_context(_type: str, **kwargs) -> AbstractContext:
         return CookieIdContext(**kwargs)
     if _type == "HttpContext":
         return HttpContext(**kwargs)
+    if _type == "InputValueContext":
+        return InputValueContext(**kwargs)
+    if _type == "LocaleContext":
+        return LocaleContext(**kwargs)
     if _type == "PathContext":
         return PathContext(**kwargs)
     if _type == "SessionContext":

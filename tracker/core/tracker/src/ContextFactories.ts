@@ -10,7 +10,9 @@ import {
   HttpContext,
   IdentityContext,
   InputContext,
+  InputValueContext,
   LinkContext,
+  LocaleContext,
   MarketingContext,
   MediaPlayerContext,
   NavigationContext,
@@ -129,6 +131,21 @@ export const makeInputContext = (props: { id: string }): InputContext => ({
   id: props.id,
 });
 
+/** Creates instance of InputValueContext
+ * @param {Object} props - factory properties
+ * @param {string} props.id - A unique string identifier to be combined with the Context Type (`_type`)
+ *         for Context instance uniqueness.
+ * @param {string} props.value - The value of the input element
+ * @returns {InputValueContext} - InputValueContext: A GlobalContext containing the value of a single input element. Multiple InputValueContexts may be present in Global Contexts at the same time.
+ */
+export const makeInputValueContext = (props: { id: string; value: string }): InputValueContext => ({
+  __instance_id: generateUUID(),
+  __global_context: true,
+  _type: GlobalContextName.InputValueContext,
+  id: props.id,
+  value: props.value,
+});
+
 /** Creates instance of LinkContext
  * @param {Object} props - factory properties
  * @param {string} props.id - A unique string identifier to be combined with the Context Type (`_type`)
@@ -143,6 +160,19 @@ export const makeLinkContext = (props: { id: string; href: string }): LinkContex
   _type: LocationContextName.LinkContext,
   id: props.id,
   href: props.href,
+});
+
+/** Creates instance of LocaleContext
+ * @param {Object} props - factory properties
+ * @param {string} props.id - A unique string identifier to be combined with the Context Type (`_type`)
+ *         for Context instance uniqueness.
+ * @returns {LocaleContext} - LocaleContext: A GlobalContext describing the locale used by the user. E.g. an ISO 639-1 code.
+ */
+export const makeLocaleContext = (props: { id: string }): LocaleContext => ({
+  __instance_id: generateUUID(),
+  __global_context: true,
+  _type: GlobalContextName.LocaleContext,
+  id: props.id,
 });
 
 /** Creates instance of MarketingContext

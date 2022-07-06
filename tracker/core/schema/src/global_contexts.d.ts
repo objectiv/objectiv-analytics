@@ -58,6 +58,33 @@ export interface HttpContext extends AbstractGlobalContext {
 }
 
 /**
+ * A GlobalContext containing the value of a single input element. Multiple InputValueContexts may be present in Global Contexts at the same time.
+ * Inheritance: InputValueContext -> AbstractGlobalContext -> AbstractContext
+ */
+export interface InputValueContext extends AbstractGlobalContext {
+  /**
+   * Typescript discriminator
+   */
+  readonly _type: 'InputValueContext';
+
+  /**
+   * The value of the input element
+   */
+  value: string;
+}
+
+/**
+ * A GlobalContext describing the locale used by the user. E.g. an ISO 639-1 code.
+ * Inheritance: LocaleContext -> AbstractGlobalContext -> AbstractContext
+ */
+export interface LocaleContext extends AbstractGlobalContext {
+  /**
+   * Typescript discriminator
+   */
+  readonly _type: 'LocaleContext';
+}
+
+/**
  * A GlobalContext describing the path where the user is when an event is sent.
  * Inheritance: PathContext -> AbstractGlobalContext -> AbstractContext
  */
