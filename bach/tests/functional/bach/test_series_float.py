@@ -49,9 +49,9 @@ def test_float_float_arithmetic(engine):
     helper_test_simple_arithmetic(engine=engine, a=20.01, b=3.33)
 
 
-def test_random_expression(engine):
+def test_random(engine):
     bt = get_df_with_test_data(engine)[['city']]
-    bt['random_float'] = SeriesFloat64.random_expression(base=bt)
+    bt['random_float'] = SeriesFloat64.random(base=bt)
     result = bt.to_pandas()
     assert list(result.columns) == ['city', 'random_float']
     distinct_values = set()

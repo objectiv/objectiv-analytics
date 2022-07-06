@@ -377,7 +377,7 @@ class SeriesFloat64(SeriesAbstractNumeric):
         return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', expression)
 
     @classmethod
-    def random_expression(cls, base: DataFrameOrSeries) -> 'SeriesFloat64':
+    def random(cls, base: DataFrameOrSeries) -> 'SeriesFloat64':
         """
         Create a new Series object with an expression, that will evaluate to a random float in the range
         [0, 1) for each row.
