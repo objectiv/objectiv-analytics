@@ -36,7 +36,7 @@ def get_sample(df: DataFrame,
     if sample_percentage is not None and (sample_percentage < 0 or sample_percentage > 100):
         raise ValueError(f'sample_percentage must be in range 0-100. Actual value: {sample_percentage}')
 
-    if seed and not is_postgres(dialect):
+    if seed is not None and not is_postgres(dialect):
         message_override = f'The `seed` parameter is not supported for database dialect "{dialect.name}".'
         raise DatabaseNotSupportedException(dialect, message_override=message_override)
 
@@ -50,7 +50,7 @@ def get_sample(df: DataFrame,
         if not isinstance(filter, SeriesBoolean):
             raise TypeError('Filter parameter needs to be a SeriesBoolean instance.')
         df = df[filter]
-    if sample_percentage:
+    if sample_percentage is not None:
         if seed is not None:
             # We'll use `tablesample bernoulli` with `repeatable`. This can only be used when selecting from
             # a table, so we have to take some extra steps:
@@ -68,7 +68,7 @@ def get_sample(df: DataFrame,
             df = DataFrame.from_model(
                 engine=df.engine,
                 model=model,
-                index=list(df.index.keys()),
+                index=df.index_columns,
                 all_dtypes=all_dtypes
             )
         else:
@@ -78,7 +78,8 @@ def get_sample(df: DataFrame,
             from bach import SeriesFloat64
             sample_cutoff = sample_percentage / 100
             df = df[SeriesFloat64.random_expression(base=df) < sample_cutoff]
-    df.database_create_table(table_name=table_name, overwrite=overwrite)
+    if_exists = 'replace' if overwrite else 'fail'
+    df.database_create_table(table_name=table_name, if_exists=if_exists)
 
     # Use SampleSqlModel, that way we can keep track of the current_node and undo this sampling
     # in get_unsampled() by switching this new node for the old node again.

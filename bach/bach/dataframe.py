@@ -1078,6 +1078,9 @@ class DataFrame:
 
         Will materialize the DataFrame if it is not in a materialized state.
 
+        If `seed` is set (Postgres only), this will create a temporary table from which the sample will be
+        queried using the `tablesample bernoulli` sql construction.
+
         :param table_name: the name of the underlying sql table that stores the sampled data.
         :param filter: a filter to apply to the dataframe before creating the sample. If a filter is applied,
             sample_percentage is ignored and thus the bernoulli sample creation is skipped.

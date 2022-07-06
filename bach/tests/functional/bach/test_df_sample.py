@@ -28,6 +28,11 @@ def test_get_sample(engine):
     assert len(pdf_sample) > 0
     assert len(pdf_sample) < 33
 
+    # If overwrite is not set, we expect an error
+    with pytest.raises(Exception, match='[aA]lready [eE]xists'):
+        df_sample = df.get_sample(table_name='test_df_sample__get_sample',
+                                  sample_percentage=50)
+
 
 @pytest.mark.skip_bigquery('We do not support the seed parameter for bigquery')
 def test_get_sample_seed(engine):
