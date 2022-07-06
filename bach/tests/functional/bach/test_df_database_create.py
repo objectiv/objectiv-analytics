@@ -28,8 +28,8 @@ def test_database_create_table(engine):
 
     # First test: write dataframe to table. We expect success
     df_from_table = df.database_create_table(
-        table_name='test_df_database_create__test_database_create_table',
-        overwrite=True
+        table_name='test_df_database_create__database_create_table',
+        if_exists='replace'
     )
     assert_equals_data(df_from_table, expected_columns=expected_columns, expected_data=expected_data)
 
@@ -38,7 +38,7 @@ def test_database_create_table(engine):
     assert df_from_table.base_node != df.base_node
     assert len(df_from_table.base_node.references) == 0
     new_sql = to_sql(dialect=dialect, model=df_from_table.base_node)
-    quoted_table_name = quote_identifier(dialect, 'test_df_database_create__test_database_create_table')
+    quoted_table_name = quote_identifier(dialect, 'test_df_database_create__database_create_table')
     expected_sql_fragment = f'FROM {quoted_table_name}'
     assert expected_sql_fragment in new_sql
 
@@ -48,8 +48,8 @@ def test_database_create_table(engine):
     # raise an error containing the phrase 'already exists', but with different capitalization
     with pytest.raises(Exception, match='[aA]lready [eE]xists'):
         df_from_table = df.database_create_table(
-            table_name='test_df_database_create__test_database_create_table',
-            overwrite=False
+            table_name='test_df_database_create__database_create_table',
+            if_exists = 'fail'
         )
     # table should be unchanged after the last failed call
     assert_equals_data(df_from_table, expected_columns=expected_columns, expected_data=expected_data)
@@ -58,7 +58,7 @@ def test_database_create_table(engine):
     expected_columns = expected_columns + ['y']
     expected_data = [row + [random_value] for row in expected_data]
     df_from_table = df.database_create_table(
-        table_name='test_df_database_create__test_database_create_table',
-        overwrite=True
+        table_name='test_df_database_create__database_create_table',
+        if_exists='replace'
     )
     assert_equals_data(df_from_table, expected_columns=expected_columns, expected_data=expected_data)
