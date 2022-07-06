@@ -704,6 +704,7 @@ class DataFrame:
             convert_objects: bool,
             name: str = 'loaded_data',
             materialization: str = 'cte',
+            *,
             if_exists: str = 'fail'
     ) -> 'DataFrame':
         """
@@ -1063,6 +1064,7 @@ class DataFrame:
                    table_name: str,
                    filter: 'SeriesBoolean' = None,
                    sample_percentage: int = None,
+                   *,
                    overwrite: bool = False,
                    seed: int = None) -> 'DataFrame':
         """
@@ -1083,9 +1085,18 @@ class DataFrame:
             Between 0-100.
         :param overwrite: if True, the sample data is written to table_name, even if that table already
             exists.
-        :param seed: optional seed number used to generate the sample. Only supported on Postgres
+        :param seed: optional seed number used to generate the sample. Only supported for Postgres
+        :raises Exception: If overwrite=False and the table already exists. The exact exception depends on
+            the underlying database.
         :returns: a sampled DataFrame of the current DataFrame.
 
+        .. warning::
+            With `overwrite=True`, if a table already exist with the given name, then that table will
+            be dropped and all data lost!
+        .. note::
+            This function queries the database.
+        .. note::
+            This function writes to the database.
         .. note::
             All data in the DataFrame to be sampled is queried to create the sample.
         """
@@ -1116,7 +1127,7 @@ class DataFrame:
         from bach.sample import get_unsampled
         return get_unsampled(df=self)
 
-    def database_create_table(self, table_name: str, overwrite: bool = False, ) -> 'DataFrame':
+    def database_create_table(self, table_name: str, *, if_exists: str = 'fail') -> 'DataFrame':
         """
         Write the current state of the DataFrame to a database table.
 
@@ -1124,16 +1135,25 @@ class DataFrame:
 
         :param table_name: Name of the table to write to. Can include project_id and dataset
                 on BigQuery, e.g. 'project_id.dataset.table_name'
-        :param overwrite: if True, the sample data is written to table_name, even if that table already
-            exists.
-
+        :param if_exists: {'fail', 'replace'}. How to behave if the table already exists:
+            * fail: Raise an Exception.
+            * replace: Drop the table before inserting new values. All data in that table will be lost! Make
+                sure that `table_name` does not contain any valuable information. Additionally, make sure
+                that it is not a source table of this DataFrame.
+        :raises Exception: If if_exists='fail'' and the table already exists. The exact exception depends on
+            the underlying database.
         :return: New DataFrame; the base_node consists of a query on the newly created table.
 
+        .. warning::
+            With `if_exists='replace'`, if a table already exist with the given name, then that table will
+            be dropped and all data lost!
         .. note::
             This function queries the database.
         .. note::
             This function writes to the database.
         """
+        if if_exists not in {'fail', 'replace'}:
+            raise ValueError(f'Value of if_exists ({if_exists}) must be either "fail" or "replace"')
         dialect = self.engine.dialect
         model = self.get_current_node(name='database_create_table')
         model = model.copy_set_materialization(Materialization.TABLE)
@@ -1144,7 +1164,7 @@ class DataFrame:
 
         sql = to_sql(dialect=dialect, model=model)
         with self.engine.connect() as conn:
-            if overwrite:
+            if if_exists == 'replace':
                 sql = f'DROP TABLE IF EXISTS {quote_identifier(dialect, table_name)}; {sql}'
 
             sql = escape_parameter_characters(conn, sql)
@@ -1154,7 +1174,7 @@ class DataFrame:
         return self.from_table(
             engine=self.engine,
             table_name=table_name,
-            index=list(self.index.keys()),
+            index=self.index_columns,
             all_dtypes=all_dtypes
         )
 

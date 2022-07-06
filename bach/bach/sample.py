@@ -19,6 +19,7 @@ def get_sample(df: DataFrame,
                table_name: str,
                filter: 'SeriesBoolean' = None,
                sample_percentage: int = None,
+               *,
                overwrite: bool = False,
                seed: int = None) -> 'DataFrame':
     """
