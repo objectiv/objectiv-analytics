@@ -51,7 +51,7 @@ SET_ENV_VARIABLE_TEMPLATE = 'os.environ["{env_var_name}"] = "{env_var_value}"'
 
 # notebook check settings defaults
 NOTEBOOK_EXTENSION = 'ipynb'
-DEFAULT_NOTEBOOKS_DIR = f'../notebooks/*.{NOTEBOOK_EXTENSION}'
+DEFAULT_NOTEBOOKS_DIR = f'../../../notebooks/*.{NOTEBOOK_EXTENSION}'
 DEFAULT_GITHUB_ISSUES_DIR = 'github_nb_issues'
 
 
