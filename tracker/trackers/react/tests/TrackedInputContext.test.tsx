@@ -170,6 +170,13 @@ describe('TrackedInputContext', () => {
             id: 'input-id',
           }),
         ]),
+        global_contexts: expect.not.arrayContaining([
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'input-id',
+            value: 'some new text'
+          }),
+        ]),
       })
     );
   });

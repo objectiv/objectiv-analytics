@@ -3,13 +3,12 @@
  */
 
 import React from 'react';
-import { TrackedInputContext } from '../trackedContexts/TrackedInputContext';
-import { TrackedContextProps } from '../types';
+import { TrackedInputContext, TrackedInputContextProps } from '../trackedContexts/TrackedInputContext';
 
 /**
  * Generates a TrackedInputContext preconfigured with a <input> Element as Component.
  */
 export const TrackedInput = React.forwardRef<
   HTMLInputElement,
-  Omit<TrackedContextProps<HTMLInputElement>, 'Component'>
+  Omit<TrackedInputContextProps, 'Component'>
 >((props, ref) => <TrackedInputContext {...props} Component={'input'} ref={ref} />);
