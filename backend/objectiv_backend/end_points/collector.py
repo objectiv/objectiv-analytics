@@ -304,8 +304,8 @@ def write_sync_events(ok_events: EventDataList, nok_events: EventDataList, event
                     insert_events_into_nok_data(connection, events=nok_events)
             finally:
                 connection.close()
-        except psycopg2.OperationalError as oe:
-            print(f'could not connect to db: {oe}')
+        except psycopg2.DatabaseError as oe:
+            print(f'Error occurred in postgres: {oe}')
 
     if output_config.snowplow:
         write_data_to_snowplow_if_configured(events=ok_events, good=True)
