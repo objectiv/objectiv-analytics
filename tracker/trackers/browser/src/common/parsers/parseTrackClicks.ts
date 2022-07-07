@@ -7,7 +7,7 @@ import { isTrackClicksAttribute } from '../guards/isTrackClicksAttribute';
 import { parseJson } from './parseJson';
 
 /**
- * `trackBlurs` Tagging Attribute to TrackClicksOptions parser
+ * `trackClicks` Tagging Attribute to TrackClicksOptions parser
  * Differently than other simplistic parsers, this one transforms the `trackClicks` attribute in a different format.
  */
 export const parseTrackClicks = (stringifiedTrackClicksAttribute: string | null): TrackClicksOptions => {
