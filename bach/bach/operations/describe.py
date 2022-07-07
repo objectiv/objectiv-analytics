@@ -28,8 +28,7 @@ TDataFrameOrSeries = TypeVar('TDataFrameOrSeries', bound='DataFrameOrSeries')
 
 class DescribeOperation(Generic[TDataFrameOrSeries]):
     """
-    Abstract class that can describe a DataFrame or Series. To use: first instantiate this class, then call the
-    instantiated object as a function, e.g. `df_described = DescribeOperation(obj=data_frame)()`
+    Abstract class that can describe a DataFrame or Series.
 
     In order to instantiate this class you should provide the following params:
     obj: a DataFrame or Series to be described. If a series is give, it will be transformed into a DataFrame
@@ -130,6 +129,9 @@ class DescribeOperation(Generic[TDataFrameOrSeries]):
 
     @abstractmethod
     def _get_final_described_result(self, describe_df: DataFrame) -> TDataFrameOrSeries:
+        """
+        returns final described object with correct sorted stats
+        """
         raise NotImplementedError()
 
     def __call__(self) -> TDataFrameOrSeries:
@@ -244,6 +246,10 @@ class DescribeOperation(Generic[TDataFrameOrSeries]):
 
 
 class DataFrameDescribeOperation(DescribeOperation[DataFrame]):
+    """
+    To use: first instantiate this class,  then call the instantiated object as a function,
+    e.g. `df_described = DataFrameDescribeOperation(obj=df)()`
+    """
     def _get_final_described_result(self, describe_df: DataFrame) -> DataFrame:
         describe_df = describe_df.sort_values(by=f'{self.STAT_SERIES_NAME}_position')
         all_described_series = [
@@ -254,6 +260,10 @@ class DataFrameDescribeOperation(DescribeOperation[DataFrame]):
 
 
 class SeriesDescribeOperation(DescribeOperation[Series]):
+    """
+    To use: first instantiate this class,  then call the instantiated object as a function,
+    e.g. `series_described = SeriesFrameDescribeOperation(obj=series)()`
+    """
     def _get_final_described_result(self, describe_df: DataFrame) -> Series:
         describe_series = describe_df[self.df.data_columns[0]]
         return describe_series.sort_values(keys=[describe_df[f'{self.STAT_SERIES_NAME}_position']])
