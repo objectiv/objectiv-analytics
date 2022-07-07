@@ -1,6 +1,6 @@
 {
   "name": "base_schema",
-  "version": {"base_schema": "0.0.3"},
+  "version": {"base_schema": "0.0.4"},
   "description": "This is the Objectiv base schema for the Open Analytics Taxonomy.",
   "events": {
     "AbstractEvent": {
