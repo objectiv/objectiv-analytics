@@ -255,7 +255,6 @@ def test_find_nodes_long_and_short_path_performance():
     #
     # If this test takes longer than a second to run, then that's a regression!
     #
-    import time; time.sleep(0.1)
     depth = 50
     vm = ValueModel.build(key='a', val=1)
     graph = vm
