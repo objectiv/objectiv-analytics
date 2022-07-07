@@ -21,7 +21,7 @@ export abstract class AbstractEvent {
   global_contexts: AbstractGlobalContext[];
 
   /**
-   * String containing the name of the event type. (eg. ClickEvent)
+   * String containing the name of the event type. (eg. ClickEvent).
    */
   _type: string;
 
@@ -33,7 +33,7 @@ export abstract class AbstractEvent {
   id: string;
 
   /**
-   * Timestamp indicating when the event was generated
+   * Timestamp indicating when the event was generated.
    */
   time: number;
 }

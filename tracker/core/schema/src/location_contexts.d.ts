@@ -89,7 +89,6 @@ export interface NavigationContext extends AbstractLocationContext {
 
 /**
  * A Location Context that describes a section of the UI that represents an overlay, i.e. a Modal.
- * .
  * Inheritance: OverlayContext -> AbstractLocationContext -> AbstractContext
  */
 export interface OverlayContext extends AbstractLocationContext {

@@ -11,8 +11,7 @@
         "location_stack": {
           "description": "The location stack is an ordered list (stack), that contains a hierarchy of location contexts that \n\
             deterministically describes where an event took place from global to specific. \n\
-            The whole stack (list) is needed to exactly pinpoint where in the UI the event originated. \n\
-          ",
+            The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.",
           "type": "array",
           "items": {
             "type":"AbstractLocationContext"
@@ -27,7 +26,7 @@
           }
         },
         "_type": {
-          "description": "String containing the name of the event type. (eg. ClickEvent)",
+          "description": "String containing the name of the event type. (eg. ClickEvent).",
           "type": "string"
         },
         "id": {
@@ -38,7 +37,7 @@
           "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[a-f0-9]{4}-[a-f0-9]{12}$"
         },
         "time": {
-          "description": "Timestamp indicating when the event was generated",
+          "description": "Timestamp indicating when the event was generated.",
           "type": "integer"
         }
       }
@@ -89,7 +88,7 @@
       "requiresContext": ["AbstractLocationContext"]
     },
     "VisibleEvent": {
-      "description": "A NonInteractiveEvent that's emitted after a section LocationContext has become visible.\n\n",
+      "description": "A NonInteractiveEvent that's emitted after a section LocationContext has become visible.",
       "parents": ["NonInteractiveEvent"],
       "requiresContext": ["AbstractLocationContext"]
     },
@@ -112,22 +111,22 @@
       "requiresContext": ["MediaPlayerContext"]
     },
     "MediaLoadEvent": {
-      "description": "A MediaEvent that's emitted after a media item completes loading.\n\n",
+      "description": "A MediaEvent that's emitted after a media item completes loading.",
       "parents": ["MediaEvent"],
       "requiresContext": []
     },
     "MediaPauseEvent": {
-      "description": "A MediaEvent that's emitted after a media item pauses playback.\n\n",
+      "description": "A MediaEvent that's emitted after a media item pauses playback.",
       "parents": ["MediaEvent"],
       "requiresContext": []
     },
     "MediaStartEvent": {
-      "description": "A MediaEvent that's emitted after a media item starts playback.\n\n",
+      "description": "A MediaEvent that's emitted after a media item starts playback.",
       "parents": ["MediaEvent"],
       "requiresContext": []
     },
     "MediaStopEvent": {
-      "description": "A MediaEvent that's emitted after a media item stops playback.\n\n",
+      "description": "A MediaEvent that's emitted after a media item stops playback.",
       "parents": ["MediaEvent"],
       "requiresContext": []
     },
@@ -160,7 +159,7 @@
       "parents": ["AbstractGlobalContext"],
       "properties": {
         "cookie_id": {
-          "description": "Unique identifier from the session cookie",
+          "description": "Unique identifier from the session cookie.",
           "type": "string"
         }
       }
@@ -189,7 +188,7 @@
       "parents": ["AbstractGlobalContext"],
       "properties": {
         "value": {
-          "description": "The value of the input element",
+          "description": "The value of the input element.",
           "type": "string"
         }
       }
@@ -216,28 +215,28 @@
     },
     "MarketingContext": {
       "description": "a context that captures marketing channel info, so users can do attribution, campaign \n\
-        effectiveness and other models",
+        effectiveness and other models.",
       "parents": ["AbstractGlobalContext"],
       "properties": {
         "source": {
-          "description": "Identifies the advertiser, site, publication, etc",
+          "description": "Identifies the advertiser, site, publication, etc.",
           "type": "string"
         },
         "medium": {
-          "description": "Advertising or marketing medium: cpc, banner, email newsletter, etc",
+          "description": "Advertising or marketing medium: cpc, banner, email newsletter, etc.",
           "type": "string"
         },
         "campaign": {
-          "description": "Individual campaign name, slogan, promo code, etc",
+          "description": "Individual campaign name, slogan, promo code, etc.",
           "type": "string"
         },
         "term": {
-          "description": "[Optional] Search keywords",
+          "description": "[Optional] Search keywords.",
           "type": "string",
           "optional": true
         },
         "content": {
-          "description": "[Optional] Used to differentiate similar content, or links within the same ad",
+          "description": "[Optional] Used to differentiate similar content, or links within the same ad.",
           "type": "string",
           "optional": true
         },
@@ -263,7 +262,7 @@
       "parents": ["AbstractGlobalContext"],
       "properties": {
         "name": {
-          "description": "The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`",
+          "description": "The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`.",
           "type": "string"
         }
       }
@@ -287,29 +286,29 @@
       "parents": ["PressableContext"],
       "properties": {
         "href": {
-          "description": "URL (href) the link points to.\n",
+          "description": "URL (href) the link points to.",
           "type": "string"
         }
       }
     },
     "RootLocationContext": {
-      "description": "A Location Context that uniquely represents the top-level UI location of the user.\n\n",
+      "description": "A Location Context that uniquely represents the top-level UI location of the user.",
       "parents": ["AbstractLocationContext"]
     },
     "ExpandableContext": {
-      "description": "A Location Context that describes a section of the UI that can expand & collapse.\n\n",
+      "description": "A Location Context that describes a section of the UI that can expand & collapse.",
       "parents": ["AbstractLocationContext"]
     },
     "MediaPlayerContext": {
-      "description": "A Location Context that describes a section of the UI containing a media player.\n\n",
+      "description": "A Location Context that describes a section of the UI containing a media player.",
       "parents": ["AbstractLocationContext"]
     },
     "NavigationContext": {
-      "description": "A Location Context that describes a section of the UI containing navigational elements, for example a menu.\n\n",
+      "description": "A Location Context that describes a section of the UI containing navigational elements, for example a menu.",
       "parents": ["AbstractLocationContext"]
     },
     "OverlayContext": {
-      "description": "A Location Context that describes a section of the UI that represents an overlay, i.e. a Modal.\n\n.",
+      "description": "A Location Context that describes a section of the UI that represents an overlay, i.e. a Modal.",
       "parents": ["AbstractLocationContext"]
     },
     "ContentContext": {

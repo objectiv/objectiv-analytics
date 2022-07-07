@@ -26,7 +26,7 @@ export interface CookieIdContext extends AbstractGlobalContext {
   readonly _type: 'CookieIdContext';
 
   /**
-   * Unique identifier from the session cookie
+   * Unique identifier from the session cookie.
    */
   cookie_id: string;
 }
@@ -68,7 +68,7 @@ export interface InputValueContext extends AbstractGlobalContext {
   readonly _type: 'InputValueContext';
 
   /**
-   * The value of the input element
+   * The value of the input element.
    */
   value: string;
 }
@@ -113,7 +113,7 @@ export interface SessionContext extends AbstractGlobalContext {
 
 /**
  * a context that captures marketing channel info, so users can do attribution, campaign
- * effectiveness and other models
+ * effectiveness and other models.
  * Inheritance: MarketingContext -> AbstractGlobalContext -> AbstractContext
  */
 export interface MarketingContext extends AbstractGlobalContext {
@@ -123,27 +123,27 @@ export interface MarketingContext extends AbstractGlobalContext {
   readonly _type: 'MarketingContext';
 
   /**
-   * Identifies the advertiser, site, publication, etc
+   * Identifies the advertiser, site, publication, etc.
    */
   source: string;
 
   /**
-   * Advertising or marketing medium: cpc, banner, email newsletter, etc
+   * Advertising or marketing medium: cpc, banner, email newsletter, etc.
    */
   medium: string;
 
   /**
-   * Individual campaign name, slogan, promo code, etc
+   * Individual campaign name, slogan, promo code, etc.
    */
   campaign: string;
 
   /**
-   * [Optional] Search keywords
+   * [Optional] Search keywords.
    */
   term: string | null;
 
   /**
-   * [Optional] Used to differentiate similar content, or links within the same ad
+   * [Optional] Used to differentiate similar content, or links within the same ad.
    */
   content: string | null;
 
@@ -174,7 +174,7 @@ export interface IdentityContext extends AbstractGlobalContext {
   readonly _type: 'IdentityContext';
 
   /**
-   * The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`
+   * The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`.
    */
   name: string;
 }

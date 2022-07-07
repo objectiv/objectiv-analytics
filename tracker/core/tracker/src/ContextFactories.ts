@@ -55,7 +55,7 @@ export const makeContentContext = (props: { id: string }): ContentContext => ({
  * @param {Object} props - factory properties
  * @param {string} props.id - A unique string identifier to be combined with the Context Type (`_type`)
  *         for Context instance uniqueness.
- * @param {string} props.cookie_id - Unique identifier from the session cookie
+ * @param {string} props.cookie_id - Unique identifier from the session cookie.
  * @returns {CookieIdContext} - CookieIdContext: Global context with information needed to reconstruct a user session.
  */
 export const makeCookieIdContext = (props: { id: string; cookie_id: string }): CookieIdContext => ({
@@ -107,7 +107,7 @@ export const makeHttpContext = (props: {
  * @param {Object} props - factory properties
  * @param {string} props.id - A unique string identifier to be combined with the Context Type (`_type`)
  *         for Context instance uniqueness.
- * @param {string} props.name - The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`
+ * @param {string} props.name - The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`.
  * @returns {IdentityContext} - IdentityContext: A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.
  */
 export const makeIdentityContext = (props: { id: string; name: string }): IdentityContext => ({
@@ -135,7 +135,7 @@ export const makeInputContext = (props: { id: string }): InputContext => ({
  * @param {Object} props - factory properties
  * @param {string} props.id - A unique string identifier to be combined with the Context Type (`_type`)
  *         for Context instance uniqueness.
- * @param {string} props.value - The value of the input element
+ * @param {string} props.value - The value of the input element.
  * @returns {InputValueContext} - InputValueContext: A GlobalContext containing the value of a single input element. Multiple InputValueContexts may be present in Global Contexts at the same time.
  */
 export const makeInputValueContext = (props: { id: string; value: string }): InputValueContext => ({
@@ -179,16 +179,16 @@ export const makeLocaleContext = (props: { id: string }): LocaleContext => ({
  * @param {Object} props - factory properties
  * @param {string} props.id - A unique string identifier to be combined with the Context Type (`_type`)
  *         for Context instance uniqueness.
- * @param {string} props.source - Identifies the advertiser, site, publication, etc
- * @param {string} props.medium - Advertising or marketing medium: cpc, banner, email newsletter, etc
- * @param {string} props.campaign - Individual campaign name, slogan, promo code, etc
- * @param {string | null} props.term - [Optional] Search keywords
- * @param {string | null} props.content - [Optional] Used to differentiate similar content, or links within the same ad
+ * @param {string} props.source - Identifies the advertiser, site, publication, etc.
+ * @param {string} props.medium - Advertising or marketing medium: cpc, banner, email newsletter, etc.
+ * @param {string} props.campaign - Individual campaign name, slogan, promo code, etc.
+ * @param {string | null} props.term - [Optional] Search keywords.
+ * @param {string | null} props.content - [Optional] Used to differentiate similar content, or links within the same ad.
  * @param {string | null} props.source_platform - [Optional] To differentiate similar content, or links within the same ad.
  * @param {string | null} props.creative_format - [Optional] Identifies the creative used (e.g., skyscraper, banner, etc).
  * @param {string | null} props.marketing_tactic - [Optional] Identifies the marketing tactic used (e.g., onboarding, retention, acquisition etc).
  * @returns {MarketingContext} - MarketingContext: a context that captures marketing channel info, so users can do attribution, campaign
- * 	effectiveness and other models
+ * 	effectiveness and other models.
  */
 export const makeMarketingContext = (props: {
   id: string;
@@ -246,7 +246,6 @@ export const makeNavigationContext = (props: { id: string }): NavigationContext 
  * @param {string} props.id - A unique string identifier to be combined with the Context Type (`_type`)
  *         for Context instance uniqueness.
  * @returns {OverlayContext} - OverlayContext: A Location Context that describes a section of the UI that represents an overlay, i.e. a Modal.
- * 	.
  */
 export const makeOverlayContext = (props: { id: string }): OverlayContext => ({
   __instance_id: generateUUID(),
