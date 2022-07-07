@@ -45,7 +45,7 @@ If you are planning to do a lot of operations on a given Bach DataFrame and alre
 
 .. code-block:: console
 
-    df = df.materialize(materialization='your_temp_table_name')
+    df = df.materialize(materialization='temp_table')
 
 and then continue to do all the other complex operations. One way of checking SQL complexity:
 
