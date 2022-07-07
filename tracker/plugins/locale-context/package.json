@@ -1,7 +1,7 @@
 {
-  "name": "@objectiv/plugin-locale-context-from-url",
+  "name": "@objectiv/plugin-locale-context",
   "version": "0.0.21",
-  "description": "Plugin for Objectiv trackers to automatically generate and attach LocaleContext inferred from URLs",
+  "description": "Plugin for Objectiv trackers to automatically generate and attach LocaleContext",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
   "keywords": [
@@ -12,13 +12,12 @@
     "events",
     "taxonomy",
     "plugin",
-    "locale",
-    "url"
+    "locale"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/objectiv/objectiv-analytics.git",
-    "directory": "tracker/plugins/locale-context-from-url"
+    "directory": "tracker/plugins/locale-context"
   },
   "bugs": "https://github.com/objectiv/objectiv-analytics/issues",
   "contributors": [

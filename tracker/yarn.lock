@@ -1581,9 +1581,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@objectiv/plugin-locale-context-from-url@workspace:plugins/locale-context-from-url":
+"@objectiv/plugin-locale-context@workspace:plugins/locale-context":
   version: 0.0.0-use.local
-  resolution: "@objectiv/plugin-locale-context-from-url@workspace:plugins/locale-context-from-url"
+  resolution: "@objectiv/plugin-locale-context@workspace:plugins/locale-context"
   dependencies:
     "@objectiv/developer-tools": ^0.0.21
     "@objectiv/testing-tools": ^0.0.21

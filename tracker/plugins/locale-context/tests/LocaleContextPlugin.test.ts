@@ -4,12 +4,12 @@
 
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { GlobalContextName, Tracker, TrackerEvent } from '@objectiv/tracker-core';
-import { LocaleContextFromURLPlugin } from '../src';
+import { LocaleContextPlugin } from '../src';
 
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
-describe('LocaleContextFromURLPlugin', () => {
+describe('LocaleContextPlugin', () => {
   beforeEach(() => {
     jest.resetAllMocks();
   });
@@ -25,7 +25,7 @@ describe('LocaleContextFromURLPlugin', () => {
     const testTracker = new Tracker({
       applicationId: 'app-id',
       plugins: [
-        new LocaleContextFromURLPlugin({
+        new LocaleContextPlugin({
           idFactoryFunction: () => location.pathname.split('/')[1] ?? null,
         }),
       ],
@@ -36,7 +36,7 @@ describe('LocaleContextFromURLPlugin', () => {
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.global_contexts).toHaveLength(0);
     expect(MockConsoleImplementation.warn).toHaveBeenCalledWith(
-      '｢objectiv:LocaleContextFromURLPlugin｣ Cannot enrich. Could not determine locale.'
+      '｢objectiv:LocaleContextPlugin｣ Cannot enrich. Could not determine locale.'
     );
   });
 
@@ -51,7 +51,7 @@ describe('LocaleContextFromURLPlugin', () => {
     const testTracker = new Tracker({
       applicationId: 'app-id',
       plugins: [
-        new LocaleContextFromURLPlugin({
+        new LocaleContextPlugin({
           idFactoryFunction: () => location.pathname.split('/')[1] ?? null,
         }),
       ],
