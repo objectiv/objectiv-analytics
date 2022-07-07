@@ -165,6 +165,8 @@ export interface MarketingContext extends AbstractGlobalContext {
 
 /**
  * A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.
+ * The `id` field is used to specify the type of identification e.g. backend, md5(email), supplier_cookie.
+ * The `value` field should contain the unique identifier within that scope.
  * Inheritance: IdentityContext -> AbstractGlobalContext -> AbstractContext
  */
 export interface IdentityContext extends AbstractGlobalContext {
@@ -174,7 +176,7 @@ export interface IdentityContext extends AbstractGlobalContext {
   readonly _type: 'IdentityContext';
 
   /**
-   * The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`.
+   * The unique identifier for this user/group/entity within the scope defined by `id`.
    */
-  name: string;
+  value: string;
 }

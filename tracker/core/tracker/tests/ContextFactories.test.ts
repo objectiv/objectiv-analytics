@@ -182,15 +182,15 @@ describe('Context Factories', () => {
   it(GlobalContextName.IdentityContext, () => {
     expect(
       makeIdentityContext({
-        id: generateUUID(),
-        name: 'backend',
+        id: 'backend',
+        value: generateUUID(),
       })
     ).toStrictEqual({
       __instance_id: matchUUID,
       __global_context: true,
       _type: GlobalContextName.IdentityContext,
-      id: matchUUID,
-      name: 'backend',
+      id: 'backend',
+      value: matchUUID,
     });
   });
 

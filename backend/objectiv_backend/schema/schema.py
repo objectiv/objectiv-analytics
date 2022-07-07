@@ -295,30 +295,33 @@ class MarketingContext(AbstractGlobalContext):
 class IdentityContext(AbstractGlobalContext):
     """
         A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.
+    The `id` field is used to specify the type of identification e.g. backend, md5(email), supplier_cookie.
+    The `value` field should contain the unique identifier within that scope.
 
         Attributes:
-        name (str):
-                The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`.
+        value (str):
+                The unique identifier for this user/group/entity within the scope defined by `id`.
         id (str):
                 A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
     _type = 'IdentityContext'
 
-    def __init__(self, name: str, id: str, **kwargs: Optional[Any]):
+    def __init__(self, value: str, id: str, **kwargs: Optional[Any]):
         """
-        :param name: 
-            The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`.
+        :param value: 
+            The unique identifier for this user/group/entity within the scope defined by `id`.
         :param id: 
             A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
-        AbstractGlobalContext.__init__(self, name=name, id=id, **kwargs)
+        AbstractGlobalContext.__init__(self, value=value, id=id, **kwargs)
 
 
 class AbstractLocationContext(AbstractContext, ABC):
     """
-        AbstractLocationContext are the abstract parents of all Location Contexts. Location Contexts are meant to describe where an event originated from in the visual UI.
+        AbstractLocationContext are the abstract parents of all Location Contexts.
+    Location Contexts are meant to describe where an event originated from in the visual UI.
 
         Attributes:
         id (str):
@@ -503,7 +506,8 @@ class OverlayContext(AbstractLocationContext):
 
 class ContentContext(AbstractLocationContext):
     """
-        A Location Context that describes a logical section of the UI that contains other Location Contexts. Enabling Data Science to analyze this section specifically.
+        A Location Context that describes a logical section of the UI that contains other Location Contexts.
+    Enabling Data Science to analyze this section specifically.
 
         Attributes:
         id (str):
