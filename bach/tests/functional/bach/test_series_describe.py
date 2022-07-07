@@ -17,22 +17,26 @@ def test_categorical_describe() -> None:
         ],
         expected_data=[
             ['count', '3'],
-            ['max', 'Snits'],
             ['min', 'Drylts'],
-            ['mode', 'Drylts'],
+            ['max', 'Snits'],
             ['nunique', '3'],
+            ['mode', 'Drylts'],
         ],
     )
 
 
 def test_numerical_describe() -> None:
     series = get_bt_with_test_data()['skating_order']
-    result = series.describe(percentiles=[0.5])
+    result = series.describe(percentiles=[0.88, 0.5, 0.75])
     assert isinstance(result, Series)
+    assert len(result.sorting_keys) == 1
 
     expected = pd.Series(
-        index=pd.Index(['count', 'mean', 'std', 'min', 'max', 'nunique', 'mode', '0.5'], name='__stat'),
-        data=[3., 2., 1., 1., 3., 3., 1., 2.],
+        index=pd.Index(
+            ['count', 'mean', 'std', 'min', 'max', 'nunique', 'mode', '0.5', '0.75', '0.88'],
+            name='__stat'
+        ),
+        data=[3., 2., 1., 1., 3., 3., 1., 2, 2.5, 2.76],
         name='skating_order',
     )
     pd.testing.assert_series_equal(expected, result.to_pandas())

@@ -1788,11 +1788,10 @@ class Series(ABC):
         :param datetime_is_numeric: not supported
         :returns: a new Series with the descriptive statistics
         """
-        from bach.operations.describe import DescribeOperation
-        describe_df = DescribeOperation(
+        from bach.operations.describe import SeriesDescribeOperation
+        return SeriesDescribeOperation(
             obj=self, datetime_is_numeric=datetime_is_numeric, percentiles=percentiles,
         )()
-        return describe_df.all_series[self.name]
 
     def drop_duplicates(self: T, keep: Union[str, bool] = 'first') -> T:
         """

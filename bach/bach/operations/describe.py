@@ -1,16 +1,16 @@
 """
 Copyright 2022 Objectiv B.V.
 """
+from abc import abstractmethod
 from collections import abc
 from enum import Enum
-from typing import Optional, Union, Sequence, List, Set
+from typing import Optional, Union, Sequence, List, Set, Generic, TypeVar
 
 from bach import (
-    DataFrame, SeriesAbstractNumeric, DataFrameOrSeries, get_series_type_from_dtype,
+    DataFrame, SeriesAbstractNumeric, DataFrameOrSeries, get_series_type_from_dtype, Series,
 )
 from bach.operations.concat import DataFrameConcatOperation
 from bach.expression import Expression
-from sql_models.util import is_bigquery
 
 
 class SupportedStats(Enum):
@@ -23,9 +23,12 @@ class SupportedStats(Enum):
     MODE = 'mode'
 
 
-class DescribeOperation:
+TDataFrameOrSeries = TypeVar('TDataFrameOrSeries', bound='DataFrameOrSeries')
+
+
+class DescribeOperation(Generic[TDataFrameOrSeries]):
     """
-    Class that can describe a DataFrame or Series. To use: first instantiate this class, then call the
+    Abstract class that can describe a DataFrame or Series. To use: first instantiate this class, then call the
     instantiated object as a function, e.g. `df_described = DescribeOperation(obj=data_frame)()`
 
     In order to instantiate this class you should provide the following params:
@@ -37,6 +40,8 @@ class DescribeOperation:
     datetime_is_numeric: A boolean specifying if datetime series should be treated as numeric columns
         (not supported)
     percentiles: List-like of numbers between 0-1. If nothing is provided, defaults to [.25, .5, .75]
+
+    Child classes are in charge of specifying the correct sorting of final result.
     """
     df: DataFrame
     series_to_describe: List[str]
@@ -48,7 +53,7 @@ class DescribeOperation:
 
     def __init__(
         self,
-        obj: DataFrameOrSeries,
+        obj: TDataFrameOrSeries,
         include: Optional[Union[str, Sequence[str]]] = None,
         exclude: Optional[Union[str, Sequence[str]]] = None,
         datetime_is_numeric: bool = False,
@@ -123,7 +128,11 @@ class DescribeOperation:
             raise ValueError(f'Unexpected dtype value: {value}')
         return {get_series_type_from_dtype(dtype).dtype for dtype in dtypes}
 
-    def __call__(self) -> DataFrame:
+    @abstractmethod
+    def _get_final_described_result(self, describe_df: DataFrame) -> TDataFrameOrSeries:
+        raise NotImplementedError()
+
+    def __call__(self) -> TDataFrameOrSeries:
         """
         Generates an aggregated dataframe per stat and concatenates all results into a new dataframe
         containing all descriptive statistics of the dataset.
@@ -141,15 +150,10 @@ class DescribeOperation:
             all_stats_df.append(percentiles_df)
 
         describe_df = DataFrameConcatOperation(objects=all_stats_df)()
-        describe_df = describe_df.sort_values(by=f'{self.STAT_SERIES_NAME}_position')
         describe_df = describe_df.round(decimals=self.RESULT_DECIMALS)
         describe_df = describe_df.set_index(self.STAT_SERIES_NAME)
 
-        all_described_series = [
-            series_name
-            for series_name in self.df.all_series if series_name in describe_df.all_series
-        ]
-        return describe_df[all_described_series]  # type: ignore
+        return self._get_final_described_result(describe_df)
 
     def _calculate_stat(
         self,
@@ -237,3 +241,19 @@ class DescribeOperation:
         )
 
         return percentile_df
+
+
+class DataFrameDescribeOperation(DescribeOperation[DataFrame]):
+    def _get_final_described_result(self, describe_df: DataFrame) -> DataFrame:
+        describe_df = describe_df.sort_values(by=f'{self.STAT_SERIES_NAME}_position')
+        all_described_series = [
+            series_name
+            for series_name in self.df.all_series if series_name in describe_df.all_series
+        ]
+        return describe_df[all_described_series]
+
+
+class SeriesDescribeOperation(DescribeOperation[Series]):
+    def _get_final_described_result(self, describe_df: DataFrame) -> Series:
+        describe_series = describe_df[self.df.data_columns[0]]
+        return describe_series.sort_values(keys=[describe_df[f'{self.STAT_SERIES_NAME}_position']])
