@@ -136,7 +136,7 @@ export const makeInputContext = (props: { id: string }): InputContext => ({
  * @param {string} props.id - A unique string identifier to be combined with the Context Type (`_type`)
  *         for Context instance uniqueness.
  * @param {string} props.value - The value of the input element.
- * @returns {InputValueContext} - InputValueContext: A GlobalContext containing the value of a single input element. Multiple InputValueContexts may be present in Global Contexts at the same time.
+ * @returns {InputValueContext} - InputValueContext: A GlobalContext containing the value of a single input element. Multiple can be present.
  */
 export const makeInputValueContext = (props: { id: string; value: string }): InputValueContext => ({
   __instance_id: generateUUID(),

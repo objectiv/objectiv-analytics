@@ -132,7 +132,7 @@ class HttpContext(AbstractGlobalContext):
 
 class InputValueContext(AbstractGlobalContext):
     """
-        A GlobalContext containing the value of a single input element. Multiple InputValueContexts may be present in Global Contexts at the same time.
+        A GlobalContext containing the value of a single input element. Multiple can be present.
 
         Attributes:
         value (str):
