@@ -66,8 +66,9 @@ class LogisticRegression:
         if not isinstance(y, SeriesBoolean):
             raise TypeError(f"y is of type {type(y)}, should be SeriesBoolean")
 
-        X_p = X.to_pandas()
-        y_p = y.to_pandas()
+        # X and y can have different ordering in BigQuery, need to sort them
+        X_p = X.to_pandas().sort_index()
+        y_p = y.to_pandas().sort_index()
 
         return self._model.fit(X_p, y_p)
 
