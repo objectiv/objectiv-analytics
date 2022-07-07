@@ -26,7 +26,7 @@ from sql_models.util import extract_format_fields
 
 class MaterializationType(NamedTuple):
     """
-    name: unique identifier
+    type_name: unique identifier
     is_statement:
         True indicates that a SqlModel with this materialization should be turned into a sql statement,
             either query or a create statement
@@ -35,25 +35,32 @@ class MaterializationType(NamedTuple):
     is_cte:
         True indicates that a SqlModel with this materialization can be used as a CTE by another SqlModel.
         False indicates that a SqlModel with this materialization cannot be used as a CTE
+    has_lasting_effect: true iff the materialization is a permanent table or view
     """
-    name: str
+    type_name: str
     is_statement: bool
     is_cte: bool
+    has_lasting_effect: bool
 
 
 class Materialization(Enum):
-    CTE = MaterializationType('cte', False, True)
+    CTE = MaterializationType('cte', is_statement=False, is_cte=True, has_lasting_effect=False)
     """ A QUERY can be used as a CTE, but is also a stand-alone query."""
-    QUERY = MaterializationType('query', True, True)
-    VIEW = MaterializationType('view', True, False)
-    TABLE = MaterializationType('table', True, False)
+    QUERY = MaterializationType('query', is_statement=True, is_cte=True, has_lasting_effect=False)
+    VIEW = MaterializationType('view', is_statement=True, is_cte=False, has_lasting_effect=True)
+    TABLE = MaterializationType('table', is_statement=True, is_cte=False, has_lasting_effect=True)
     """
     TEMP TABLE is a temporary table that is limited to the current session, or a table that is guaranteed to
     be cleaned up by the database at some later time.
     """
-    TEMP_TABLE = MaterializationType('temp_table', True, False)
+    TEMP_TABLE = MaterializationType('temp_table', is_statement=True, is_cte=False, has_lasting_effect=False)
     """ A VIRTUAL_NODE will not be turned into a statement, nor generate any CTEs"""
-    VIRTUAL_NODE = MaterializationType('virtual', False, False)
+    VIRTUAL_NODE = MaterializationType('virtual', is_statement=False, is_cte=False, has_lasting_effect=False)
+
+    @property
+    def type_name(self) -> str:
+        """ Materialization type unique name e.g. 'cte' or 'table' """
+        return self.value.type_name
 
     @property
     def is_statement(self) -> bool:
@@ -65,22 +72,19 @@ class Materialization(Enum):
 
     @property
     def has_lasting_effect(self) -> bool:
-        """ Return true if the materialization is a permanent table or view."""
-        # TODO: make these functions consistent, e.g. have a field in value for this, or remove those from
-        # others
-        return self in (Materialization.VIEW, Materialization.TABLE)
+        return self.value.has_lasting_effect
 
     @classmethod
-    def get_by_name(cls, name) -> 'Materialization':
+    def get_by_type_name(cls, type_name) -> 'Materialization':
         for mat in cls:
-            if mat.value.name == name:
+            if mat.type_name == type_name:
                 return mat
-        raise KeyError(f'no such Materialization: "{name}"')
+        raise KeyError(f'no such Materialization: "{type_name}"')
 
     @classmethod
     def normalize(cls, materialization: Union['Materialization', str]) -> 'Materialization':
         if isinstance(materialization, str):
-            return Materialization.get_by_name(materialization)
+            return Materialization.get_by_type_name(materialization)
         if isinstance(materialization, Materialization):
             return materialization
         raise ValueError(f'materialization must be of type str or Materialization, '
@@ -384,8 +388,9 @@ class SqlModel(Generic[T]):
             invalidate assumptions that code might hold about these instances. See the class's docstring
             for information on why this is important.
         :param references: Dictionary mapping reference names to instances of SqlModels.
-        :param materialization: TODO
-        :param materialization_name: TODO
+        :param materialization: How this model should be materialized, e.g. as CTE, as a table, etc.
+        :param materialization_name: If the materialization is a database object (e.g. table, view,
+            temp table), then this value can be set to override the default name of the object.
         """
         self._model_spec = model_spec
         self._generic_name = model_spec.generic_name
@@ -421,7 +426,7 @@ class SqlModel(Generic[T]):
             'generic_name': self.generic_name,
             'sql': self.sql,
             'properties': self.placeholders_formatted,
-            'materialization': self.materialization.value,
+            'materialization': self.materialization.type_name,
             'references': {
                 ref_name: model.hash for ref_name, model in self.references.items()
             }

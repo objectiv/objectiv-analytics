@@ -6,7 +6,7 @@ import math
 from unittest.mock import ANY
 
 from bach import SeriesFloat64
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
+from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data, run_query
 from tests.functional.bach.test_series_numeric import helper_test_simple_arithmetic
 
 
@@ -47,3 +47,19 @@ def test_float_int_arithmetic(engine):
 
 def test_float_float_arithmetic(engine):
     helper_test_simple_arithmetic(engine=engine, a=20.01, b=3.33)
+
+
+def test_random(engine):
+    bt = get_df_with_test_data(engine)[['city']]
+    bt['random_float'] = SeriesFloat64.random(base=bt)
+    result = bt.to_pandas()
+    assert list(result.columns) == ['city', 'random_float']
+    distinct_values = set()
+    for value in result['random_float'].values:
+        assert isinstance(value, float)
+        assert 0 <= value < 1
+        # We cannot check whether the generated numbers are random. But we can check
+        # that there are no duplicates. The chance of having a duplicate random number in
+        # 3 rows of data with 64 bit random numbers is so small we just discard that.
+        assert value not in distinct_values
+        distinct_values.add(value)

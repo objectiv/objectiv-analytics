@@ -73,9 +73,12 @@ class SeriesUuid(Series):
         raise ValueError(f'cannot convert {source_dtype} to uuid.')
 
     @classmethod
-    def sql_gen_random_uuid(cls, base: DataFrameOrSeries) -> 'SeriesUuid':
+    def random(cls, base: DataFrameOrSeries) -> 'SeriesUuid':
         """
         Create a new Series object with an expression, that will evaluate to a random uuid for each row.
+
+        :param base: DataFrame or Series from which the newly created Series' engine, base_node and index
+            parameters are copied.
 
         .. warning::
             The returned Series has a non-deterministic expression, it will give a different result each
@@ -85,11 +88,11 @@ class SeriesUuid(Series):
 
         .. code-block:: python
 
-            df['x'] = SeriesUuid.sql_gen_random_uuid(df)
+            df['x'] = SeriesUuid.random(df)
             df['y'] = df['x']
             df['different'] = df['y'] != df['x']
 
-        The df['different'] column will be True for all rows, because the second statement copies the
+        The df['different'] series will be True for all rows, because the second statement copies the
         unevaluated expression, not the result of the expression. So at evaluation time the expression will
         be evaluated twice for each row, for the 'x' column and the 'y' column, giving different results both
         times. One way to work around this is to materialize the dataframe in its current state (using
@@ -105,8 +108,8 @@ class SeriesUuid(Series):
         return cls.get_class_instance(
             engine=base.engine,
             base_node=base.base_node,
-            index=base.engine,
-            name='__tmp',
+            index=base.index,
+            name='random',
             expression=Expression.construct(expr_str),
             group_by=None,
             sorted_ascending=None,

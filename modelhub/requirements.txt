@@ -2,6 +2,7 @@
 objectiv-bach
 matplotlib
 seaborn
+typing-extensions
 
 # metabase
 requests

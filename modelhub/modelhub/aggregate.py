@@ -1,13 +1,12 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-from typing import List, Union
-
 import bach
 from bach.series import Series
 from sql_models.constants import NotSet, not_set
 from typing import cast, List, Union, TYPE_CHECKING
 
+from modelhub.decorators import use_only_required_objectiv_series
 
 if TYPE_CHECKING:
     from modelhub import ModelHub
@@ -57,8 +56,6 @@ class Aggregate:
                              column: str,
                              name: str):
 
-        self._mh._check_data_is_objectiv_data(data)
-
         data = self._check_groupby(data=data,
                                    groupby=groupby,
                                    not_allowed_in_groupby=column)
@@ -66,6 +63,9 @@ class Aggregate:
         series = data[column].nunique()
         return series.copy_override(name=name)
 
+    @use_only_required_objectiv_series(
+        required_series=['user_id', 'moment'], include_series_from_params=['groupby'],
+    )
     def unique_users(self,
                      data: bach.DataFrame,
                      groupby: GroupByType = not_set) -> bach.SeriesInt64:
@@ -87,6 +87,9 @@ class Aggregate:
                                          column='user_id',
                                          name='unique_users')
 
+    @use_only_required_objectiv_series(
+        required_series=['session_id', 'moment'], include_series_from_params=['groupby'],
+    )
     def unique_sessions(self,
                         data: bach.DataFrame,
                         groupby: GroupByType = not_set) -> bach.SeriesInt64:
@@ -108,6 +111,9 @@ class Aggregate:
                                          column='session_id',
                                          name='unique_sessions')
 
+    @use_only_required_objectiv_series(
+        required_series=['session_id', 'moment'], include_series_from_params=['groupby']
+    )
     def session_duration(self,
                          data: bach.DataFrame,
                          groupby: GroupByType = not_set,
@@ -127,8 +133,6 @@ class Aggregate:
         :param method: 'mean' or 'sum'
         :returns: series with results.
         """
-
-        self._mh._check_data_is_objectiv_data(data)
 
         if groupby is not_set:
             groupby = self._mh.time_agg(data)
@@ -156,6 +160,7 @@ class Aggregate:
             return grouped_data.sum()
         return grouped_data.mean()
 
+    @use_only_required_objectiv_series(required_series=['user_id', 'session_id'])
     def frequency(self, data: bach.DataFrame) -> bach.SeriesInt64:
         """
         Calculate a frequency table for the number of users by number of sessions.
@@ -163,13 +168,14 @@ class Aggregate:
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :returns: series with results.
         """
-
-        self._mh._check_data_is_objectiv_data(data)
         total_sessions_user = data.groupby(['user_id']).aggregate({'session_id': 'nunique'}).reset_index()
         frequency = total_sessions_user.groupby(['session_id_nunique']).aggregate({'user_id': 'nunique'})
 
         return frequency.user_id_nunique
 
+    @use_only_required_objectiv_series(
+        required_series=['global_contexts', 'location_stack', 'user_id', 'stack_event_types', 'event_type'],
+    )
     def top_product_features(self,
                              data: bach.DataFrame,
                              location_stack: 'SeriesLocationStack' = None,
@@ -187,8 +193,6 @@ class Aggregate:
         """
 
         data = data.copy()
-
-        self._mh._check_data_is_objectiv_data(data)
 
         # the following columns have to be in the data
         data['__application'] = data.global_contexts.gc.application
@@ -217,6 +221,13 @@ class Aggregate:
 
         return users_feature.sort_values('user_id_nunique', ascending=False)
 
+    @use_only_required_objectiv_series(
+        required_series=[
+            'global_contexts', 'location_stack', 'user_id', 'stack_event_types',
+            # required by Map.conversions_in_time and Map.conversions_counter
+            'session_id', 'moment', 'event_type',
+        ],
+    )
     def top_product_features_before_conversion(self,
                                                data: bach.DataFrame,
                                                name: str,
@@ -238,7 +249,6 @@ class Aggregate:
         """
 
         data = data.copy()
-        self._mh._check_data_is_objectiv_data(data)
 
         if not name:
             raise ValueError('Conversion event label is not provided.')
@@ -296,6 +306,7 @@ class Aggregate:
 
         return converted_users_features.sort_values('unique_users', ascending=False)
 
+    @use_only_required_objectiv_series(required_series=['user_id', 'moment', 'event_type'])
     def retention_matrix(self,
                          data: bach.DataFrame,
                          time_period: str = 'monthly',
@@ -368,8 +379,6 @@ class Aggregate:
             except Exception as e:
                 print('Please provide correct end_date formatted as "YYYY-MM-DD".')
                 raise e
-
-        self._mh._check_data_is_objectiv_data(data)
 
         data = data.copy()
 

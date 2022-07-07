@@ -1,8 +1,8 @@
 install_env_bach:
-	pip install -e ../bach
+	pip install -e ../../../bach
 
 install_env_modelhub:
-	pip install -e ../modelhub
+	pip install -e ../../../modelhub
 
 requirements:
 	pip install -r requirements.txt
@@ -21,7 +21,7 @@ mypy:
 check-dev: requirements isort pycodestyle mypy
 
 checklock-inspection:
-	python checklock_holmes.py --engine=all
+	python checklock-holmes.py --engine=all
 
 checklock-inspection-bigquery:
-	python checklock_holmes.py --engine=bigquery
+	python checklock-holmes.py --engine=bigquery

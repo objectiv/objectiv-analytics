@@ -802,7 +802,7 @@ class Series(ABC):
         the size of the generated SQL query. But this can be useful if the current Series contains
         expressions that you want to evaluate before further expressions are build on top of them. This might
         make sense for very large expressions, or for non-deterministic expressions (e.g. see
-        :py:meth:`SeriesUuid.sql_gen_random_uuid`). Additionally, materializing as a temporary table can
+        :py:meth:`SeriesUuid.random`). Additionally, materializing as a temporary table can
         improve performance in some instances.
 
         Note this function does NOT query the database or materializes any data in the database. It merely
