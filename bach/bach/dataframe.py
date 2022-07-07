@@ -1116,11 +1116,15 @@ class DataFrame:
 
     def get_unsampled(self) -> 'DataFrame':
         """
-        Return a copy of the current sampled DataFrame, that undoes calling :py:meth:`get_sample` earlier.
+        Return a copy of the current sampled DataFrame, that undoes calling :py:meth:`get_sample()` earlier.
 
         All other operations that have been done on the sample DataFrame will be applied on the DataFrame
-        that is returned. This does not remove the table that was written to the database by
-        :py:meth:`get_sample`, the new DataFrame just does not query that table anymore.
+        that is returned. The returned DataFrame's data will look as if :py:meth:`get_sample()` was never
+        called, but the state of the DataFrame could be slightly different since :py:meth:`get_sample()`
+        might have called :py:meth:`materialize()`.
+
+        This does not remove the table that was written to the database by :py:meth:`get_sample()`, the new
+        DataFrame just does not query that table anymore.
 
         Will raise an error if the current DataFrame is not sample data of another DataFrame, i.e.
         :py:meth:`get_sample` has not been called.
