@@ -11,7 +11,6 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data
 def test_top_product_features(db_params):
     df, modelhub = get_objectiv_dataframe_test(db_params)
     initial_columns = df.data_columns
-    print(df.engine)
     # without location_stack
     tdf = modelhub.aggregate.top_product_features(df)
     assert len(tdf.index) == 3
