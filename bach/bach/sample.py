@@ -77,7 +77,7 @@ def get_sample(df: DataFrame,
             # and doesn't require us to create a temporary table like `tablesample` does.
             from bach import SeriesFloat64
             sample_cutoff = sample_percentage / 100
-            df = df[SeriesFloat64.random_expression(base=df) < sample_cutoff]
+            df = df[SeriesFloat64.random(base=df) < sample_cutoff]
     if_exists = 'replace' if overwrite else 'fail'
     df.database_create_table(table_name=table_name, if_exists=if_exists)
 
