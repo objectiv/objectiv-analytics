@@ -51,7 +51,7 @@ describe('TrackedInputContext', () => {
           expect.objectContaining({
             _type: GlobalContextName.InputValueContext,
             id: 'input-id',
-            value: 'some new text'
+            value: 'some new text',
           }),
         ]),
       })
@@ -65,7 +65,13 @@ describe('TrackedInputContext', () => {
 
     render(
       <ObjectivProvider tracker={tracker}>
-        <TrackedInput type={'text'} id={'input-id'} data-testid={'test-input'} defaultValue={'text'} trackValue={true}/>
+        <TrackedInput
+          type={'text'}
+          id={'input-id'}
+          data-testid={'test-input'}
+          defaultValue={'text'}
+          trackValue={true}
+        />
       </ObjectivProvider>
     );
 
@@ -85,9 +91,18 @@ describe('TrackedInputContext', () => {
         ]),
         global_contexts: expect.arrayContaining([
           expect.objectContaining({
+            _type: GlobalContextName.ApplicationContext,
+          }),
+          expect.objectContaining({
+            _type: GlobalContextName.PathContext,
+          }),
+          expect.objectContaining({
+            _type: GlobalContextName.HttpContext,
+          }),
+          expect.objectContaining({
             _type: GlobalContextName.InputValueContext,
             id: 'input-id',
-            value: 'some new text'
+            value: 'some new text',
           }),
         ]),
       })

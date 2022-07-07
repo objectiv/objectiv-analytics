@@ -172,9 +172,18 @@ describe('TrackedInputContext', () => {
         ]),
         global_contexts: expect.not.arrayContaining([
           expect.objectContaining({
+            _type: GlobalContextName.ApplicationContext,
+          }),
+          expect.objectContaining({
+            _type: GlobalContextName.PathContext,
+          }),
+          expect.objectContaining({
+            _type: GlobalContextName.HttpContext,
+          }),
+          expect.objectContaining({
             _type: GlobalContextName.InputValueContext,
             id: 'input-id',
-            value: 'some new text'
+            value: 'some new text',
           }),
         ]),
       })
@@ -214,7 +223,7 @@ describe('TrackedInputContext', () => {
           expect.objectContaining({
             _type: GlobalContextName.InputValueContext,
             id: 'input-id',
-            value: 'some new text'
+            value: 'some new text',
           }),
         ]),
       })

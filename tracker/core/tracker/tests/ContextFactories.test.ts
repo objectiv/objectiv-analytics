@@ -13,8 +13,10 @@ import {
   makeExpandableContext,
   makeHttpContext,
   makeIdentityContext,
-  makeInputContext, makeInputValueContext,
-  makeLinkContext, makeLocaleContext,
+  makeInputContext,
+  makeInputValueContext,
+  makeLinkContext,
+  makeLocaleContext,
   makeMarketingContext,
   makeMediaPlayerContext,
   makeNavigationContext,
@@ -122,7 +124,7 @@ describe('Context Factories', () => {
       __instance_id: matchUUID,
       __global_context: true,
       _type: GlobalContextName.LocaleContext,
-      id: 'en'
+      id: 'en',
     });
   });
 
