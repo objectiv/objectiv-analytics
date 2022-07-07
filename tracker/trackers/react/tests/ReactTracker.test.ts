@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { IdentityContextPlugin } from '@objectiv/plugin-identity-context';
+import { IdentityContextAttributes, IdentityContextPlugin } from '@objectiv/plugin-identity-context';
 import { RootLocationContextFromURLPlugin } from '@objectiv/plugin-root-location-context-from-url';
 import { AbstractGlobalContext } from '@objectiv/schema';
 import { expectToThrow, MockConsoleImplementation } from '@objectiv/testing-tools';
@@ -225,9 +225,9 @@ describe('ReactTracker', () => {
       /**
        * Mocked identity metadata we will use to enrich the event, via IdentityContext
        */
-      const identityMetadata = {
+      const identityMetadata: IdentityContextAttributes = {
         id: '123abc',
-        name: 'authentication',
+        value: 'authentication',
       };
 
       /**

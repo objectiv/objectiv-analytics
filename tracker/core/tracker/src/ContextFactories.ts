@@ -107,15 +107,15 @@ export const makeHttpContext = (props: {
  * @param {Object} props - factory properties
  * @param {string} props.id - A unique string identifier to be combined with the Context Type (`_type`)
  *         for Context instance uniqueness.
- * @param {string} props.name - The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`.
+ * @param {string} props.value - The unique identifier for this user/group/entity within the scope defined by `id`.
  * @returns {IdentityContext} - IdentityContext: A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.
  */
-export const makeIdentityContext = (props: { id: string; name: string }): IdentityContext => ({
+export const makeIdentityContext = (props: { id: string; value: string }): IdentityContext => ({
   __instance_id: generateUUID(),
   __global_context: true,
   _type: GlobalContextName.IdentityContext,
   id: props.id,
-  name: props.name,
+  value: props.value,
 });
 
 /** Creates instance of InputContext
@@ -136,7 +136,7 @@ export const makeInputContext = (props: { id: string }): InputContext => ({
  * @param {string} props.id - A unique string identifier to be combined with the Context Type (`_type`)
  *         for Context instance uniqueness.
  * @param {string} props.value - The value of the input element.
- * @returns {InputValueContext} - InputValueContext: A GlobalContext containing the value of a single input element. Multiple InputValueContexts may be present in Global Contexts at the same time.
+ * @returns {InputValueContext} - InputValueContext: A GlobalContext containing the value of a single input element. Multiple can be present.
  */
 export const makeInputValueContext = (props: { id: string; value: string }): InputValueContext => ({
   __instance_id: generateUUID(),

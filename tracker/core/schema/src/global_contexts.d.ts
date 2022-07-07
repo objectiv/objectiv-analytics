@@ -58,7 +58,7 @@ export interface HttpContext extends AbstractGlobalContext {
 }
 
 /**
- * A GlobalContext containing the value of a single input element. Multiple InputValueContexts may be present in Global Contexts at the same time.
+ * A GlobalContext containing the value of a single input element. Multiple can be present.
  * Inheritance: InputValueContext -> AbstractGlobalContext -> AbstractContext
  */
 export interface InputValueContext extends AbstractGlobalContext {
@@ -174,7 +174,7 @@ export interface IdentityContext extends AbstractGlobalContext {
   readonly _type: 'IdentityContext';
 
   /**
-   * The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`.
+   * The unique identifier for this user/group/entity within the scope defined by `id`.
    */
-  name: string;
+  value: string;
 }

@@ -132,7 +132,7 @@ class HttpContext(AbstractGlobalContext):
 
 class InputValueContext(AbstractGlobalContext):
     """
-        A GlobalContext containing the value of a single input element. Multiple InputValueContexts may be present in Global Contexts at the same time.
+        A GlobalContext containing the value of a single input element. Multiple can be present.
 
         Attributes:
         value (str):
@@ -297,23 +297,23 @@ class IdentityContext(AbstractGlobalContext):
         A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.
 
         Attributes:
-        name (str):
-                The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`.
+        value (str):
+                The unique identifier for this user/group/entity within the scope defined by `id`.
         id (str):
                 A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
     _type = 'IdentityContext'
 
-    def __init__(self, name: str, id: str, **kwargs: Optional[Any]):
+    def __init__(self, value: str, id: str, **kwargs: Optional[Any]):
         """
-        :param name: 
-            The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`.
+        :param value: 
+            The unique identifier for this user/group/entity within the scope defined by `id`.
         :param id: 
             A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
-        AbstractGlobalContext.__init__(self, name=name, id=id, **kwargs)
+        AbstractGlobalContext.__init__(self, value=value, id=id, **kwargs)
 
 
 class AbstractLocationContext(AbstractContext, ABC):

@@ -17,12 +17,12 @@ describe('IdentityContextPlugin', () => {
   it('should allow configuring the IdentityContext attributes by value', async () => {
     const identityContextPlugin = new IdentityContextPlugin({
       id: 'test',
-      name: 'backend',
+      value: 'backend',
     });
     expect(identityContextPlugin).toBeInstanceOf(IdentityContextPlugin);
     expect(identityContextPlugin.config).toStrictEqual({
       id: 'test',
-      name: 'backend',
+      value: 'backend',
     });
   });
 
@@ -30,22 +30,22 @@ describe('IdentityContextPlugin', () => {
     const identityContextPlugin = new IdentityContextPlugin([
       {
         id: 'test 1',
-        name: 'backend',
+        value: 'backend',
       },
       {
         id: 'test 2',
-        name: 'authentication',
+        value: 'authentication',
       },
     ]);
     expect(identityContextPlugin).toBeInstanceOf(IdentityContextPlugin);
     expect(identityContextPlugin.config).toStrictEqual([
       {
         id: 'test 1',
-        name: 'backend',
+        value: 'backend',
       },
       {
         id: 'test 2',
-        name: 'authentication',
+        value: 'authentication',
       },
     ]);
   });
@@ -53,7 +53,7 @@ describe('IdentityContextPlugin', () => {
   it('should allow configuring the IdentityContext attributes by function returning an object', async () => {
     const identityContextPlugin = new IdentityContextPlugin(() => ({
       id: 'test',
-      name: 'backend',
+      value: 'backend',
     }));
     expect(identityContextPlugin).toBeInstanceOf(IdentityContextPlugin);
     expect(identityContextPlugin.config).toBeInstanceOf(Function);
@@ -63,11 +63,11 @@ describe('IdentityContextPlugin', () => {
     const identityContextPlugin = new IdentityContextPlugin(() => [
       {
         id: 'test 1',
-        name: 'backend',
+        value: 'backend',
       },
       {
         id: 'test 2',
-        name: 'authentication',
+        value: 'authentication',
       },
     ]);
     expect(identityContextPlugin).toBeInstanceOf(IdentityContextPlugin);
@@ -88,7 +88,7 @@ describe('IdentityContextPlugin', () => {
       plugins: [
         new IdentityContextPlugin({
           id: 'test 1',
-          name: 'backend',
+          value: 'backend',
         }),
       ],
     });
@@ -99,7 +99,7 @@ describe('IdentityContextPlugin', () => {
         expect.objectContaining({
           _type: GlobalContextName.IdentityContext,
           id: 'test 1',
-          name: 'backend',
+          value: 'backend',
         }),
       ])
     );
@@ -120,11 +120,11 @@ describe('IdentityContextPlugin', () => {
         new IdentityContextPlugin([
           {
             id: 'test 1',
-            name: 'backend',
+            value: 'backend',
           },
           {
             id: 'test 2',
-            name: 'authentication',
+            value: 'authentication',
           },
         ]),
       ],
@@ -136,12 +136,12 @@ describe('IdentityContextPlugin', () => {
         expect.objectContaining({
           _type: GlobalContextName.IdentityContext,
           id: 'test 1',
-          name: 'backend',
+          value: 'backend',
         }),
         expect.objectContaining({
           _type: GlobalContextName.IdentityContext,
           id: 'test 2',
-          name: 'authentication',
+          value: 'authentication',
         }),
       ])
     );
@@ -161,7 +161,7 @@ describe('IdentityContextPlugin', () => {
       plugins: [
         new IdentityContextPlugin(() => ({
           id: 'test 1',
-          name: 'backend',
+          value: 'backend',
         })),
       ],
     });
@@ -173,7 +173,7 @@ describe('IdentityContextPlugin', () => {
         expect.objectContaining({
           _type: GlobalContextName.IdentityContext,
           id: 'test 1',
-          name: 'backend',
+          value: 'backend',
         }),
       ])
     );
@@ -194,11 +194,11 @@ describe('IdentityContextPlugin', () => {
         new IdentityContextPlugin(() => [
           {
             id: 'test 1',
-            name: 'backend',
+            value: 'backend',
           },
           {
             id: 'test 2',
-            name: 'authentication',
+            value: 'authentication',
           },
         ]),
       ],
@@ -211,12 +211,12 @@ describe('IdentityContextPlugin', () => {
         expect.objectContaining({
           _type: GlobalContextName.IdentityContext,
           id: 'test 1',
-          name: 'backend',
+          value: 'backend',
         }),
         expect.objectContaining({
           _type: GlobalContextName.IdentityContext,
           id: 'test 2',
-          name: 'authentication',
+          value: 'authentication',
         }),
       ])
     );
@@ -237,7 +237,7 @@ describe('IdentityContextPlugin', () => {
     it('should not log', () => {
       new IdentityContextPlugin({
         id: 'test',
-        name: 'backend',
+        value: 'backend',
       });
       expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
     });
