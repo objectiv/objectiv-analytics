@@ -56,7 +56,7 @@ describe('TrackedTextInput', () => {
     expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
   });
 
-  it('should track InputChangeEvent on press with a InputValueContext in the GlobalContexts', () => {
+  it('should track InputChangeEvent on press with an InputValueContext in the GlobalContexts', () => {
     const { getByTestId } = render(<TestTrackedTextInput id={'test-switch'} testID="test-switch" trackValue={true} />);
 
     jest.resetAllMocks();
