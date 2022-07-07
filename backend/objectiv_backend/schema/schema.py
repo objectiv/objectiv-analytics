@@ -295,6 +295,8 @@ class MarketingContext(AbstractGlobalContext):
 class IdentityContext(AbstractGlobalContext):
     """
         A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.
+    The `id` field is used to specify the type of identification e.g. backend, md5(email), supplier_cookie.
+    The `value` field should contain the unique identifier within that scope.
 
         Attributes:
         value (str):
@@ -318,7 +320,8 @@ class IdentityContext(AbstractGlobalContext):
 
 class AbstractLocationContext(AbstractContext, ABC):
     """
-        AbstractLocationContext are the abstract parents of all Location Contexts. Location Contexts are meant to describe where an event originated from in the visual UI.
+        AbstractLocationContext are the abstract parents of all Location Contexts.
+    Location Contexts are meant to describe where an event originated from in the visual UI.
 
         Attributes:
         id (str):
@@ -503,7 +506,8 @@ class OverlayContext(AbstractLocationContext):
 
 class ContentContext(AbstractLocationContext):
     """
-        A Location Context that describes a logical section of the UI that contains other Location Contexts. Enabling Data Science to analyze this section specifically.
+        A Location Context that describes a logical section of the UI that contains other Location Contexts.
+    Enabling Data Science to analyze this section specifically.
 
         Attributes:
         id (str):

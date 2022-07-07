@@ -69,7 +69,8 @@ export abstract class AbstractGlobalContext extends AbstractContext {
 }
 
 /**
- * AbstractLocationContext are the abstract parents of all Location Contexts. Location Contexts are meant to describe where an event originated from in the visual UI.
+ * AbstractLocationContext are the abstract parents of all Location Contexts.
+ * Location Contexts are meant to describe where an event originated from in the visual UI.
  * Inheritance: AbstractLocationContext -> AbstractContext
  */
 export abstract class AbstractLocationContext extends AbstractContext {

@@ -42,7 +42,8 @@ export const makeApplicationContext = (props: { id: string }): ApplicationContex
  * @param {Object} props - factory properties
  * @param {string} props.id - A unique string identifier to be combined with the Context Type (`_type`)
  *         for Context instance uniqueness.
- * @returns {ContentContext} - ContentContext: A Location Context that describes a logical section of the UI that contains other Location Contexts. Enabling Data Science to analyze this section specifically.
+ * @returns {ContentContext} - ContentContext: A Location Context that describes a logical section of the UI that contains other Location Contexts.
+ * 	Enabling Data Science to analyze this section specifically.
  */
 export const makeContentContext = (props: { id: string }): ContentContext => ({
   __instance_id: generateUUID(),
@@ -109,6 +110,8 @@ export const makeHttpContext = (props: {
  *         for Context instance uniqueness.
  * @param {string} props.value - The unique identifier for this user/group/entity within the scope defined by `id`.
  * @returns {IdentityContext} - IdentityContext: A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.
+ * 	The `id` field is used to specify the type of identification e.g. backend, md5(email), supplier_cookie.
+ * 	The `value` field should contain the unique identifier within that scope.
  */
 export const makeIdentityContext = (props: { id: string; value: string }): IdentityContext => ({
   __instance_id: generateUUID(),

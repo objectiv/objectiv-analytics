@@ -99,7 +99,8 @@ export interface OverlayContext extends AbstractLocationContext {
 }
 
 /**
- * A Location Context that describes a logical section of the UI that contains other Location Contexts. Enabling Data Science to analyze this section specifically.
+ * A Location Context that describes a logical section of the UI that contains other Location Contexts.
+ * Enabling Data Science to analyze this section specifically.
  * Inheritance: ContentContext -> AbstractLocationContext -> AbstractContext
  */
 export interface ContentContext extends AbstractLocationContext {
