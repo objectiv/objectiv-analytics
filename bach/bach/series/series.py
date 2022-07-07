@@ -11,7 +11,7 @@ import numpy
 import pandas
 from sqlalchemy.engine import Dialect, Engine
 
-from bach import DataFrame, SortColumn, DataFrameOrSeries, get_series_type_from_dtype
+from bach import DataFrame, DataFrameOrSeries, get_series_type_from_dtype
 
 from bach.dataframe import ColumnFunction, dict_name_series_equals
 from bach.expression import Expression, NonAtomicExpression, ConstValueExpression, \
@@ -21,7 +21,7 @@ from bach.sql_model import BachSqlModel
 
 from bach.types import StructuredDtype, Dtype, validate_instance_dtype, DtypeOrAlias,\
     AllSupportedLiteralTypes, value_to_series_type
-from bach.utils import is_valid_column_name
+from bach.utils import is_valid_column_name, validate_sorting_expressions, SortColumn
 from sql_models.constants import NotSet, not_set, DBDialect
 from sql_models.util import is_bigquery, DatabaseNotSupportedException
 
@@ -125,6 +125,7 @@ class Series(ABC):
         sorted_ascending: Optional[bool],
         index_sorting: List[bool],
         instance_dtype: StructuredDtype,
+        sorting_keys: Optional[List[SortColumn]] = None,
         **kwargs,
     ):
         """
@@ -194,6 +195,9 @@ class Series(ABC):
                              f'length of index ({len(index)}).')
         if not is_valid_column_name(dialect=engine.dialect, name=name):
             raise ValueError(f'Column name "{name}" is not valid for SQL dialect {engine.dialect}')
+
+        if sorting_keys:
+            validate_sorting_expressions(node=base_node, order_by=sorting_keys)
         validate_instance_dtype(static_dtype=self.dtype, instance_dtype=instance_dtype)
 
         self._engine = engine
@@ -205,6 +209,7 @@ class Series(ABC):
         self._sorted_ascending = sorted_ascending
         self._index_sorting = index_sorting
         self._instance_dtype = instance_dtype
+        self._sorting_keys = sorting_keys or []
 
     @classmethod
     @abstractmethod
@@ -314,6 +319,14 @@ class Series(ABC):
         Get this Series' index sorting. An empty list indicates no sorting by index.
         """
         return copy(self._index_sorting)
+
+    @property
+    def sorting_keys(self) -> List[SortColumn]:
+        """
+        Get the series expressions for sorting this Series. Columns referenced on sorting expressions
+        must be valid for current base node.
+        """
+        return copy(self._sorting_keys)
 
     @property
     def expression(self) -> Expression:
@@ -512,6 +525,7 @@ class Series(ABC):
         sorted_ascending: Optional[Union[bool, NotSet]] = not_set,
         index_sorting: Optional[List[bool]] = None,
         instance_dtype: Optional[StructuredDtype] = None,
+        sorting_keys: Optional[Union[List[SortColumn], NotSet]] = not_set,
         **kwargs
     ) -> T:
         """
@@ -533,6 +547,7 @@ class Series(ABC):
             sorted_ascending=self._sorted_ascending if sorted_ascending is not_set else sorted_ascending,
             index_sorting=self._index_sorting if index_sorting is None else index_sorting,
             instance_dtype=self.instance_dtype if instance_dtype is None else instance_dtype,
+            sorting_keys=self.sorting_keys if sorting_keys is not_set else sorting_keys,
             **kwargs
         )
 
@@ -570,6 +585,7 @@ class Series(ABC):
             sorted_ascending=self._sorted_ascending,
             index_sorting=self._index_sorting,
             instance_dtype=instance_dtype,
+            sorting_keys=self.sorting_keys,
             **kwargs,
         )
 
@@ -838,13 +854,25 @@ class Series(ABC):
 
         return result
 
-    def sort_values(self, *, ascending=True):
+    def sort_values(self, *, ascending=True, keys: Optional[List['Series']] = None):
         """
         Sort this Series by its values.
         Returns a new instance and does not actually modify the instance it is called on.
 
         :param ascending: Whether to sort ascending (True) or descending (False)
+        :param keys: Apply sorting based on expressions from other series that share same
+        base node as caller
         """
+        if keys and any(key.base_node != self.base_node for key in keys):
+            raise ValueError('All series provided as keys must have the same base_node as caller.')
+
+        if keys:
+            sorting_keys = [
+                SortColumn(expression=series.expression, asc=ascending)
+                for series in keys
+            ]
+            return self.copy_override(sorting_keys=sorting_keys)
+
         if self._sorted_ascending is not None and self._sorted_ascending == ascending:
             return self
         return self.copy_override(sorted_ascending=ascending)
@@ -891,6 +919,8 @@ class Series(ABC):
                 order_by.append(SortColumn(expression=index_series.expression, asc=asc))
         else:
             order_by = []
+
+        order_by += self.sorting_keys
         from bach.savepoints import Savepoints
         return DataFrame(
             engine=self._engine,

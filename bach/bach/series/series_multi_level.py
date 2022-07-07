@@ -7,7 +7,7 @@ from copy import copy
 from functools import reduce
 from typing import Union, List, Optional, Dict, Any, cast, TypeVar, Tuple, Type, TYPE_CHECKING
 
-from bach import DataFrameOrSeries
+from bach import DataFrameOrSeries, SortColumn
 from bach.series.series import Series
 from bach.series.series_numeric import SeriesAbstractNumeric, SeriesFloat64, SeriesInt64
 from bach.series.series_string import SeriesString
@@ -59,6 +59,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
         sorted_ascending: Optional[Union[bool, NotSet]] = not_set,
         index_sorting: Optional[List[bool]] = None,
         instance_dtype: Optional[StructuredDtype] = None,
+        sorting_keys: Optional[Union[List[SortColumn], NotSet]] = not_set,
         **kwargs,
     ) -> T:
         """
@@ -78,6 +79,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
             sorted_ascending=sorted_ascending,
             index_sorting=index_sorting,
             instance_dtype=instance_dtype,
+            sorting_keys=sorting_keys,
             **extra_params
         ))
 

@@ -2,8 +2,14 @@ import re
 from typing import NamedTuple, Dict, List, Set
 from sqlalchemy.engine import Connection, Dialect
 
-from bach.expression import Expression
+from bach.expression import Expression, ColumnReferenceToken
+from bach.sql_model import BachSqlModel
 from sql_models.util import is_postgres, DatabaseNotSupportedException, is_bigquery
+
+
+class SortColumn(NamedTuple):
+    expression: Expression
+    asc: bool
 
 
 class FeatureRange(NamedTuple):
@@ -80,3 +86,21 @@ def is_valid_column_name(dialect: Dialect, name: str) -> bool:
         prefix_ok = not any(name.startswith(prefix) for prefix in reserved_prefixes)
         return len_ok and pattern_ok and prefix_ok
     raise DatabaseNotSupportedException(dialect)
+
+
+def validate_sorting_expressions(node: BachSqlModel, order_by: List[SortColumn]) -> None:
+    for ob in order_by:
+        invalid_column_references = [
+            token.column_name
+            for token in ob.expression.get_all_tokens()
+            if isinstance(token, ColumnReferenceToken) and token.column_name not in node.column_expressions
+        ]
+        if invalid_column_references:
+            raise ValueError(
+                (
+                    'Sorting contains expressions referencing '
+                    f'non-existent columns in current base node. {invalid_column_references}.'
+                    ' Please call DataFrame.sort_values([]) or DataFrame.sort_index() for removing'
+                    ' sorting and try again.'
+                )
+            )

@@ -12,11 +12,11 @@ import numpy
 import pandas
 from sqlalchemy.engine import Engine
 
-from bach.expression import Expression, SingleValueExpression, VariableToken, AggregateFunctionExpression
+from bach.expression import Expression, SingleValueExpression, VariableToken
 from bach.from_database import get_dtypes_from_table, get_dtypes_from_model
 from bach.sql_model import BachSqlModel, CurrentNodeSqlModel, get_variable_values_sql
 from bach.types import get_series_type_from_dtype, AllSupportedLiteralTypes, StructuredDtype
-from bach.utils import escape_parameter_characters
+from bach.utils import escape_parameter_characters, validate_sorting_expressions, SortColumn
 from sql_models.constants import NotSet, not_set
 from sql_models.graph_operations import update_placeholders_in_graph, get_all_placeholders
 from sql_models.model import SqlModel, Materialization, CustomSqlModelBuilder, RefPath
@@ -45,11 +45,6 @@ ColumnFunction = Union[str, Callable, List[Union[str, Callable]]]
 #     - dict of axis labels -> functions, function names or list of such.
 
 Level = Union[int, List[int], str, List[str]]
-
-
-class SortColumn(NamedTuple):
-    expression: Expression
-    asc: bool
 
 
 class DtypeNamePair(NamedTuple):
@@ -172,7 +167,7 @@ class DataFrame:
             index: Dict[str, 'Series'],
             series: Dict[str, 'Series'],
             group_by: Optional['GroupBy'],
-            order_by: List[SortColumn],
+            order_by: Optional[List[SortColumn]],
             savepoints: 'Savepoints',
             variables: Dict['DtypeNamePair', Hashable] = None
     ):
@@ -227,6 +222,8 @@ class DataFrame:
         if set(index.keys()) & set(series.keys()):
             raise ValueError(f"The names of the index series and data series should not intersect. "
                              f"Index series: {sorted(index.keys())} data series: {sorted(series.keys())}")
+
+        validate_sorting_expressions(node=base_node, order_by=self.order_by)
 
     @property
     def engine(self):

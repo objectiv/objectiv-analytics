@@ -1,14 +1,12 @@
-import itertools
 from copy import copy
 from enum import Enum
 from typing import List, Dict, Optional, cast, TypeVar
 
 from sqlalchemy.engine import Dialect
 
-from bach import SeriesAbstractMultiLevel
+from bach import SeriesAbstractMultiLevel, SortColumn
 from bach.series import Series
 from bach.expression import Expression, WindowFunctionExpression
-from bach.dataframe import SortColumn
 from bach.sql_model import BachSqlModel
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
 

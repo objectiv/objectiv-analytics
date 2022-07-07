@@ -2,7 +2,10 @@ from typing import NamedTuple
 
 import pytest
 
-from bach.utils import get_merged_series_dtype, is_valid_column_name
+from bach.expression import Expression
+from bach.sql_model import BachSqlModel
+from bach.utils import get_merged_series_dtype, is_valid_column_name, SortColumn, validate_sorting_expressions
+from sql_models.model import Materialization, CustomSqlModelBuilder
 
 
 @pytest.mark.db_independent
@@ -45,3 +48,36 @@ def test_is_valid_column_name(dialect):
         expected = getattr(test, dialect.name)
         column_name = test.name
         assert is_valid_column_name(dialect, column_name) is expected
+
+
+def test_validate_sorting_expressions() -> None:
+    model = BachSqlModel(
+        model_spec=CustomSqlModelBuilder(sql='SELECT * FROM test', name='test'),
+        placeholders={},
+        references={},
+        materialization=Materialization.CTE,
+        materialization_name=None,
+        column_expressions={
+            'a': Expression.column_reference('a'),
+            'b': Expression.column_reference('b'),
+        },
+    )
+
+    with pytest.raises(ValueError, match=r'Sorting contains expressions referencing'):
+        validate_sorting_expressions(
+            model, [SortColumn(expression=Expression.column_reference('c'), asc=True)],
+        )
+
+    validate_sorting_expressions(
+        node=model,
+        order_by=[
+            SortColumn(
+                expression=Expression(
+                    data=[
+                        Expression.column_reference('b'), Expression.raw('+'), Expression.column_reference('a'),
+                    ],
+                ),
+                asc=True
+            )
+        ]
+    )
