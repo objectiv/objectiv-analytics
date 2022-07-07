@@ -226,8 +226,8 @@ describe('ReactTracker', () => {
        * Mocked identity metadata we will use to enrich the event, via IdentityContext
        */
       const identityMetadata: IdentityContextAttributes = {
-        id: '123abc',
-        value: 'authentication',
+        id: 'authentication',
+        value: '123abc',
       };
 
       /**
