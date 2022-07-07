@@ -10,9 +10,9 @@ from tests_modelhub.data_and_utils.utils import get_objectiv_dataframe_test
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 
-def test_retention_matrix():
+def test_retention_matrix(db_params):
 
-    df, modelhub = get_objectiv_dataframe_test()
+    df, modelhub = get_objectiv_dataframe_test(db_params)
     event_type = 'ClickEvent'
 
     # yearly
