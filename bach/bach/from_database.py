@@ -1,7 +1,7 @@
 """
 Copyright 2022 Objectiv B.V.
 """
-from typing import Dict, Optional
+from typing import Dict, Optional, NamedTuple
 
 from sqlalchemy.engine import Engine
 
@@ -35,31 +35,26 @@ def get_dtypes_from_model(engine: Engine, node: SqlModel) -> Dict[str, Structure
 def get_dtypes_from_table(
     engine: Engine,
     table_name: str,
-    *,
-    bq_dataset: Optional[str] = None,
-    bq_project_id: Optional[str] = None
 ) -> Dict[str, StructuredDtype]:
     """
     Query database to get dtypes of the given table.
     :param engine: sqlalchemy engine for the database.
-    :param table_name: the table name for which to get the dtypes
-    :param bq_dataset: BigQuery-only. Dataset in which the table resides, if different from engine.url
-    :param bq_project_id: BigQuery-only. Project of dataset, if different from engine.url
+    :param table_name: the table name for which to get the dtypes.
+    :param table_name: the table name for which to get the dtypes.
+        For BigQuery, in addition to the plain table names, the format '{project_id}.{dataset}.{table_name}'
+        is supported for tables that reside in a different project/dataset than the `engine.url`.
     :return: Dictionary with as key the column names of the table, and as values the dtype of the column.
     """
-    if bq_project_id and not bq_dataset:
-        raise ValueError('Cannot specify bq_project_id without setting bq_dataset.')
-    if bq_dataset and not is_bigquery(engine):
-        raise ValueError('bq_dataset is a BigQuery-only option.')
-
     if is_postgres(engine):
         meta_data_table = 'INFORMATION_SCHEMA.COLUMNS'
     elif is_bigquery(engine):
+        full_table_name = _split_bq_table_name(table_name)
+        table_name = full_table_name.table_name
         meta_data_table = 'INFORMATION_SCHEMA.COLUMNS'
-        if bq_dataset:
-            meta_data_table = f'{bq_dataset}.{meta_data_table}'
-        if bq_project_id:
-            meta_data_table = f'{bq_project_id}.{meta_data_table}'
+        if full_table_name.dataset:
+            meta_data_table = f'{full_table_name.dataset}.{meta_data_table}'
+        if full_table_name.project_id:
+            meta_data_table = f'{full_table_name.project_id}.{meta_data_table}'
     else:
         raise DatabaseNotSupportedException(engine)
     sql = f"""
@@ -69,6 +64,25 @@ def get_dtypes_from_table(
         order by ordinal_position;
     """
     return _get_dtypes_from_information_schema_query(engine=engine, query=sql)
+
+
+class FullTableName(NamedTuple):
+    project_id: Optional[str]
+    dataset: Optional[str]
+    table_name: str
+
+
+def _split_bq_table_name(table_name: str) -> FullTableName:
+    """ Split a BigQuery table name into project, dataset and actual table_name. """
+    parts = table_name.split('.')
+    if len(parts) == 3:
+        return FullTableName(project_id=parts[0], dataset=parts[1], table_name=parts[2])
+    if len(parts) == 2:
+        return FullTableName(project_id=None, dataset=parts[0], table_name=parts[1])
+    if len(parts) == 1:
+        return FullTableName(project_id=None, dataset=None, table_name=parts[0])
+    raise ValueError(f'Expected table_name in format "{{project_id}}.{{dataset}}.{{table_name}}"'
+                     f', value: {table_name}')
 
 
 def _get_dtypes_from_information_schema_query(engine: Engine, query: str) -> Dict[str, StructuredDtype]:
