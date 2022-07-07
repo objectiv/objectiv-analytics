@@ -1076,6 +1076,11 @@ class DataFrame:
         Use :py:meth:`get_unsampled` to switch back to the unsampled data later on. This returns a new
         DataFrame with all operations that have been done on the sample, applied to that DataFrame.
 
+        Will materialize the DataFrame if it is not in a materialized state.
+
+        If `seed` is set (Postgres only), this will create a temporary table from which the sample will be
+        queried using the `tablesample bernoulli` sql construction.
+
         :param table_name: the name of the underlying sql table that stores the sampled data.
         :param filter: a filter to apply to the dataframe before creating the sample. If a filter is applied,
             sample_percentage is ignored and thus the bernoulli sample creation is skipped.
@@ -1083,7 +1088,7 @@ class DataFrame:
             Between 0-100.
         :param overwrite: if True, the sample data is written to table_name, even if that table already
             exists.
-        :param seed: optional seed number used to generate the sample.
+        :param seed: optional seed number used to generate the sample. Only supported for Postgres
         :raises Exception: If overwrite=False and the table already exists. The exact exception depends on
             the underlying database.
         :returns: a sampled DataFrame of the current DataFrame.
@@ -1111,11 +1116,15 @@ class DataFrame:
 
     def get_unsampled(self) -> 'DataFrame':
         """
-        Return a copy of the current sampled DataFrame, that undoes calling :py:meth:`get_sample` earlier.
+        Return a copy of the current sampled DataFrame, that undoes calling :py:meth:`get_sample()` earlier.
 
         All other operations that have been done on the sample DataFrame will be applied on the DataFrame
-        that is returned. This does not remove the table that was written to the database by
-        :py:meth:`get_sample`, the new DataFrame just does not query that table anymore.
+        that is returned. The returned DataFrame's data will look as if :py:meth:`get_sample()` was never
+        called, but the state of the DataFrame could be slightly different since :py:meth:`get_sample()`
+        might have called :py:meth:`materialize()`.
+
+        This does not remove the table that was written to the database by :py:meth:`get_sample()`, the new
+        DataFrame just does not query that table anymore.
 
         Will raise an error if the current DataFrame is not sample data of another DataFrame, i.e.
         :py:meth:`get_sample` has not been called.
@@ -2121,7 +2130,7 @@ class DataFrame:
                 raise ValueError(
                     f'The df has groupby set, but contains Series that have no aggregation '
                     f'function yet. Please make sure to first: remove these from the frame, '
-                    f'setup aggregation through agg(), or on all individual series.'
+                    f'setup aggregation through agg(), or on all individual series. '
                     f'Unaggregated series: {not_aggregated}'
                 )
 
@@ -2164,20 +2173,15 @@ class DataFrame:
         :param limit: the limit to apply, either as a max amount of rows or a slice of the data.
         :returns: SQL query
         """
-
+        dialect = self.engine.dialect
         # we need to construct each multi-level series, since it should resemble the final result
         model = self.get_current_node('view_sql', limit=limit, construct_multi_levels=True)
-        placeholder_values = get_variable_values_sql(
-            dialect=self.engine.dialect,
-            variable_values=self.variables
-        )
+        model = model.copy_set_materialization(Materialization.QUERY)
+
+        placeholder_values = get_variable_values_sql(dialect=dialect, variable_values=self.variables)
         model = update_placeholders_in_graph(start_node=model, placeholder_values=placeholder_values)
-        sql_statements = to_sql_materialized_nodes(
-            dialect=self.engine.dialect, start_node=model
-        )
-        sql_statements = [sql_stat for sql_stat in sql_statements
-                          if not sql_stat.materialization.has_lasting_effect]
-        sql = ';\n'.join(sql_stat.sql for sql_stat in sql_statements)
+
+        sql = to_sql(dialect=dialect, model=model)
         return sql
 
     def merge(
