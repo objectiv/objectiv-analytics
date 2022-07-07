@@ -544,10 +544,8 @@ class DataFrame:
         schema.
 
         :param engine: a sqlalchemy engine for the database.
-        :param table_name: the table name that contains the data to instantiate as DataFrame. For BigQuery,
-            in addition to the plain table names, the format '{project_id}.{dataset}.{table_name}' is
-            supported for tables that reside in a different project/dataset than the `engine.url`.
-            e.g. 'bigquery-public-data.google_analytics_sample.ga_sessions_20170101' is a valid table name
+        :param table_name: the table name that contains the data to instantiate as DataFrame.
+            Can include project_id and dataset on BigQuery, e.g. 'project_id.dataset.table_name'
         :param index: list of column names that make up the index. At least one column needs to be
             selected for the index.
         :param all_dtypes: Optional. Mapping from column name to dtype.
@@ -1061,7 +1059,8 @@ class DataFrame:
         If `seed` is set (Postgres only), this will create a temporary table from which the sample will be
         queried using the `tablesample bernoulli` sql construction.
 
-        :param table_name: the name of the underlying sql table that stores the sampled data.
+        :param table_name: the name of the underlying sql table that is created to store the sampled data.
+            Can include project_id and dataset on BigQuery, e.g. 'project_id.dataset.table_name'
         :param filter: a filter to apply to the dataframe before creating the sample. If a filter is applied,
             sample_percentage is ignored and thus the bernoulli sample creation is skipped.
         :param sample_percentage: the approximate size of the sample as a proportion of all rows.

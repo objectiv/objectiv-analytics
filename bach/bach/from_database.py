@@ -40,9 +40,8 @@ def get_dtypes_from_table(
     Query database to get dtypes of the given table.
     :param engine: sqlalchemy engine for the database.
     :param table_name: the table name for which to get the dtypes.
-    :param table_name: the table name for which to get the dtypes.
-        For BigQuery, in addition to the plain table names, the format '{project_id}.{dataset}.{table_name}'
-        is supported for tables that reside in a different project/dataset than the `engine.url`.
+    :param table_name: the table name for which to get the dtypes. Can include project_id and dataset on
+        BigQuery, e.g. 'project_id.dataset.table_name'
     :return: Dictionary with as key the column names of the table, and as values the dtype of the column.
     """
     if is_postgres(engine):
