@@ -30,8 +30,8 @@ class TestLR:
         self.X = X
         self.y = y
 
-        self.X_p = self.X.to_pandas()
-        self.y_p = self.y.to_pandas()
+        self.X_p = self.X.to_pandas().sort_index()
+        self.y_p = self.y.to_pandas().sort_index()
 
         modelhub = ModelHub()
 
