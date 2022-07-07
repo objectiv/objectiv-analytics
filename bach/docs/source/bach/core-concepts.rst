@@ -24,6 +24,12 @@ a Series object:
 Typical usage would be to do all heavy lifting inside the database, and only query the aggregated/summarized
 output.
 
+Additionally there are operations that write to the database:
+
+* :py:meth:`DataFrame.database_create_table()`
+* :py:meth:`DataFrame.from_pandas()`, when called with `materialization='table'`
+* :py:meth:`DataFrame.get_sample()`
+
 Compatibility with pandas
 -------------------------
 We are striving for a pandas compatible api, such that everyone that already knows pandas can get started
@@ -34,7 +40,7 @@ of functionality that we have not yet implemented. Additionally we have some fun
 have, and some of our functions have slightly different parameters.
 
 Of course the fundamental difference is in how data is stored and processed: in local memory vs in the
-database. This also results in a few differences in how DataFrames form both libraries work in certain
+database. This also results in a few differences in how DataFrames from both libraries work in certain
 situations:
 
 * The order of rows in a Bach DataFrame can be non-deterministic. If there is not a deterministic
