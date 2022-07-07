@@ -1,0 +1,70 @@
+{
+  "name": "@objectiv/plugin-locale-context-from-url",
+  "version": "0.0.21",
+  "description": "Plugin for Objectiv trackers to automatically generate and attach LocaleContext inferred from URLs",
+  "license": "Apache-2.0",
+  "homepage": "https://objectiv.io",
+  "keywords": [
+    "objectiv",
+    "tracking",
+    "web",
+    "analytics",
+    "events",
+    "taxonomy",
+    "plugin",
+    "locale",
+    "url"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/objectiv/objectiv-analytics.git",
+    "directory": "tracker/plugins/locale-context-from-url"
+  },
+  "bugs": "https://github.com/objectiv/objectiv-analytics/issues",
+  "contributors": [
+    {
+      "name": "Surai Di Rosa",
+      "email": "surai.dirosa@gmail.com",
+      "url": "https://github.com/sdirosa"
+    }
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/esm/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --legacy-output --minify --dts --sourcemap --clean",
+    "prettify": "prettier --write .",
+    "tsc": "tsc --noEmit",
+    "test": "jest --silent --runInBand",
+    "test:ci": "jest --silent --ci --runInBand",
+    "test:coverage": "jest --silent --coverage --runInBand",
+    "check:dependencies": "npx depcheck",
+    "npm-publish": "npm publish --access=public --tag=$TAG",
+    "npm-publish:verdaccio": "npm publish --tag=$TAG"
+  },
+  "devDependencies": {
+    "@objectiv/developer-tools": "^0.0.21",
+    "@objectiv/testing-tools": "^0.0.21",
+    "@types/jest": "^27.4.1",
+    "jest": "^27.5.1",
+    "jest-extended": "^2.0.0",
+    "jest-standard-reporter": "^2.0.0",
+    "prettier": "^2.5.1",
+    "ts-jest": "^27.1.3",
+    "tsup": "^5.12.0",
+    "typescript": "^4.6.2"
+  },
+  "peerDependencies": {
+    "@objectiv/tracker-core": "^0.0.21"
+  }
+}
