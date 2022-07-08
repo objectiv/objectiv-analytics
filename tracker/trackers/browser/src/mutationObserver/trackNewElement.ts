@@ -6,6 +6,7 @@ import { BrowserTracker } from '../BrowserTracker';
 import { findParentTaggedElements } from '../common/findParentTaggedElements';
 import { isTaggedElement } from '../common/guards/isTaggedElement';
 import { parseLocationContext } from '../common/parsers/parseLocationContext';
+import { parseTrackBlurs } from '../common/parsers/parseTrackBlurs';
 import { parseTrackClicks } from '../common/parsers/parseTrackClicks';
 import { parseValidate } from '../common/parsers/parseValidate';
 import { trackerErrorHandler } from '../common/trackerErrorHandler';
@@ -33,11 +34,12 @@ export const trackNewElement = (element: Element, tracker: BrowserTracker) => {
       // Gather Element id and Validate attributes to determine whether we can and if we should validate the Location
       const validate = parseValidate(element.getAttribute(TaggingAttribute.validate));
 
+      // Get element Location Context and its id
+      const elementLocationContextAttribute = element.getAttribute(TaggingAttribute.context);
+      const elementLocationContext = parseLocationContext(elementLocationContextAttribute);
+
       // Add this element to LocationTree - this will also check if its Location is unique
       if (globalThis.objectiv.devTools && validate.locationUniqueness) {
-        const elementLocationContextAttribute = element.getAttribute(TaggingAttribute.context);
-        const elementLocationContext = parseLocationContext(elementLocationContextAttribute);
-
         let parentLocationContext = null;
         const parent = findParentTaggedElements(element).splice(1).reverse().pop() ?? null;
         if (parent) {
@@ -72,8 +74,20 @@ export const trackNewElement = (element: Element, tracker: BrowserTracker) => {
       }
 
       // Blur tracking (inputs)
-      if (element.getAttribute(TaggingAttribute.trackBlurs) === 'true') {
-        element.addEventListener('blur', makeBlurEventHandler(element, tracker), { passive: true });
+      if (element.hasAttribute(TaggingAttribute.trackBlurs)) {
+        // Parse and validate attribute - then convert it into options
+        const trackBlursOptions = parseTrackBlurs(element.getAttribute(TaggingAttribute.trackBlurs));
+
+        // If trackBlurs is specifically disabled, nothing to do
+        if (!trackBlursOptions) {
+          return;
+        }
+
+        element.addEventListener(
+          'blur',
+          makeBlurEventHandler(element, tracker, trackBlursOptions, elementLocationContext.id),
+          { passive: true }
+        );
       }
     }
   } catch (error) {

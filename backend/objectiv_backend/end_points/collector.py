@@ -7,6 +7,7 @@ import time
 from urllib.parse import urlparse, parse_qs
 from typing import List
 
+import psycopg2
 from flask import Response, Request
 
 from objectiv_backend.common.config import get_collector_config
@@ -295,13 +296,16 @@ def write_sync_events(ok_events: EventDataList, nok_events: EventDataList, event
     output_config = get_collector_config().output
     # todo: add exception handling. if one output fails, continue to next if configured.
     if output_config.postgres:
-        connection = get_db_connection(output_config.postgres)
         try:
-            with connection:
-                insert_events_into_data(connection, events=ok_events)
-                insert_events_into_nok_data(connection, events=nok_events)
-        finally:
-            connection.close()
+            connection = get_db_connection(output_config.postgres)
+            try:
+                with connection:
+                    insert_events_into_data(connection, events=ok_events)
+                    insert_events_into_nok_data(connection, events=nok_events)
+            finally:
+                connection.close()
+        except psycopg2.DatabaseError as oe:
+            print(f'Error occurred in postgres: {oe}')
 
     if output_config.snowplow:
         write_data_to_snowplow_if_configured(events=ok_events, good=True)

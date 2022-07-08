@@ -9,6 +9,7 @@ import {
   parseJson,
   parseLocationContext,
   parseTagChildren,
+  parseTrackBlurs,
   parseTrackClicks,
   parseTrackVisibility,
   parseValidate,
@@ -17,6 +18,8 @@ import {
   stringifyTrackVisibility,
   stringifyValidate,
   tagContent,
+  TrackBlursAttribute,
+  TrackBlursOptions,
   TrackClicksAttribute,
   TrackClicksOptions,
   TrackVisibilityAttribute,
@@ -346,6 +349,51 @@ describe('parsersAndStringifiers', () => {
       const stringifiedTrackClicks = JSON.stringify('{not: "valid"}');
 
       expectToThrow(() => parseTrackClicks(stringifiedTrackClicks));
+    });
+  });
+
+  describe('Track Blurs Attribute to Options parsing', () => {
+    const trackBlursTestCases: {
+      attribute: TrackBlursAttribute;
+      options: TrackBlursOptions;
+    }[] = [
+      {
+        attribute: false,
+        options: undefined,
+      },
+      {
+        attribute: true,
+        options: { trackValue: false },
+      },
+      {
+        attribute: { trackValue: true },
+        options: { trackValue: true },
+      },
+      {
+        attribute: { trackValue: false },
+        options: { trackValue: false },
+      },
+    ];
+
+    trackBlursTestCases.forEach((testCase) => {
+      it(`parses \`${JSON.stringify(testCase.attribute)}\` to \`${JSON.stringify(testCase.options)}\``, () => {
+        const trackBlurs: TrackBlursAttribute = testCase.attribute;
+        const stringifiedTrackBlurs = JSON.stringify(trackBlurs);
+
+        const trackBlursOptions = parseTrackBlurs(stringifiedTrackBlurs);
+
+        expect(trackBlursOptions).toStrictEqual(testCase.options);
+      });
+    });
+
+    it(`should throw`, () => {
+      const stringifiedTrackBlursInvalid = JSON.stringify('{not: "valid"}');
+
+      expectToThrow(() => parseTrackBlurs(stringifiedTrackBlursInvalid));
+
+      const stringifiedTrackBlursNull = JSON.stringify(null);
+
+      expectToThrow(() => parseTrackBlurs(stringifiedTrackBlursNull));
     });
   });
 

@@ -8,6 +8,7 @@ import { isShowableContext } from '../common/guards/isShowableContext';
 import { isTagLocationParameters } from '../common/guards/isTagLocationParameters';
 import { runIfValueIsNotUndefined } from '../common/runIfValueIsNotUndefined';
 import { stringifyLocationContext } from '../common/stringifiers/stringifyLocationContext';
+import { stringifyTrackBlurs } from '../common/stringifiers/stringifyTrackBlurs';
 import { stringifyTrackClicks } from '../common/stringifiers/stringifyTrackClicks';
 import { stringifyTrackVisibility } from '../common/stringifiers/stringifyTrackVisibility';
 import { stringifyValidate } from '../common/stringifiers/stringifyValidate';
@@ -60,7 +61,7 @@ export const tagLocation = (parameters: TagLocationParameters): TagLocationRetur
       [TaggingAttribute.parentElementId]: parentElementId,
       [TaggingAttribute.context]: stringifyLocationContext(instance),
       [TaggingAttribute.trackClicks]: runIfValueIsNotUndefined(stringifyTrackClicks, trackClicks),
-      [TaggingAttribute.trackBlurs]: runIfValueIsNotUndefined(JSON.stringify, trackBlurs),
+      [TaggingAttribute.trackBlurs]: runIfValueIsNotUndefined(stringifyTrackBlurs, trackBlurs),
       [TaggingAttribute.trackVisibility]: runIfValueIsNotUndefined(stringifyTrackVisibility, trackVisibility),
       [TaggingAttribute.validate]: runIfValueIsNotUndefined(stringifyValidate, options?.validate),
     };

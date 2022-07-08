@@ -388,8 +388,9 @@ class SqlModel(Generic[T]):
             invalidate assumptions that code might hold about these instances. See the class's docstring
             for information on why this is important.
         :param references: Dictionary mapping reference names to instances of SqlModels.
-        :param materialization: TODO
-        :param materialization_name: TODO
+        :param materialization: How this model should be materialized, e.g. as CTE, as a table, etc.
+        :param materialization_name: If the materialization is a database object (e.g. table, view,
+            temp table), then this value can be set to override the default name of the object.
         """
         self._model_spec = model_spec
         self._generic_name = model_spec.generic_name

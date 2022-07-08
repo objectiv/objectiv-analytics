@@ -16,6 +16,10 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'HttpContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
       IdentityContext:
         'IdentityContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
+      InputValueContext:
+        'InputValueContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
+      LocaleContext:
+        'LocaleContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
       MarketingContext:
         'MarketingContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -32,6 +36,10 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'Only one HttpContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
       IdentityContext:
         'Only one IdentityContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
+      InputValueContext:
+        'Only one InputValueContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
+      LocaleContext:
+        'Only one LocaleContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
       MarketingContext:
         'Only one MarketingContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -50,6 +58,10 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'HttpContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
       IdentityContext:
         'IdentityContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
+      InputValueContext:
+        'InputValueContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
+      LocaleContext:
+        'LocaleContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
       MarketingContext:
         'MarketingContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -66,6 +78,10 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'Only one HttpContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
       IdentityContext:
         'Only one IdentityContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
+      InputValueContext:
+        'Only one InputValueContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
+      LocaleContext:
+        'Only one LocaleContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
       MarketingContext:
         'Only one MarketingContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -84,6 +100,10 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'HttpContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
       IdentityContext:
         'IdentityContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
+      InputValueContext:
+        'InputValueContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
+      LocaleContext:
+        'LocaleContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
       MarketingContext:
         'MarketingContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -100,6 +120,10 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'Only one HttpContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
       IdentityContext:
         'Only one IdentityContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
+      InputValueContext:
+        'Only one InputValueContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
+      LocaleContext:
+        'Only one LocaleContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
       MarketingContext:
         'Only one MarketingContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -118,6 +142,10 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'HttpContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
       IdentityContext:
         'IdentityContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
+      InputValueContext:
+        'InputValueContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
+      LocaleContext:
+        'LocaleContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
       MarketingContext:
         'MarketingContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -134,6 +162,10 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'Only one HttpContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
       IdentityContext:
         'Only one IdentityContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
+      InputValueContext:
+        'Only one InputValueContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
+      LocaleContext:
+        'Only one LocaleContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
       MarketingContext:
         'Only one MarketingContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -152,6 +184,10 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'HttpContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
       IdentityContext:
         'IdentityContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
+      InputValueContext:
+        'InputValueContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
+      LocaleContext:
+        'LocaleContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
       MarketingContext:
         'MarketingContext is missing from Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
@@ -168,6 +204,10 @@ export const GlobalContextErrorMessages: ContextErrorMessages<GlobalContextError
         'Only one HttpContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/HttpContext.',
       IdentityContext:
         'Only one IdentityContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/IdentityContext.',
+      InputValueContext:
+        'Only one InputValueContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/InputValueContext.',
+      LocaleContext:
+        'Only one LocaleContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/LocaleContext.',
       MarketingContext:
         'Only one MarketingContext should be present in Global Contexts of {{eventName}}.\nTaxonomy documentation: https://objectiv.io/docs/taxonomy/reference/global-contexts/MarketingContext.',
       PathContext:
