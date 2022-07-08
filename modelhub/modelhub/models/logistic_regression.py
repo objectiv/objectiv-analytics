@@ -66,8 +66,11 @@ class LogisticRegression:
         if not isinstance(y, SeriesBoolean):
             raise TypeError(f"y is of type {type(y)}, should be SeriesBoolean")
 
-        X_p = X.to_pandas()
-        y_p = y.to_pandas()
+        data = X.copy()
+        data[y.name] = y
+        pdf = data.to_pandas()
+        X_p = pdf[X.data_columns]
+        y_p = pdf[y.name]
 
         return self._model.fit(X_p, y_p)
 

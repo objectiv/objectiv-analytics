@@ -7,6 +7,8 @@ export enum GlobalContextName {
   CookieIdContext = 'CookieIdContext',
   HttpContext = 'HttpContext',
   IdentityContext = 'IdentityContext',
+  InputValueContext = 'InputValueContext',
+  LocaleContext = 'LocaleContext',
   MarketingContext = 'MarketingContext',
   PathContext = 'PathContext',
   SessionContext = 'SessionContext',
@@ -17,6 +19,8 @@ export type AnyGlobalContextName =
   | 'CookieIdContext'
   | 'HttpContext'
   | 'IdentityContext'
+  | 'InputValueContext'
+  | 'LocaleContext'
   | 'MarketingContext'
   | 'PathContext'
   | 'SessionContext';

@@ -9,7 +9,7 @@ import { ContextsConfig, makeIdentityContext, TrackerPluginInterface } from '@ob
  */
 export type IdentityContextAttributes = {
   id: string;
-  name: string;
+  value: string;
 };
 
 /**
