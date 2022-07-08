@@ -704,6 +704,7 @@ class DataFrame:
             convert_objects: bool,
             name: str = 'loaded_data',
             materialization: str = 'cte',
+            *,
             if_exists: str = 'fail'
     ) -> 'DataFrame':
         """
@@ -959,7 +960,7 @@ class DataFrame:
         Changes to data, index, sorting, grouping etc. on the copy will not affect the original.
         The savepoints on the other hand will be shared by the original and the copy.
 
-        If you want to create a snapshot of the data, have a look at :py:meth:`get_sample()`
+        If you want to create a snapshot of the data, have a look at :py:meth:`database_create_table()`
 
         Calling `copy(df)` will invoke this copy function, i.e. `copy(df)` is implemented as df.copy()
 
@@ -1063,6 +1064,7 @@ class DataFrame:
                    table_name: str,
                    filter: 'SeriesBoolean' = None,
                    sample_percentage: int = None,
+                   *,
                    overwrite: bool = False,
                    seed: int = None) -> 'DataFrame':
         """
@@ -1074,6 +1076,11 @@ class DataFrame:
         Use :py:meth:`get_unsampled` to switch back to the unsampled data later on. This returns a new
         DataFrame with all operations that have been done on the sample, applied to that DataFrame.
 
+        Will materialize the DataFrame if it is not in a materialized state.
+
+        If `seed` is set (Postgres only), this will create a temporary table from which the sample will be
+        queried using the `tablesample bernoulli` sql construction.
+
         :param table_name: the name of the underlying sql table that stores the sampled data.
         :param filter: a filter to apply to the dataframe before creating the sample. If a filter is applied,
             sample_percentage is ignored and thus the bernoulli sample creation is skipped.
@@ -1081,9 +1088,18 @@ class DataFrame:
             Between 0-100.
         :param overwrite: if True, the sample data is written to table_name, even if that table already
             exists.
-        :param seed: optional seed number used to generate the sample.
+        :param seed: optional seed number used to generate the sample. Only supported for Postgres
+        :raises Exception: If overwrite=False and the table already exists. The exact exception depends on
+            the underlying database.
         :returns: a sampled DataFrame of the current DataFrame.
 
+        .. warning::
+            With `overwrite=True`, if a table already exist with the given name, then that table will
+            be dropped and all data lost!
+        .. note::
+            This function queries the database.
+        .. note::
+            This function writes to the database.
         .. note::
             All data in the DataFrame to be sampled is queried to create the sample.
         """
@@ -1100,11 +1116,15 @@ class DataFrame:
 
     def get_unsampled(self) -> 'DataFrame':
         """
-        Return a copy of the current sampled DataFrame, that undoes calling :py:meth:`get_sample` earlier.
+        Return a copy of the current sampled DataFrame, that undoes calling :py:meth:`get_sample()` earlier.
 
         All other operations that have been done on the sample DataFrame will be applied on the DataFrame
-        that is returned. This does not remove the table that was written to the database by
-        :py:meth:`get_sample`, the new DataFrame just does not query that table anymore.
+        that is returned. The returned DataFrame's data will look as if :py:meth:`get_sample()` was never
+        called, but the state of the DataFrame could be slightly different since :py:meth:`get_sample()`
+        might have called :py:meth:`materialize()`.
+
+        This does not remove the table that was written to the database by :py:meth:`get_sample()`, the new
+        DataFrame just does not query that table anymore.
 
         Will raise an error if the current DataFrame is not sample data of another DataFrame, i.e.
         :py:meth:`get_sample` has not been called.
@@ -1113,6 +1133,57 @@ class DataFrame:
         """
         from bach.sample import get_unsampled
         return get_unsampled(df=self)
+
+    def database_create_table(self, table_name: str, *, if_exists: str = 'fail') -> 'DataFrame':
+        """
+        Write the current state of the DataFrame to a database table.
+
+        The DataFrame that's returned will query from the written table for any further operations.
+
+        :param table_name: Name of the table to write to. Can include project_id and dataset
+                on BigQuery, e.g. 'project_id.dataset.table_name'
+        :param if_exists: {'fail', 'replace'}. How to behave if the table already exists:
+            * fail: Raise an Exception.
+            * replace: Drop the table before inserting new values. All data in that table will be lost! Make
+                sure that `table_name` does not contain any valuable information. Additionally, make sure
+                that it is not a source table of this DataFrame.
+        :raises Exception: If if_exists='fail'' and the table already exists. The exact exception depends on
+            the underlying database.
+        :return: New DataFrame; the base_node consists of a query on the newly created table.
+
+        .. warning::
+            With `if_exists='replace'`, if a table already exist with the given name, then that table will
+            be dropped and all data lost!
+        .. note::
+            This function queries the database.
+        .. note::
+            This function writes to the database.
+        """
+        if if_exists not in {'fail', 'replace'}:
+            raise ValueError(f'Value of if_exists ({if_exists}) must be either "fail" or "replace"')
+        dialect = self.engine.dialect
+        model = self.get_current_node(name='database_create_table')
+        model = model.copy_set_materialization(Materialization.TABLE)
+        model = model.copy_set_materialization_name(materialization_name=table_name)
+
+        placeholder_values = get_variable_values_sql(dialect=dialect, variable_values=self.variables)
+        model = update_placeholders_in_graph(start_node=model, placeholder_values=placeholder_values)
+
+        sql = to_sql(dialect=dialect, model=model)
+        with self.engine.connect() as conn:
+            if if_exists == 'replace':
+                sql = f'DROP TABLE IF EXISTS {quote_identifier(dialect, table_name)}; {sql}'
+
+            sql = escape_parameter_characters(conn, sql)
+            conn.execute(sql)
+
+        all_dtypes = {**self.index_dtypes, **self.dtypes}
+        return self.from_table(
+            engine=self.engine,
+            table_name=table_name,
+            index=self.index_columns,
+            all_dtypes=all_dtypes
+        )
 
     @overload
     def __getitem__(self, key: str) -> 'Series':
@@ -2059,7 +2130,7 @@ class DataFrame:
                 raise ValueError(
                     f'The df has groupby set, but contains Series that have no aggregation '
                     f'function yet. Please make sure to first: remove these from the frame, '
-                    f'setup aggregation through agg(), or on all individual series.'
+                    f'setup aggregation through agg(), or on all individual series. '
                     f'Unaggregated series: {not_aggregated}'
                 )
 
@@ -2102,20 +2173,15 @@ class DataFrame:
         :param limit: the limit to apply, either as a max amount of rows or a slice of the data.
         :returns: SQL query
         """
-
+        dialect = self.engine.dialect
         # we need to construct each multi-level series, since it should resemble the final result
         model = self.get_current_node('view_sql', limit=limit, construct_multi_levels=True)
-        placeholder_values = get_variable_values_sql(
-            dialect=self.engine.dialect,
-            variable_values=self.variables
-        )
+        model = model.copy_set_materialization(Materialization.QUERY)
+
+        placeholder_values = get_variable_values_sql(dialect=dialect, variable_values=self.variables)
         model = update_placeholders_in_graph(start_node=model, placeholder_values=placeholder_values)
-        sql_statements = to_sql_materialized_nodes(
-            dialect=self.engine.dialect, start_node=model
-        )
-        sql_statements = [sql_stat for sql_stat in sql_statements
-                          if not sql_stat.materialization.has_lasting_effect]
-        sql = ';\n'.join(sql_stat.sql for sql_stat in sql_statements)
+
+        sql = to_sql(dialect=dialect, model=model)
         return sql
 
     def merge(
