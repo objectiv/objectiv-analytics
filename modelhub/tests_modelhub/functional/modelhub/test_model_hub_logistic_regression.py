@@ -12,7 +12,8 @@ from tests_modelhub.functional.modelhub.logistic_regression_test_utils import Te
 
 def test_fitted_model(db_params):
     bt, modelhub = get_objectiv_dataframe_test(db_params)
-    bt['ts'] = bt['moment'].dt.strftime('%Y%m%d%H%m').astype(dtype=int)
+    bt['ts'] = bt['moment'].dt.strftime('%m%d%H%m').astype(dtype=int)
+    bt['session'] = bt['session_hit_number'] * 100
     bt['target'] = bt.session_hit_number > 1
 
     test_lr = TestLR(X=bt[['ts', 'session_hit_number']],
@@ -28,10 +29,11 @@ def test_fitted_model(db_params):
 ])
 def test_model_methods(db_params, method_name, X, y):
     bt, modelhub = get_objectiv_dataframe_test(db_params)
-    bt['ts'] = bt['moment'].dt.strftime('%Y%m%d%H%m').astype(dtype=int)
+    bt['ts'] = bt['moment'].dt.strftime('%m%d%H%m').astype(dtype=int)
+    bt['session'] = bt['session_hit_number'] * 100
     bt['target'] = bt.session_hit_number > 1
 
-    test_lr = TestLR(X=bt[['ts', 'session_hit_number']],
+    test_lr = TestLR(X=bt[['ts', 'session_hit_number', 'session']],
                      y=bt['target'])
 
     test_lr.test_method(method_name=method_name, X=X, y=y)

@@ -57,8 +57,7 @@ class LogisticRegression:
 
         .. important::
             This method uses sklearns LogisticRegression.fit, meaning that the data in the database gets
-            exported first before fitting the data. The exported data order, `X` and `y`, can be
-            different, hence we sort them by index before the fitting, so both have the same order.
+            exported first before fitting the data.
 
         :param X: DataFrame with features.
         :param y: Series with the target variable.
@@ -67,8 +66,11 @@ class LogisticRegression:
         if not isinstance(y, SeriesBoolean):
             raise TypeError(f"y is of type {type(y)}, should be SeriesBoolean")
 
-        X_p = X.to_pandas().sort_index()
-        y_p = y.to_pandas().sort_index()
+        data = X.copy()
+        data[y.name] = y
+        pdf = data.to_pandas()
+        X_p = pdf[X.data_columns]
+        y_p = pdf[y.name]
 
         return self._model.fit(X_p, y_p)
 
