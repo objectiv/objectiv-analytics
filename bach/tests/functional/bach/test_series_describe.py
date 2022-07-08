@@ -1,12 +1,14 @@
+from unittest.mock import ANY
+
 import numpy as np
 import pandas as pd
 
 from bach import Series, DataFrame
-from tests.functional.bach.test_data_and_utils import get_bt_with_test_data, assert_equals_data
+from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
-def test_categorical_describe() -> None:
-    series = get_bt_with_test_data()['city']
+def test_categorical_describe(engine) -> None:
+    series = get_df_with_test_data(engine)['city']
     result = series.describe()
     assert isinstance(result, Series)
     assert_equals_data(
@@ -20,13 +22,13 @@ def test_categorical_describe() -> None:
             ['min', 'Drylts'],
             ['max', 'Snits'],
             ['nunique', '3'],
-            ['mode', 'Drylts'],
+            ['mode', ANY],
         ],
     )
 
 
-def test_numerical_describe() -> None:
-    series = get_bt_with_test_data()['skating_order']
+def test_numerical_describe(engine) -> None:
+    series = get_df_with_test_data(engine)['skating_order']
     result = series.describe(percentiles=[0.88, 0.5, 0.75])
     assert isinstance(result, Series)
     assert len(result.sorting_keys) == 1
@@ -36,10 +38,10 @@ def test_numerical_describe() -> None:
             ['count', 'mean', 'std', 'min', 'max', 'nunique', 'mode', '0.5', '0.75', '0.88'],
             name='__stat'
         ),
-        data=[3., 2., 1., 1., 3., 3., 1., 2, 2.5, 2.76],
+        data=[3., 2., 1., 1., 3., 3., ANY, 2, 2.5, 2.76],
         name='skating_order',
     )
-    pd.testing.assert_series_equal(expected, result.to_pandas())
+    pd.testing.assert_series_equal(expected, result.to_pandas(), check_dtype=False)
 
 
 def test_describe_datetime(pg_engine) -> None:
