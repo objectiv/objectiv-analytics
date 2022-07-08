@@ -278,6 +278,9 @@ def get_sessionized_data(
     :param engine: db connection
     :param table_name: table from where to extract data
     :param set_index: set index series for final dataframe
+    :poram extracted_contexts_df: DataFrame containing extracted context data,
+        if not value is provided then the generated DataFrame from ExtractedContextsPipeline
+        will be used instead.
     :param session_gap_seconds: the session gap in seconds
 
     returns a bach DataFrame
