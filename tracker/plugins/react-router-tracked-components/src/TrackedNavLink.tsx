@@ -38,7 +38,11 @@ export const TrackedNavLink = React.forwardRef<HTMLAnchorElement, TrackedNavLink
         `｢objectiv｣ Could not generate id for LinkContext @ ${locationPath}. Either add the \`title\` prop or specify an id manually via the  \`id\` option of the \`objectiv\` prop.`
       );
     }
-    return <NavLink {...otherProps}>{children}</NavLink>;
+    return (
+      <NavLink {...otherProps} ref={ref}>
+        {children}
+      </NavLink>
+    );
   }
 
   return (
