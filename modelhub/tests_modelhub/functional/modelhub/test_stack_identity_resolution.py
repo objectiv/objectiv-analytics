@@ -41,8 +41,8 @@ _FAKE_DATA = [
             },
             {
                 "_type": "IdentityContext",
-                "id": "user_1@objectiv.io",
-                "name": "email",
+                "id": "email",
+                "value": "user_1@objectiv.io",
             },
             {
                 "_type": "HttpContext",
@@ -61,11 +61,18 @@ _FAKE_DATA = [
         'user_id': 'b2df75d2-d7ca-48ac-9747-af47d7a4a2b1',
         'moment': datetime.datetime(2021, 12, 2, 11, 23, 36),
         'global_contexts': json.dumps(
-            [{
-                "_type": "IdentityContext",
-                "id": "user_2@objectiv.io",
-                "name": "email",
-            }]
+            [
+                {
+                    "_type": "IdentityContext",
+                    "id": "email",
+                    "value": "user_2@objectiv.io",
+                },
+                {
+                    "_type": "IdentityContext",
+                    "id": "username",
+                    "value": "user_2",
+                }
+            ]
         ),
     },
     {
@@ -242,6 +249,31 @@ def test_extract_identities_from_global_contexts(pipeline: IdentityResolutionPip
         expected_data=[
             [
                 'b2df75d2-d7ca-48ac-9747-af47d7a4a2b1', 'user_2@objectiv.io|email',
+            ],
+        ],
+    )
+
+
+def test_extract_identities_from_global_contexts_w_identity_id(
+    pipeline: IdentityResolutionPipeline,
+) -> None:
+    engine = pipeline._engine
+
+    pdf = pd.DataFrame(_FAKE_DATA)
+
+    context_df = bach.DataFrame.from_pandas(
+        df=pdf, engine=engine, convert_objects=True
+    ).reset_index(drop=True)
+    context_df['global_contexts'] = context_df['global_contexts'].astype('json')
+
+    result = pipeline._extract_identities_from_global_contexts(context_df, identity_id='username')
+
+    assert_equals_data(
+        result,
+        expected_columns=['user_id', 'identity_user_id'],
+        expected_data=[
+            [
+                'b2df75d2-d7ca-48ac-9747-af47d7a4a2b1', 'user_2|username',
             ],
         ],
     )

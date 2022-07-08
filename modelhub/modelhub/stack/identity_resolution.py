@@ -1,7 +1,7 @@
 """
 Copyright 2022 Objectiv B.V.
 """
-from typing import Dict
+from typing import Dict, Optional
 
 import bach
 from sqlalchemy.engine import Engine
@@ -52,6 +52,7 @@ class IdentityResolutionPipeline(BaseDataPipeline):
 
     def _get_pipeline_result(
         self,
+        identity_id: Optional[str] = None,
         with_sessionized_data: bool = True,
         **kwargs,
     ) -> bach.DataFrame:
@@ -66,7 +67,7 @@ class IdentityResolutionPipeline(BaseDataPipeline):
         context_df[ObjectivSupportedColumns.USER_ID.value] = (
             context_df[ObjectivSupportedColumns.USER_ID.value].astype(bach.SeriesString.dtype)
         )
-        identity_context_df = self._extract_identities_from_global_contexts(context_df)
+        identity_context_df = self._extract_identities_from_global_contexts(context_df, identity_id)
 
         context_df = self._resolve_original_user_ids(context_df, identity_context_df)
         if with_sessionized_data:
@@ -119,19 +120,25 @@ class IdentityResolutionPipeline(BaseDataPipeline):
             current_dtypes=df.dtypes,
         )
 
-    def _extract_identities_from_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
+    def _extract_identities_from_global_contexts(
+        self, df: bach.DataFrame, identity_id: Optional[str] = None,
+    ) -> bach.DataFrame:
         """
         Generates a dataframe containing the last encountered unique identity per user_id.
 
         This is performed by:
-            1. Extract the first IdentityContext from the event's global_contexts.
+            1. Extract the first IdentityContext where `id` value matches the provided identity_id param value
+                from the event's global_contexts. If `identity_id` is None, then the first IdentityContext
+                found will be used instead.
             2. Drop rows where events have no IdentityContext
             3. Create the new user id based on the IdentityContext's id and name.
                 Follows the following format:
                 {id}|{name}
             4. Consider only the last identity from the user's last event
 
-        returns a bach DataFrame
+        returns a bach DataFrame with two series: user_id and identity_user_id.
+            user-id is the user_id series from the provided `df` DataFrame
+            identity_user_id is the new user_id in the format {id}|{name}
         """
         global_context_series = (
             df[ObjectivSupportedColumns.GLOBAL_CONTEXTS.value]
@@ -144,7 +151,11 @@ class IdentityResolutionPipeline(BaseDataPipeline):
         identity_context_df = df[[user_id_series_name, moment_series_name]]
 
         # Extract first identity context for the event
-        gc_array_slice = slice({'_type': 'IdentityContext'}, None)
+        identity_slice_filter = {'_type': 'IdentityContext'}
+        if identity_id:
+            identity_slice_filter['id'] = identity_id
+
+        gc_array_slice = slice(identity_slice_filter, None)
         identity_context_df['identity_context_series'] = global_context_series.json[gc_array_slice].json[0]
 
         # drop events that have no identity
@@ -156,8 +167,8 @@ class IdentityResolutionPipeline(BaseDataPipeline):
         )
         resolved_expr = bach.expression.Expression.construct(
             self.IDENTITY_FORMAT,
+            identity_context_series.json.get_value('value', as_str=True),
             identity_context_series.json.get_value('id', as_str=True),
-            identity_context_series.json.get_value('name', as_str=True),
         )
         identity_context_df[self.RESOLVED_USER_ID_SERIES_NAME] = (
             identity_context_df[user_id_series_name].copy_override(expression=resolved_expr)
@@ -216,6 +227,7 @@ def get_identity_resolution_data(
     engine: Engine,
     table_name: str,
     set_index: bool = True,
+    identity_id: Optional[str] = None,
     with_sessionized_data: bool = True,
     **kwargs,
 ) -> bach.DataFrame:
@@ -224,12 +236,15 @@ def get_identity_resolution_data(
     :param engine: db connection
     :param table_name: table from where to extract data
     :param set_index: set index series for final dataframe
+    :param identity_id: identifier type of IdentityContext to use for resolution.
+        (e.g. email, supplier cookie, etc).
+        If not provided, the first IdentityContext found for the event will be considered instead.
     :param with_sessionized_data: if true, result will include calculated session data.
 
     returns a bach DataFrame
     """
     pipeline = IdentityResolutionPipeline(engine=engine, table_name=table_name)
-    result = pipeline(with_sessionized_data=with_sessionized_data, **kwargs)
+    result = pipeline(identity_id=identity_id, with_sessionized_data=with_sessionized_data, **kwargs)
     if set_index:
         indexes = list(ObjectivSupportedColumns.get_index_columns())
         result = result.set_index(keys=indexes)

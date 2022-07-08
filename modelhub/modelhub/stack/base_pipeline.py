@@ -25,7 +25,7 @@ class BaseDataPipeline:
 
     def __call__(self, **kwargs) -> bach.DataFrame:
         result = self._get_pipeline_result(**kwargs)
-        self.validate_pipeline_result(result)
+        self.validate_pipeline_result(result, **kwargs)
         return result
 
     @classmethod
