@@ -100,6 +100,18 @@ describe('ReactNativeTracker', () => {
       );
     });
 
+    it('should allow disabling all plugins, exception made for OpenTaxonomyValidationPlugin ', () => {
+      const testTracker = new ReactNativeTracker({
+        applicationId: 'app-id',
+        endpoint: 'localhost',
+        trackApplicationContext: false,
+      });
+      expect(testTracker).toBeInstanceOf(ReactNativeTracker);
+      expect(testTracker.plugins?.plugins).toEqual([
+        expect.objectContaining({ pluginName: 'OpenTaxonomyValidationPlugin' }),
+      ]);
+    });
+
     it('should add Plugins `plugins` has been specified', () => {
       const testTracker = new ReactNativeTracker({
         applicationId: 'app-id',

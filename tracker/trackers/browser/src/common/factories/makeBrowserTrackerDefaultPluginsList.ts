@@ -2,6 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { ApplicationContextPlugin } from '@objectiv/plugin-application-context';
 import { HttpContextPlugin } from '@objectiv/plugin-http-context';
 import { PathContextFromURLPlugin } from '@objectiv/plugin-path-context-from-url';
 import { RootLocationContextFromURLPlugin } from '@objectiv/plugin-root-location-context-from-url';
@@ -13,12 +14,17 @@ import { BrowserTrackerConfig } from '../../definitions/BrowserTrackerConfig';
  */
 export const makeBrowserTrackerDefaultPluginsList = (trackerConfig: BrowserTrackerConfig) => {
   const {
+    trackApplicationContext = true,
     trackHttpContext = true,
     trackPathContextFromURL = true,
     trackRootLocationContextFromURL = true,
   } = trackerConfig;
 
   const plugins: TrackerPluginInterface[] = [];
+
+  if (trackApplicationContext) {
+    plugins.push(new ApplicationContextPlugin());
+  }
 
   if (trackHttpContext) {
     plugins.push(new HttpContextPlugin());

@@ -1756,6 +1756,7 @@ __metadata:
   resolution: "@objectiv/tracker-browser@workspace:trackers/browser"
   dependencies:
     "@objectiv/developer-tools": ^0.0.22-0
+    "@objectiv/plugin-application-context": ^0.0.22-0
     "@objectiv/plugin-http-context": ^0.0.22-0
     "@objectiv/plugin-path-context-from-url": ^0.0.22-0
     "@objectiv/plugin-root-location-context-from-url": ^0.0.22-0
@@ -1783,7 +1784,6 @@ __metadata:
   resolution: "@objectiv/tracker-core@workspace:core/tracker"
   dependencies:
     "@objectiv/developer-tools": ^0.0.22-0
-    "@objectiv/plugin-application-context": ^0.0.22-0
     "@objectiv/schema": ^0.0.22-0
     "@objectiv/testing-tools": ^0.0.22-0
     "@types/jest": ^27.4.1
@@ -1831,6 +1831,7 @@ __metadata:
   resolution: "@objectiv/tracker-react-native@workspace:trackers/react-native"
   dependencies:
     "@objectiv/developer-tools": ^0.0.22-0
+    "@objectiv/plugin-application-context": ^0.0.22-0
     "@objectiv/testing-tools": ^0.0.22-0
     "@objectiv/tracker-core": ~0.0.22-0
     "@objectiv/tracker-react-core": ~0.0.22-0
@@ -1858,6 +1859,7 @@ __metadata:
   resolution: "@objectiv/tracker-react@workspace:trackers/react"
   dependencies:
     "@objectiv/developer-tools": ^0.0.22-0
+    "@objectiv/plugin-application-context": ^0.0.22-0
     "@objectiv/plugin-http-context": ^0.0.22-0
     "@objectiv/plugin-path-context-from-url": ^0.0.22-0
     "@objectiv/plugin-root-location-context-from-url": ^0.0.22-0
