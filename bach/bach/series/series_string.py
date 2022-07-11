@@ -8,6 +8,7 @@ from sqlalchemy.engine import Dialect
 
 from bach.series import Series
 from bach.expression import Expression
+from bach.series.series import WrappedPartition
 from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
 
@@ -226,3 +227,16 @@ class SeriesString(Series):
 
     def _comparator_operation(self, other, comparator, other_dtypes=tuple(['string'])) -> 'SeriesBoolean':
         return super()._comparator_operation(other, comparator, other_dtypes)
+
+    def to_json_array(self, partition: WrappedPartition = None, skipna: bool = True, min_count: int = None, **kwargs):
+        """
+        Get the sum of the input values.
+
+        :param partition: The partition or window to apply
+        :param skipna: Exclude NA/NULL values
+        :param min_count: This minimum amount of values (not NULL) to be present before returning a result.
+        """
+        result = self._derived_agg_func(partition, 'array_agg', skipna=skipna, min_count=min_count)
+        expression = Expression.construct('to_jsonb({})', result)
+        from bach import SeriesJson
+        return result.copy_override(expression=expression).copy_override_type(SeriesJson)
