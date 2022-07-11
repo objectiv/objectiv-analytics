@@ -3,7 +3,7 @@
  */
 
 import '@objectiv/developer-tools';
-import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import { MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
   GlobalContextName,
   LocationContextName,
@@ -74,16 +74,6 @@ describe('ObjectivProvider', () => {
                 eventMatches: expect.any(Function),
               },
             ],
-          },
-          {
-            pluginName: 'ApplicationContextPlugin',
-            initialized: true,
-            applicationContext: {
-              __instance_id: matchUUID,
-              __global_context: true,
-              _type: GlobalContextName.ApplicationContext,
-              id: 'app-id',
-            },
           },
         ],
       }),

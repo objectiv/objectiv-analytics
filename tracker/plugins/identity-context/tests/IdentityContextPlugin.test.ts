@@ -93,7 +93,7 @@ describe('IdentityContextPlugin', () => {
       ],
     });
     const trackedEvent = await coreTracker.trackEvent(testEvent);
-    expect(trackedEvent.global_contexts).toHaveLength(4);
+    expect(trackedEvent.global_contexts).toHaveLength(3);
     expect(trackedEvent.global_contexts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -130,7 +130,7 @@ describe('IdentityContextPlugin', () => {
       ],
     });
     const trackedEvent = await coreTracker.trackEvent(testEvent);
-    expect(trackedEvent.global_contexts).toHaveLength(5);
+    expect(trackedEvent.global_contexts).toHaveLength(4);
     expect(trackedEvent.global_contexts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -167,7 +167,7 @@ describe('IdentityContextPlugin', () => {
     });
 
     const trackedEvent = await coreTracker.trackEvent(testEvent);
-    expect(trackedEvent.global_contexts).toHaveLength(4);
+    expect(trackedEvent.global_contexts).toHaveLength(3);
     expect(trackedEvent.global_contexts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -205,7 +205,7 @@ describe('IdentityContextPlugin', () => {
     });
 
     const trackedEvent = await coreTracker.trackEvent(testEvent);
-    expect(trackedEvent.global_contexts).toHaveLength(5);
+    expect(trackedEvent.global_contexts).toHaveLength(4);
     expect(trackedEvent.global_contexts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
