@@ -9,7 +9,7 @@ import pandas as pd
 from sql_models.util import is_bigquery
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
-from modelhub import SessionizedDataPipeline, get_extracted_contexts_df, get_sessionized_data
+from modelhub import SessionizedDataPipeline, get_sessionized_data
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data
 from tests_modelhub.functional.modelhub.test_stack_extracted_contexts import get_expected_context_pandas_df
 
