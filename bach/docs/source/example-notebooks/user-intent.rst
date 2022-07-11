@@ -45,7 +45,9 @@ The root_location context in the location_stack uniquely represents the top-leve
 
 .. code-block:: python
 
-    modelhub.aggregate.unique_users(df, groupby=['application', 'root_location']).head(10)
+    # model hub: unique users per root location
+    users_root = modelhub.aggregate.unique_users(df, groupby=['application', 'root_location'])
+    users_root.sort_index().head(10)
 
 Exploring session duration
 --------------------------
