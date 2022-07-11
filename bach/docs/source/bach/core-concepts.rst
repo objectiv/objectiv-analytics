@@ -51,3 +51,29 @@ situations:
   and mainly uses NaN. When outputting data from a Bach DataFrame to a pandas DataFrame, most of this
   distinction is lost again.
 * In a Bach DataFrame column names must be unique, in pandas this is not the case
+
+
+BigQuery Tips
+-------------
+The columns in Bach DataFrame are the database columns, hence the column name must contain only letters (`a-z`, `A-Z`), numbers (`0-9`), or underscores (`_`), and it must start with a letter or underscore. Especially remember this during [`DataFrame.unstack()`](/modeling/bach/api-reference/DataFrame/bach.DataFrame.unstack.mdx) usage.
+
+For getting a sample of the data one can use:
+
+.. code-block:: console
+
+    table_name = 'objectiv-production.writable_dataset.table_name'
+    df.get_sample(table_name, sample_percentage=10, overwrite=True)
+
+It creates a permanent table, and if the table exists it overwrites it (make sure you have a write access). For BigQuery `seed` parameter is not implemented.
+
+If you are planning to do a lot of operations on a given Bach DataFrame and already the underlying SQL query is complex it would be more optimal for the database first to materialize the current DataFrame as a temporary table:
+
+.. code-block:: console
+
+    df = df.materialize(materialization='temp_table')
+
+and then continue to do all the other complex operations. One way of checking SQL complexity:
+
+.. code-block:: console
+
+    display_sql_as_markdown(df)
