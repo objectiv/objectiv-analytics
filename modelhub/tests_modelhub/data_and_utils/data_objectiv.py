@@ -1,4 +1,7 @@
-TEST_DATA_OBJECTIV = [
+import json
+from typing import List, Dict
+
+_BASE_TEST_DATA_OBJECTIVE = [
     ('12b55ed5-4295-4fc1-bf1f-88d64d1ac301','2021-11-30','2021-11-30 10:23:36.287','b2df75d2-d7ca-48ac-9747-af47d7a4a2b2','{"_type": "ClickEvent", "location_stack": [{"_type": "WebDocumentContext", "id": "#document", "url": "https://objectiv.io/", "_types": ["AbstractContext", "AbstractLocationContext", "SectionContext", "WebDocumentContext"]}, {"_type": "SectionContext", "id": "navbar-top", "_types": ["AbstractContext", "AbstractLocationContext", "SectionContext"]}, {"_type": "OverlayContext", "id": "hamburger-menu", "_types": ["AbstractContext", "AbstractLocationContext", "OverlayContext", "SectionContext"]}, {"_type": "LinkContext", "id": "GitHub", "text": "GitHub", "href": "https://github.com/objectiv", "_types": ["AbstractContext", "AbstractLocationContext", "ActionContext", "ItemContext", "LinkContext"]}], "global_contexts": [{"_type": "ApplicationContext", "id": "objectiv-website", "_types": ["AbstractContext", "AbstractGlobalContext", "ApplicationContext"]}, {"id": "http_context", "referrer": "https://objectiv.io/", "user_agent": "Mozilla/5.0 (Linux; Android 12; Pixel 4a) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.74 Mobile Safari/537.36", "_type": "HttpContext", "_types": ["AbstractContext", "AbstractGlobalContext", "HttpContext"]}, {"id": "1cc3cb08-010b-465a-8241-88c9b4d233ea", "cookie_id": "1cc3cb08-010b-465a-8241-88c9b4d233ea", "_type": "CookieIdContext", "_types": ["AbstractContext", "AbstractGlobalContext", "CookieIdContext"]}], "id": "729c84f9-91d0-4f9f-be58-5cfb2d8130e4", "time": 1636476263115, "_types": ["AbstractEvent", "ClickEvent", "InteractiveEvent"]}'),
     ('12b55ed5-4295-4fc1-bf1f-88d64d1ac302','2021-11-30','2021-11-30 10:23:36.290','b2df75d2-d7ca-48ac-9747-af47d7a4a2b2','{"_type": "ClickEvent", "location_stack": [{"_type": "WebDocumentContext", "id": "#document", "url": "https://objectiv.io/", "_types": ["AbstractContext", "AbstractLocationContext", "SectionContext", "WebDocumentContext"]}, {"_type": "SectionContext", "id": "main", "_types": ["AbstractContext", "AbstractLocationContext", "SectionContext"]}, {"_type": "SectionContext", "id": "location-stack", "_types": ["AbstractContext", "AbstractLocationContext", "SectionContext"]}, {"_type": "LinkContext", "id": "cta-docs-location-stack", "text": "Docs - Location Stack", "href": "/docs/taxonomy", "_types": ["AbstractContext", "AbstractLocationContext", "ActionContext", "ItemContext", "LinkContext"]}], "global_contexts": [{"_type": "ApplicationContext", "id": "objectiv-website", "_types": ["AbstractContext", "AbstractGlobalContext", "ApplicationContext"]}, {"id": "http_context", "referrer": "https://objectiv.io/", "user_agent": "Mozilla/5.0 (Linux; Android 12; Pixel 4a) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.74 Mobile Safari/537.36", "_type": "HttpContext", "_types": ["AbstractContext", "AbstractGlobalContext", "HttpContext"]}, {"id": "a30c5ca2-6f0c-4e56-997c-2148bd71ee8d", "cookie_id": "a30c5ca2-6f0c-4e56-997c-2148bd71ee8d", "_type": "CookieIdContext", "_types": ["AbstractContext", "AbstractGlobalContext", "CookieIdContext"]}], "id": "1049e11c-bb9c-4b84-9dac-b4125998999d", "time": 1636475896879, "_types": ["AbstractEvent", "ClickEvent", "InteractiveEvent"]}'),
     ('12b55ed5-4295-4fc1-bf1f-88d64d1ac303','2021-11-30','2021-11-30 10:23:36.291','b2df75d2-d7ca-48ac-9747-af47d7a4a2b2','{"_type": "ClickEvent", "location_stack": [{"_type": "WebDocumentContext", "id": "#document", "url": "https://objectiv.io/", "_types": ["AbstractContext", "AbstractLocationContext", "SectionContext", "WebDocumentContext"]}, {"_type": "SectionContext", "id": "header", "_types": ["AbstractContext", "AbstractLocationContext", "SectionContext"]}, {"_type": "LinkContext", "id": "cta-repo-button", "text": "Objectiv on GitHub", "href": "https://github.com/objectiv/objectiv-analytics", "_types": ["AbstractContext", "AbstractLocationContext", "ActionContext", "ItemContext", "LinkContext"]}], "global_contexts": [{"_type": "ApplicationContext", "id": "objectiv-website", "_types": ["AbstractContext", "AbstractGlobalContext", "ApplicationContext"]}, {"id": "http_context", "referrer": "https://objectiv.io/", "user_agent": "Mozilla/5.0 (Linux; Android 12; Pixel 4a) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.74 Mobile Safari/537.36", "_type": "HttpContext", "_types": ["AbstractContext", "AbstractGlobalContext", "HttpContext"]}, {"id": "a30c5ca2-6f0c-4e56-997c-2148bd71ee8d", "cookie_id": "a30c5ca2-6f0c-4e56-997c-2148bd71ee8d", "_type": "CookieIdContext", "_types": ["AbstractContext", "AbstractGlobalContext", "CookieIdContext"]}], "id": "fd8239de-032f-499a-9849-8e97214ecdf1", "time": 1636475880112, "_types": ["AbstractEvent", "ClickEvent", "InteractiveEvent"]}'),
@@ -13,4 +16,58 @@ TEST_DATA_OBJECTIV = [
     ('12b55ed5-4295-4fc1-bf1f-88d64d1ac312','2021-11-29','2021-11-29 10:23:36.287','b2df75d2-d7ca-48ac-9747-af47d7a4a2b2','{"_type": "ClickEvent", "location_stack": [{"_type": "WebDocumentContext", "id": "#document", "url": "https://objectiv.io/docs/taxonomy/", "_types": ["AbstractContext", "AbstractLocationContext", "SectionContext", "WebDocumentContext"]}, {"_type": "SectionContext", "id": "navbar-top", "_types": ["AbstractContext", "AbstractLocationContext", "SectionContext"]}, {"_type": "LinkContext", "id": "logo", "text": "Objectiv Documentation Logo", "href": "/docs/", "_types": ["AbstractContext", "AbstractLocationContext", "ActionContext", "ItemContext", "LinkContext"]}], "global_contexts": [{"_type": "ApplicationContext", "id": "objectiv-docs", "_types": ["AbstractContext", "AbstractGlobalContext", "ApplicationContext"]}, {"id": "http_context", "referrer": "https://objectiv.io/", "user_agent": "Mozilla/5.0 (Linux; Android 11; SM-G986B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.74 Mobile Safari/537.36", "_type": "HttpContext", "_types": ["AbstractContext", "AbstractGlobalContext", "HttpContext"]}, {"id": "81a8ace2-273b-4b95-b6a6-0fba33858a22", "cookie_id": "81a8ace2-273b-4b95-b6a6-0fba33858a22", "_type": "CookieIdContext", "_types": ["AbstractContext", "AbstractGlobalContext", "CookieIdContext"]}], "id": "e2445152-327a-466f-a2bf-116f0146ab7a", "time": 1636476196460, "_types": ["AbstractEvent", "ClickEvent", "InteractiveEvent"]}')
 ]
 
-_TEST_DATA_OBJECTIV_COLUMN_NAMES = ['event_id', 'day', 'moment', 'cookie_id', 'value']
+IDENTITY_CONTEXTS_PER_EVENT = [
+    # event: 301, user: a2b2
+    [
+        {'_type': 'IdentityContext', 'id': 'email', 'value': 'fake1@objectiv.io'},
+        {'_type': 'IdentityContext', 'id': 'phone', 'value': '123456789'},
+    ],
+    # event: 302, user: a2b2
+    [],
+    # event: 303, user: a2b2
+    [
+        {'_type': 'IdentityContext', 'id': 'email', 'value': 'fake2@objectiv.io'},
+    ],
+    # event: 304, user: a2b1
+    [],
+    # event: 305, user: a2b1
+    [{'_type': 'IdentityContext', 'id': 'phone', 'value': '123456789'}],
+    # event: 306, user: a2b1
+    [],
+    # event: 307, user: a2b3
+    [
+        {'_type': 'IdentityContext', 'id': 'email', 'value': 'fake3@objectiv.io'},
+        {'_type': 'IdentityContext', 'id': 'email', 'value': 'fake31@objectiv.io'},
+    ],
+    # event: 308, user: a2b3
+    [],
+    # event: 309, user: a2b3
+    [],
+    # event: 310, user: a2b4
+    [],
+    # event: 311, user: a2b2
+    [{'_type': 'IdentityContext', 'id': 'email', 'value': 'fake4@objectiv.io'}],
+    # event: 312, user: a2b2
+    [],
+]
+
+
+def _add_identity_contexts_to_value_json(
+    value: str, identity_contexts: List[Dict[str, str]]
+) -> str:
+    value_json = json.loads(value)
+    value_json['global_contexts'].extend(identity_contexts)
+    return json.dumps(value_json)
+
+
+TEST_DATA_OBJECTIV = [
+    (
+        base_data[0],  # event_id
+        base_data[1],  # day
+        base_data[2],  # moment
+        base_data[3],  # cookie_id
+        _add_identity_contexts_to_value_json(base_data[4], identity_data),  # value
+
+    )
+    for base_data, identity_data in zip(_BASE_TEST_DATA_OBJECTIVE, IDENTITY_CONTEXTS_PER_EVENT)
+]

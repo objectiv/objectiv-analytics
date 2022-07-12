@@ -2,7 +2,6 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ApplicationContextPlugin } from '@objectiv/plugin-application-context';
 import { AbstractGlobalContext, AbstractLocationContext, Contexts } from '@objectiv/schema';
 import { ContextsConfig } from './Context';
 import { waitForPromise } from './helpers';
@@ -62,27 +61,16 @@ export type TrackerConfig = ContextsConfig & {
    * Optional. Determines if the TrackerInstance.trackEvent will process Events or not.
    */
   active?: boolean;
-
-  /**
-   * Optional. Whether to track ApplicationContext automatically. Enabled by default.
-   */
-  trackApplicationContext?: boolean;
 };
 
 /**
  * The default list of Plugins of Core Tracker
  */
-export const makeCoreTrackerDefaultPluginsList = (trackerConfig: TrackerConfig) => {
-  const { trackApplicationContext = true } = trackerConfig;
-
+export const makeCoreTrackerDefaultPluginsList = () => {
   const plugins: TrackerPluginInterface[] = [];
 
   if (globalThis.objectiv.devTools) {
     plugins.push(globalThis.objectiv.devTools.OpenTaxonomyValidationPlugin);
-  }
-
-  if (trackApplicationContext) {
-    plugins.push(new ApplicationContextPlugin());
   }
 
   return plugins;
@@ -171,7 +159,7 @@ export class Tracker implements TrackerInterface {
     if (isPluginsArray(trackerConfig.plugins) || trackerConfig.plugins === undefined) {
       this.plugins = new TrackerPlugins({
         tracker: this,
-        plugins: [...makeCoreTrackerDefaultPluginsList(trackerConfig), ...(trackerConfig.plugins ?? [])],
+        plugins: [...makeCoreTrackerDefaultPluginsList(), ...(trackerConfig.plugins ?? [])],
       });
     } else {
       this.plugins = trackerConfig.plugins;

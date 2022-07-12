@@ -4,7 +4,7 @@ import pytest
 
 from bach.expression import Expression
 from bach.sql_model import BachSqlModel
-from bach.utils import get_merged_series_dtype, is_valid_column_name, SortColumn, validate_sorting_expressions
+from bach.utils import get_merged_series_dtype, is_valid_column_name, SortColumn, validate_node_column_references_in_sorting_expressions
 from sql_models.model import Materialization, CustomSqlModelBuilder
 
 
@@ -64,11 +64,11 @@ def test_validate_sorting_expressions() -> None:
     )
 
     with pytest.raises(ValueError, match=r'Sorting contains expressions referencing'):
-        validate_sorting_expressions(
+        validate_node_column_references_in_sorting_expressions(
             model, [SortColumn(expression=Expression.column_reference('c'), asc=True)],
         )
 
-    validate_sorting_expressions(
+    validate_node_column_references_in_sorting_expressions(
         node=model,
         order_by=[
             SortColumn(

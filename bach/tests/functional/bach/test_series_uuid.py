@@ -82,9 +82,9 @@ def test_uuid_from_dtype_to_sql(engine):
     )
 
 
-def test_uuid_generate_random_uuid(engine):
+def test_uuid_random(engine):
     bt = get_df_with_test_data(engine)[['city']]
-    bt['x'] = SeriesUuid.sql_gen_random_uuid(base=bt)
+    bt['x'] = SeriesUuid.random(base=bt)
     assert_equals_data(
         bt,
         expected_columns=['_index_skating_order', 'city', 'x'],
@@ -111,7 +111,7 @@ def test_uuid_compare(engine):
     bt = get_df_with_test_data(engine)[['city', 'founding']]
     bt['a'] = uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264')
     bt['b'] = uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264')
-    bt['c'] = SeriesUuid.sql_gen_random_uuid(bt)
+    bt['c'] = SeriesUuid.random(bt)
     # this is a bit funky, here we copy the 'gen_random_uuid()' expression instead of the result of the
     # expression. As a result bt['d'] != bt['c']. This is something that we might want to change in the
     # future (e.g. by having a flag indicating that we need to create a new node in the DAG if we copy this
@@ -157,7 +157,7 @@ def test_uuid_compare(engine):
 def test_to_pandas(engine):
     bt = get_df_with_test_data(engine)
     bt['a'] = uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264')
-    bt['c'] = SeriesUuid.sql_gen_random_uuid(bt)
+    bt['c'] = SeriesUuid.random(bt)
     result_pdf = bt[['a', 'c']].to_pandas()
     assert result_pdf[['a']].to_numpy()[0] == [uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264')]
     assert type(result_pdf[['a']].to_numpy()[0][0]) == type(uuid.UUID('0022c7dd-074b-4a44-a7cb-b7716b668264'))

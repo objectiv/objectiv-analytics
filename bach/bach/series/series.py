@@ -21,8 +21,9 @@ from bach.sql_model import BachSqlModel
 
 from bach.types import StructuredDtype, Dtype, validate_instance_dtype, DtypeOrAlias,\
     AllSupportedLiteralTypes, value_to_series_type
-from bach.utils import is_valid_column_name, validate_sorting_expressions, SortColumn
+from bach.utils import is_valid_column_name, validate_node_column_references_in_sorting_expressions, SortColumn
 from sql_models.constants import NotSet, not_set, DBDialect
+from sql_models.model import Materialization
 from sql_models.util import is_bigquery, DatabaseNotSupportedException
 
 if TYPE_CHECKING:
@@ -125,7 +126,7 @@ class Series(ABC):
         sorted_ascending: Optional[bool],
         index_sorting: List[bool],
         instance_dtype: StructuredDtype,
-        sorting_keys: Optional[List[SortColumn]] = None,
+        order_by: Optional[List[SortColumn]] = None,
         **kwargs,
     ):
         """
@@ -160,6 +161,7 @@ class Series(ABC):
         :param instance_dtype: dtype of this specific instance. For basic scalar types this should be the
             same value as self.dtype. For structured types (e.g. SeriesDict) this should indicate what the
             structure of the data is.
+        :param order_by: Optional list of sort-columns to order the Series by
         """
         # Series is an abstract class, besides the abstractmethods subclasses must/may override some
         #   properties:
@@ -196,8 +198,8 @@ class Series(ABC):
         if not is_valid_column_name(dialect=engine.dialect, name=name):
             raise ValueError(f'Column name "{name}" is not valid for SQL dialect {engine.dialect}')
 
-        if sorting_keys:
-            validate_sorting_expressions(node=base_node, order_by=sorting_keys)
+        if order_by:
+            validate_node_column_references_in_sorting_expressions(node=base_node, order_by=order_by)
         validate_instance_dtype(static_dtype=self.dtype, instance_dtype=instance_dtype)
 
         self._engine = engine
@@ -209,7 +211,7 @@ class Series(ABC):
         self._sorted_ascending = sorted_ascending
         self._index_sorting = index_sorting
         self._instance_dtype = instance_dtype
-        self._sorting_keys = sorting_keys or []
+        self._order_by = order_by or []
 
     @classmethod
     @abstractmethod
@@ -321,12 +323,12 @@ class Series(ABC):
         return copy(self._index_sorting)
 
     @property
-    def sorting_keys(self) -> List[SortColumn]:
+    def order_by(self) -> List[SortColumn]:
         """
         Get the series expressions for sorting this Series. Columns referenced on sorting expressions
         must be valid for current base node.
         """
-        return copy(self._sorting_keys)
+        return copy(self._order_by)
 
     @property
     def expression(self) -> Expression:
@@ -525,7 +527,7 @@ class Series(ABC):
         sorted_ascending: Optional[Union[bool, NotSet]] = not_set,
         index_sorting: Optional[List[bool]] = None,
         instance_dtype: Optional[StructuredDtype] = None,
-        sorting_keys: Optional[Union[List[SortColumn], NotSet]] = not_set,
+        order_by: Optional[Union[List[SortColumn]]] = None,
         **kwargs
     ) -> T:
         """
@@ -547,7 +549,7 @@ class Series(ABC):
             sorted_ascending=self._sorted_ascending if sorted_ascending is not_set else sorted_ascending,
             index_sorting=self._index_sorting if index_sorting is None else index_sorting,
             instance_dtype=self.instance_dtype if instance_dtype is None else instance_dtype,
-            sorting_keys=self.sorting_keys if sorting_keys is not_set else sorting_keys,
+            order_by=self.order_by if order_by is None else order_by,
             **kwargs
         )
 
@@ -585,7 +587,7 @@ class Series(ABC):
             sorted_ascending=self._sorted_ascending,
             index_sorting=self._index_sorting,
             instance_dtype=instance_dtype,
-            sorting_keys=self.sorting_keys,
+            order_by=self.order_by,
             **kwargs,
         )
 
@@ -808,6 +810,7 @@ class Series(ABC):
             node_name='manual_materialize',
             limit: Any = None,
             distinct: bool = False,
+            materialization: Union[Materialization, str] = Materialization.CTE
     ) -> 'Series':
         """
         Create a copy of this Series with as base_node the current Series's state.
@@ -816,11 +819,18 @@ class Series(ABC):
         the size of the generated SQL query. But this can be useful if the current Series contains
         expressions that you want to evaluate before further expressions are build on top of them. This might
         make sense for very large expressions, or for non-deterministic expressions (e.g. see
-        :py:meth:`SeriesUuid.sql_gen_random_uuid`).
+        :py:meth:`SeriesUuid.random`). Additionally, materializing as a temporary table can
+        improve performance in some instances.
+
+        Note this function does NOT query the database or materializes any data in the database. It merely
+        changes the underlying SqlModel graph, which gets executed by data transfer functions (e.g.
+        :meth:`to_pandas()`)
 
         :param node_name: The name of the node that's going to be created
         :param limit: The limit (slice, int) to apply.
         :param distinct: Apply distinct statement if ``distinct=True``
+        :param materialization: Set the materialization of the SqlModel in the graph. Only
+            Materialization.CTE / 'cte' and Materialization.TEMP_TABLE / 'temp_table' are supported.
         :returns: Series with the current Series's state as base_node
 
         .. note::
@@ -830,7 +840,7 @@ class Series(ABC):
             Argument inplace should be always False.
         """
         result = self.to_frame().materialize(node_name=node_name, limit=limit, distinct=distinct,
-                                             inplace=False)
+                                             inplace=False, materialization=materialization)
         return result.all_series[self.name]
 
     def reset_index(
@@ -854,24 +864,24 @@ class Series(ABC):
 
         return result
 
-    def sort_values(self, *, ascending=True, keys: Optional[List['Series']] = None):
+    def sort_values(self, *, ascending=True, by_series: Optional[List['Series']] = None):
         """
         Sort this Series by its values.
         Returns a new instance and does not actually modify the instance it is called on.
 
         :param ascending: Whether to sort ascending (True) or descending (False)
-        :param keys: Apply sorting based on expressions from other series that share same
-        base node as caller
+        :param by_series: Apply sorting based on expressions from other series that share same
+            base node as caller
         """
-        if keys and any(key.base_node != self.base_node for key in keys):
+        if by_series and any(series.base_node != self.base_node for series in by_series):
             raise ValueError('All series provided as keys must have the same base_node as caller.')
 
-        if keys:
-            sorting_keys = [
+        if by_series is not None:
+            order_by = [
                 SortColumn(expression=series.expression, asc=ascending)
-                for series in keys
+                for series in by_series
             ]
-            return self.copy_override(sorting_keys=sorting_keys)
+            return self.copy_override(order_by=order_by)
 
         if self._sorted_ascending is not None and self._sorted_ascending == ascending:
             return self
@@ -920,7 +930,7 @@ class Series(ABC):
         else:
             order_by = []
 
-        order_by += self.sorting_keys
+        order_by += self.order_by
         from bach.savepoints import Savepoints
         return DataFrame(
             engine=self._engine,

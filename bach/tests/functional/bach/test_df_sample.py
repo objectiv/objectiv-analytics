@@ -10,10 +10,6 @@ from sql_models.util import is_bigquery, is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
-# For now skip all tests for BigQuery. The next commit or PR will fix this again.
-pytestmark = [pytest.mark.skip_bigquery]
-
-
 def test_get_sample(engine):
     # For reliable asserts (see below) we need more rows than the standard dataset of 11 rows has.
     # Therefore we append the dataset to itself two times to get 33 rows in total.
@@ -31,6 +27,11 @@ def test_get_sample(engine):
     assert list(pdf_sample.columns) == ['skating_order', 'city', 'municipality', 'inhabitants', 'founding']
     assert len(pdf_sample) > 0
     assert len(pdf_sample) < 33
+
+    # If overwrite is not set, we expect an error
+    with pytest.raises(Exception, match='[aA]lready [eE]xists'):
+        df_sample = df.get_sample(table_name='test_df_sample__get_sample',
+                                  sample_percentage=50)
 
 
 @pytest.mark.skip_bigquery('We do not support the seed parameter for bigquery')
@@ -182,9 +183,27 @@ def test_get_unsampled_multiple_nodes(engine):
     )
 
 
+def test_sample_w_temp_tables(engine):
+    # Test to prevent regression: get_sample() should work after materialize(materialization='temp_table')
+    df = get_df_with_test_data(engine, True)
+    df = df.append([df, df])
+
+    # materialize and add some operation
+    df = df.materialize(node_name='first', materialization='temp_table')
+    df['founding'] = df.founding + 1000
+    df = df.materialize(node_name='second', materialization='temp_table')
+
+    df_sample = df.get_sample(table_name='test_df_sample__sample_w_temp_tables',
+                              sample_percentage=50,
+                              overwrite=True)
+    pdf_sample = df_sample.to_pandas()
+    assert pdf_sample.index.name == '_index_skating_order'
+    assert list(pdf_sample.columns) == ['skating_order', 'city', 'municipality', 'inhabitants', 'founding']
+    assert len(pdf_sample) > 0
+    assert len(pdf_sample) < 33
+
+
 def test_sample_grouped(engine):
-    # TODO: create additional tests here. Perhaps we should always materialize the dataframe before
-    #   sampling. Currently we sample the base_node, which doesn't always match the state of the DataFrame
     bt = get_df_with_test_data(engine, True)
     seed = _get_seed(engine)
     bt = bt[['municipality', 'inhabitants', 'founding']]
@@ -192,19 +211,22 @@ def test_sample_grouped(engine):
     btg = bt.groupby('municipality').sort_values('municipality')
     btg_min = btg.min()
 
-    btg_sample = btg.get_sample(table_name='test_df_sample__sample_grouped',
-                                sample_percentage=50,
-                                seed=seed,
-                                overwrite=True)
-    btg_sample_max = btg_sample.max()
+    with pytest.raises(ValueError, match='contains Series that have no aggregation function yet'):
+        btg_sample = btg.get_sample(table_name='test_df_sample__sample_grouped',
+                                    sample_percentage=50,
+                                    seed=seed,
+                                    overwrite=True)
+
+    btg_max = btg.max()
+    btg_sample_max = btg_max.get_sample(table_name='test_df_sample__sample_grouped',
+                                    sample_percentage=50,
+                                    seed=seed,
+                                    overwrite=True)
     btg_sample_max = btg_sample_max[['founding_century_max']]
     btg_sample_max['founding_century_max_plus_10'] = btg_sample_max['founding_century_max'] + 10
     del btg_sample_max['founding_century_max']
 
     btg_unsampled_max = btg_sample_max.get_unsampled()
-    # btg_sample_max was grouped at the moment that we unsample it. Make sure that the unsampled df
-    # is grouped in the same way
-    assert btg_unsampled_max.group_by.index.keys() == btg_sample_max.group_by.index.keys()
 
     btg_unsampled_max['after_unsample_plus_20'] = btg_unsampled_max.founding_century_max_plus_10 + 10
     btg_unsampled_max['founding_century_min'] = btg_min['founding_century_min']
@@ -221,8 +243,9 @@ def test_sample_grouped(engine):
             btg_sample_max,
             expected_columns=['municipality', 'founding_century_max_plus_10'],
             expected_data=[
-                ['De Friese Meren', 25.0],
-                ['Súdwest-Fryslân', 23.0]
+                ['Leeuwarden', 23.0],
+                ['Noardeast-Fryslân', 23.0],
+                ['Waadhoeke', 24.0]
             ]
         )
 

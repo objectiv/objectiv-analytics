@@ -3,7 +3,7 @@
  */
 
 import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
-import { LocationContextName } from '@objectiv/tracker-core';
+import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import {
@@ -49,6 +49,60 @@ describe('TrackedSwitch', () => {
           expect.objectContaining({
             _type: LocationContextName.InputContext,
             id: 'test-switch',
+          }),
+        ]),
+      })
+    );
+    expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
+  });
+
+  it('should track InputChangeEvent on press with an InputValueContext in the GlobalContexts', () => {
+    const { getByTestId } = render(<TestTrackedSwitch id={'test-switch'} testID="test-switch" trackValue={true} />);
+
+    jest.resetAllMocks();
+
+    fireEvent(getByTestId('test-switch'), 'valueChange', true);
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'test-switch',
+          }),
+        ]),
+        global_contexts: expect.arrayContaining([
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'test-switch',
+            value: '1',
+          }),
+        ]),
+      })
+    );
+    expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
+
+    jest.resetAllMocks();
+
+    fireEvent(getByTestId('test-switch'), 'valueChange', false);
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'test-switch',
+          }),
+        ]),
+        global_contexts: expect.arrayContaining([
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'test-switch',
+            value: '0',
           }),
         ]),
       })

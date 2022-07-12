@@ -16,44 +16,44 @@ describe('IdentityContextPlugin', () => {
 
   it('should allow configuring the IdentityContext attributes by value', async () => {
     const identityContextPlugin = new IdentityContextPlugin({
-      id: 'test',
-      name: 'backend',
+      id: 'backend',
+      value: 'test',
     });
     expect(identityContextPlugin).toBeInstanceOf(IdentityContextPlugin);
     expect(identityContextPlugin.config).toStrictEqual({
-      id: 'test',
-      name: 'backend',
+      id: 'backend',
+      value: 'test',
     });
   });
 
   it('should allow configuring the IdentityContext attributes by value array', async () => {
     const identityContextPlugin = new IdentityContextPlugin([
       {
-        id: 'test 1',
-        name: 'backend',
+        id: 'backend',
+        value: 'test 1',
       },
       {
-        id: 'test 2',
-        name: 'authentication',
+        id: 'authentication',
+        value: 'test 2',
       },
     ]);
     expect(identityContextPlugin).toBeInstanceOf(IdentityContextPlugin);
     expect(identityContextPlugin.config).toStrictEqual([
       {
-        id: 'test 1',
-        name: 'backend',
+        id: 'backend',
+        value: 'test 1',
       },
       {
-        id: 'test 2',
-        name: 'authentication',
+        id: 'authentication',
+        value: 'test 2',
       },
     ]);
   });
 
   it('should allow configuring the IdentityContext attributes by function returning an object', async () => {
     const identityContextPlugin = new IdentityContextPlugin(() => ({
-      id: 'test',
-      name: 'backend',
+      id: 'backend',
+      value: 'test',
     }));
     expect(identityContextPlugin).toBeInstanceOf(IdentityContextPlugin);
     expect(identityContextPlugin.config).toBeInstanceOf(Function);
@@ -62,12 +62,12 @@ describe('IdentityContextPlugin', () => {
   it('should allow configuring the IdentityContext attributes by function returning an array of objects', async () => {
     const identityContextPlugin = new IdentityContextPlugin(() => [
       {
-        id: 'test 1',
-        name: 'backend',
+        id: 'backend',
+        value: 'test 1',
       },
       {
-        id: 'test 2',
-        name: 'authentication',
+        id: 'authentication',
+        value: 'test 2',
       },
     ]);
     expect(identityContextPlugin).toBeInstanceOf(IdentityContextPlugin);
@@ -87,19 +87,19 @@ describe('IdentityContextPlugin', () => {
       applicationId: 'app-id',
       plugins: [
         new IdentityContextPlugin({
-          id: 'test 1',
-          name: 'backend',
+          id: 'backend',
+          value: 'test 1',
         }),
       ],
     });
     const trackedEvent = await coreTracker.trackEvent(testEvent);
-    expect(trackedEvent.global_contexts).toHaveLength(4);
+    expect(trackedEvent.global_contexts).toHaveLength(3);
     expect(trackedEvent.global_contexts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           _type: GlobalContextName.IdentityContext,
-          id: 'test 1',
-          name: 'backend',
+          id: 'backend',
+          value: 'test 1',
         }),
       ])
     );
@@ -119,29 +119,29 @@ describe('IdentityContextPlugin', () => {
       plugins: [
         new IdentityContextPlugin([
           {
-            id: 'test 1',
-            name: 'backend',
+            id: 'backend',
+            value: 'test 1',
           },
           {
-            id: 'test 2',
-            name: 'authentication',
+            id: 'authentication',
+            value: 'test 2',
           },
         ]),
       ],
     });
     const trackedEvent = await coreTracker.trackEvent(testEvent);
-    expect(trackedEvent.global_contexts).toHaveLength(5);
+    expect(trackedEvent.global_contexts).toHaveLength(4);
     expect(trackedEvent.global_contexts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           _type: GlobalContextName.IdentityContext,
-          id: 'test 1',
-          name: 'backend',
+          id: 'backend',
+          value: 'test 1',
         }),
         expect.objectContaining({
           _type: GlobalContextName.IdentityContext,
-          id: 'test 2',
-          name: 'authentication',
+          id: 'authentication',
+          value: 'test 2',
         }),
       ])
     );
@@ -160,20 +160,20 @@ describe('IdentityContextPlugin', () => {
       applicationId: 'app-id',
       plugins: [
         new IdentityContextPlugin(() => ({
-          id: 'test 1',
-          name: 'backend',
+          id: 'backend',
+          value: 'test 1',
         })),
       ],
     });
 
     const trackedEvent = await coreTracker.trackEvent(testEvent);
-    expect(trackedEvent.global_contexts).toHaveLength(4);
+    expect(trackedEvent.global_contexts).toHaveLength(3);
     expect(trackedEvent.global_contexts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           _type: GlobalContextName.IdentityContext,
-          id: 'test 1',
-          name: 'backend',
+          id: 'backend',
+          value: 'test 1',
         }),
       ])
     );
@@ -193,30 +193,30 @@ describe('IdentityContextPlugin', () => {
       plugins: [
         new IdentityContextPlugin(() => [
           {
-            id: 'test 1',
-            name: 'backend',
+            id: 'backend',
+            value: 'test 1',
           },
           {
-            id: 'test 2',
-            name: 'authentication',
+            id: 'authentication',
+            value: 'test 2',
           },
         ]),
       ],
     });
 
     const trackedEvent = await coreTracker.trackEvent(testEvent);
-    expect(trackedEvent.global_contexts).toHaveLength(5);
+    expect(trackedEvent.global_contexts).toHaveLength(4);
     expect(trackedEvent.global_contexts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           _type: GlobalContextName.IdentityContext,
-          id: 'test 1',
-          name: 'backend',
+          id: 'backend',
+          value: 'test 1',
         }),
         expect.objectContaining({
           _type: GlobalContextName.IdentityContext,
-          id: 'test 2',
-          name: 'authentication',
+          id: 'authentication',
+          value: 'test 2',
         }),
       ])
     );
@@ -236,8 +236,8 @@ describe('IdentityContextPlugin', () => {
 
     it('should not log', () => {
       new IdentityContextPlugin({
-        id: 'test',
-        name: 'backend',
+        id: 'backend',
+        value: 'test',
       });
       expect(MockConsoleImplementation.log).not.toHaveBeenCalled();
     });

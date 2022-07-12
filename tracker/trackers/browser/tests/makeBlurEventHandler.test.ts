@@ -3,7 +3,7 @@
  */
 
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateUUID, LocationContextName, makeInputChangeEvent } from '@objectiv/tracker-core';
+import { generateUUID, GlobalContextName, LocationContextName, makeInputChangeEvent } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker } from '../src/';
 import { makeBlurEventHandler } from '../src/mutationObserver/makeBlurEventHandler';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
@@ -40,6 +40,37 @@ describe('makeBlurEventHandler', () => {
         id: matchUUID,
         global_contexts: [],
         location_stack: [],
+      })
+    );
+  });
+
+  it('should include InputValueContext when invoked with the trackValue option', () => {
+    const trackedInput = makeTaggedElement('input', 'test-input', 'input', false, true);
+    trackedInput.setAttribute('value', 'test value');
+    const blurEventListener = makeBlurEventHandler(trackedInput, undefined, { trackValue: true }, 'test-input');
+
+    trackedInput.addEventListener('blur', blurEventListener);
+    trackedInput.dispatchEvent(new FocusEvent('blur'));
+
+    expect(getTracker().trackEvent).toHaveBeenCalledTimes(1);
+    expect(getTracker().trackEvent).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        id: matchUUID,
+        global_contexts: expect.arrayContaining([
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'test-input',
+            value: 'test value',
+          }),
+        ]),
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'test-input',
+          }),
+        ]),
       })
     );
   });

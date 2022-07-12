@@ -19,13 +19,45 @@ class GeneratedSqlStatement(NamedTuple):
 
 def to_sql(dialect: Dialect, model: SqlModel) -> str:
     """
-    Give the sql to query the given model
+    Give the sql for the given SqlModel.
+
+    The returned sql can be a single query or statement, or can contain multiple sql statements. The latter
+    will be the case if the dependency graph of model contains other models with a materialization that is a
+    statement but has non-lasting effect (e.g. creating temporary tables). Then the returned SQL will also
+    contain statements for those models.
+
+    If the dependency graph contains models with lasting effect (e.g. create a table or view), then no
+    statements for those dependencies are included in the returned sql. The returned sql will assume those
+    dependencies have been created already.
+
+    The generated SQL always includes the model itself, regardless of whether it has lasting effect or not.
+    Examples: If model.materialization.type_name == 'table' then the final statement of the returned sql will
+    create a table. If the materialization is 'query' then the final statement of the returned sql will
+    execute a query.
+
     :param dialect: SQL Dialect
     :param model: model to convert to sql
-    :return: executable select query
+    :return: executable SQL statement
     """
-    compiler_cache: Dict[str, List['SemiCompiledTuple']] = {}
-    return _to_sql_materialized_node(dialect=dialect, model=model, compiler_cache=compiler_cache)
+    # Find all nodes that are a statement (e.g. create a temporary table), but exclude nodes that have a
+    # lasting effect (e.g. creating a regular table). Always include the start node
+    # Make sure we get the longest possible path to a node (use_last_found_instance=True). That way we can
+    # reverse the list and we'll get the nodes that are a dependency for other nodes before the node that
+    # depends on them.
+    materialized_found_nodes: List[FoundNode] = find_nodes(
+        start_node=model,
+        function=lambda node: (
+            (node is model)
+            or
+            (node.materialization.is_statement and not node.materialization.has_lasting_effect)
+        ),
+        first_instance=False
+    )
+
+    models = [fn.model for fn in reversed(materialized_found_nodes)]
+    statements = _to_sql_list_models(dialect=dialect, models=models)
+    sql = ';\n'.join(sql_stat.sql for sql_stat in statements)
+    return sql
 
 
 def to_sql_materialized_nodes(
@@ -45,8 +77,6 @@ def to_sql_materialized_nodes(
         be used by later statements.
         The names are guaranteed to be unique in the list.
     """
-    result: List[GeneratedSqlStatement] = []
-    compiler_cache: Dict[str, List['SemiCompiledTuple']] = {}
     # find all nodes that are materialized as view or table, and the start_node if needed
     # make sure we get the longest possible path to a node (use_last_found_instance=True). That way we can
     # reverse the list and we'll get the nodes that are a dependency for other nodes before the node that
@@ -59,9 +89,18 @@ def to_sql_materialized_nodes(
         ),
         first_instance=False
     )
-    _check_names_unique(found_node.model for found_node in materialized_found_nodes)
-    for found_node in reversed(materialized_found_nodes):
-        model = found_node.model
+    models = [fn.model for fn in reversed(materialized_found_nodes)]
+    return _to_sql_list_models(dialect=dialect, models=models)
+
+
+def _to_sql_list_models(dialect: Dialect, models: List[SqlModel]) -> List[GeneratedSqlStatement]:
+    """
+
+    """
+    result: List[GeneratedSqlStatement] = []
+    compiler_cache: Dict[str, List['SemiCompiledTuple']] = {}
+    _check_names_unique(models)
+    for model in models:
         generated_sql = GeneratedSqlStatement(
             name=model_to_name(model),
             sql=_to_sql_materialized_node(

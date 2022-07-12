@@ -20,7 +20,7 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df
 def test_materialize(inplace: bool, materialization: Union[Materialization, str], engine: Engine):
     bt = get_df_with_test_data(engine)[['city', 'founding']]
     bt['city'] = bt['city'] + ' '
-    bt['uuid'] = SeriesUuid.sql_gen_random_uuid(bt)
+    bt['uuid'] = SeriesUuid.random(bt)
     bt['founding_str'] = bt['founding'].astype('string')
     bt['city_founding'] = bt['city'] + bt['founding_str']
     bt['founding'] = bt['founding'] + 200
@@ -105,7 +105,7 @@ def test_materialize_with_non_aggregation_series(inplace: bool, engine):
 @pytest.mark.parametrize("inplace", [False, True])
 def test_materialize_non_deterministic_expressions(inplace: bool, engine):
     bt = get_df_with_test_data(engine)[['city']]
-    bt['uuid1'] = SeriesUuid.sql_gen_random_uuid(bt)
+    bt['uuid1'] = SeriesUuid.random(bt)
     # now bt['uuid1'] has not been evaluated, so copying the column should copy the unevaluated expression
     bt['uuid2'] = bt['uuid1']
     bt['eq'] = bt['uuid1'] == bt['uuid2']  # expect False
