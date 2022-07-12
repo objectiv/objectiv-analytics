@@ -6,11 +6,13 @@ import pytest
 
 from bach.series import Series
 from sql_models.graph_operations import get_graph_nodes_info
+from sql_models.model import Materialization
 from sql_models.util import is_bigquery, is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
-def test_materialize(engine):
+@pytest.mark.parametrize("materialization", [Materialization.CTE, 'temp_table'])
+def test_materialize(engine, materialization):
     bt = get_df_with_test_data(engine)['city'] + ' '
     assert isinstance(bt, Series)
 
@@ -22,7 +24,7 @@ def test_materialize(engine):
         ]
     assert_equals_data(bt, expected_columns=expected_columns, expected_data=expected_data)
 
-    bt_materialized = bt.materialize(node_name='node')
+    bt_materialized = bt.materialize(node_name='node', materialization=materialization)
     # The materialized Series should result in the exact same data
     assert_equals_data(bt_materialized, expected_columns=expected_columns, expected_data=expected_data)
 
@@ -40,11 +42,15 @@ def test_materialize(engine):
     assert bt_materialized.expression.to_sql(engine.dialect) == expected_to_sql
 
     # The materialized graph should have one extra node
+    # If the materialization was temp_table, then the node before that was changed too: its materialization
+    # will be different
     node_info_orig = get_graph_nodes_info(bt.to_frame().get_current_node('node'))
     node_info_mat = get_graph_nodes_info(bt_materialized.to_frame().get_current_node('node'))
     assert len(node_info_orig) + 1 == len(node_info_mat)
     previous_node_mat = list(bt_materialized.to_frame().get_current_node('node').references.values())[0]
-    assert previous_node_mat == bt.to_frame().get_current_node('node')
+    node_before_mat = bt.to_frame().get_current_node('node')
+    node_before_mat = node_before_mat.copy_set_materialization(Materialization.normalize(materialization))
+    assert previous_node_mat == node_before_mat
 
 
 def test_materialize_with_non_aggregation_series(engine):

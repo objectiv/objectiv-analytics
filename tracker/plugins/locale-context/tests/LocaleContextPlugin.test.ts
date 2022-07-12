@@ -29,7 +29,6 @@ describe('LocaleContextPlugin', () => {
           idFactoryFunction: () => location.pathname.split('/')[1] ?? null,
         }),
       ],
-      trackApplicationContext: false,
     });
 
     const testEvent = new TrackerEvent({ _type: 'test-event' });
@@ -55,7 +54,6 @@ describe('LocaleContextPlugin', () => {
           idFactoryFunction: () => location.pathname.split('/')[1] ?? null,
         }),
       ],
-      trackApplicationContext: false,
     });
 
     const testEvent = new TrackerEvent({ _type: 'test-event' });

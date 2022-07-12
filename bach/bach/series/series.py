@@ -23,6 +23,7 @@ from bach.types import StructuredDtype, Dtype, validate_instance_dtype, DtypeOrA
     AllSupportedLiteralTypes, value_to_series_type
 from bach.utils import is_valid_column_name
 from sql_models.constants import NotSet, not_set, DBDialect
+from sql_models.model import Materialization
 from sql_models.util import is_bigquery, DatabaseNotSupportedException
 
 if TYPE_CHECKING:
@@ -792,6 +793,7 @@ class Series(ABC):
             node_name='manual_materialize',
             limit: Any = None,
             distinct: bool = False,
+            materialization: Union[Materialization, str] = Materialization.CTE
     ) -> 'Series':
         """
         Create a copy of this Series with as base_node the current Series's state.
@@ -800,11 +802,18 @@ class Series(ABC):
         the size of the generated SQL query. But this can be useful if the current Series contains
         expressions that you want to evaluate before further expressions are build on top of them. This might
         make sense for very large expressions, or for non-deterministic expressions (e.g. see
-        :py:meth:`SeriesUuid.random`).
+        :py:meth:`SeriesUuid.random`). Additionally, materializing as a temporary table can
+        improve performance in some instances.
+
+        Note this function does NOT query the database or materializes any data in the database. It merely
+        changes the underlying SqlModel graph, which gets executed by data transfer functions (e.g.
+        :meth:`to_pandas()`)
 
         :param node_name: The name of the node that's going to be created
         :param limit: The limit (slice, int) to apply.
         :param distinct: Apply distinct statement if ``distinct=True``
+        :param materialization: Set the materialization of the SqlModel in the graph. Only
+            Materialization.CTE / 'cte' and Materialization.TEMP_TABLE / 'temp_table' are supported.
         :returns: Series with the current Series's state as base_node
 
         .. note::
@@ -814,7 +823,7 @@ class Series(ABC):
             Argument inplace should be always False.
         """
         result = self.to_frame().materialize(node_name=node_name, limit=limit, distinct=distinct,
-                                             inplace=False)
+                                             inplace=False, materialization=materialization)
         return result.all_series[self.name]
 
     def reset_index(

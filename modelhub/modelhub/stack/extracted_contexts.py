@@ -234,7 +234,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         return df_cp
 
     @classmethod
-    def validate_pipeline_result(cls, result: bach.DataFrame) -> None:
+    def validate_pipeline_result(cls, result: bach.DataFrame, **kwargs) -> None:
         """
         Checks if we are returning ALL expected context series with proper dtype.
         """
