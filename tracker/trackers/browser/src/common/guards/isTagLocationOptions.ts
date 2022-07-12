@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { isTrackBlursAttribute } from "@objectiv/tracker-browser";
+import { isTrackBlursAttribute } from '@objectiv/tracker-browser';
 import { TagLocationOptions } from '../../definitions/TagLocationOptions';
 import { isTrackClicksAttribute } from './isTrackClicksAttribute';
 import { isTrackVisibilityAttribute } from './isTrackVisibilityAttribute';
