@@ -536,9 +536,6 @@ class DataFrame:
             table_name: str,
             index: List[str],
             all_dtypes: Optional[Mapping[str, StructuredDtype]] = None,
-            *,
-            bq_dataset: Optional[str] = None,
-            bq_project_id: Optional[str] = None
     ) -> 'DataFrame':
         """
         Instantiate a new DataFrame based on the content of an existing table in the database.
@@ -546,49 +543,30 @@ class DataFrame:
         If all_dtypes is not specified, the column dtypes are queried from the database's information
         schema.
 
-        :param engine: an sqlalchemy engine for the database.
+        :param engine: a sqlalchemy engine for the database.
         :param table_name: the table name that contains the data to instantiate as DataFrame.
+            Can include project_id and dataset on BigQuery, e.g. 'project_id.dataset.table_name'
         :param index: list of column names that make up the index. At least one column needs to be
             selected for the index.
         :param all_dtypes: Optional. Mapping from column name to dtype.
             Must contain all index and data columns.
             Must be in same order as the columns appear in the the sql-model.
-        :param bq_dataset: BigQuery-only. Dataset in which the table resides, if different from engine.url
-        :param bq_project_id: BigQuery-only. Project of dataset, if different from engine.url
         :returns: A DataFrame based on a sql table.
 
         .. note::
             If all_dtypes is not set, then this will query the database.
         """
-        if bq_project_id and not bq_dataset:
-            raise ValueError('Cannot specify bq_project_id without setting bq_dataset.')
-        if bq_dataset and not is_bigquery(engine):
-            raise ValueError('bq_dataset is a BigQuery-only option.')
-
         if all_dtypes is not None:
             dtypes = all_dtypes
         else:
             dtypes = get_dtypes_from_table(
                 engine=engine,
                 table_name=table_name,
-                bq_dataset=bq_dataset,
-                bq_project_id=bq_project_id
             )
 
-        # For postgres we just generate:
+        # We generate sql of the form (with quote characters depending on the database):
         # 'SELECT "column_1", ... , "column_N" FROM "table_name"'
-        # For BQ we might need to generate:
-        # 'SELECT `column_1`, ... , `column_N`  FROM `project_id`.`data_set`.`table_name`'
-        #  columns in select statement are based on keys from dtypes
-        sql_table_name_template = '{table_name}'
         sql_params = {'table_name': quote_identifier(engine.dialect, table_name)}
-        if bq_dataset:
-            sql_table_name_template = f'{{bq_dataset}}.{sql_table_name_template}'
-            sql_params['bq_dataset'] = quote_identifier(engine.dialect, bq_dataset)
-        if bq_project_id:
-            sql_table_name_template = f'{{bq_project_id}}.{sql_table_name_template}'
-            sql_params['bq_project_id'] = quote_identifier(engine.dialect, bq_project_id)
-
         # use placeholders for columns in order to avoid conflicts when extracting spec references
         column_stmt = ','.join(f'{{col_{col_index}}}' for col_index in range(len(dtypes)))
         column_placeholders = {
@@ -597,7 +575,7 @@ class DataFrame:
         }
         sql_params.update(column_placeholders)
 
-        sql = f'SELECT {column_stmt} FROM {sql_table_name_template}'
+        sql = f'SELECT {column_stmt} FROM {{table_name}}'
         model_builder = CustomSqlModelBuilder(sql=sql, name='from_table')
         sql_model = model_builder(**sql_params)
 
@@ -1081,7 +1059,8 @@ class DataFrame:
         If `seed` is set (Postgres only), this will create a temporary table from which the sample will be
         queried using the `tablesample bernoulli` sql construction.
 
-        :param table_name: the name of the underlying sql table that stores the sampled data.
+        :param table_name: the name of the underlying sql table that is created to store the sampled data.
+            Can include project_id and dataset on BigQuery, e.g. 'project_id.dataset.table_name'
         :param filter: a filter to apply to the dataframe before creating the sample. If a filter is applied,
             sample_percentage is ignored and thus the bernoulli sample creation is skipped.
         :param sample_percentage: the approximate size of the sample as a proportion of all rows.

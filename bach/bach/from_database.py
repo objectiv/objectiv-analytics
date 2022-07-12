@@ -1,7 +1,7 @@
 """
 Copyright 2022 Objectiv B.V.
 """
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 from sqlalchemy.engine import Engine
 
@@ -35,31 +35,18 @@ def get_dtypes_from_model(engine: Engine, node: SqlModel) -> Dict[str, Structure
 def get_dtypes_from_table(
     engine: Engine,
     table_name: str,
-    *,
-    bq_dataset: Optional[str] = None,
-    bq_project_id: Optional[str] = None
 ) -> Dict[str, StructuredDtype]:
     """
     Query database to get dtypes of the given table.
     :param engine: sqlalchemy engine for the database.
-    :param table_name: the table name for which to get the dtypes
-    :param bq_dataset: BigQuery-only. Dataset in which the table resides, if different from engine.url
-    :param bq_project_id: BigQuery-only. Project of dataset, if different from engine.url
+    :param table_name: the table name for which to get the dtypes. Can include project_id and dataset on
+        BigQuery, e.g. 'project_id.dataset.table_name'
     :return: Dictionary with as key the column names of the table, and as values the dtype of the column.
     """
-    if bq_project_id and not bq_dataset:
-        raise ValueError('Cannot specify bq_project_id without setting bq_dataset.')
-    if bq_dataset and not is_bigquery(engine):
-        raise ValueError('bq_dataset is a BigQuery-only option.')
-
     if is_postgres(engine):
         meta_data_table = 'INFORMATION_SCHEMA.COLUMNS'
     elif is_bigquery(engine):
-        meta_data_table = 'INFORMATION_SCHEMA.COLUMNS'
-        if bq_dataset:
-            meta_data_table = f'{bq_dataset}.{meta_data_table}'
-        if bq_project_id:
-            meta_data_table = f'{bq_project_id}.{meta_data_table}'
+        meta_data_table, table_name = _get_meta_data_table_from_table_name(table_name)
     else:
         raise DatabaseNotSupportedException(engine)
     sql = f"""
@@ -69,6 +56,26 @@ def get_dtypes_from_table(
         order by ordinal_position;
     """
     return _get_dtypes_from_information_schema_query(engine=engine, query=sql)
+
+
+def _get_meta_data_table_from_table_name(table_name) -> Tuple[str, str]:
+    """
+    From a BigQuery table name, get the meta-data table name that contains the column information for that
+    table, and the short table name.
+    Examples:
+        'project_id.dataset.table1' -> ('project_id.dataset.INFORMATION_SCHEMA.COLUMNS', 'table1')
+        'table1' -> ('INFORMATION_SCHEMA.COLUMNS', 'table1')
+    :param table_name: a table name, a table name including dataset or including project_id and dataset
+    :return: a tuple: the metadata table containing column information, the simple table name
+    """
+    parts = table_name.rsplit('.', maxsplit=1)
+    if len(parts) == 2:
+        project_id_dataset = parts[0] + '.'
+        table_name = parts[1]
+    else:
+        project_id_dataset = ''
+        table_name = parts[0]
+    return f'{project_id_dataset}INFORMATION_SCHEMA.COLUMNS', table_name
 
 
 def _get_dtypes_from_information_schema_query(engine: Engine, query: str) -> Dict[str, StructuredDtype]:
