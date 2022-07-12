@@ -137,7 +137,14 @@ def find_nodes(
     """
     # result_nodes maps the id of the found objects to a FoundNode object
     result_nodes: Dict[int, FoundNode] = {}
+    # discovered maps the id of all models that are processed or are queued to be processed to the length of
+    # the reference path to get to them. Depending on the value of first_instance, this is the length of the
+    # longest or shortest reference path.
+    discovered: Dict[int, int] = {}
+    # queue contains the queue of items that have been discovered but not yet processed.
     queue: Deque[Tuple[SqlModel, RefPath]] = deque()
+
+    discovered[id(start_node)] = 0
     queue.append((start_node, tuple()))
     while queue:
         node, path = queue.popleft()
@@ -146,12 +153,24 @@ def find_nodes(
             if current_id not in result_nodes:
                 result_nodes[current_id] = FoundNode(node, path)
             elif current_id in result_nodes and not first_instance:
+                # We found a longer path to a node we already found earlier.
                 # we rely on the fact that python 3.7+ will keep the insertion order. So we'll have to
                 # remove and reinsert the item to get it in the right position in the returned result.
                 del result_nodes[current_id]
                 result_nodes[current_id] = FoundNode(node, path)
-        for next_path, next_node in node.references.items():
-            next_tuple = (next_node, path + (next_path,))
+        for next_path_step, next_node in node.references.items():
+            next_id = id(next_node)
+            next_path = path + (next_path_step,)
+            len_next_path = len(next_path)
+            if next_id in discovered:
+                # If there is already a path to next_node that's equally long or short (depending on
+                # first_instance), then we don't add next_node to the queue.
+                if first_instance and discovered[next_id] <= len_next_path:
+                    continue
+                if (not first_instance) and discovered[next_id] >= len_next_path:
+                    continue
+            discovered[next_id] = len_next_path
+            next_tuple = (next_node, next_path)
             queue.append(next_tuple)
     return list(result_nodes.values())
 
