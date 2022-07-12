@@ -31,10 +31,15 @@ Category 4 and 5 are for functionality that we explicitly not support on some da
 
 Category 2, 4, and 5 are the exception, these need to be marked with the `db_independent`, `skip_postgres`,
 or `skip_bigquery` marks.
+
+### Other
+For all unittests we add a timeout of 1 second. If they take longer they will be stopped and considered
+failed.
+
 """
 import os
 from enum import Enum
-from typing import Dict
+from typing import Dict, List
 
 import pytest
 from _pytest.main import Session
@@ -124,6 +129,21 @@ def pytest_generate_tests(metafunc: Metafunc):
         metafunc.parametrize("dialect", dialects)
     if 'engine' in metafunc.fixturenames:
         metafunc.parametrize("engine", engines)
+
+
+def pytest_collection_modifyitems(session, config, items: List[pytest.Item]):
+    # Unit tests should be quick. Add a timeout, after which the test will be cancelled and failed. This is
+    # enforced by pytest-timeout. We actually have a few unittests that previously would have taken minutes
+    # to run. Having this timeout should prevent performance regressions.
+
+    # This function will automatically be callled by pytest when it has collected all tests to run,
+    # see https://docs.pytest.org/en/6.2.x/reference.html#pytest.hookspec.pytest_collection_modifyitems
+    for item in items:
+        # Check if item is a unittest. This is a bit hackish, but should work on virtual all setups.
+        if '/unit/' in str(item.fspath):
+            # 1.0 seconds is actual lenient. Almost all tests run within 0.1 on a fast laptop, and even the
+            # slowest tests consistently run within 0.5 on a fast laptop.
+            item.add_marker(pytest.mark.timeout(1.0))
 
 
 def pytest_runtest_setup(item: Function):
