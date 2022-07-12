@@ -14,8 +14,7 @@ Objectiv’s Tracker. There are three types of functions/models:
 2. Aggregation models. These models consist of a combination of Bach instructions that run some of the more common data analyses or product analytics metrics. 
 3. Machine learning models.
 
-The model hub has configurable :ref:`identity resolution <identity-resolution>` to make sure you can reliably behaviour of users and groups.
-
+The open model hub has configurable identity resolution (TODO: Make this a link?) to make sure you can reliably model behaviour of users and groups.
 
 All models are open-source, free to use, and can be combined to build advanced compound models with little effort. The open model hub is powered by :ref:`Bach <bach>`: Objectiv's data modeling library. 
 With Bach, you can compose models with familiar Pandas-like dataframe operations in your notebook. It uses a SQL abstraction layer that enables models to run on the full dataset, 
@@ -35,11 +34,12 @@ View the list of available models :ref:`here <models>` or check out the full
 
 The open model hub is powered by :ref:`Bach <bach>`: Objectiv's data modeling library. 
 
-More information on setting up a development environment for the open model hub mis in the `readme <https://github.com/objectiv/objectiv-analytics/tree/main/modelhub>`_.
+More information on setting up a development environment for the open model hub in the `readme <https://github.com/objectiv/objectiv-analytics/tree/main/modelhub>`_.
 
 .. toctree::
     :maxdepth: 7
     :hidden:
     
+    identity-resolution
     version-check
     API reference <api-reference/index>
