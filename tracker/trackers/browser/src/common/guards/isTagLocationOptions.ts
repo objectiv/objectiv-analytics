@@ -2,6 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { isTrackBlursAttribute } from "@objectiv/tracker-browser";
 import { TagLocationOptions } from '../../definitions/TagLocationOptions';
 import { isTrackClicksAttribute } from './isTrackClicksAttribute';
 import { isTrackVisibilityAttribute } from './isTrackVisibilityAttribute';
@@ -19,7 +20,7 @@ export const isTagLocationOptions = (object: Partial<TagLocationOptions>): objec
     return false;
   }
 
-  if (object.trackBlurs !== undefined && object.trackBlurs !== true && object.trackBlurs !== false) {
+  if (object.trackBlurs !== undefined && !isTrackBlursAttribute(object.trackBlurs)) {
     return false;
   }
 
