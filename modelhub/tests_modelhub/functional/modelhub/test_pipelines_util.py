@@ -11,7 +11,7 @@ def test_get_objectiv_data_only_context_data(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
 
     result = get_objectiv_data(
-        engine=engine, table_name=db_params.table_name
+        engine=engine, table_name=db_params.table_name, with_sessionized_data=False,
     )
     result = result.sort_index()
     expected = get_expected_context_pandas_df(engine).set_index('event_id')
@@ -61,7 +61,7 @@ def test_get_objectiv_data_w_identity_data(db_params) -> None:
             'fake3@objectiv.io|email',
             'fake3@objectiv.io|email',
             'fake3@objectiv.io|email',
-            'fake3@objectiv.io|email',
+            'b2df75d2-d7ca-48ac-9747-af47d7a4a2b4',
             'fake2@objectiv.io|email',
             'fake2@objectiv.io|email',
         ]

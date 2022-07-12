@@ -40,7 +40,6 @@ class IdentityResolutionPipeline(BaseDataPipeline):
           requested
     """
 
-    RESOLVED_USER_ID_SERIES_NAME = 'identity_user_id'
     IDENTITY_FORMAT = "({}) || '|' || ({})"
 
     def _get_pipeline_result(
@@ -56,7 +55,6 @@ class IdentityResolutionPipeline(BaseDataPipeline):
 
         self._validate_extracted_context_df(context_df)
 
-        # TODO: make user_id dtype default to str as identity resolution will always return str values
         context_df[ObjectivSupportedColumns.USER_ID.value] = (
             context_df[ObjectivSupportedColumns.USER_ID.value].astype(bach.SeriesString.dtype)
         )
@@ -70,13 +68,11 @@ class IdentityResolutionPipeline(BaseDataPipeline):
         """
         Checks if we are returning required Objectiv series with respective dtype.
         """
-        if cls.RESOLVED_USER_ID_SERIES_NAME not in result.data_columns:
-            raise ValueError(f'{cls.RESOLVED_USER_ID_SERIES_NAME} is not present in DataFrame.')
-
         check_objectiv_dataframe(
             df=result,
-            columns_to_check=['user_id', 'global_contexts', 'moment'],
-            check_dtypes=True
+            columns_to_check=['identity_user_id', 'user_id', 'global_contexts', 'moment'],
+            check_dtypes=True,
+            infer_identity_resolution=True,
         )
 
     @classmethod
@@ -84,16 +80,17 @@ class IdentityResolutionPipeline(BaseDataPipeline):
         """
         If user_id has no identity, then it will be anonymized by replacing original value with NULL.
         """
-        if cls.RESOLVED_USER_ID_SERIES_NAME not in df.data_columns:
+        resolved_user_id_series_name = ObjectivSupportedColumns.IDENTITY_USER_ID.value
+        if resolved_user_id_series_name not in df.data_columns:
             raise Exception(
                 (
-                    f'Cannot anonymize user ids if {cls.RESOLVED_USER_ID_SERIES_NAME} series '
+                    f'Cannot anonymize user ids if {resolved_user_id_series_name} series '
                     'is not present in DataFrame data columns.'
                 )
             )
 
         df = df.copy()
-        has_no_identity = df[cls.RESOLVED_USER_ID_SERIES_NAME].isnull()
+        has_no_identity = df[resolved_user_id_series_name].isnull()
         df.loc[has_no_identity, ObjectivSupportedColumns.USER_ID.value] = None
         return df
 
@@ -101,12 +98,14 @@ class IdentityResolutionPipeline(BaseDataPipeline):
     def result_series_dtypes(self) -> Dict[str, str]:
         return {
             ObjectivSupportedColumns.USER_ID.value: bach.SeriesString.dtype,
-            self.RESOLVED_USER_ID_SERIES_NAME: bach.SeriesString.dtype,
+            ObjectivSupportedColumns.IDENTITY_USER_ID.value: bach.SeriesString.dtype,
         }
 
     def _validate_extracted_context_df(self, df: bach.DataFrame) -> None:
         # make sure the context_df has AT LEAST the following series
-        supported_dtypes = get_supported_dtypes_per_objectiv_column()
+        supported_dtypes = get_supported_dtypes_per_objectiv_column(
+            with_identity_resolution=False,
+        )
         expected_context_columns = [
             ObjectivSupportedColumns.USER_ID.value,
             ObjectivSupportedColumns.GLOBAL_CONTEXTS.value,
@@ -168,7 +167,9 @@ class IdentityResolutionPipeline(BaseDataPipeline):
             identity_context_series.json.get_value('value', as_str=True),
             identity_context_series.json.get_value('id', as_str=True),
         )
-        identity_context_df[self.RESOLVED_USER_ID_SERIES_NAME] = (
+
+        identity_user_id_series_name = ObjectivSupportedColumns.IDENTITY_USER_ID.value
+        identity_context_df[identity_user_id_series_name] = (
             identity_context_df[user_id_series_name].copy_override(expression=resolved_expr)
         )
 
@@ -178,7 +179,7 @@ class IdentityResolutionPipeline(BaseDataPipeline):
         identity_context_df = identity_context_df.drop_duplicates(
             subset=[user_id_series_name], keep='last', sort_by=moment_series_name, ascending=True,
         )
-        return identity_context_df[[user_id_series_name, self.RESOLVED_USER_ID_SERIES_NAME]]
+        return identity_context_df[[user_id_series_name, identity_user_id_series_name]]
 
     def _resolve_original_user_ids(
         self, df_to_resolve: bach.DataFrame, identity_context_df: bach.DataFrame,
@@ -190,15 +191,16 @@ class IdentityResolutionPipeline(BaseDataPipeline):
         Returns a DataFrame with updated user_ids and a new series for identity_user_id.
         """
         user_id_series_name = ObjectivSupportedColumns.USER_ID.value
+        identity_user_id_series_name = ObjectivSupportedColumns.IDENTITY_USER_ID.value
 
         df_to_resolve = df_to_resolve.merge(
             identity_context_df, on=[user_id_series_name], how='left',
         )
 
         # replace user_ids with respective identity
-        has_identity = df_to_resolve[self.RESOLVED_USER_ID_SERIES_NAME].notnull()
+        has_identity = df_to_resolve[identity_user_id_series_name].notnull()
         df_to_resolve.loc[has_identity, user_id_series_name] = (
-            df_to_resolve[self.RESOLVED_USER_ID_SERIES_NAME]
+            df_to_resolve[identity_user_id_series_name]
         )
 
         return df_to_resolve

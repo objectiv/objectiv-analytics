@@ -49,7 +49,12 @@ def get_objectiv_data(
     if with_sessionized_data:
         columns_to_check += ObjectivSupportedColumns.get_sessionized_columns()
 
-    check_objectiv_dataframe(df=data, columns_to_check=columns_to_check, check_dtypes=True)
+    check_objectiv_dataframe(
+        df=data,
+        columns_to_check=columns_to_check,
+        check_dtypes=True,
+        infer_identity_resolution=identity_resolution is not None,
+    )
     data = data[columns_to_check]
 
     if set_index:

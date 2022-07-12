@@ -131,8 +131,9 @@ class ExtractedContextsPipeline(BaseDataPipeline):
     @property
     def result_series_dtypes(self) -> Dict[str, str]:
         context_columns = ObjectivSupportedColumns.get_extracted_context_columns()
+        supported_dtypes = get_supported_dtypes_per_objectiv_column(with_identity_resolution=False)
         return {
-            col: dtype for col, dtype in get_supported_dtypes_per_objectiv_column().items()
+            col: dtype for col, dtype in supported_dtypes.items()
             if col in context_columns
         }
 
@@ -244,6 +245,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             result,
             columns_to_check=ObjectivSupportedColumns.get_extracted_context_columns(),
             check_dtypes=True,
+            infer_identity_resolution=False,
         )
 
     def _apply_date_filter(

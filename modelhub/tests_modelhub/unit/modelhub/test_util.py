@@ -10,7 +10,7 @@ from tests_modelhub.data_and_utils.utils import create_engine_from_db_params
 
 
 def test_get_supported_types_per_objectiv_column() -> None:
-    result = get_supported_dtypes_per_objectiv_column()
+    result = get_supported_dtypes_per_objectiv_column(with_identity_resolution=False)
 
     expected = {
         'event_id': 'uuid',
@@ -22,7 +22,8 @@ def test_get_supported_types_per_objectiv_column() -> None:
         'event_type': 'string',
         'stack_event_types': 'json',
         'session_id': 'int64',
-        'session_hit_number': 'int64'
+        'session_hit_number': 'int64',
+        'identity_user_id': 'string',
     }
 
     assert expected == result
@@ -30,6 +31,9 @@ def test_get_supported_types_per_objectiv_column() -> None:
     result = get_supported_dtypes_per_objectiv_column(with_md_dtypes=True)
     assert result['global_contexts'] == 'objectiv_global_context'
     assert result['location_stack'] == 'objectiv_location_stack'
+
+    result = get_supported_dtypes_per_objectiv_column(with_identity_resolution=True)
+    assert result['user_id'] == 'string'
 
 
 def test_check_objectiv_dataframe(db_params) -> None:

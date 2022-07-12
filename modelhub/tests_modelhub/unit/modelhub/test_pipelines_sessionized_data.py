@@ -3,7 +3,6 @@ Copyright 2022 Objectiv B.V.
 """
 import bach
 import pandas as pd
-import pytest
 
 from modelhub import SessionizedDataPipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params

@@ -64,7 +64,12 @@ class SessionizedDataPipeline(BaseDataPipeline):
     def _validate_extracted_context_df(self, df: bach.DataFrame) -> None:
         # make sure the result has AT LEAST the following series
         # even though the ExtractedContextsPipeline already validates series
-        supported_dtypes = get_supported_dtypes_per_objectiv_column()
+        with_identity_resolution = (
+            ObjectivSupportedColumns.IDENTITY_USER_ID.value in df.data_columns
+        )
+        supported_dtypes = get_supported_dtypes_per_objectiv_column(
+            with_identity_resolution=with_identity_resolution
+        )
         expected_context_columns = [
             ObjectivSupportedColumns.EVENT_ID.value,
             ObjectivSupportedColumns.USER_ID.value,
@@ -79,12 +84,13 @@ class SessionizedDataPipeline(BaseDataPipeline):
     @classmethod
     def validate_pipeline_result(cls, result: bach.DataFrame) -> None:
         """
-        Checks if we are returning ALL expected context series and sessionized series with respective dtype.
+        Checks if we are returning all sessionized series with respective dtype.
         """
         check_objectiv_dataframe(
             result,
             columns_to_check=ObjectivSupportedColumns.get_sessionized_columns(),
             check_dtypes=True,
+            infer_identity_resolution=True,
         )
 
     @property

@@ -45,9 +45,9 @@ IDENTITY_CONTEXTS_PER_EVENT = [
     [],
     # event: 310, user: a2b4
     [],
-    # event: 311, user: a2b4
+    # event: 311, user: a2b2
     [{'_type': 'IdentityContext', 'id': 'email', 'value': 'fake4@objectiv.io'}],
-    # event: 312, user: a2b4
+    # event: 312, user: a2b2
     [],
 ]
 
