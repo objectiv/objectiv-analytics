@@ -19,6 +19,21 @@ def get_objectiv_data(
     identity_resolution: Optional[str] = None,
     anonymize_unidentified_users: bool = True,
 ) -> bach.DataFrame:
+    """
+        :param table_name: the name of the sql table where the data is stored. Will default to 'events' for
+            bigquery and 'data' for other engines.
+        :param start_date: start_date to filter data from ExtractedContextsPipeline
+        :param end_date: end_date to filter data from ExtractedContextsPipeline
+        :param with_sessionized_data: If true, SessionizedDataPipeline will be applied on
+            ExtractedContextsPipeline (or IdentityResolutionPipeline) result.
+        :param session_gap_seconds: Amount of seconds to be used by SessionizedDataPipeline
+        :param identity_resolution: If value provided, IdentityResolutionPipeline will be applied
+            on ExtractedContextsPipeline result
+        :param anonymize_unidentified_users: If True, unidentified user_ids will be set to NULL.
+            This step is performed after applying IdentityResolutionPipeline and SessionizedDataPipeline.
+
+        :returns: initial bach DataFrame required by ModelHub.
+    """
     from modelhub.pipelines import (
         ExtractedContextsPipeline, SessionizedDataPipeline, IdentityResolutionPipeline
     )
