@@ -63,7 +63,7 @@ def test_top_product_features(db_params):
             ['objectiv-website', 'Link: Docs', 'ClickEvent', 1, 'ocs'],
             ['objectiv-website', 'Link: Contact Us', 'ClickEvent', 1, 'ontact Us'],
             ['objectiv-website', 'Link: Cookies', 'ClickEvent', 1, 'ookies'],
-            ['objectiv-website', 'Link: cta-docs-location-pipelines', 'ClickEvent', 1, 'ta-docs-location-pipelines'],
+            ['objectiv-website', 'Link: cta-docs-location-stack', 'ClickEvent', 1, 'ta-docs-location-stack'],
             ['objectiv-website', 'Link: cta-docs-taxonomy', 'ClickEvent', 1, 'ta-docs-taxonomy'],
             ['objectiv-website', 'Link: cta-repo-button', 'ClickEvent', 1, 'ta-repo-button']]
 ,
