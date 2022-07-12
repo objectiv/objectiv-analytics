@@ -1,7 +1,7 @@
 """
 Copyright 2022 Objectiv B.V.
 """
-from typing import Dict, Optional, NamedTuple, Tuple
+from typing import Dict, Optional, Tuple
 
 from sqlalchemy.engine import Engine
 
