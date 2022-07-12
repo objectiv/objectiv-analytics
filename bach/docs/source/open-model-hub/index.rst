@@ -32,8 +32,6 @@ See the :ref:`example notebooks <example_notebooks>` section to get started imme
 View the list of available models :ref:`here <models>` or check out the full
 :ref:`open model hub API reference <open_model_hub_api_reference>`. 
 
-The open model hub is powered by :ref:`Bach <bach>`: Objectiv's data modeling library. 
-
 More information on setting up a development environment for the open model hub in the `readme <https://github.com/objectiv/objectiv-analytics/tree/main/modelhub>`_.
 
 .. toctree::
