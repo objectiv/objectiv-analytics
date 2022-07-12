@@ -53,7 +53,7 @@ def insert_events_into_data(connection, events: EventDataList):
     insert_query = f'''
         insert into data(event_id, day, moment, cookie_id, value)
         values %s
-        on conflict(event_id) do nothing
+        on conflict(event_id, cookie_id) do nothing
         returning event_id
     '''
     values = []

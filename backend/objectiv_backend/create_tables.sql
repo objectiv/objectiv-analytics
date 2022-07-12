@@ -18,7 +18,7 @@ create table data (
     moment timestamp not null,
     cookie_id uuid not null,
     value json not null,
-    primary key(event_id)
+    primary key(event_id, cookie_id)
 );
 
 create index on data(day);
