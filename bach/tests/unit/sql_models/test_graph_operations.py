@@ -219,19 +219,58 @@ def test_find_nodes_path_length():
     result = find_nodes(graph, function=lambda n: n is vm1, first_instance=True)
     assert result == [FoundNode(model=vm1, reference_path=('ref_right', 'ref'))]
     result = find_nodes(graph, function=lambda n: n is vm1, first_instance=False)
-    assert result == [FoundNode(model=vm1, reference_path=('ref_left', 'ref_right', 'ref_right', 'ref'))]
+    assert result == [FoundNode(model=vm1, reference_path=('ref_left', 'ref_left', 'ref_right', 'ref_right'))]
 
     # find vm1 from jm4, both with longest and shortest path
     result = find_nodes(jm4, function=lambda n: n is vm1, first_instance=True)
     assert result == [FoundNode(model=vm1, reference_path=('ref_left', 'ref_right', 'ref_right'))]
     result = find_nodes(jm4, function=lambda n: n is vm1, first_instance=False)
-    assert result == [FoundNode(model=vm1, reference_path=('ref_right', 'ref_right', 'ref'))]
+    assert result == [FoundNode(model=vm1, reference_path=('ref_left', 'ref_right', 'ref_right'))]
 
     # find vm2 from graph, both with longest and shortest path
     result = find_nodes(graph, function=lambda n: n is vm2)
     assert result == [FoundNode(model=vm2, reference_path=('ref_left', 'ref_left', 'ref_left'))]
     result = find_nodes(graph, function=lambda n: n is vm2, first_instance=False)
-    assert result == [FoundNode(model=vm2, reference_path=('ref_left', 'ref_right', 'ref_left', 'ref_left'))]
+    assert result == [FoundNode(model=vm2, reference_path=('ref_left', 'ref_left', 'ref_right', 'ref_left'))]
+
+
+# be explicit as this is also a performance test: max 1 sec runtime.
+# But conftests.py should already define limit for all unittests.
+@pytest.mark.timeout(1)
+def test_find_nodes_long_and_short_path_performance():
+    # We'll build a graph with a simple structure but with a lot of paths. The number of joins is controlled
+    # through the `depth` constant. Schematically the graph looks like this (all joins between 2 and N-1 are
+    # omitted):
+    #
+    #               /------------------------------------------------------------------------------\
+    #              /                                                                                +-- graph
+    #   vm <------+                                                                                /
+    #              \              /----\             /- ... -\                /----\              /
+    #               +-- join1 <--+     +-- join2 <--+         +-- joinN-1 <--+      +-- joinN <--/
+    #                             \----/             \- ... -/                \----/
+    #
+    # There are a lot of possible reference paths from the `graph` node to `vm` node: 2^depth + 1
+    # For depth values above ~ 18 this used to get noticeably slow (> 1 second to run), for values larger
+    # than 23 it was unbearable slow (> 1 minute to run) .
+    #
+    # If this test takes longer than a second to run, then that's a regression!
+    #
+    depth = 50
+    vm = ValueModel.build(key='a', val=1)
+    graph = vm
+    for _ in range(depth):
+        graph = JoinModel.build(ref_left=graph, ref_right=graph)
+    graph = JoinModel.build(ref_left=graph, ref_right=vm)
+
+    # shortest path: one step
+    expected_path = ('ref_right',)
+    result = find_nodes(graph, function=lambda n: n is vm, first_instance=True)
+    assert result == [FoundNode(model=vm, reference_path=expected_path)]
+
+    # longest path: depth + 1 steps
+    expected_path = ('ref_left', ) * (depth + 1)
+    result = find_nodes(graph, function=lambda n: n is vm, first_instance=False)
+    assert result == [FoundNode(model=vm, reference_path=expected_path)]
 
 
 def test_get_all_placeholders():

@@ -27,8 +27,10 @@ class ConcatOperation(Generic[TDataFrameOrSeries]):
     Abstract class that specifies the list of objects to be concatenated.
 
     Child classes are in charge of specifying the correct type (DataFrame/Series) of all objects.
-    All classes should implement _get_concatenated_object method that returns a single object with the correct
-    instantiated type.
+    All classes should implement:
+     - _get_concatenated_object method: returns a single object with the correct instantiated type.
+     - _join_series_expressions method: returns expression per object to be concatenated
+     - _get_series method: returns the data series of the final concatenated object
     """
     objects: Sequence[TDataFrameOrSeries]
     ignore_index: bool
@@ -106,10 +108,48 @@ class ConcatOperation(Generic[TDataFrameOrSeries]):
             for series_name in series_names
         }
 
+    def _get_model(
+        self,
+        objects: Sequence[TDataFrameOrSeries],
+        variables: Dict['DtypeNamePair', Hashable],
+    ) -> 'ConcatSqlModel':
+        """
+        returns a ConcatSqlModel which unifies all queries from all dataframes.
+        """
+        new_indexes = self._get_indexes()
+        new_data_series = self._get_series()
+
+        new_index_names = [rs.name for rs in new_indexes.values()]
+        new_data_series_names = [rs.name for rs in new_data_series.values()]
+
+        series_expressions = [self._join_series_expressions(df) for df in objects]
+
+        return ConcatSqlModel.get_instance(
+            dialect=self.dialect,
+            columns=tuple(new_index_names + new_data_series_names),
+            all_series_expressions=series_expressions,
+            all_nodes=[df.base_node for df in objects],
+            variables=variables,
+        )
+
     @abstractmethod
     def _get_concatenated_object(self) -> TDataFrameOrSeries:
         """
         returns a single object based on the instantiated type from the child class
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _join_series_expressions(self, obj: TDataFrameOrSeries) -> Expression:
+        """
+        return the column expression for the object subquery. For more information see implementation.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _get_series(self) -> Dict[str, ResultSeries]:
+        """
+        gets the data series of the final concatenated object
         """
         raise NotImplementedError()
 
@@ -218,30 +258,6 @@ class DataFrameConcatOperation(ConcatOperation[DataFrame]):
             variables=variables,
         )
 
-    def _get_model(
-        self,
-        objects: Sequence[DataFrame],
-        variables: Dict['DtypeNamePair', Hashable],
-    ) -> 'ConcatSqlModel':
-        """
-        returns a ConcatSqlModel which unifies all queries from all dataframes.
-        """
-        new_indexes = self._get_indexes()
-        new_data_series = self._get_series()
-
-        new_index_names = [rs.name for rs in new_indexes.values()]
-        new_data_series_names = [rs.name for rs in new_data_series.values()]
-
-        series_expressions = [self._join_series_expressions(df) for df in objects]
-
-        return ConcatSqlModel.get_instance(
-            dialect=self.dialect,
-            columns=tuple(new_index_names + new_data_series_names),
-            all_series_expressions=series_expressions,
-            all_nodes=[df.base_node for df in objects],
-            variables=variables,
-        )
-
 
 class SeriesConcatOperation(ConcatOperation[Series]):
     """
@@ -315,24 +331,6 @@ class SeriesConcatOperation(ConcatOperation[Series]):
             sorted_ascending=None,
             index_sorting=[] if self.ignore_index else main_series.index_sorting,
             instance_dtype=series_cls.dtype  # TODO: make this work for structural types too
-        )
-
-    def _get_model(
-        self,
-        objects: Sequence[Series],
-        variables: Dict['DtypeNamePair', Hashable],
-    ) -> 'ConcatSqlModel':
-        """
-        returns a ConcatSqlModel that unifies all series queries into a single column.
-        """
-        series_expressions = [self._join_series_expressions(obj) for obj in objects]
-
-        return ConcatSqlModel.get_instance(
-            dialect=self.dialect,
-            columns=('concatenated_series', ),
-            all_series_expressions=series_expressions,
-            all_nodes=[series.base_node for series in objects],
-            variables=variables,
         )
 
 

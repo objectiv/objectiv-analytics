@@ -12,7 +12,6 @@ globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplem
 const testTracker = new Tracker({
   applicationId: 'app-id',
   plugins: [new PathContextFromURLPlugin()],
-  trackApplicationContext: false,
 });
 
 describe('PathContextFromURLPlugin', () => {

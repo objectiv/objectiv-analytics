@@ -4,7 +4,7 @@
 
 import '@objectiv/developer-tools';
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateUUID, LocationContextName, makeInputContext, makePressableContext } from '@objectiv/tracker-core';
+import { generateUUID, LocationContextName } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker, TaggingAttribute } from '../src';
 import { trackNewElement } from '../src/mutationObserver/trackNewElement';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
@@ -70,8 +70,7 @@ describe('trackNewElement', () => {
   });
 
   it('should skip the Element if it is already Tracked', async () => {
-    const buttonContext = makePressableContext({ id: 'test' });
-    const trackedButton = makeTaggedElement('button-id-1', JSON.stringify(buttonContext), 'button');
+    const trackedButton = makeTaggedElement('button-id-1', 'test', 'button', true);
     trackedButton.setAttribute(TaggingAttribute.tracked, 'true');
     jest.spyOn(trackedButton, 'addEventListener');
 
@@ -82,8 +81,7 @@ describe('trackNewElement', () => {
   });
 
   it('should not attach click event listener', async () => {
-    const buttonContext = makePressableContext({ id: 'test' });
-    const trackedButton = makeTaggedElement('button-id-2', JSON.stringify(buttonContext), 'button');
+    const trackedButton = makeTaggedElement('button-id-2', 'test', 'button', true);
     trackedButton.setAttribute('data-testid', 'test-button');
     trackedButton.setAttribute(TaggingAttribute.trackClicks, 'false');
     trackedButton.setAttribute(TaggingAttribute.validate, JSON.stringify({ locationUniqueness: false }));
@@ -117,8 +115,7 @@ describe('trackNewElement', () => {
   });
 
   it('should attach click event listener - passive', async () => {
-    const buttonContext = makePressableContext({ id: 'test' });
-    const trackedButton = makeTaggedElement('button-id-1', JSON.stringify(buttonContext), 'button');
+    const trackedButton = makeTaggedElement('button-id-1', 'test', 'button', true);
     trackedButton.setAttribute('data-testid', 'test-button');
     trackedButton.setAttribute(TaggingAttribute.trackClicks, 'true');
     trackedButton.setAttribute(TaggingAttribute.validate, JSON.stringify({ locationUniqueness: false }));
@@ -132,8 +129,7 @@ describe('trackNewElement', () => {
   });
 
   it('should attach click event listener - capture', async () => {
-    const buttonContext = makePressableContext({ id: 'test' });
-    const trackedButton = makeTaggedElement('button-id-1', JSON.stringify(buttonContext), 'button');
+    const trackedButton = makeTaggedElement('button-id-1', 'test', 'button', true);
     trackedButton.setAttribute('data-testid', 'test-button');
     trackedButton.setAttribute(TaggingAttribute.trackClicks, JSON.stringify({ waitUntilTracked: true }));
     trackedButton.setAttribute(TaggingAttribute.validate, JSON.stringify({ locationUniqueness: false }));
@@ -147,8 +143,7 @@ describe('trackNewElement', () => {
   });
 
   it('should attach click event listener - capture with custom options', async () => {
-    const buttonContext = makePressableContext({ id: 'test' });
-    const trackedButton = makeTaggedElement('button-id-1', JSON.stringify(buttonContext), 'button');
+    const trackedButton = makeTaggedElement('button-id-1', 'test', 'button', true);
     trackedButton.setAttribute('data-testid', 'test-button');
     trackedButton.setAttribute(TaggingAttribute.trackClicks, JSON.stringify({ waitUntilTracked: { timeoutMs: 5000 } }));
     trackedButton.setAttribute(TaggingAttribute.validate, JSON.stringify({ locationUniqueness: false }));
@@ -162,8 +157,7 @@ describe('trackNewElement', () => {
   });
 
   it('should not attach click event listener and TrackerConsole.error', async () => {
-    const buttonContext = makePressableContext({ id: 'test' });
-    const trackedButton = makeTaggedElement('button-id-1', JSON.stringify(buttonContext), 'button');
+    const trackedButton = makeTaggedElement('button-id-1', 'test', 'button', true);
     trackedButton.setAttribute('data-testid', 'test-button');
     trackedButton.setAttribute(TaggingAttribute.trackClicks, JSON.stringify({ waitUntilTracked: false }));
     jest.spyOn(trackedButton, 'addEventListener');
@@ -176,8 +170,7 @@ describe('trackNewElement', () => {
   });
 
   it('should attach blur event listener', async () => {
-    const inputContext = makeInputContext({ id: 'test' });
-    const trackedInput = makeTaggedElement('input-id-1', JSON.stringify(inputContext), 'input');
+    const trackedInput = makeTaggedElement('input-id-1', 'test', 'input', false, true);
     trackedInput.setAttribute(TaggingAttribute.trackBlurs, 'true');
     trackedInput.setAttribute(TaggingAttribute.validate, JSON.stringify({ locationUniqueness: false }));
     jest.spyOn(trackedInput, 'addEventListener');
@@ -189,9 +182,20 @@ describe('trackNewElement', () => {
     expect(getTracker().trackEvent).not.toHaveBeenCalled();
   });
 
+  it('should not attach blur event listener', async () => {
+    const trackedInput = makeTaggedElement('input-id-1', 'test', 'input', false);
+    trackedInput.setAttribute(TaggingAttribute.trackBlurs, 'false');
+    trackedInput.setAttribute(TaggingAttribute.validate, JSON.stringify({ locationUniqueness: false }));
+    jest.spyOn(trackedInput, 'addEventListener');
+
+    trackNewElement(trackedInput, getTracker());
+
+    expect(trackedInput.addEventListener).toHaveBeenCalledTimes(0);
+    expect(getTracker().trackEvent).not.toHaveBeenCalled();
+  });
+
   it('should TrackerConsole.error', async () => {
-    const inputContext = makeInputContext({ id: 'test' });
-    const trackedInput = makeTaggedElement('input-id-1', JSON.stringify(inputContext), 'input');
+    const trackedInput = makeTaggedElement('input-id-1', 'test', 'input', true);
     trackedInput.setAttribute(TaggingAttribute.trackBlurs, 'true');
     jest.spyOn(trackedInput, 'addEventListener').mockImplementation(() => {
       throw new Error('nope');

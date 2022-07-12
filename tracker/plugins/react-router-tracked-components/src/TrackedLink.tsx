@@ -38,7 +38,7 @@ export const TrackedLink = React.forwardRef<HTMLAnchorElement, TrackedLinkProps>
         `｢objectiv｣ Could not generate id for LinkContext @ ${locationPath}. Either add the \`title\` prop or specify an id manually via the  \`id\` option of the \`objectiv\` prop.`
       );
     }
-    return <Link {...otherProps} />;
+    return <Link {...otherProps} ref={ref} />;
   }
 
   return (

@@ -3,7 +3,7 @@
  */
 
 import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
-import { LocationContextName } from '@objectiv/tracker-core';
+import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { ObjectivProvider, ReactTracker, TrackedDiv, TrackedInput, TrackedRootLocationContext } from '../src';
@@ -45,6 +45,64 @@ describe('TrackedInputContext', () => {
           expect.objectContaining({
             _type: LocationContextName.InputContext,
             id: 'input-id',
+          }),
+        ]),
+        global_contexts: expect.not.arrayContaining([
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'input-id',
+            value: 'some new text',
+          }),
+        ]),
+      })
+    );
+  });
+
+  it('should allow tracking values as InputValueContexts', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInput
+          type={'text'}
+          id={'input-id'}
+          data-testid={'test-input'}
+          defaultValue={'text'}
+          trackValue={true}
+        />
+      </ObjectivProvider>
+    );
+
+    jest.resetAllMocks();
+
+    fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some new text' } });
+
+    expect(logTransport.handle).toHaveBeenCalledTimes(1);
+    expect(logTransport.handle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'input-id',
+          }),
+        ]),
+        global_contexts: expect.arrayContaining([
+          expect.objectContaining({
+            _type: GlobalContextName.ApplicationContext,
+          }),
+          expect.objectContaining({
+            _type: GlobalContextName.PathContext,
+          }),
+          expect.objectContaining({
+            _type: GlobalContextName.HttpContext,
+          }),
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'input-id',
+            value: 'some new text',
           }),
         ]),
       })
