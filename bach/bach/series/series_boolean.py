@@ -11,7 +11,7 @@ from bach.expression import Expression
 from bach.series.series import WrappedPartition
 from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
-from sql_models.util import is_postgres
+from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
 
 
 class SeriesBoolean(Series, ABC):
@@ -116,7 +116,11 @@ class SeriesBoolean(Series, ABC):
         :param skipna: only ``skipna=True`` supported. This means NULL values are ignored.
         :returns: a new Series with the aggregation applied
         """
-        return self._derived_agg_func(partition, 'bool_and', skipna=skipna)
+        if is_postgres(self.engine):
+            return self._derived_agg_func(partition, 'bool_and', skipna=skipna)
+        if is_bigquery(self.engine):
+            return self._derived_agg_func(partition, 'logical_and', skipna=skipna)
+        raise DatabaseNotSupportedException(self.engine)
 
     def max(self, partition: WrappedPartition = None, skipna: bool = True):
         """
@@ -127,4 +131,8 @@ class SeriesBoolean(Series, ABC):
         :param skipna: only ``skipna=True`` supported. This means NULL values are ignored.
         :returns: a new Series with the aggregation applied
         """
-        return self._derived_agg_func(partition, 'bool_or', skipna=skipna)
+        if is_postgres(self.engine):
+            return self._derived_agg_func(partition, 'bool_or', skipna=skipna)
+        if is_bigquery(self.engine):
+            return self._derived_agg_func(partition, 'logical_or', skipna=skipna)
+        raise DatabaseNotSupportedException(self.engine)

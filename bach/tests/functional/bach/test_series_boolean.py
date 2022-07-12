@@ -71,9 +71,8 @@ def test_operations(engine):
     )
 
 
-def test_min_max(pg_engine):
-    # TODO: BigQuery
-    df = get_df_with_test_data(pg_engine)[['founding']]
+def test_min_max(engine):
+    df = get_df_with_test_data(engine)[['founding']]
     df['mixed'] = df['founding'] < 1400
     df['yes'] = True
     df['no'] = False
