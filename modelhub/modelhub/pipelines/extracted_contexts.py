@@ -12,10 +12,10 @@ from sql_models.constants import DBDialect
 from sql_models.util import is_bigquery, is_postgres
 from sqlalchemy.engine import Engine
 
-from modelhub.stack.util import (
+from modelhub.util import (
     ObjectivSupportedColumns, get_supported_dtypes_per_objectiv_column, check_objectiv_dataframe
 )
-from modelhub.stack.base_pipeline import BaseDataPipeline
+from modelhub.pipelines.base_pipeline import BaseDataPipeline
 
 
 class TaxonomyColumnDefinition(NamedTuple):
@@ -97,7 +97,9 @@ class ExtractedContextsPipeline(BaseDataPipeline):
     }
 
     def __init__(self, engine: Engine, table_name: str):
-        super().__init__(engine, table_name)
+        super().__init__()
+        self._engine = engine
+        self._table_name = table_name
         self._taxonomy_column = _get_taxonomy_column_definition(engine)
 
         # check if table has all required columns for pipeline
@@ -234,7 +236,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         return df_cp
 
     @classmethod
-    def validate_pipeline_result(cls, result: bach.DataFrame, **kwargs) -> None:
+    def validate_pipeline_result(cls, result: bach.DataFrame) -> None:
         """
         Checks if we are returning ALL expected context series with proper dtype.
         """
@@ -268,22 +270,3 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             date_filters.append(df_cp[self.DATE_FILTER_COLUMN] <= end_date)
 
         return df_cp[reduce(operator.and_, date_filters)]
-
-
-def get_extracted_contexts_df(
-    engine: Engine, table_name: str, set_index=True, **kwargs
-) -> bach.DataFrame:
-    """
-    Gets extracted context from pipeline.
-    :param engine: db connection
-    :param table_name: table from where to extract data
-    :param set_index: set index series for final dataframe
-
-    returns a bach DataFrame
-    """
-    pipeline = ExtractedContextsPipeline(engine=engine, table_name=table_name)
-    result = pipeline(**kwargs)
-    if set_index:
-        result = result.set_index(keys=ObjectivSupportedColumns.get_index_columns())
-
-    return result

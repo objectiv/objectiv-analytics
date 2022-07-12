@@ -63,7 +63,7 @@ _OBJECTIV_SUPPORTED_COLUMNS_X_SERIES_DTYPE = {
     ObjectivSupportedColumns.EVENT_ID: bach.SeriesUuid.dtype,
     ObjectivSupportedColumns.DAY: bach.SeriesDate.dtype,
     ObjectivSupportedColumns.MOMENT: bach.SeriesTimestamp.dtype,
-    ObjectivSupportedColumns.USER_ID: bach.SeriesUuid.dtype,
+    ObjectivSupportedColumns.USER_ID: bach.SeriesString.dtype,
     ObjectivSupportedColumns.GLOBAL_CONTEXTS: bach.SeriesJson.dtype,
     ObjectivSupportedColumns.LOCATION_STACK: bach.SeriesJson.dtype,
     ObjectivSupportedColumns.EVENT_TYPE: bach.SeriesString.dtype,

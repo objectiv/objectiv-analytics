@@ -184,10 +184,10 @@ class Aggregate:
         Calculate the top used features in the product.
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
-        :param location_stack: the location stack
+        :param location_stack: the location pipelines
 
             - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column
-            - if None - the whole location stack is taken.
+            - if None - the whole location pipelines is taken.
         :param event_type: event type. Must be a valid event_type (either parent or child).
         :returns: bach DataFrame with results.
         """
@@ -239,10 +239,10 @@ class Aggregate:
 
         :param data: :py:class:`bach.DataFrame` to apply the method on.
         :param name: label of the conversion event.
-        :param location_stack: the location stack
+        :param location_stack: the location pipelines
 
             - can be any slice of a :py:class:`modelhub.SeriesLocationStack` type column
-            - if None - the whole location stack is taken.
+            - if None - the whole location pipelines is taken.
         :param event_type: event type. Must be a valid event_type
             (either parent or child).
         :returns: bach DataFrame with results.

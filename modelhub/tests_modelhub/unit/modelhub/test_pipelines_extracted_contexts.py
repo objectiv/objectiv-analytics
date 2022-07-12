@@ -6,19 +6,19 @@ import pytest
 from bach import DataFrame
 from sql_models.util import is_postgres, is_bigquery
 
-from modelhub.stack.extracted_contexts import ExtractedContextsPipeline
+from modelhub.pipelines.extracted_contexts import ExtractedContextsPipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data
 
 
 @pytest.fixture(autouse=True)
 def patch_extracted_contexts_validations(monkeypatch):
     monkeypatch.setattr(
-        'modelhub.stack.extracted_contexts.bach.from_database.get_dtypes_from_table',
+        'modelhub.pipelines.extracted_contexts.bach.from_database.get_dtypes_from_table',
         lambda *args, **kwargs: {},
     )
 
     monkeypatch.setattr(
-        'modelhub.stack.extracted_contexts.ExtractedContextsPipeline._validate_data_dtypes',
+        'modelhub.pipelines.extracted_contexts.ExtractedContextsPipeline._validate_data_dtypes',
         lambda *args, **kwargs: None,
     )
 

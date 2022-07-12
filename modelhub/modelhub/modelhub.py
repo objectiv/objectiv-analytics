@@ -103,6 +103,10 @@ class ModelHub:
         end_date: str = None,
         *,
         bq_credentials_path: Optional[str] = None,
+        with_sessionized_data: bool = True,
+        session_gap_seconds: int = SESSION_GAP_DEFAULT_SECONDS,
+        identity_resolution: Optional[str] = None,
+        anonymize_unidentified_users: bool = True,
     ):
         """
         Sets data from sql table into an :py:class:`bach.DataFrame` object.
@@ -127,19 +131,22 @@ class ModelHub:
         :returns: :py:class:`bach.DataFrame` with Objectiv data.
         """
         engine = self._get_db_engine(db_url=db_url, bq_credentials_path=bq_credentials_path)
-        from modelhub.stack import get_sessionized_data
+        from modelhub.pipelines.util import get_objectiv_data
         if table_name is None:
             if is_bigquery(engine):
                 table_name = 'events'
             else:
                 table_name = 'data'
 
-        data = get_sessionized_data(
+        data = get_objectiv_data(
             engine=engine,
+            table_name=table_name,
             start_date=start_date,
             end_date=end_date,
-            table_name=table_name,
+            with_sessionized_data=with_sessionized_data,
             session_gap_seconds=SESSION_GAP_DEFAULT_SECONDS,
+            identity_resolution=identity_resolution,
+            anonymize_unidentified_users=anonymize_unidentified_users,
         )
 
         # sessionized data returns both series as bach.SeriesJson.
@@ -155,7 +162,7 @@ class ModelHub:
         Label events that are used as conversions. All labeled conversion events are set in
         :py:attr:`conversion_events`.
 
-        :param location_stack: the location stack that is labeled as conversion. Can be any slice in of a
+        :param location_stack: the location pipelines that is labeled as conversion. Can be any slice in of a
             :py:class:`modelhub.SeriesLocationStack` type column. Optionally use in conjunction with
             ``event_type`` to label a conversion.
         :param event_type: the event type that is labeled as conversion. Optionally use in conjunction with

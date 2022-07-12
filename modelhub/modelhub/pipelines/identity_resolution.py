@@ -4,16 +4,10 @@ Copyright 2022 Objectiv B.V.
 from typing import Dict, Optional
 
 import bach
-from sqlalchemy.engine import Engine
-
-from modelhub import (
-    get_extracted_contexts_df,
-    get_sessionized_data,
-    ExtractedContextsPipeline,
-    SessionizedDataPipeline
+from modelhub.pipelines.base_pipeline import BaseDataPipeline
+from modelhub.util import (
+    ObjectivSupportedColumns, get_supported_dtypes_per_objectiv_column, check_objectiv_dataframe
 )
-from modelhub.stack.base_pipeline import BaseDataPipeline
-from modelhub.stack.util import ObjectivSupportedColumns, get_supported_dtypes_per_objectiv_column
 
 
 class IdentityResolutionPipeline(BaseDataPipeline):
@@ -26,21 +20,20 @@ class IdentityResolutionPipeline(BaseDataPipeline):
     SessionizedDataPipeline.
 
     The steps followed in this pipeline are the following:
-        1. get_extracted_contexts_df: Gets the generated DataFrame from ExtractedContextsPipeline.
-        2. _validate_extracted_context_df: Validates if result from previous step
-            has user_id, global_contexts and moment series.
-        3. _extract_identities_from_global_contexts: Creates new identity (user id) id
+        1. _validate_extracted_context_df: Validates if provided DataFrame contains
+            user_id, global_contexts and moment series.
+        2. _extract_identities_from_global_contexts: Creates new identity (user id) id
             and name values from the first IdentityContext value found for the event
             under the global_contexts series json. Returns a DataFrame considering the last
             registered identity for each user_id. If no identity was found, user_id is not considered.
-        4. _resolve_original_user_ids: Replaces original user_ids with the ones extracted from previous step,
+        3. _resolve_original_user_ids: Replaces original user_ids with the ones extracted from previous step,
             only if an identity was found for it.
-        5. get_sessionized_data (Optional): If required, sessionized data will be calculated based on
+        4. get_sessionized_data (Optional): If required, sessionized data will be calculated based on
             the new values from user_id series.
-        6. _anonymize_user_ids_without_identity: If user_id has no identity, original value will be replaced
+        5. _anonymize_user_ids_without_identity: If user_id has no identity, original value will be replaced
             with NULL. This step is required after getting sessionized data, since it's required to treat
             anonymous users as individual users.
-        5. _convert_dtypes: Will convert all required identity series to their correct dtype
+        6. _convert_dtypes: Will convert all required identity series to their correct dtype
 
     Final bach DataFrame will be later validated, it must include:
         - all context series defined in ObjectivSupportedColumns. Sessionized series will be validated if
@@ -52,14 +45,14 @@ class IdentityResolutionPipeline(BaseDataPipeline):
 
     def _get_pipeline_result(
         self,
+        extracted_contexts_df: Optional[bach.DataFrame] = None,
         identity_id: Optional[str] = None,
-        with_sessionized_data: bool = True,
         **kwargs,
     ) -> bach.DataFrame:
-        # initial data is the result from ExtractedContextsPipeline
-        context_df = get_extracted_contexts_df(
-            engine=self._engine, table_name=self._table_name, set_index=False, **kwargs,
-        )
+        if not extracted_contexts_df:
+            raise ValueError(f'{self.__class__.__name__} requires dataframe with extracted contexts.')
+
+        context_df = extracted_contexts_df.copy()
 
         self._validate_extracted_context_df(context_df)
 
@@ -70,40 +63,45 @@ class IdentityResolutionPipeline(BaseDataPipeline):
         identity_context_df = self._extract_identities_from_global_contexts(context_df, identity_id)
 
         context_df = self._resolve_original_user_ids(context_df, identity_context_df)
-        if with_sessionized_data:
-            result = get_sessionized_data(
-                engine=self._engine,
-                table_name=self._table_name,
-                set_index=False,
-                extracted_contexts_df=context_df,
-                **kwargs,
-            )
-        else:
-            result = context_df.copy()
-
-        # anonymize user ids
-        result = self._anonymize_user_ids_without_identity(result)
-        result = result.drop(columns=[self.RESOLVED_USER_ID_SERIES_NAME])
-
-        df = self._convert_dtypes(df=result)
-        return df
+        return self._convert_dtypes(df=context_df)
 
     @classmethod
-    def validate_pipeline_result(
-        cls, result: bach.DataFrame, with_sessionized_data: bool = True, **kwargs,
-    ) -> None:
+    def validate_pipeline_result(cls, result: bach.DataFrame) -> None:
         """
         Checks if we are returning required Objectiv series with respective dtype.
         """
-        if with_sessionized_data:
-            SessionizedDataPipeline.validate_pipeline_result(result)
-        else:
-            ExtractedContextsPipeline.validate_pipeline_result(result)
+        if cls.RESOLVED_USER_ID_SERIES_NAME not in result.data_columns:
+            raise ValueError(f'{cls.RESOLVED_USER_ID_SERIES_NAME} is not present in DataFrame.')
+
+        check_objectiv_dataframe(
+            df=result,
+            columns_to_check=['user_id', 'global_contexts', 'moment'],
+            check_dtypes=True
+        )
+
+    @classmethod
+    def anonymize_user_ids_without_identity(cls, df: bach.DataFrame) -> bach.DataFrame:
+        """
+        If user_id has no identity, then it will be anonymized by replacing original value with NULL.
+        """
+        if cls.RESOLVED_USER_ID_SERIES_NAME not in df.data_columns:
+            raise Exception(
+                (
+                    f'Cannot anonymize user ids if {cls.RESOLVED_USER_ID_SERIES_NAME} series '
+                    'is not present in DataFrame data columns.'
+                )
+            )
+
+        df = df.copy()
+        has_no_identity = df[cls.RESOLVED_USER_ID_SERIES_NAME].isnull()
+        df.loc[has_no_identity, ObjectivSupportedColumns.USER_ID.value] = None
+        return df
 
     @property
     def result_series_dtypes(self) -> Dict[str, str]:
         return {
-            ObjectivSupportedColumns.USER_ID.value: bach.SeriesString.dtype
+            ObjectivSupportedColumns.USER_ID.value: bach.SeriesString.dtype,
+            self.RESOLVED_USER_ID_SERIES_NAME: bach.SeriesString.dtype,
         }
 
     def _validate_extracted_context_df(self, df: bach.DataFrame) -> None:
@@ -204,49 +202,3 @@ class IdentityResolutionPipeline(BaseDataPipeline):
         )
 
         return df_to_resolve
-
-    def _anonymize_user_ids_without_identity(self, df: bach.DataFrame) -> bach.DataFrame:
-        """
-        If user_id has no identity, then it will be anonymized by replacing original value with NULL.
-        """
-        if self.RESOLVED_USER_ID_SERIES_NAME not in df.data_columns:
-            raise Exception(
-                (
-                    f'Cannot anonymize user ids if {self.RESOLVED_USER_ID_SERIES_NAME} series '
-                    'is not present in DataFrame data columns.'
-                )
-            )
-
-        df = df.copy()
-        has_no_identity = df[self.RESOLVED_USER_ID_SERIES_NAME].isnull()
-        df.loc[has_no_identity, ObjectivSupportedColumns.USER_ID.value] = None
-        return df
-
-
-def get_identity_resolution_data(
-    engine: Engine,
-    table_name: str,
-    set_index: bool = True,
-    identity_id: Optional[str] = None,
-    with_sessionized_data: bool = True,
-    **kwargs,
-) -> bach.DataFrame:
-    """
-    Resolves user identity based on IdentityContext value from extracted contexts.
-    :param engine: db connection
-    :param table_name: table from where to extract data
-    :param set_index: set index series for final dataframe
-    :param identity_id: identifier type of IdentityContext to use for resolution.
-        (e.g. email, supplier cookie, etc).
-        If not provided, the first IdentityContext found for the event will be considered instead.
-    :param with_sessionized_data: if true, result will include calculated session data.
-
-    returns a bach DataFrame
-    """
-    pipeline = IdentityResolutionPipeline(engine=engine, table_name=table_name)
-    result = pipeline(identity_id=identity_id, with_sessionized_data=with_sessionized_data, **kwargs)
-    if set_index:
-        indexes = list(ObjectivSupportedColumns.get_index_columns())
-        result = result.set_index(keys=indexes)
-
-    return result
