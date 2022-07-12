@@ -34,8 +34,8 @@ class SessionizedDataPipeline(BaseDataPipeline):
         4. _convert_dtypes: Will convert all required sessionized series to their correct dtype
 
     Final bach DataFrame will be later validated, it must include:
-        - all context and sessionized series defined in ObjectivSupportedColumns
-        - correct dtypes for both context and sessionized series
+        - session_id and session_hit_number series
+        - correct dtypes for sessionized series
     """
 
     def __init__(self, session_gap_seconds: int):
@@ -44,6 +44,13 @@ class SessionizedDataPipeline(BaseDataPipeline):
     def _get_pipeline_result(
         self, extracted_contexts_df: Optional[bach.DataFrame] = None, **kwargs
     ) -> bach.DataFrame:
+        """
+        Contains steps for calculating sessionized series for provided dataframe.
+        :param extracted_contexts_df: bach DataFrame containing `user_id`, `event_id` and `moment` series.
+
+        returns a bach DataFrame with session_id and session_hit_number series
+            and all series from provided extracted_contexts_df.
+        """
         if not extracted_contexts_df:
             raise ValueError(f'{self.__class__.__name__} requires dataframe with extracted contexts.')
 

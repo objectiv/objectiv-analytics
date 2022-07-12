@@ -97,11 +97,11 @@ class ModelHub:
 
     def get_objectiv_dataframe(
         self,
+        *,
         db_url: str = None,
         table_name: str = None,
         start_date: str = None,
         end_date: str = None,
-        *,
         bq_credentials_path: Optional[str] = None,
         with_sessionized_data: bool = True,
         session_gap_seconds: int = SESSION_GAP_DEFAULT_SECONDS,
@@ -124,11 +124,34 @@ class ModelHub:
             the first date in the sql table. Format as 'YYYY-MM-DD'.
         :param end_date: last date for which data is loaded to the DataFrame. If None, data is loaded up to
             and including the last date in the sql table. Format as 'YYYY-MM-DD'.
-
         :param bq_credentials_path: path for BigQuery credentials. If db_url is for BigQuery engine, this
             parameter is required.
+        :param with_sessionized_data: Indicates if DataFrame must include `session_id`
+            and `session_hit_number` calculated series.
+        :param session_gap_seconds: Amount of seconds to be use for identifying if events were triggered
+            or not during the same session.
+        :param identity_resolution: Identity id to be used for identifying users based on IdentityContext.
+            If no value is provided, original user_id values (UUIDs) will remain.
+        :param anonymize_unidentified_users: Indicates if unidentified users are required to be anonymize
+            by setting user_id value to NULL. Otherwise, original UUID value will remain.
 
         :returns: :py:class:`bach.DataFrame` with Objectiv data.
+
+        .. note::
+            DataFrame will always include:
+            | Series            | Dtype                                           |
+            |-------------------|-------------------------------------------------|
+            | event_id          | uuid                                            |
+            | day               | date                                            |
+            | moment            | timestamp                                       |
+            | user_id           | uuid (string if identity resolution is applied) |
+            | global_contexts   | objectiv_global_context                         |
+            | location_stack    | objectiv_location_stack                         |
+            | stack_event_types | json                                            |
+
+        .. note::
+            If `with_sessionized_data` is True, Objectiv data will include `session_id` (int64)
+                and `session_hit_number` (int64) series.
         """
         engine = self._get_db_engine(db_url=db_url, bq_credentials_path=bq_credentials_path)
         from modelhub.pipelines.util import get_objectiv_data
@@ -144,7 +167,7 @@ class ModelHub:
             start_date=start_date,
             end_date=end_date,
             with_sessionized_data=with_sessionized_data,
-            session_gap_seconds=SESSION_GAP_DEFAULT_SECONDS,
+            session_gap_seconds=session_gap_seconds,
             identity_resolution=identity_resolution,
             anonymize_unidentified_users=anonymize_unidentified_users,
         )
@@ -162,7 +185,7 @@ class ModelHub:
         Label events that are used as conversions. All labeled conversion events are set in
         :py:attr:`conversion_events`.
 
-        :param location_stack: the location pipelines that is labeled as conversion. Can be any slice in of a
+        :param location_stack: the location stack that is labeled as conversion. Can be any slice in of a
             :py:class:`modelhub.SeriesLocationStack` type column. Optionally use in conjunction with
             ``event_type`` to label a conversion.
         :param event_type: the event type that is labeled as conversion. Optionally use in conjunction with

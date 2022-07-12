@@ -16,8 +16,6 @@ class IdentityResolutionPipeline(BaseDataPipeline):
     This pipeline is dependent on the result from ExtractedContextsPipeline, therefore it expects that
     the result from the latter is generated correctly.
 
-    If sessionized data is required, the pipeline will solve identities based on the result from
-    SessionizedDataPipeline.
 
     The steps followed in this pipeline are the following:
         1. _validate_extracted_context_df: Validates if provided DataFrame contains
@@ -28,16 +26,13 @@ class IdentityResolutionPipeline(BaseDataPipeline):
             registered identity for each user_id. If no identity was found, user_id is not considered.
         3. _resolve_original_user_ids: Replaces original user_ids with the ones extracted from previous step,
             only if an identity was found for it.
-        4. get_sessionized_data (Optional): If required, sessionized data will be calculated based on
-            the new values from user_id series.
-        5. _anonymize_user_ids_without_identity: If user_id has no identity, original value will be replaced
-            with NULL. This step is required after getting sessionized data, since it's required to treat
-            anonymous users as individual users.
-        6. _convert_dtypes: Will convert all required identity series to their correct dtype
+        4. _convert_dtypes: Will convert all required identity series to their correct dtype
+
+    If user anonymization is required, call classmethod `anonymize_user_ids_without_identity`. The
+        provided dataframe MUST have  `identity_user_id` series.
 
     Final bach DataFrame will be later validated, it must include:
-        - all context series defined in ObjectivSupportedColumns. Sessionized series will be validated if
-          requested
+        - 'identity_user_id', 'user_id', 'global_contexts', 'moment' series.
     """
 
     IDENTITY_FORMAT = "({}) || '|' || ({})"
@@ -48,6 +43,21 @@ class IdentityResolutionPipeline(BaseDataPipeline):
         identity_id: Optional[str] = None,
         **kwargs,
     ) -> bach.DataFrame:
+        """
+        Contains steps for solving identities for user_ids in provided dataframe.
+        :param extracted_contexts_df: bach DataFrame containing `user_id`, `global_contexts`
+            and `moment` series.
+        :param identity_id: Identity id to be used for filtering IdentityContexts. If no value is provided,
+            all IdentityContexts will be considered.
+
+        returns a bach DataFrame
+            - user_id original series dtype will be changed to string
+            - identity_user_id series and all series from provided extracted_contexts_df.
+
+        .. note::
+            If user has no identity, original value will remain. If anonymization is required, please call
+            IdentityResolutionPipeline.anonymize_user_ids_without_identity(df).
+        """
         if not extracted_contexts_df:
             raise ValueError(f'{self.__class__.__name__} requires dataframe with extracted contexts.')
 
