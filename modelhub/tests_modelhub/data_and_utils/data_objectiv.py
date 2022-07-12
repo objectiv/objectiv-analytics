@@ -71,7 +71,3 @@ TEST_DATA_OBJECTIV = [
     )
     for base_data, identity_data in zip(_BASE_TEST_DATA_OBJECTIVE, IDENTITY_CONTEXTS_PER_EVENT)
 ]
-
-
-# add identity contexts to
-_TEST_DATA_OBJECTIV_COLUMN_NAMES = ['event_id', 'day', 'moment', 'cookie_id', 'value']
