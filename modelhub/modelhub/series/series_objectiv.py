@@ -110,7 +110,7 @@ class SeriesGlobalContexts(SeriesJson):
     @property
     def objectiv(self):
         """
-        Accessor for Objectiv pipelines data. All methods of :py:attr:`json` can also be accessed with this
+        Accessor for Objectiv stack data. All methods of :py:attr:`json` can also be accessed with this
         accessor. Same as :py:attr:`obj`
 
         .. autoclass:: modelhub.series.ObjectivStack
@@ -123,7 +123,7 @@ class SeriesGlobalContexts(SeriesJson):
     @property
     def obj(self):
         """
-        Accessor for Objectiv pipelines data. All methods of :py:attr:`json` can also be accessed with this
+        Accessor for Objectiv stack data. All methods of :py:attr:`json` can also be accessed with this
         accessor. Same as :py:attr:`objectiv`
 
         .. autoclass:: modelhub.series.ObjectivStack
@@ -252,8 +252,8 @@ class SeriesLocationStack(SeriesJson):
             """
             .. _ls_nice_name:
 
-            Returns a nice name for the location pipelines. This is a human readable name for the data in the
-            feature pipelines.
+            Returns a nice name for the location stack. This is a human readable name for the data in the
+            feature stack.
             """
             engine = self._series_object.engine
             if is_postgres(engine):
@@ -280,7 +280,7 @@ class SeriesLocationStack(SeriesJson):
                 last_element.json.get_value('id', as_str=True)
             )
 
-            # For all other elements in the pipelines we do something similar as we did with the last element
+            # For all other elements in the stack we do something similar as we did with the last element
             # in last_element_nice_expr. But we prepend 'Located at', and couple the elements with ' => '.
             # Example output value for other_elements_expr:
             #   'located at Web Document: #document => Section: x => Section: y'
@@ -350,7 +350,7 @@ class SeriesLocationStack(SeriesJson):
     @property
     def objectiv(self):
         """
-        Accessor for Objectiv pipelines data. All methods of :py:attr:`json` can also be accessed with this
+        Accessor for Objectiv stack data. All methods of :py:attr:`json` can also be accessed with this
         accessor. Same as :py:attr:`obj`
 
         .. autoclass:: modelhub.series.ObjectivStack
@@ -363,7 +363,7 @@ class SeriesLocationStack(SeriesJson):
     @property
     def obj(self):
         """
-        Accessor for Objectiv pipelines data. All methods of :py:attr:`json` can also be accessed with this
+        Accessor for Objectiv stack data. All methods of :py:attr:`json` can also be accessed with this
         accessor. Same as :py:attr:`objectiv`
 
         .. autoclass:: modelhub.series.ObjectivStack
