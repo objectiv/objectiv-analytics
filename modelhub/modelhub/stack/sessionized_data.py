@@ -2,7 +2,7 @@
 Copyright 2021 Objectiv B.V.
 """
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, Optional
 
 import bach
 from sqlalchemy.engine import Engine
@@ -27,8 +27,9 @@ class SessionizedDataPipeline(BaseDataPipeline):
     the result from the latter is generated correctly.
 
     The steps followed in this pipeline are the following:
-        1. get_extracted_contexts_df: Gets the generated DataFrame from ExtractedContextsPipeline.
-        2. _validate_data_columns: Validates if result from previous step has event_id, user_id and
+        1. get_extracted_contexts_df: if no DataFrame with extracted context data was provided,
+        then it gets the generated DataFrame from ExtractedContextsPipeline.
+        2. _validate_extracted_context_df: Validates if result from previous step has event_id, user_id and
             moment series.
         3. _calculate_base_session_series: Calculates `is_start_of_session`, `session_start_id` and
             `is_one_session` series.
@@ -45,25 +46,15 @@ class SessionizedDataPipeline(BaseDataPipeline):
         super().__init__(engine, table_name)
         self._session_gap_seconds = session_gap_seconds
 
-    def _get_pipeline_result(self, **kwargs) -> bach.DataFrame:
-        # initial data is the result from ExtractedContextsPipeline
-        context_df = get_extracted_contexts_df(
-            engine=self._engine, table_name=self._table_name, set_index=False, **kwargs,
-        )
-
-        # make sure the result has AT LEAST the following series
-        # even though the ExtractedContextsPipeline already validates series
-        supported_dtypes = get_supported_dtypes_per_objectiv_column()
-        expected_context_columns = [
-            ObjectivSupportedColumns.EVENT_ID.value,
-            ObjectivSupportedColumns.USER_ID.value,
-            ObjectivSupportedColumns.MOMENT.value,
-        ]
-
-        self._validate_data_dtypes(
-            expected_dtypes={col: supported_dtypes[col] for col in expected_context_columns},
-            current_dtypes=context_df.dtypes,
-        )
+    def _get_pipeline_result(
+        self, extracted_contexts_df: Optional[bach.DataFrame] = None, **kwargs
+    ) -> bach.DataFrame:
+        if not extracted_contexts_df:
+            context_df = get_extracted_contexts_df(
+                engine=self._engine, table_name=self._table_name, set_index=False, **kwargs,
+            )
+        else:
+            context_df = extracted_contexts_df.copy()
 
         # calculate series that are needed for the final result
         sessionized_df = self._calculate_base_session_series(context_df)
@@ -76,8 +67,23 @@ class SessionizedDataPipeline(BaseDataPipeline):
         final_columns = context_df.data_columns + ObjectivSupportedColumns.get_sessionized_columns()
         return sessionized_df[final_columns]
 
+    def _validate_extracted_context_df(self, df: bach.DataFrame) -> None:
+        # make sure the result has AT LEAST the following series
+        # even though the ExtractedContextsPipeline already validates series
+        supported_dtypes = get_supported_dtypes_per_objectiv_column()
+        expected_context_columns = [
+            ObjectivSupportedColumns.EVENT_ID.value,
+            ObjectivSupportedColumns.USER_ID.value,
+            ObjectivSupportedColumns.MOMENT.value,
+        ]
+
+        self._validate_data_dtypes(
+            expected_dtypes={col: supported_dtypes[col] for col in expected_context_columns},
+            current_dtypes=df.dtypes,
+        )
+
     @classmethod
-    def validate_pipeline_result(cls, result: bach.DataFrame) -> None:
+    def validate_pipeline_result(cls, result: bach.DataFrame, **kwargs) -> None:
         """
         Checks if we are returning ALL expected context series and sessionized series with respective dtype.
         """
@@ -259,20 +265,29 @@ class SessionizedDataPipeline(BaseDataPipeline):
         ).copy_override_type(bach.SeriesInt64)
 
 
-def get_sessionized_data(engine: Engine, table_name: str, session_gap_seconds: int,
-                         set_index: bool = True, **kwargs) -> bach.DataFrame:
+def get_sessionized_data(
+    engine: Engine,
+    table_name: str,
+    session_gap_seconds: int,
+    set_index: bool = True,
+    extracted_contexts_df: bach.DataFrame = None,
+    **kwargs,
+) -> bach.DataFrame:
     """
     Gets context and sessionized data from pipeline.
     :param engine: db connection
     :param table_name: table from where to extract data
     :param set_index: set index series for final dataframe
+    :poram extracted_contexts_df: DataFrame containing extracted context data,
+        if not value is provided then the generated DataFrame from ExtractedContextsPipeline
+        will be used instead.
     :param session_gap_seconds: the session gap in seconds
 
     returns a bach DataFrame
     """
     pipeline = SessionizedDataPipeline(engine=engine, table_name=table_name,
                                        session_gap_seconds=session_gap_seconds)
-    result = pipeline(**kwargs)
+    result = pipeline(extracted_contexts_df=extracted_contexts_df, **kwargs)
     if set_index:
         indexes = list(ObjectivSupportedColumns.get_index_columns())
         result = result.set_index(keys=indexes)

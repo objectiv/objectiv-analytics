@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { expectToThrow, matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import { expectToThrow, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
   GlobalContextName,
   LocationContextName,
@@ -73,16 +73,6 @@ describe('TrackingContextProvider', () => {
                 eventMatches: expect.any(Function),
               },
             ],
-          },
-          {
-            pluginName: 'ApplicationContextPlugin',
-            initialized: true,
-            applicationContext: {
-              __instance_id: matchUUID,
-              __global_context: true,
-              _type: GlobalContextName.ApplicationContext,
-              id: 'app-id',
-            },
           },
         ],
       }),

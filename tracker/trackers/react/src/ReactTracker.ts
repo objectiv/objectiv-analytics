@@ -18,6 +18,11 @@ export type ReactTrackerConfig = Omit<TrackerConfig, 'platform'> & {
   endpoint?: string;
 
   /**
+   * Optional. Whether to track ApplicationContext automatically. Enabled by default.
+   */
+  trackApplicationContext?: boolean;
+
+  /**
    * Optional. Whether to automatically create HttpContext based on Document and Navigation APIs. Enabled by default.
    */
   trackHttpContext?: boolean;

@@ -1141,7 +1141,7 @@ class DataFrame:
         The DataFrame that's returned will query from the written table for any further operations.
 
         :param table_name: Name of the table to write to. Can include project_id and dataset
-                on BigQuery, e.g. 'project_id.dataset.table_name'
+            on BigQuery, e.g. 'project_id.dataset.table_name'
         :param if_exists: {'fail', 'replace'}. How to behave if the table already exists:
             * fail: Raise an Exception.
             * replace: Drop the table before inserting new values. All data in that table will be lost! Make

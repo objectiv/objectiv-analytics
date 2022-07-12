@@ -53,3 +53,4 @@ and model data using the open analytics taxonomy, the open model hub, and the Ba
     Models <open-model-hub/models/index>
     Open model hub <open-model-hub/index>
     Bach <bach/index>
+    Get started in your notebook <./get-started-in-your-notebook>

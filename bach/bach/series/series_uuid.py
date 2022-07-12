@@ -37,6 +37,14 @@ class SeriesUuid(Series):
     supported_value_types = (UUID, str)
 
     @classmethod
+    def get_db_dtype(cls, dialect: Dialect) -> Optional[str]:
+        if not is_bigquery(dialect):
+            return super().get_db_dtype(dialect)
+
+        from bach.series import SeriesString
+        return SeriesString.get_db_dtype(dialect)
+
+    @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         if is_postgres(dialect):
             return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
