@@ -142,6 +142,8 @@ class ModelHub:
             DataFrame will always include:
 
             .. list-table:: Objectiv DataFrame
+                :widths: 25 25
+                :header-rows: 1
 
                 * - Series
                   - Dtype
