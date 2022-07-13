@@ -78,6 +78,8 @@ _OBJECTIV_SUPPORTED_COLUMNS_X_SERIES_DTYPE = {
     ObjectivSupportedColumns.STACK_EVENT_TYPES: bach.SeriesJson.dtype,
     ObjectivSupportedColumns.SESSION_ID: bach.SeriesInt64.dtype,
     ObjectivSupportedColumns.SESSION_HIT_NUMBER: bach.SeriesInt64.dtype,
+
+
     ObjectivSupportedColumns.IDENTITY_USER_ID: bach.SeriesString.dtype,
 }
 

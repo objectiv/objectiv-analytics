@@ -132,7 +132,6 @@ class IdentityResolutionPipeline(BaseDataPipeline):
     ) -> bach.DataFrame:
         """
         Generates a dataframe containing the last encountered unique identity per user_id.
-
         This is performed by:
             1. Extract the first IdentityContext where `id` value matches the provided identity_id param value
                 from the event's global_contexts. If `identity_id` is None, then the first IdentityContext
@@ -142,7 +141,6 @@ class IdentityResolutionPipeline(BaseDataPipeline):
                 Follows the following format:
                 {id}|{name}
             4. Consider only the last identity from the user's last event
-
         returns a bach DataFrame with two series: user_id and identity_user_id.
             user-id is the user_id series from the provided `df` DataFrame
             identity_user_id is the new user_id in the format {id}|{name}
@@ -197,7 +195,6 @@ class IdentityResolutionPipeline(BaseDataPipeline):
         """
         Replaces values from original user_id series with the extracted identities
         iff the identity is not NULL, otherwise original value is kept.
-
         Returns a DataFrame with updated user_ids and a new series for identity_user_id.
         """
         user_id_series_name = ObjectivSupportedColumns.USER_ID.value

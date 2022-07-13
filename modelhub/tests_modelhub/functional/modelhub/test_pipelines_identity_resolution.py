@@ -90,15 +90,18 @@ def pipeline() -> IdentityResolutionPipeline:
 def test_get_pipeline_result(db_params, pipeline: IdentityResolutionPipeline) -> None:
     pdf = pd.DataFrame(_FAKE_DATA)
     context_df = bach.DataFrame.from_pandas(
-        df=pdf,
-        engine=create_engine_from_db_params(db_params),
-        convert_objects=True,
+        df=pdf, engine=create_engine_from_db_params(db_params), convert_objects=True
     ).reset_index(drop=True)
     context_df['user_id'] = context_df['user_id'].astype('uuid')
     context_df['event_id'] = context_df['event_id'].astype('uuid')
     context_df['global_contexts'] = context_df['global_contexts'].astype('json')
 
-    result = pipeline._get_pipeline_result(extracted_contexts_df=context_df)
+
+    result = pipeline._get_pipeline_result(
+        extracted_contexts_df=context_df,
+        with_sessionized_data=False,
+        session_gap_seconds=1800,
+    )
 
     assert_equals_data(
         result,
@@ -145,9 +148,9 @@ def test_get_pipeline_result(db_params, pipeline: IdentityResolutionPipeline) ->
     )
 
 
-def test_extract_identities_from_global_contexts(
-    db_params, pipeline: IdentityResolutionPipeline,
-) -> None:
+def test_extract_identities_from_global_contexts(db_params, pipeline: IdentityResolutionPipeline) -> None:
+    engine = create_engine_from_db_params(db_params)
+
     pdf = pd.DataFrame(_FAKE_DATA)
 
     context_df = bach.DataFrame.from_pandas(
@@ -174,11 +177,13 @@ def test_extract_identities_from_global_contexts(
 def test_extract_identities_from_global_contexts_w_identity_id(
     db_params, pipeline: IdentityResolutionPipeline,
 ) -> None:
+    engine = create_engine_from_db_params(db_params)
+
     pdf = pd.DataFrame(_FAKE_DATA)
 
     context_df = bach.DataFrame.from_pandas(
         df=pdf,
-        engine=create_engine_from_db_params(db_params),
+        engine=engine,
         convert_objects=True,
     ).reset_index(drop=True)
     context_df['global_contexts'] = context_df['global_contexts'].astype('json')

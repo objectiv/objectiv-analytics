@@ -221,7 +221,6 @@ class SessionizedDataPipeline(BaseDataPipeline):
     def _calculate_session_start_id(df: bach.DataFrame) -> bach.SeriesInt64:
         """
         Calculates session_start_id by numbering each event that is a session start.
-
         Returns a bach SeriesInt64
         """
         sort_by = [ObjectivSupportedColumns.MOMENT.value, ObjectivSupportedColumns.EVENT_ID.value]
