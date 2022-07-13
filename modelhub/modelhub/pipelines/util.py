@@ -55,7 +55,7 @@ def get_objectiv_data(
     if with_sessionized_data:
         data = sessionized_pipeline(extracted_contexts_df=data)
 
-    # Autonomizing users must be done after getting sessionized data, this way we don't aggregate
+    # Anonymizing users must be done after getting sessionized data, this way we don't aggregate
     # events on a single unknown user
     if identity_resolution and anonymize_unidentified_users:
         data = IdentityResolutionPipeline.anonymize_user_ids_without_identity(data)

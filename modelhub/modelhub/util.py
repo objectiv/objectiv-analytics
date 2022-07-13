@@ -50,10 +50,6 @@ class ObjectivSupportedColumns(Enum):
         return list(cls._SESSIONIZED_COLUMNS.value)
 
     @classmethod
-    def get_identity_resolution_columns(cls) -> List[str]:
-        return list(cls._IDENTITY_RESOLUTION_COLUMNS.value)
-
-    @classmethod
     def get_data_columns(cls) -> List[str]:
         return list(cls._DATA_SERIES.value)
 
@@ -78,7 +74,6 @@ _OBJECTIV_SUPPORTED_COLUMNS_X_SERIES_DTYPE = {
     ObjectivSupportedColumns.STACK_EVENT_TYPES: bach.SeriesJson.dtype,
     ObjectivSupportedColumns.SESSION_ID: bach.SeriesInt64.dtype,
     ObjectivSupportedColumns.SESSION_HIT_NUMBER: bach.SeriesInt64.dtype,
-
 
     ObjectivSupportedColumns.IDENTITY_USER_ID: bach.SeriesString.dtype,
 }

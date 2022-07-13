@@ -61,7 +61,6 @@ def _get_sessionized_data_pipeline() -> SessionizedDataPipeline:
 def test_get_pipeline_result(db_params) -> None:
     pipeline = _get_sessionized_data_pipeline()
     engine = create_engine_from_db_params(db_params)
-
     pdf = pd.DataFrame(get_parsed_objectiv_data(engine))[['event_id', 'cookie_id', 'moment']]
     pdf = pdf.rename(columns={'cookie_id': 'user_id'})
 
@@ -109,6 +108,7 @@ def test_get_pipeline_result(db_params) -> None:
         use_to_pandas=True,
         order_by=['event_id'],
     )
+
 
 def test_calculate_session_start(db_params) -> None:
     pipeline = _get_sessionized_data_pipeline()

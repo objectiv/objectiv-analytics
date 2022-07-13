@@ -172,7 +172,7 @@ class ModelHub:
             anonymize_unidentified_users=anonymize_unidentified_users,
         )
 
-        # sessionized data returns both series as bach.SeriesJson.
+        # get_objectiv_data returns both series as bach.SeriesJson.
         data['global_contexts'] = data.global_contexts.astype('objectiv_global_context')
         data['location_stack'] = data.location_stack.astype('objectiv_location_stack')
         return data

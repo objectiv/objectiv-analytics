@@ -154,11 +154,8 @@ def test_extract_identities_from_global_contexts(db_params, pipeline: IdentityRe
     pdf = pd.DataFrame(_FAKE_DATA)
 
     context_df = bach.DataFrame.from_pandas(
-        df=pdf,
-        engine=create_engine_from_db_params(db_params),
-        convert_objects=True
+        df=pdf, engine=engine, convert_objects=True
     ).reset_index(drop=True)
-
     context_df['global_contexts'] = context_df['global_contexts'].astype('json')
 
     result = pipeline._extract_identities_from_global_contexts(context_df)
