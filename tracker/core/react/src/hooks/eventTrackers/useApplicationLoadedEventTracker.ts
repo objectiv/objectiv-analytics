@@ -2,6 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { Optional } from '@objectiv/tracker-core';
 import { trackApplicationLoadedEvent } from '../../eventTrackers/trackApplicationLoadedEvent';
 import { EventTrackerHookParameters } from '../../types';
 import { useLocationStack } from '../consumers/useLocationStack';
@@ -22,7 +23,7 @@ export const useApplicationLoadedEventTracker = (parameters: ApplicationLoadedEv
     locationStack: extraLocationStack = [],
     globalContexts: extraGlobalContexts = [],
     options: extraOptions,
-  }: Omit<ApplicationLoadedEventTrackerHookParameters, 'tracker'> = {}) =>
+  }: Optional<ApplicationLoadedEventTrackerHookParameters, 'tracker'> = {}) =>
     trackApplicationLoadedEvent({
       tracker,
       options: options || extraOptions ? { ...(options ?? {}), ...(extraOptions ?? {}) } : undefined,

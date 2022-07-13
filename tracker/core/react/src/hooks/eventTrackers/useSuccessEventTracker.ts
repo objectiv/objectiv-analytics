@@ -2,6 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
+import { Optional } from '@objectiv/tracker-core';
 import { SuccessEventTrackerParameters, trackSuccessEvent } from '../../eventTrackers/trackSuccessEvent';
 import { EventTrackerHookParameters } from '../../types';
 import { useLocationStack } from '../consumers/useLocationStack';
@@ -18,7 +19,7 @@ export const useSuccessEventTracker = (parameters: EventTrackerHookParameters = 
     locationStack: extraLocationStack = [],
     globalContexts: extraGlobalContexts = [],
     options: extraOptions,
-  }: Omit<SuccessEventTrackerParameters, 'tracker'>) =>
+  }: Optional<SuccessEventTrackerParameters, 'tracker'>) =>
     trackSuccessEvent({
       message,
       tracker,
