@@ -17,6 +17,7 @@ class IdentityResolutionPipeline(BaseDataPipeline):
     This pipeline is dependent on the result from ExtractedContextsPipeline, therefore it expects that
     the result from the latter is generated correctly.
 
+
     The steps followed in this pipeline are the following:
         1. _validate_extracted_context_df: Validates if provided DataFrame contains
             user_id, global_contexts and moment series.
