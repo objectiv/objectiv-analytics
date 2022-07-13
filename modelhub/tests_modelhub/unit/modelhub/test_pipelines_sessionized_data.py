@@ -12,12 +12,12 @@ from tests_modelhub.data_and_utils.utils import create_engine_from_db_params
 @pytest.fixture(autouse=True)
 def patch_extracted_contexts_validations(monkeypatch):
     monkeypatch.setattr(
-        'modelhub.stack.extracted_contexts.bach.from_database.get_dtypes_from_table',
+        'modelhub.pipelines.extracted_contexts.bach.from_database.get_dtypes_from_table',
         lambda *args, **kwargs: {},
     )
 
     monkeypatch.setattr(
-        'modelhub.stack.extracted_contexts.ExtractedContextsPipeline._validate_data_dtypes',
+        'modelhub.pipelines.extracted_contexts.ExtractedContextsPipeline._validate_data_dtypes',
         lambda *args, **kwargs: None,
     )
 

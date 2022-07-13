@@ -5,7 +5,7 @@ import bach
 import pandas as pd
 import pytest
 
-from modelhub.stack.util import get_supported_dtypes_per_objectiv_column, check_objectiv_dataframe
+from modelhub.util import get_supported_dtypes_per_objectiv_column, check_objectiv_dataframe
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params
 
 

@@ -127,7 +127,7 @@ class ModelHub:
         :returns: :py:class:`bach.DataFrame` with Objectiv data.
         """
         engine = self._get_db_engine(db_url=db_url, bq_credentials_path=bq_credentials_path)
-        from modelhub.stack import get_sessionized_data
+        from modelhub.pipelines import get_sessionized_data
         if table_name is None:
             if is_bigquery(engine):
                 table_name = 'events'

@@ -12,10 +12,10 @@ from sql_models.constants import DBDialect
 from sql_models.util import is_bigquery, is_postgres
 from sqlalchemy.engine import Engine
 
-from modelhub.stack.util import (
+from modelhub.util import (
     ObjectivSupportedColumns, get_supported_dtypes_per_objectiv_column, check_objectiv_dataframe
 )
-from modelhub.stack.base_pipeline import BaseDataPipeline
+from modelhub.pipelines.base_pipeline import BaseDataPipeline
 
 
 class TaxonomyColumnDefinition(NamedTuple):
