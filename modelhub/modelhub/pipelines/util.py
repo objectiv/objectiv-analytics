@@ -27,8 +27,8 @@ def get_objectiv_data(
         :param end_date: end_date to filter data from ExtractedContextsPipeline
         :param with_sessionized_data: If true, SessionizedDataPipeline will be applied on
             ExtractedContextsPipeline (or IdentityResolutionPipeline) result.
-        :param session_gap_seconds: :param session_gap_seconds: Maximum time between two consecutive
-            events from the same user, for thee vents to be considered part of the same session.
+        :param session_gap_seconds: Maximum time between two consecutive
+            events from the same user, for the events to be considered part of the same session.
             This is used by SessionizedDataPipeline, thus only relevant if `with_sessionized_data=True`.
         :param identity_resolution: If value provided, IdentityResolutionPipeline will be applied
             on ExtractedContextsPipeline result
