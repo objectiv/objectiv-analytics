@@ -9,9 +9,8 @@ import pandas as pd
 from sql_models.util import is_bigquery
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
-from modelhub import SessionizedDataPipeline, get_sessionized_data
+from modelhub import SessionizedDataPipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data
-from tests_modelhub.functional.modelhub.test_pipelines_extracted_contexts import get_expected_context_pandas_df
 
 _SESSION_GAP_SECONDS = 180
 
@@ -246,33 +245,3 @@ def test_calculate_objectiv_session_series(db_params) -> None:
         ],
         order_by=['user_id', 'event_id'],
     )
-
-
-def test_get_sessionized_data_df(db_params, monkeypatch) -> None:
-    monkeypatch.setattr(
-        'modelhub.pipelines.sessionized_data.SessionizedDataPipeline._validate_extracted_context_df',
-        lambda *args, **kwargs: None,
-    )
-
-    engine = create_engine_from_db_params(db_params)
-    contexts_pdf = get_expected_context_pandas_df(engine)
-    contexts_pdf = contexts_pdf[['event_id', 'user_id', 'moment']]
-    contexts_pdf['user_id'] = contexts_pdf['user_id'].astype(str)
-    contexts_pdf['event_id'] = contexts_pdf['event_id'].astype(str)
-
-    contexts_df = bach.DataFrame.from_pandas(engine, df=contexts_pdf, convert_objects=True)
-
-    result = get_sessionized_data(extracted_contexts_df=contexts_df, session_gap_seconds=_SESSION_GAP_SECONDS)
-    result = result.sort_index()
-
-    expected = contexts_pdf.copy()
-    expected['session_id'] = pd.Series([3, 3, 3, 2, 4, 4, 5, 5, 6, 7, 1, 1])
-    expected['session_hit_number'] = pd.Series([1, 2, 3, 1, 1, 2, 1, 2, 1, 1, 1, 2])
-    expected = expected.set_index('event_id')
-    pd.testing.assert_frame_equal(expected, result.to_pandas())
-
-    result = get_sessionized_data(
-        extracted_contexts_df=contexts_df, session_gap_seconds=_SESSION_GAP_SECONDS, set_index=False,
-    )
-    assert 'event_id' not in result.index
-    assert 'event_id' in result.data

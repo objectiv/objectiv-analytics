@@ -10,11 +10,10 @@ import pandas as pd
 import pytest
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
-from modelhub.pipelines.identity_resolution import IdentityResolutionPipeline, get_identity_resolution_data
+from modelhub.pipelines.identity_resolution import IdentityResolutionPipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params
 
 
-# TODO: Add IdentityContexts in tests_modelhub.data_and_utils.data_objectiv.TEST_DATA_OBJECTIV
 _FAKE_DATA = [
     {
         'event_id': '12b55ed5-4295-4fc1-bf1f-88d64d1ac301',
@@ -86,81 +85,6 @@ _FAKE_DATA = [
 @pytest.fixture()
 def pipeline() -> IdentityResolutionPipeline:
     return IdentityResolutionPipeline()
-
-
-# TODO: test different identities for same user in different sessions
-def test_get_identity_resolution_data(db_params, pipeline: IdentityResolutionPipeline, monkeypatch) -> None:
-    pdf = pd.DataFrame(_FAKE_DATA)
-
-    context_df = bach.DataFrame.from_pandas(
-        df=pdf, engine=create_engine_from_db_params(db_params), convert_objects=True
-    ).reset_index(drop=True)
-    context_df['user_id'] = context_df['user_id'].astype('uuid')
-    context_df['event_id'] = context_df['event_id'].astype('uuid')
-    context_df['global_contexts'] = context_df['global_contexts'].astype('json')
-
-    # patch final validation as we are not including all objectiv columns in tests
-    monkeypatch.setattr(
-        'modelhub.pipelines.sessionized_data.SessionizedDataPipeline.validate_pipeline_result',
-        lambda *args, **kwargs: None,
-    )
-
-    result = get_identity_resolution_data(
-        extracted_contexts_df=context_df,
-        with_sessionized_data=True,
-        session_gap_seconds=1800,
-    )
-
-    assert_equals_data(
-        result,
-        expected_columns=[
-            'event_id', 'user_id', 'moment', 'global_contexts', 'session_id', 'session_hit_number',
-        ],
-        expected_data=[
-        [
-            UUID(_FAKE_DATA[0]['event_id']),
-            'user_2@objectiv.io|email',
-            _FAKE_DATA[0]['moment'],
-            json.loads(_FAKE_DATA[0]['global_contexts']),
-            2,
-            1,
-        ],
-        [
-            UUID(_FAKE_DATA[1]['event_id']),
-            'user_2@objectiv.io|email',
-            _FAKE_DATA[1]['moment'],
-            json.loads(_FAKE_DATA[1]['global_contexts']),
-            2,
-            2,
-        ],
-        [
-            UUID(_FAKE_DATA[2]['event_id']),
-            'user_2@objectiv.io|email',
-            _FAKE_DATA[2]['moment'],
-            json.loads(_FAKE_DATA[2]['global_contexts']),
-            2,
-            3,
-        ],
-        [
-            UUID(_FAKE_DATA[3]['event_id']),
-            'user_2@objectiv.io|email',
-            _FAKE_DATA[3]['moment'],
-            json.loads(_FAKE_DATA[3]['global_contexts']),
-            3,
-            1,
-        ],
-        [
-            UUID(_FAKE_DATA[4]['event_id']),
-            None,
-            _FAKE_DATA[4]['moment'],
-            json.loads(_FAKE_DATA[4]['global_contexts']),
-            1,
-            1,
-        ],
-    ],
-        use_to_pandas=True,
-        order_by=['event_id'],
-    )
 
 
 def test_get_pipeline_result(db_params, pipeline: IdentityResolutionPipeline) -> None:
@@ -247,19 +171,20 @@ def test_extract_identities_from_global_contexts(db_params, pipeline: IdentityRe
     )
 
 
-def test_extract_identities_from_global_contexts_w_identity_id(
-    db_params, pipeline: IdentityResolutionPipeline,
-) -> None:
+def test_extract_identities_from_global_contexts_w_identity_id(db_params) -> None:
+    pipeline = IdentityResolutionPipeline(identity_id='username')
     engine = create_engine_from_db_params(db_params)
 
     pdf = pd.DataFrame(_FAKE_DATA)
 
     context_df = bach.DataFrame.from_pandas(
-        df=pdf, engine=engine, convert_objects=True
+        df=pdf,
+        engine=engine,
+        convert_objects=True,
     ).reset_index(drop=True)
     context_df['global_contexts'] = context_df['global_contexts'].astype('json')
 
-    result = pipeline._extract_identities_from_global_contexts(context_df, identity_id='username')
+    result = pipeline._extract_identities_from_global_contexts(context_df)
 
     assert_equals_data(
         result,
