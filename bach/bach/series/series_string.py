@@ -7,10 +7,11 @@ from typing import Union, TYPE_CHECKING, Optional, Pattern
 from sqlalchemy.engine import Dialect
 
 from bach.series import Series
-from bach.expression import Expression
+from bach.expression import Expression, AggregateFunctionExpression
 from bach.series.series import WrappedPartition
 from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
+from sql_models.util import DatabaseNotSupportedException, is_bigquery, is_postgres
 
 if TYPE_CHECKING:
     from bach.series import SeriesBoolean
@@ -230,13 +231,21 @@ class SeriesString(Series):
 
     def to_json_array(self, partition: WrappedPartition = None, skipna: bool = True, min_count: int = None, **kwargs):
         """
-        Get the sum of the input values.
+        Aggregate function: Concatenate values into a json array.
 
         :param partition: The partition or window to apply
         :param skipna: Exclude NA/NULL values
         :param min_count: This minimum amount of values (not NULL) to be present before returning a result.
         """
-        result = self._derived_agg_func(partition, 'array_agg', skipna=skipna, min_count=min_count)
-        expression = Expression.construct('to_jsonb({})', result)
+        # TODO: ordering inside the array_agg function. this is an absolute MUST before merging
+        if is_postgres(self.engine):
+            array_agg = AggregateFunctionExpression.construct('array_agg({})', self)
+            expression = Expression.construct('to_jsonb({})', array_agg)
+        elif is_bigquery(self.engine):
+            array_agg = AggregateFunctionExpression.construct('array_agg({})', self)
+            expression = Expression.construct('to_json_string({})', array_agg)
+        else:
+            raise DatabaseNotSupportedException(self.engine)
+        result = self._derived_agg_func(partition, expression, skipna=skipna, min_count=min_count)
         from bach import SeriesJson
-        return result.copy_override(expression=expression).copy_override_type(SeriesJson)
+        return result.copy_override_type(SeriesJson)
