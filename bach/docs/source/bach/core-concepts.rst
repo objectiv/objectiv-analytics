@@ -55,25 +55,33 @@ situations:
 
 BigQuery Tips
 -------------
-The columns in Bach DataFrame are the database columns, hence the column name must contain only letters (`a-z`, `A-Z`), numbers (`0-9`), or underscores (`_`), and it must start with a letter or underscore. Especially remember this during [`DataFrame.unstack()`](/modeling/bach/api-reference/DataFrame/bach.DataFrame.unstack.mdx) usage.
 
-For getting a sample of the data one can use:
+1. Use valid column names
+    The series in a Bach DataFrame map directly to database columns, hence a series names must be a valid BigQuery column name, and contain only letters (`a-z`, `A-Z`), numbers (`0-9`), or underscores (`_`), and it must start with a letter or underscore. Especially remember this during :py:meth:`DataFrame.unstack()` usage.
 
-.. code-block:: console
+2. Getting a data sample from a DataFrame
+    Querying big datasets can be expensive with BigQuery. To get a smaller sample of the current DataFrame use :py:meth:`DataFrame.get_sample()`:
 
-    table_name = 'objectiv-production.writable_dataset.table_name'
-    df.get_sample(table_name, sample_percentage=10, overwrite=True)
+    .. code-block:: console
 
-It creates a permanent table, and if the table exists it overwrites it (make sure you have a write access). For BigQuery `seed` parameter is not implemented.
+        table_name = 'objectiv-production.writable_dataset.table_name'
+        df.get_sample(table_name, sample_percentage=10, overwrite=True)
 
-If you are planning to do a lot of operations on a given Bach DataFrame and already the underlying SQL query is complex it would be more optimal for the database first to materialize the current DataFrame as a temporary table:
+    It creates a permanent table, and if the table exists it overwrites it (make sure you have a write access). For BigQuery `seed` parameter is not implemented.
 
-.. code-block:: console
+3. Using temporary tables to limit query complexity
+    Sometimes complex operations on Bach cannot be executed on BigQuery and you might get an error:
 
-    df = df.materialize(materialization='temp_table')
+        Resources exceeded during query execution: Not enough resources for query planning - too many subqueries or query is too complex.
 
-and then continue to do all the other complex operations. One way of checking SQL complexity:
+    So, if the underlying SQL query is complex for your data and you still need to apply other operations, in order to avoid the query to become too complex one has to first materialize the current DataFrame as a temporary table:
 
-.. code-block:: console
+    .. code-block:: console
 
-    display_sql_as_markdown(df)
+        df = df.materialize(materialization='temp_table')
+
+    and then continue to do all the other operations. One way of checking SQL complexity:
+
+    .. code-block:: console
+
+        display_sql_as_markdown(df)
