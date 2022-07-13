@@ -16,6 +16,7 @@ class IdentityResolutionPipeline(BaseDataPipeline):
     Pipeline in charge of resolving user identities based on `IdentityContext`.
     This pipeline is dependent on the result from ExtractedContextsPipeline, therefore it expects that
     the result from the latter is generated correctly.
+
     The steps followed in this pipeline are the following:
         1. _validate_extracted_context_df: Validates if provided DataFrame contains
             user_id, global_contexts and moment series.
@@ -26,8 +27,10 @@ class IdentityResolutionPipeline(BaseDataPipeline):
         3. _resolve_original_user_ids: Replaces original user_ids with the ones extracted from previous step,
             only if an identity was found for it.
         4. _convert_dtypes: Will convert all required identity series to their correct dtype
+
     If user anonymization is required, call classmethod `anonymize_user_ids_without_identity`. The
         provided dataframe MUST have  `identity_user_id` series.
+
     Final bach DataFrame will be later validated, it must include:
         - 'identity_user_id', 'user_id', 'global_contexts', 'moment' series.
     """
@@ -46,9 +49,11 @@ class IdentityResolutionPipeline(BaseDataPipeline):
             and `moment` series.
         :param identity_id: Identity id to be used for filtering IdentityContexts. If no value is provided,
             all IdentityContexts will be considered.
+
         returns a bach DataFrame
             - user_id original series dtype will be changed to string
             - identity_user_id series and all series from provided extracted_contexts_df.
+
         .. note::
             If user has no identity, original value will remain. If anonymization is required, please call
             IdentityResolutionPipeline.anonymize_user_ids_without_identity(df).

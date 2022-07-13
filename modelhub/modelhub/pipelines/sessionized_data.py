@@ -23,6 +23,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
     Pipeline in charge of calculating Objectiv sessionized columns.
     This pipeline is dependent on the result from ExtractedContextsPipeline, therefore it expects that
     the result from the latter is generated correctly.
+
     The steps followed in this pipeline are the following:
         1. _validate_extracted_context_df: Validates if provided DataFrame contains event_id, user_id and
             moment series.
@@ -31,6 +32,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
         3. _calculate_objectiv_session_series: Calculates final sessionized series:
             `session_id` and `session_hit_number`
         4. _convert_dtypes: Will convert all required sessionized series to their correct dtype
+
     Final bach DataFrame will be later validated, it must include:
         - session_id and session_hit_number series
         - correct dtypes for sessionized series
@@ -45,6 +47,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
         """
         Contains steps for calculating sessionized series for provided dataframe.
         :param extracted_contexts_df: bach DataFrame containing `user_id`, `event_id` and `moment` series.
+
         returns a bach DataFrame with session_id and session_hit_number series
             and all series from provided extracted_contexts_df.
         """
