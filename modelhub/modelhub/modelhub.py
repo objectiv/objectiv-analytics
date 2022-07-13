@@ -139,31 +139,6 @@ class ModelHub:
         :returns: :py:class:`bach.DataFrame` with Objectiv data.
 
         .. note::
-            DataFrame will always include:
-
-            .. list-table:: Objectiv DataFrame
-                :widths: 25 25
-                :header-rows: 1
-
-                * - Series
-                  - Dtype
-                * - event_id
-                  - uuid
-                * - day
-                  - date
-                * - moment
-                  - timestamp
-                * - user_id
-                  - uuid (string if identity resolution is applied)
-                * - global_contexts
-                  - objectiv_global_contex
-                * - location_stack
-                  - objectiv_location_stack
-                * - stack_event_types
-                  - json
-
-
-        .. note::
             If `with_sessionized_data` is True, Objectiv data will include `session_id` (int64)
                 and `session_hit_number` (int64) series.
         """
