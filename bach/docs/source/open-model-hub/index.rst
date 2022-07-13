@@ -23,8 +23,8 @@ analyses and product analytics metrics.
 Modeling behavior of users and groups is enabled through configurable 
 :doc:`Identity Resolution <./identity-resolution>`.
 
-See the :doc:`example notebooks <../example-notebooks/index>` to get started immediately, and install the 
-model hub package directly from PyPI:
+See how to :doc:`get started in your notebook <../get-started-in-your-notebook>` and the 
+:doc:`example notebooks <../example-notebooks/index>`, and install the model hub package directly from PyPI:
 
 .. code-block:: console
 
