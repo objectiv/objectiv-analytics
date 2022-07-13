@@ -38,6 +38,9 @@ Or use methods specific to the :ref:`location_stack` or :ref:`global_contexts` t
     df['application'] = df.global_contexts.gc.application
     df['feature_nice_name'] = df.location_stack.ls.nice_name
     df['root_location'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext', key='id')
+    
+    # have a look at the data
+    df.sort_values(['session_id', 'session_hit_number'], ascending=False).head()
 
 Now we will go though a selection of basic analytics metrics. We can use models from the :ref:`models
 <models>`
@@ -57,7 +60,7 @@ default time_aggregation is overridden by using a different `groupby`.
 
     # model hub: unique users, monthly
     monthly_users = modelhub.aggregate.unique_users(df, groupby=modelhub.time_agg(df, '%Y-%m'))
-    monthly_users.head()
+    monthly_users.sort_index(ascending=False).head()
 
 .. code-block:: python
 

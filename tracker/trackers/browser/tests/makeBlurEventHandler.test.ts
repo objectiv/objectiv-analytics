@@ -25,7 +25,7 @@ describe('makeBlurEventHandler', () => {
     jest.resetAllMocks();
   });
 
-  it('should track Input Change when invoked from a valid target', () => {
+  it('should track Input Change when invoked from a valid target (HTMLInputElement)', () => {
     const trackedInput = makeTaggedElement('input', null, 'input');
     const blurEventListener = makeBlurEventHandler(trackedInput);
 
@@ -44,9 +44,43 @@ describe('makeBlurEventHandler', () => {
     );
   });
 
-  it('should include InputValueContext when invoked with the trackValue option', () => {
+  it('should include InputValueContext when invoked with the trackValue option (HTMLInputElement)', () => {
     const trackedInput = makeTaggedElement('input', 'test-input', 'input', false, true);
     trackedInput.setAttribute('value', 'test value');
+    const blurEventListener = makeBlurEventHandler(trackedInput, undefined, { trackValue: true }, 'test-input');
+
+    trackedInput.addEventListener('blur', blurEventListener);
+    trackedInput.dispatchEvent(new FocusEvent('blur'));
+
+    expect(getTracker().trackEvent).toHaveBeenCalledTimes(1);
+    expect(getTracker().trackEvent).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        id: matchUUID,
+        global_contexts: expect.arrayContaining([
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'test-input',
+            value: 'test value',
+          }),
+        ]),
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'test-input',
+          }),
+        ]),
+      })
+    );
+  });
+
+  it('should include InputValueContext when invoked with the trackValue option (HTMLSelectElement)', () => {
+    const trackedInput = makeTaggedElement('input', 'test-input', 'select', false, true);
+    const inputOption = document.createElement('option')
+    inputOption.setAttribute('value', 'test value');
+    trackedInput.setAttribute('selectedIndex', '0');
+    trackedInput.append(inputOption);
     const blurEventListener = makeBlurEventHandler(trackedInput, undefined, { trackValue: true }, 'test-input');
 
     trackedInput.addEventListener('blur', blurEventListener);
