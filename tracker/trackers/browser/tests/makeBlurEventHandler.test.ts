@@ -77,7 +77,7 @@ describe('makeBlurEventHandler', () => {
 
   it('should include InputValueContext when invoked with the trackValue option (HTMLSelectElement)', () => {
     const trackedInput = makeTaggedElement('input', 'test-input', 'select', false, true);
-    const inputOption = document.createElement('option')
+    const inputOption = document.createElement('option');
     inputOption.setAttribute('value', 'test value');
     trackedInput.setAttribute('selectedIndex', '0');
     trackedInput.append(inputOption);
