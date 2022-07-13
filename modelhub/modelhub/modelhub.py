@@ -140,15 +140,26 @@ class ModelHub:
 
         .. note::
             DataFrame will always include:
-            | Series            | Dtype                                           |
-            |-------------------|-------------------------------------------------|
-            | event_id          | uuid                                            |
-            | day               | date                                            |
-            | moment            | timestamp                                       |
-            | user_id           | uuid (string if identity resolution is applied) |
-            | global_contexts   | objectiv_global_context                         |
-            | location_stack    | objectiv_location_stack                         |
-            | stack_event_types | json                                            |
+
+            .. list-table:: Objectiv DataFrame
+
+                * - Series
+                  - Dtype
+                * - event_id
+                  - uuid
+                * - day
+                  - date
+                * - moment
+                  - timestamp
+                * - user_id
+                  - uuid (string if identity resolution is applied)
+                * - global_contexts
+                  - objectiv_global_contex
+                * - location_stack
+                  - objectiv_location_stack
+                * - stack_event_types
+                  - json
+
 
         .. note::
             If `with_sessionized_data` is True, Objectiv data will include `session_id` (int64)
