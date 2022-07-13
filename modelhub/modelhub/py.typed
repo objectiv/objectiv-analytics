@@ -1,0 +1,2 @@
+# MyPy will not typecheck calls to modelhub.* if this file doesn't exist
+# See https://mypy.readthedocs.io/en/stable/installed_packages.html#creating-pep-561-compatible-packages
