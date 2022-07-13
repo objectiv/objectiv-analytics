@@ -20,6 +20,7 @@ def get_objectiv_data(
     anonymize_unidentified_users: bool = True,
 ) -> bach.DataFrame:
     """
+        :param engine: db_connection
         :param table_name: the name of the sql table where the data is stored. Will default to 'events' for
             bigquery and 'data' for other engines.
         :param start_date: start_date to filter data from ExtractedContextsPipeline
