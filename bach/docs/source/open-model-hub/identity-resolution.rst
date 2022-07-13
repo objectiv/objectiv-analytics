@@ -34,7 +34,7 @@ How does it work?
 Sessions are normally assigned to users that are identified by a cookie. In case the cookie isn't available 
 (e.g. deleted, user is on a different device, etc.), or not sufficient (e.g. because the user should be 
 linked to an internal ID), the tracker needs some help. It should then be instructed to track the user 
-identity explicitely, for example with a unique hash that identifies them persistently across devices when 
+identity explicitly, for example with a unique hash that identifies them persistently across devices when 
 they log in. 
 
 An identity is tracked through an 
