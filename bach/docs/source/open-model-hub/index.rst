@@ -2,42 +2,47 @@
 
 .. currentmodule:: modelhub
 
-.. frontmatterposition:: 2
+.. frontmatterposition:: 1
 .. frontmatterslug:: /modeling/open-model-hub/
 
 ==============
 Open model hub
 ==============
-The open model hub is a toolkit that contains functions and models that can be applied on data collected with 
-Objectiv’s Tracker. There are three types of functions/models: 
-1. Helper functions. These helper functions simplify manipulating and analyzing the data. 
-2. Aggregation models. These models consist of a combination of Bach instructions that run some of the more common data analyses or product analytics metrics. 
-3. Machine learning models.
+The open model hub is a toolkit with functions and models that can be applied on data collected with 
+Objectiv's Tracker SDKs, directly on the full dataset. All models are open-source, free to use, and can easily 
+be combined to build advanced compound models.
 
-The open model hub has configurable identity resolution (TODO: Make this a link?) to make sure you can reliably model behaviour of users and groups.
+How to use the open model hub
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Three types of functions/models are provided: 
+1. :doc:`Helper functions <./models/helper-functions/index>`: simplify manipulating and analyzing the data. 
+2. :doc:`Aggregation models <./models/aggregation/index>`: enable running some of the more common data 
+analyses and product analytics metrics. 
+3. :doc:`Machine learning models <./models/machine-learning/index>`.
 
-All models are open-source, free to use, and can be combined to build advanced compound models with little effort. The open model hub is powered by :ref:`Bach <bach>`: Objectiv's data modeling library. 
-With Bach, you can compose models with familiar Pandas-like dataframe operations in your notebook. It uses a SQL abstraction layer that enables models to run on the full dataset, 
-and you can output models to SQL with a single command.
+Reliably modeling behavior of users and groups is enabled through configurable 
+:doc:`Identity Resolution <./identity-resolution>`.
 
-If you want to use the open model hub, install the package from PyPI as follows:
+See the :ref:`example notebooks <example_notebooks>` to get started immediately, and install the package 
+directly from PyPI:
 
 .. code-block:: console
 
     pip install objectiv-modelhub
 
 
-See the :ref:`example notebooks <example_notebooks>` section to get started immediately. 
+Powered by Bach
+~~~~~~~~~~~~~~~
+The open model hub is powered by :ref:`Bach <bach>`: Objectiv's data modeling library. With Bach, you can 
+compose models with familiar Pandas-like dataframe operations in your notebook, which use an SQL abstraction 
+layer to run on the full dataset. Models can be output to SQL with a single command.
 
-View the list of available models :ref:`here <models>` or check out the full
-:ref:`open model hub API reference <open_model_hub_api_reference>`. 
-
-More information on setting up a development environment for the open model hub in the `readme <https://github.com/objectiv/objectiv-analytics/tree/main/modelhub>`_.
 
 .. toctree::
     :maxdepth: 7
     :hidden:
     
     identity-resolution
-    version-check
+    Models <models/index>
     API reference <api-reference/index>
+    version-check
