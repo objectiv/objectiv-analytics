@@ -53,6 +53,6 @@ for identity resolution. This triggers the following flow:
 method);
 2. Sessions are assigned to the new identity, with any parallel sessions (e.g. same user logged in on 
 multiple devices) remaining intact;
-3. Sessions for users that do not have a new identity are either left alone, or they can be fully anonymised. 
+3. Sessions for users that do not have a new identity are either left alone, or they can be fully anonymized. 
 This behavior can be specified in the :py:meth:`get_objectiv_dataframe <ModelHub.get_objectiv_dataframe>` 
 call.
