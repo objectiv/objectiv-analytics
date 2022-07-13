@@ -1124,8 +1124,8 @@ class DataFrame:
         :param if_exists: {'fail', 'replace'}. How to behave if the table already exists:
 
             * fail: Raise an Exception.
-            * replace: Drop the table before inserting new values. All data in that table will be lost! Make 
-              \ sure that `table_name` does not contain any valuable information. Additionally, make sure 
+            * replace: Drop the table before inserting new values. All data in that table will be lost! Make
+              \ sure that `table_name` does not contain any valuable information. Additionally, make sure
               \ that it is not a source table of this DataFrame.
 
         :raises Exception: If if_exists='fail'' and the table already exists. The exact exception depends on
