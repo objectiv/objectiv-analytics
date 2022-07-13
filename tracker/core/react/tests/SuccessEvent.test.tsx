@@ -2,10 +2,19 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { LocationContextName, makeContentContext, makeSuccessEvent, Tracker } from '@objectiv/tracker-core';
+import { ApplicationContextPlugin } from '@objectiv/plugin-application-context';
+import {
+  EventName,
+  GlobalContextName,
+  LocationContextName,
+  makeContentContext,
+  makeInputValueContext,
+  makeSuccessEvent,
+  Tracker,
+} from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
-import { TrackingContextProvider, trackSuccessEvent, useSuccessEventTracker } from '../src';
+import { ContentContextWrapper, TrackingContextProvider, trackSuccessEvent, useSuccessEventTracker } from '../src';
 
 describe('SuccessEvent', () => {
   beforeEach(() => {
@@ -35,7 +44,7 @@ describe('SuccessEvent', () => {
     const tracker = new Tracker({ applicationId: 'app-id', transport: LogTransport });
 
     const Component = () => {
-      const trackSuccessEvent = useSuccessEventTracker();
+      const trackSuccessEvent = useSuccessEventTracker({ globalContexts: [] });
       trackSuccessEvent({ message: 'ok' });
 
       return <>Component triggering SuccessEvent</>;
@@ -49,6 +58,150 @@ describe('SuccessEvent', () => {
 
     expect(LogTransport.handle).toHaveBeenCalledTimes(1);
     expect(LogTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: 'SuccessEvent' }));
+  });
+
+  it('should track a SuccessEvent (hook with custom location stack)', () => {
+    const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
+    const tracker = new Tracker({ applicationId: 'app-id', transport: LogTransport });
+
+    const Component = () => {
+      const trackSuccessEvent = useSuccessEventTracker();
+      trackSuccessEvent({
+        message: 'ok',
+        locationStack: [makeContentContext({ id: 'extra' })],
+      });
+
+      return <>Component triggering SuccessEvent</>;
+    };
+
+    render(
+      <TrackingContextProvider tracker={tracker}>
+        <ContentContextWrapper id={'wrapper'}>
+          <Component />
+        </ContentContextWrapper>
+      </TrackingContextProvider>
+    );
+
+    expect(LogTransport.handle).toHaveBeenCalledTimes(1);
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: EventName.SuccessEvent,
+        location_stack: [
+          expect.objectContaining({
+            _type: LocationContextName.ContentContext,
+            id: 'wrapper',
+          }),
+          expect.objectContaining({
+            _type: LocationContextName.ContentContext,
+            id: 'extra',
+          }),
+        ],
+      })
+    );
+  });
+
+  it('should track a SuccessEvent (hook with custom global context)', () => {
+    const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
+    const tracker = new Tracker({
+      applicationId: 'app-id',
+      transport: LogTransport,
+      plugins: [new ApplicationContextPlugin()],
+    });
+
+    const Component = () => {
+      const trackSuccessEvent = useSuccessEventTracker();
+      trackSuccessEvent({
+        message: 'ok',
+        globalContexts: [
+          makeInputValueContext({
+            id: 'test',
+            value: 'test-value',
+          }),
+        ],
+      });
+
+      return <>Component triggering SuccessEvent</>;
+    };
+
+    render(
+      <TrackingContextProvider tracker={tracker}>
+        <Component />
+      </TrackingContextProvider>
+    );
+
+    expect(LogTransport.handle).toHaveBeenCalledTimes(1);
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: EventName.SuccessEvent,
+        global_contexts: [
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'test',
+            value: 'test-value',
+          }),
+          expect.objectContaining({ _type: GlobalContextName.ApplicationContext }),
+        ],
+      })
+    );
+  });
+
+  it('should track a SuccessEvent (hook with custom options)', () => {
+    const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
+    const tracker = new Tracker({
+      applicationId: 'app-id',
+      transport: LogTransport,
+      plugins: [new ApplicationContextPlugin()],
+    });
+
+    const Component = () => {
+      const trackSuccessEvent = useSuccessEventTracker();
+      trackSuccessEvent({
+        message: 'ok',
+        options: {
+          waitForQueue: true,
+        },
+      });
+
+      return <>Component triggering SuccessEvent</>;
+    };
+
+    render(
+      <TrackingContextProvider tracker={tracker}>
+        <Component />
+      </TrackingContextProvider>
+    );
+
+    expect(LogTransport.handle).toHaveBeenCalledTimes(1);
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: EventName.SuccessEvent }));
+  });
+
+  it('should track a SuccessEvent (hook with custom options at construction)', () => {
+    const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
+    const tracker = new Tracker({
+      applicationId: 'app-id',
+      transport: LogTransport,
+      plugins: [new ApplicationContextPlugin()],
+    });
+
+    const Component = () => {
+      const trackSuccessEvent = useSuccessEventTracker({ options: { waitForQueue: true } });
+      trackSuccessEvent({
+        message: 'ok',
+      });
+
+      return <>Component triggering SuccessEvent</>;
+    };
+
+    render(
+      <TrackingContextProvider tracker={tracker}>
+        <Component />
+      </TrackingContextProvider>
+    );
+
+    expect(LogTransport.handle).toHaveBeenCalledTimes(1);
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(1, expect.objectContaining({ _type: EventName.SuccessEvent }));
   });
 
   it('should track a SuccessEvent (hook with custom tracker)', () => {

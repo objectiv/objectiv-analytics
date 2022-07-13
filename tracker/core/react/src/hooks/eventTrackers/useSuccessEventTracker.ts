@@ -11,8 +11,19 @@ import { useTracker } from '../consumers/useTracker';
  * Returns a SuccessEvent Tracker callback function, ready to be triggered.
  */
 export const useSuccessEventTracker = (parameters: EventTrackerHookParameters = {}) => {
-  const { tracker = useTracker(), locationStack = useLocationStack(), globalContexts } = parameters;
+  const { tracker = useTracker(), locationStack = useLocationStack(), globalContexts = [], options } = parameters;
 
-  return ({ message }: Pick<SuccessEventTrackerParameters, 'message'>) =>
-    trackSuccessEvent({ message, tracker, locationStack, globalContexts });
+  return ({
+    message,
+    locationStack: extraLocationStack = [],
+    globalContexts: extraGlobalContexts = [],
+    options: extraOptions,
+  }: Omit<SuccessEventTrackerParameters, 'tracker'>) =>
+    trackSuccessEvent({
+      message,
+      tracker,
+      options: options || extraOptions ? { ...(options ?? {}), ...(extraOptions ?? {}) } : undefined,
+      locationStack: [...locationStack, ...extraLocationStack],
+      globalContexts: [...globalContexts, ...extraGlobalContexts],
+    });
 };
