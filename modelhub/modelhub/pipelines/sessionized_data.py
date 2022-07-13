@@ -7,11 +7,11 @@ from typing import Dict, Optional
 import bach
 from sqlalchemy.engine import Engine
 
-from modelhub.stack.util import (
+from modelhub.util import (
     ObjectivSupportedColumns, get_supported_dtypes_per_objectiv_column, check_objectiv_dataframe
 )
-from modelhub.stack.base_pipeline import BaseDataPipeline
-from modelhub.stack.extracted_contexts import get_extracted_contexts_df, ExtractedContextsPipeline
+from modelhub.pipelines.base_pipeline import BaseDataPipeline
+from modelhub.pipelines.extracted_contexts import get_extracted_contexts_df, ExtractedContextsPipeline
 
 
 class _BaseCalculatedSessionSeries(Enum):

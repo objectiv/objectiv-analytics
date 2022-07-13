@@ -12,8 +12,8 @@ from modelhub import (
     ExtractedContextsPipeline,
     SessionizedDataPipeline
 )
-from modelhub.stack.base_pipeline import BaseDataPipeline
-from modelhub.stack.util import ObjectivSupportedColumns, get_supported_dtypes_per_objectiv_column
+from modelhub.pipelines.base_pipeline import BaseDataPipeline
+from modelhub.util import ObjectivSupportedColumns, get_supported_dtypes_per_objectiv_column
 
 
 class IdentityResolutionPipeline(BaseDataPipeline):

@@ -11,7 +11,7 @@ import pandas as pd
 import pytest
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
-from modelhub.stack.identity_resolution import IdentityResolutionPipeline
+from modelhub.pipelines.identity_resolution import IdentityResolutionPipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params
 
 
@@ -105,13 +105,13 @@ def test_get_pipeline_result_w_sessionized_data(pipeline: IdentityResolutionPipe
     context_df['global_contexts'] = context_df['global_contexts'].astype('json')
 
     monkeypatch.setattr(
-        'modelhub.stack.identity_resolution.get_extracted_contexts_df',
+        'modelhub.pipelines.identity_resolution.get_extracted_contexts_df',
         lambda *args, **kwargs: context_df,
     )
 
     # patch final validation as we are not including all objectiv columns in tests
     monkeypatch.setattr(
-        'modelhub.stack.sessionized_data.SessionizedDataPipeline.validate_pipeline_result',
+        'modelhub.pipelines.sessionized_data.SessionizedDataPipeline.validate_pipeline_result',
         lambda *args, **kwargs: None,
     )
 
@@ -182,7 +182,7 @@ def test_get_pipeline_result_wo_sessionized_data(pipeline: IdentityResolutionPip
     context_df['global_contexts'] = context_df['global_contexts'].astype('json')
 
     monkeypatch.setattr(
-        'modelhub.stack.identity_resolution.get_extracted_contexts_df',
+        'modelhub.pipelines.identity_resolution.get_extracted_contexts_df',
         lambda *args, **kwargs: context_df,
     )
 

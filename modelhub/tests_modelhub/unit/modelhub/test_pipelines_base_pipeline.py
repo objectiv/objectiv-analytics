@@ -3,7 +3,7 @@ Copyright 2022 Objectiv B.V.
 """
 import pytest
 
-from modelhub.stack.base_pipeline import BaseDataPipeline
+from modelhub.pipelines.base_pipeline import BaseDataPipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params
 
 

@@ -11,7 +11,7 @@ from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 from modelhub import SessionizedDataPipeline, get_sessionized_data
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data
-from tests_modelhub.functional.modelhub.test_stack_extracted_contexts import get_expected_context_pandas_df
+from tests_modelhub.functional.modelhub.test_pipelines_extracted_contexts import get_expected_context_pandas_df
 
 _SESSION_GAP_SECONDS = 180
 
@@ -79,7 +79,7 @@ def test_get_pipeline_result(db_params, monkeypatch) -> None:
     context_df['event_id'] = context_df['event_id'].astype('uuid')
 
     monkeypatch.setattr(
-        'modelhub.stack.sessionized_data.get_extracted_contexts_df',
+        'modelhub.pipelines.sessionized_data.get_extracted_contexts_df',
         lambda *args, **kwargs: context_df,
     )
 
