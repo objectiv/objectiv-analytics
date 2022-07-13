@@ -37,10 +37,12 @@ class IdentityResolutionPipeline(BaseDataPipeline):
 
     IDENTITY_FORMAT = "({}) || '|' || ({})"
 
+    def __init__(self, identity_id: Optional[str] = None):
+        self._identity_id = identity_id
+
     def _get_pipeline_result(
         self,
         extracted_contexts_df: Optional[bach.DataFrame] = None,
-        identity_id: Optional[str] = None,
         **kwargs,
     ) -> bach.DataFrame:
         """
@@ -68,7 +70,7 @@ class IdentityResolutionPipeline(BaseDataPipeline):
         context_df[ObjectivSupportedColumns.USER_ID.value] = (
             context_df[ObjectivSupportedColumns.USER_ID.value].astype(bach.SeriesString.dtype)
         )
-        identity_context_df = self._extract_identities_from_global_contexts(context_df, identity_id)
+        identity_context_df = self._extract_identities_from_global_contexts(context_df)
 
         context_df = self._resolve_original_user_ids(context_df, identity_context_df)
         return self._convert_dtypes(df=context_df)
@@ -127,15 +129,13 @@ class IdentityResolutionPipeline(BaseDataPipeline):
             current_dtypes=df.dtypes,
         )
 
-    def _extract_identities_from_global_contexts(
-        self, df: bach.DataFrame, identity_id: Optional[str] = None,
-    ) -> bach.DataFrame:
+    def _extract_identities_from_global_contexts(self, df: bach.DataFrame) -> bach.DataFrame:
         """
         Generates a dataframe containing the last encountered unique identity per user_id.
         This is performed by:
             1. Extract the first IdentityContext where `id` value matches the provided identity_id param value
-                from the event's global_contexts. If `identity_id` is None, then the first IdentityContext
-                found will be used instead.
+                from the event's global_contexts. If `self._identity_id` is None, then the
+                first IdentityContext found will be used instead.
             2. Drop rows where events have no IdentityContext
             3. Create the new user id based on the IdentityContext's id and name.
                 Follows the following format:
@@ -157,8 +157,8 @@ class IdentityResolutionPipeline(BaseDataPipeline):
 
         # Extract first identity context for the event
         identity_slice_filter = {'_type': 'IdentityContext'}
-        if identity_id:
-            identity_slice_filter['id'] = identity_id
+        if self._identity_id is not None:
+            identity_slice_filter['id'] = self._identity_id
 
         gc_array_slice = slice(identity_slice_filter, None)
         identity_context_df['identity_context_series'] = global_context_series.json[gc_array_slice].json[0]

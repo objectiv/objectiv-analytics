@@ -27,7 +27,9 @@ def get_objectiv_data(
         :param end_date: end_date to filter data from ExtractedContextsPipeline
         :param with_sessionized_data: If true, SessionizedDataPipeline will be applied on
             ExtractedContextsPipeline (or IdentityResolutionPipeline) result.
-        :param session_gap_seconds: Amount of seconds to be used by SessionizedDataPipeline
+        :param session_gap_seconds: :param session_gap_seconds: Maximum time between two consecutive
+            events from the same user, for thee vents to be considered part of the same session.
+            This is used by SessionizedDataPipeline, thus only relevant if `with_sessionized_data=True`.
         :param identity_resolution: If value provided, IdentityResolutionPipeline will be applied
             on ExtractedContextsPipeline result
         :param anonymize_unidentified_users: If True, unidentified user_ids will be set to NULL.
@@ -41,16 +43,13 @@ def get_objectiv_data(
 
     contexts_pipeline = ExtractedContextsPipeline(engine=engine, table_name=table_name)
     sessionized_pipeline = SessionizedDataPipeline(session_gap_seconds=session_gap_seconds)
-    identity_pipeline = IdentityResolutionPipeline()
+    identity_pipeline = IdentityResolutionPipeline(identity_id=identity_resolution)
 
     data = contexts_pipeline(start_date=start_date, end_date=end_date)
 
     # resolve user ids
     if identity_resolution:
-        data = identity_pipeline(
-            extracted_contexts_df=data,
-            identity_id=identity_resolution,
-        )
+        data = identity_pipeline(extracted_contexts_df=data)
 
     # calculate sessionized data from events
     if with_sessionized_data:

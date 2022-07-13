@@ -131,9 +131,10 @@ class ModelHub:
         :param session_gap_seconds: Amount of seconds to be use for identifying if events were triggered
             or not during the same session.
         :param identity_resolution: Identity id to be used for identifying users based on IdentityContext.
-            If no value is provided, original user_id values (UUIDs) will remain.
-        :param anonymize_unidentified_users: Indicates if unidentified users are required to be anonymize
-            by setting user_id value to NULL. Otherwise, original UUID value will remain.
+            If no value is provided, then the user_id series will contain the value from
+            the cookie_id column (a UUID).
+        :param anonymize_unidentified_users: Indicates if unidentified users are required to be anonymized
+            by setting user_id value to NULL. Otherwise, original UUID value from the cookie will remain.
 
         :returns: :py:class:`bach.DataFrame` with Objectiv data.
 

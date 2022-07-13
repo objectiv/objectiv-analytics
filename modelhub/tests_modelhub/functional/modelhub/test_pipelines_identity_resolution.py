@@ -171,9 +171,8 @@ def test_extract_identities_from_global_contexts(db_params, pipeline: IdentityRe
     )
 
 
-def test_extract_identities_from_global_contexts_w_identity_id(
-    db_params, pipeline: IdentityResolutionPipeline,
-) -> None:
+def test_extract_identities_from_global_contexts_w_identity_id(db_params) -> None:
+    pipeline = IdentityResolutionPipeline(identity_id='username')
     engine = create_engine_from_db_params(db_params)
 
     pdf = pd.DataFrame(_FAKE_DATA)
@@ -185,7 +184,7 @@ def test_extract_identities_from_global_contexts_w_identity_id(
     ).reset_index(drop=True)
     context_df['global_contexts'] = context_df['global_contexts'].astype('json')
 
-    result = pipeline._extract_identities_from_global_contexts(context_df, identity_id='username')
+    result = pipeline._extract_identities_from_global_contexts(context_df)
 
     assert_equals_data(
         result,
