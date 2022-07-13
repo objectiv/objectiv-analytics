@@ -16,7 +16,17 @@ export type ApplicationLoadedEventTrackerHookParameters = EventTrackerHookParame
  * Returns an ApplicationLoadedEvent Tracker callback function, ready to be triggered.
  */
 export const useApplicationLoadedEventTracker = (parameters: ApplicationLoadedEventTrackerHookParameters = {}) => {
-  const { tracker = useTracker(), locationStack = useLocationStack(), globalContexts } = parameters;
+  const { tracker = useTracker(), locationStack = useLocationStack(), globalContexts = [], options } = parameters;
 
-  return () => trackApplicationLoadedEvent({ tracker, locationStack, globalContexts });
+  return ({
+    locationStack: extraLocationStack = [],
+    globalContexts: extraGlobalContexts = [],
+    options: extraOptions,
+  }: Omit<ApplicationLoadedEventTrackerHookParameters, 'tracker'> = {}) =>
+    trackApplicationLoadedEvent({
+      tracker,
+      options: options || extraOptions ? { ...(options ?? {}), ...(extraOptions ?? {}) } : undefined,
+      locationStack: [...locationStack, ...extraLocationStack],
+      globalContexts: [...globalContexts, ...extraGlobalContexts],
+    });
 };
