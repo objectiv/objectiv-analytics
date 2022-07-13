@@ -97,7 +97,9 @@ class ExtractedContextsPipeline(BaseDataPipeline):
     }
 
     def __init__(self, engine: Engine, table_name: str):
-        super().__init__(engine, table_name)
+        super().__init__()
+        self._engine = engine
+        self._table_name = table_name
         self._taxonomy_column = _get_taxonomy_column_definition(engine)
 
         # check if table has all required columns for pipeline
@@ -234,7 +236,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
         return df_cp
 
     @classmethod
-    def validate_pipeline_result(cls, result: bach.DataFrame, **kwargs) -> None:
+    def validate_pipeline_result(cls, result: bach.DataFrame) -> None:
         """
         Checks if we are returning ALL expected context series with proper dtype.
         """
@@ -271,18 +273,24 @@ class ExtractedContextsPipeline(BaseDataPipeline):
 
 
 def get_extracted_contexts_df(
-    engine: Engine, table_name: str, set_index=True, **kwargs
+    engine: Engine,
+    table_name: str,
+    set_index=True,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
 ) -> bach.DataFrame:
     """
     Gets extracted context from pipeline.
     :param engine: db connection
     :param table_name: table from where to extract data
     :param set_index: set index series for final dataframe
+    :param start_date: start_date to filter data
+    :param end_date: end_date to filter data
 
     returns a bach DataFrame
     """
     pipeline = ExtractedContextsPipeline(engine=engine, table_name=table_name)
-    result = pipeline(**kwargs)
+    result = pipeline(start_date=start_date, end_date=end_date)
     if set_index:
         result = result.set_index(keys=ObjectivSupportedColumns.get_index_columns())
 

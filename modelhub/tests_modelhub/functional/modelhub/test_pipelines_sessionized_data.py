@@ -55,15 +55,13 @@ _FAKE_SESSIONIZED_DATA = [
 ]
 
 
-def _get_sessionized_data_pipeline(db_params) -> SessionizedDataPipeline:
+def _get_sessionized_data_pipeline() -> SessionizedDataPipeline:
+    return SessionizedDataPipeline(session_gap_seconds=_SESSION_GAP_SECONDS)
+
+
+def test_get_pipeline_result(db_params) -> None:
+    pipeline = _get_sessionized_data_pipeline()
     engine = create_engine_from_db_params(db_params)
-    return SessionizedDataPipeline(engine=engine, table_name=db_params.table_name,
-                                   session_gap_seconds=_SESSION_GAP_SECONDS)
-
-
-def test_get_pipeline_result(db_params, monkeypatch) -> None:
-    pipeline = _get_sessionized_data_pipeline(db_params)
-    engine = pipeline._engine
     pdf = pd.DataFrame(get_parsed_objectiv_data(engine))[['event_id', 'cookie_id', 'moment']]
     pdf = pdf.rename(columns={'cookie_id': 'user_id'})
 
@@ -78,12 +76,9 @@ def test_get_pipeline_result(db_params, monkeypatch) -> None:
     context_df['user_id'] = context_df['user_id'].astype('uuid')
     context_df['event_id'] = context_df['event_id'].astype('uuid')
 
-    monkeypatch.setattr(
-        'modelhub.pipelines.sessionized_data.get_extracted_contexts_df',
-        lambda *args, **kwargs: context_df,
+    result = pipeline._get_pipeline_result(
+        extracted_contexts_df=context_df, session_gap_seconds=_SESSION_GAP_SECONDS,
     )
-
-    result = pipeline._get_pipeline_result(session_gap_seconds=_SESSION_GAP_SECONDS)
 
     assert_equals_data(
         result,
@@ -117,8 +112,8 @@ def test_get_pipeline_result(db_params, monkeypatch) -> None:
 
 
 def test_calculate_session_start(db_params) -> None:
-    pipeline = _get_sessionized_data_pipeline(db_params)
-    engine = pipeline._engine
+    pipeline = _get_sessionized_data_pipeline()
+    engine = create_engine_from_db_params(db_params)
 
     context_pdf = pd.DataFrame(_FAKE_SESSIONIZED_DATA)
     context_pdf = context_pdf[['user_id', 'event_id', 'moment']]
@@ -140,8 +135,8 @@ def test_calculate_session_start(db_params) -> None:
 
 
 def test_calculate_session_start_id(db_params) -> None:
-    pipeline = _get_sessionized_data_pipeline(db_params)
-    engine = pipeline._engine
+    pipeline = _get_sessionized_data_pipeline()
+    engine = create_engine_from_db_params(db_params)
     context_pdf_w_session_start = pd.DataFrame(_FAKE_SESSIONIZED_DATA)
     context_df_w_session_start = bach.DataFrame.from_pandas(
         engine=engine, df=context_pdf_w_session_start, convert_objects=True,
@@ -164,8 +159,8 @@ def test_calculate_session_start_id(db_params) -> None:
 
 
 def test_calculate_session_count(db_params) -> None:
-    pipeline = _get_sessionized_data_pipeline(db_params)
-    engine = pipeline._engine
+    pipeline = _get_sessionized_data_pipeline()
+    engine = create_engine_from_db_params(db_params)
     context_pdf_w_session_start = pd.DataFrame(_FAKE_SESSIONIZED_DATA)
     context_df_w_session_start = bach.DataFrame.from_pandas(
         engine=engine, df=context_pdf_w_session_start, convert_objects=True,
@@ -187,8 +182,8 @@ def test_calculate_session_count(db_params) -> None:
 
 
 def test_calculate_base_session_series(db_params) -> None:
-    pipeline = _get_sessionized_data_pipeline(db_params)
-    engine = pipeline._engine
+    pipeline = _get_sessionized_data_pipeline()
+    engine = create_engine_from_db_params(db_params)
     context_pdf = pd.DataFrame(_FAKE_SESSIONIZED_DATA)
     context_pdf = context_pdf[['user_id', 'event_id', 'moment']]
     context_df = bach.DataFrame.from_pandas(
@@ -216,8 +211,8 @@ def test_calculate_base_session_series(db_params) -> None:
 
 
 def test_calculate_objectiv_session_series(db_params) -> None:
-    pipeline = _get_sessionized_data_pipeline(db_params)
-    engine = pipeline._engine
+    pipeline = _get_sessionized_data_pipeline()
+    engine = create_engine_from_db_params(db_params)
     context_pdf = pd.DataFrame(_FAKE_SESSIONIZED_DATA)
     context_pdf['session_start_id'] = pd.Series([1, None, 2, 3, 4, None])
     context_pdf['is_one_session'] = pd.Series([1, 1, 2, 3, 4, 4])
@@ -253,20 +248,31 @@ def test_calculate_objectiv_session_series(db_params) -> None:
     )
 
 
-def test_get_sessionized_data_df(db_params) -> None:
-    engine = create_engine_from_db_params(db_params)
+def test_get_sessionized_data_df(db_params, monkeypatch) -> None:
+    monkeypatch.setattr(
+        'modelhub.pipelines.sessionized_data.SessionizedDataPipeline._validate_extracted_context_df',
+        lambda *args, **kwargs: None,
+    )
 
-    result = get_sessionized_data(engine=engine, table_name=db_params.table_name,
-                                  session_gap_seconds=_SESSION_GAP_SECONDS)
+    engine = create_engine_from_db_params(db_params)
+    contexts_pdf = get_expected_context_pandas_df(engine)
+    contexts_pdf = contexts_pdf[['event_id', 'user_id', 'moment']]
+    contexts_pdf['user_id'] = contexts_pdf['user_id'].astype(str)
+    contexts_pdf['event_id'] = contexts_pdf['event_id'].astype(str)
+
+    contexts_df = bach.DataFrame.from_pandas(engine, df=contexts_pdf, convert_objects=True)
+
+    result = get_sessionized_data(extracted_contexts_df=contexts_df, session_gap_seconds=_SESSION_GAP_SECONDS)
     result = result.sort_index()
 
-    expected = get_expected_context_pandas_df(engine)
+    expected = contexts_pdf.copy()
     expected['session_id'] = pd.Series([3, 3, 3, 2, 4, 4, 5, 5, 6, 7, 1, 1])
     expected['session_hit_number'] = pd.Series([1, 2, 3, 1, 1, 2, 1, 2, 1, 1, 1, 2])
     expected = expected.set_index('event_id')
     pd.testing.assert_frame_equal(expected, result.to_pandas())
 
-    result = get_sessionized_data(engine=engine, table_name=db_params.table_name,
-                                  session_gap_seconds=_SESSION_GAP_SECONDS, set_index=False)
+    result = get_sessionized_data(
+        extracted_contexts_df=contexts_df, session_gap_seconds=_SESSION_GAP_SECONDS, set_index=False,
+    )
     assert 'event_id' not in result.index
     assert 'event_id' in result.data

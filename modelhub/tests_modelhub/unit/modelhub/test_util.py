@@ -22,7 +22,8 @@ def test_get_supported_types_per_objectiv_column() -> None:
         'event_type': 'string',
         'stack_event_types': 'json',
         'session_id': 'int64',
-        'session_hit_number': 'int64'
+        'session_hit_number': 'int64',
+        'identity_user_id': 'string',
     }
 
     assert expected == result

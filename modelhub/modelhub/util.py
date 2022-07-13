@@ -22,6 +22,8 @@ class ObjectivSupportedColumns(Enum):
     SESSION_ID = 'session_id'
     SESSION_HIT_NUMBER = 'session_hit_number'
 
+    IDENTITY_USER_ID = 'identity_user_id'
+
     _DATA_SERIES = (
         DAY, MOMENT, USER_ID, GLOBAL_CONTEXTS, LOCATION_STACK, EVENT_TYPE,
         STACK_EVENT_TYPES, SESSION_ID, SESSION_HIT_NUMBER,
@@ -70,6 +72,8 @@ _OBJECTIV_SUPPORTED_COLUMNS_X_SERIES_DTYPE = {
     ObjectivSupportedColumns.STACK_EVENT_TYPES: bach.SeriesJson.dtype,
     ObjectivSupportedColumns.SESSION_ID: bach.SeriesInt64.dtype,
     ObjectivSupportedColumns.SESSION_HIT_NUMBER: bach.SeriesInt64.dtype,
+
+    ObjectivSupportedColumns.IDENTITY_USER_ID: bach.SeriesString.dtype,
 }
 
 # mapping for series names and modelhub series dtypes

@@ -127,18 +127,22 @@ class ModelHub:
         :returns: :py:class:`bach.DataFrame` with Objectiv data.
         """
         engine = self._get_db_engine(db_url=db_url, bq_credentials_path=bq_credentials_path)
-        from modelhub.pipelines import get_sessionized_data
+        from modelhub.pipelines import get_sessionized_data, get_extracted_contexts_df
         if table_name is None:
             if is_bigquery(engine):
                 table_name = 'events'
             else:
                 table_name = 'data'
 
-        data = get_sessionized_data(
+        data = get_extracted_contexts_df(
             engine=engine,
+            table_name=table_name,
             start_date=start_date,
             end_date=end_date,
-            table_name=table_name,
+            set_index=False,
+        )
+        data = get_sessionized_data(
+            extracted_contexts_df=data,
             session_gap_seconds=SESSION_GAP_DEFAULT_SECONDS,
         )
 
