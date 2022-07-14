@@ -3,12 +3,14 @@
  */
 
 import { ApplicationContextPlugin } from '@objectiv/plugin-application-context';
+import { PathContextFromURLPlugin } from '@objectiv/plugin-path-context-from-url';
 import {
   EventName,
   GlobalContextName,
   LocationContextName,
   makeContentContext,
   makeInputValueContext,
+  makeRootLocationContext,
   makeSuccessEvent,
   Tracker,
 } from '@objectiv/tracker-core';
@@ -245,6 +247,71 @@ describe('SuccessEvent', () => {
         })
       ),
       undefined
+    );
+  });
+
+  it('should track a SuccessEvent (hook with both its options and more options in the callback)', () => {
+    const LogTransport = { transportName: 'LogTransport', handle: jest.fn(), isUsable: () => true };
+    const tracker = new Tracker({
+      applicationId: 'app-id',
+      transport: LogTransport,
+      plugins: [new ApplicationContextPlugin(), new PathContextFromURLPlugin()],
+      location_stack: [makeRootLocationContext({ id: 'root' })],
+    });
+
+    const Component = () => {
+      const trackSuccessEvent = useSuccessEventTracker({
+        locationStack: [
+          makeContentContext({ id: 'virtual-content-location-1' }),
+          makeContentContext({ id: 'virtual-content-location-2' }),
+        ],
+        globalContexts: [
+          makeInputValueContext({ id: 'test-input-value-1', value: 'a' }),
+          makeInputValueContext({ id: 'test-input-value-2', value: 'b' }),
+        ],
+      });
+      trackSuccessEvent({
+        message: 'ok',
+        locationStack: [
+          makeContentContext({ id: 'virtual-content-location-3' }),
+          makeContentContext({ id: 'virtual-content-location-4' }),
+        ],
+        globalContexts: [
+          makeInputValueContext({ id: 'test-input-value-3', value: 'c' }),
+          makeInputValueContext({ id: 'test-input-value-4', value: 'd' }),
+        ],
+      });
+
+      return <>Component triggering SuccessEvent</>;
+    };
+
+    render(
+      <TrackingContextProvider tracker={tracker}>
+        <Component />
+      </TrackingContextProvider>
+    );
+
+    expect(LogTransport.handle).toHaveBeenCalledTimes(1);
+    expect(LogTransport.handle).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        _type: EventName.SuccessEvent,
+        global_contexts: [
+          expect.objectContaining({ _type: GlobalContextName.InputValueContext, id: 'test-input-value-1', value: 'a' }),
+          expect.objectContaining({ _type: GlobalContextName.InputValueContext, id: 'test-input-value-2', value: 'b' }),
+          expect.objectContaining({ _type: GlobalContextName.InputValueContext, id: 'test-input-value-3', value: 'c' }),
+          expect.objectContaining({ _type: GlobalContextName.InputValueContext, id: 'test-input-value-4', value: 'd' }),
+          expect.objectContaining({ _type: GlobalContextName.ApplicationContext }),
+          expect.objectContaining({ _type: GlobalContextName.PathContext }),
+        ],
+        location_stack: [
+          expect.objectContaining({ _type: LocationContextName.RootLocationContext, id: 'root' }),
+          expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'virtual-content-location-1' }),
+          expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'virtual-content-location-2' }),
+          expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'virtual-content-location-3' }),
+          expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'virtual-content-location-4' }),
+        ],
+      })
     );
   });
 });
