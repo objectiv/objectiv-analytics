@@ -21,7 +21,9 @@ from bach.sql_model import BachSqlModel
 
 from bach.types import StructuredDtype, Dtype, validate_instance_dtype, DtypeOrAlias,\
     AllSupportedLiteralTypes, value_to_series_type
-from bach.utils import is_valid_column_name, validate_node_column_references_in_sorting_expressions, SortColumn
+from bach.utils import (
+    is_valid_column_name, validate_node_column_references_in_sorting_expressions, SortColumn
+)
 from sql_models.constants import NotSet, not_set, DBDialect
 from sql_models.model import Materialization
 from sql_models.util import is_bigquery, DatabaseNotSupportedException
@@ -864,28 +866,38 @@ class Series(ABC):
 
         return result
 
-    def sort_values(self, *, ascending=True, by_series: Optional[List['Series']] = None):
+    def sort_values(self, *, ascending=True):
         """
         Sort this Series by its values.
         Returns a new instance and does not actually modify the instance it is called on.
 
         :param ascending: Whether to sort ascending (True) or descending (False)
-        :param by_series: Apply sorting based on expressions from other series that share same
-            base node as caller
         """
-        if by_series and any(series.base_node != self.base_node for series in by_series):
-            raise ValueError('All series provided as keys must have the same base_node as caller.')
-
-        if by_series is not None:
-            order_by = [
-                SortColumn(expression=series.expression, asc=ascending)
-                for series in by_series
-            ]
-            return self.copy_override(order_by=order_by)
-
         if self._sorted_ascending is not None and self._sorted_ascending == ascending:
             return self
         return self.copy_override(sorted_ascending=ascending)
+
+    def sort_by_series(self, by: List['Series'], ascending: Union[bool, List[bool]] = True):
+        """
+        Sort this Series by other Series that have the same base node as the caller.
+        Returns a new instance and does not actually modify the instance it is called on.
+
+        :param by:  list of Series to sort by.
+        :param ascending: Whether to sort ascending (True) or descending (False)
+        """
+        if any(series.base_node != self.base_node for series in by):
+            raise ValueError('All series provided as keys must have the same base_node as caller.')
+
+        if isinstance(ascending, bool):
+            ascending = [ascending] * len(by)
+        if len(by) != len(ascending):
+            raise ValueError(f'Length of ascending ({len(ascending)}) != length of by ({len(by)})')
+
+        order_by = [
+            SortColumn(expression=series.expression, asc=asc)
+            for series, asc in zip(by, ascending)
+        ]
+        return self.copy_override(order_by=order_by)
 
     def sort_index(self: T, *, ascending: Union[List[bool], bool] = True) -> T:
         """

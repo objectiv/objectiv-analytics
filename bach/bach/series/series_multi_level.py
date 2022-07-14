@@ -59,7 +59,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
         sorted_ascending: Optional[Union[bool, NotSet]] = not_set,
         index_sorting: Optional[List[bool]] = None,
         instance_dtype: Optional[StructuredDtype] = None,
-        sorting_keys: Optional[Union[List[SortColumn], NotSet]] = not_set,
+        order_by: Optional[List[SortColumn]] = None,
         **kwargs,
     ) -> T:
         """
@@ -79,7 +79,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
             sorted_ascending=sorted_ascending,
             index_sorting=index_sorting,
             instance_dtype=instance_dtype,
-            sorting_keys=sorting_keys,
+            order_by=order_by,
             **extra_params
         ))
 

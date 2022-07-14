@@ -16,7 +16,9 @@ from bach.expression import Expression, SingleValueExpression, VariableToken
 from bach.from_database import get_dtypes_from_table, get_dtypes_from_model
 from bach.sql_model import BachSqlModel, CurrentNodeSqlModel, get_variable_values_sql
 from bach.types import get_series_type_from_dtype, AllSupportedLiteralTypes, StructuredDtype
-from bach.utils import escape_parameter_characters, validate_node_column_references_in_sorting_expressions, SortColumn
+from bach.utils import (
+    escape_parameter_characters, validate_node_column_references_in_sorting_expressions, SortColumn
+)
 from sql_models.constants import NotSet, not_set
 from sql_models.graph_operations import update_placeholders_in_graph, get_all_placeholders
 from sql_models.model import SqlModel, Materialization, CustomSqlModelBuilder, RefPath
