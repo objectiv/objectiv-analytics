@@ -107,6 +107,8 @@ def test_min_max_scale() -> None:
     numerical_cols = ['skating_order', 'inhabitants', 'founding']
     all_cols = ['city'] + numerical_cols
     bt = get_bt_with_test_data(full_data_set=True)[all_cols]
+    # bt = bt.sort_index()  # TODO: This breaks later on, it shouldn't.
+                            #  Required to make this test deterministicly pass/fail
     pdf = bt.to_pandas()
 
     min_so = 1

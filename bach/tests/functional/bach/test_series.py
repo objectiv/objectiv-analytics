@@ -713,8 +713,8 @@ def test__set_item_with_merge_index_level_error(engine) -> None:
         bt['inhabitants'] + bt2['inhabitants']
 
 
-def test__set_item_with_merge_different_dtypes() -> None:
-    bt = get_bt_with_test_data(full_data_set=False)
+def test__set_item_with_merge_different_dtypes(engine) -> None:
+    bt = get_df_with_test_data(engine, full_data_set=False)
 
     bt2 = bt.copy()
     bt2._index[bt2.index_columns[0]] = bt2.index[bt2.index_columns[0]].astype(str)
