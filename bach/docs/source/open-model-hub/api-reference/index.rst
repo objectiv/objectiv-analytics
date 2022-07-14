@@ -2,7 +2,7 @@
 
 .. currentmodule:: modelhub
 
-.. frontmatterposition:: 3
+.. frontmatterposition:: 4
 
 =============
 API reference

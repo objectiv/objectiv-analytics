@@ -12,6 +12,7 @@ from sqlalchemy.engine import Engine
 from bach import DataFrame
 from sql_models.model import CustomSqlModelBuilder, SqlModel
 from sql_models.util import is_postgres, is_bigquery
+from tests.functional.bach.test_data_and_utils import assert_equals_data
 
 
 def _create_test_table(engine: Engine, table_name: str):
@@ -156,3 +157,59 @@ def test_from_model_column_ordering(pg_engine):
         all_dtypes={'a': 'int64', 'b': 'string', 'c': 'float64', 'd': 'date', 'e': 'timestamp', 'f': 'bool'}
     )
     assert df == df_all_dtypes
+
+
+@pytest.mark.skip_postgres
+def test_big_query_from_other_project(engine):
+    # Test specifically for BigQuery, whether DataFrame.from_table() works on a table in a different project.
+
+    # The selected table is part of Google's BigQuery public datasets.
+    # The table in question is about 8 mb, and should never change in size, but still we won't query it to
+    # make sure that CI doesn't accidentally incur big costs.
+    full_table_name = 'bigquery-public-data.google_analytics_sample.ga_sessions_20170101'
+    df = DataFrame.from_table(engine=engine, table_name=full_table_name, index=['visitId'])
+
+    assert df.index_columns == ['visitId']
+    assert df.index_dtypes == {'visitId': 'int64'}
+    expected_dtypes = {
+        'visitorId': 'int64',
+        'visitNumber': 'int64',
+        'visitStartTime': 'int64',
+        'date': 'string',
+        'totals': 'dict',
+        'trafficSource': 'dict',
+        'device': 'dict',
+        'geoNetwork': 'dict',
+        'customDimensions': 'list',
+        'hits': 'list',
+        'fullVisitorId': 'string',
+        'userId': 'string',
+        'channelGrouping': 'string',
+        'socialEngagementType': 'string',
+    }
+    assert df.dtypes == expected_dtypes
+    # In this case it's interesting to actually query the table, to verify that that works to across
+    # projects.
+    # The table is 8 MB in size. At $5 per TB for querying. Running this test 25000 times will cost $1. It
+    # seems pretty safe to assume that the table does not magically get bigger, as we'll check the number of
+    # rows below.
+
+    # Add a column with the total row count of the table
+    df['count'] = df.reset_index()['visitId'].count()
+    # subselection of interesting columns
+    column_selection = ['count', 'visitorId', 'visitNumber', 'visitStartTime', 'date', 'customDimensions',
+                        'fullVisitorId', 'userId', 'channelGrouping', 'socialEngagementType']
+    df = df[column_selection]
+    df = df.sort_index()
+    df = df[0:2]  # 2 rows is plenty
+
+    expected_columns = ['visitId'] + column_selection
+    expected_data = [
+        [1483257208, 1364, None, 1, 1483257623, '20170101', [{'index': 4, 'value': 'APAC'}], '0736364053634014627', None, 'Direct', 'Not Socially Engaged'],
+        [1483257533, 1364, None, 2, 1483257729, '20170101', [{'index': 4, 'value': 'North America'}], '0014884852016449602', None, 'Referral', 'Not Socially Engaged']
+    ]
+    assert_equals_data(
+        df,
+        expected_columns=expected_columns,
+        expected_data=expected_data
+    )

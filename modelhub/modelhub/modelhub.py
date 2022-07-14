@@ -97,12 +97,16 @@ class ModelHub:
 
     def get_objectiv_dataframe(
         self,
+        *,
         db_url: str = None,
         table_name: str = None,
         start_date: str = None,
         end_date: str = None,
-        *,
         bq_credentials_path: Optional[str] = None,
+        with_sessionized_data: bool = True,
+        session_gap_seconds: int = SESSION_GAP_DEFAULT_SECONDS,
+        identity_resolution: Optional[str] = None,
+        anonymize_unidentified_users: bool = True,
     ):
         """
         Sets data from sql table into an :py:class:`bach.DataFrame` object.
@@ -120,29 +124,44 @@ class ModelHub:
             the first date in the sql table. Format as 'YYYY-MM-DD'.
         :param end_date: last date for which data is loaded to the DataFrame. If None, data is loaded up to
             and including the last date in the sql table. Format as 'YYYY-MM-DD'.
-
         :param bq_credentials_path: path for BigQuery credentials. If db_url is for BigQuery engine, this
             parameter is required.
+        :param with_sessionized_data: Indicates if DataFrame must include `session_id`
+            and `session_hit_number` calculated series.
+        :param session_gap_seconds: Amount of seconds to be use for identifying if events were triggered
+            or not during the same session.
+        :param identity_resolution: Identity id to be used for identifying users based on IdentityContext.
+            If no value is provided, then the user_id series will contain the value from
+            the cookie_id column (a UUID).
+        :param anonymize_unidentified_users: Indicates if unidentified users are required to be anonymized
+            by setting user_id value to NULL. Otherwise, original UUID value from the cookie will remain.
 
         :returns: :py:class:`bach.DataFrame` with Objectiv data.
+
+        .. note::
+            If `with_sessionized_data` is True, Objectiv data will include `session_id` (int64)
+                and `session_hit_number` (int64) series.
         """
         engine = self._get_db_engine(db_url=db_url, bq_credentials_path=bq_credentials_path)
-        from modelhub.stack import get_sessionized_data
+        from modelhub.pipelines.util import get_objectiv_data
         if table_name is None:
             if is_bigquery(engine):
                 table_name = 'events'
             else:
                 table_name = 'data'
 
-        data = get_sessionized_data(
+        data = get_objectiv_data(
             engine=engine,
+            table_name=table_name,
             start_date=start_date,
             end_date=end_date,
-            table_name=table_name,
-            session_gap_seconds=SESSION_GAP_DEFAULT_SECONDS,
+            with_sessionized_data=with_sessionized_data,
+            session_gap_seconds=session_gap_seconds,
+            identity_resolution=identity_resolution,
+            anonymize_unidentified_users=anonymize_unidentified_users,
         )
 
-        # sessionized data returns both series as bach.SeriesJson.
+        # get_objectiv_data returns both series as bach.SeriesJson.
         data['global_contexts'] = data.global_contexts.astype('objectiv_global_context')
         data['location_stack'] = data.location_stack.astype('objectiv_location_stack')
         return data

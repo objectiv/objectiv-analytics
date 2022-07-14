@@ -5,14 +5,14 @@ import bach
 import pandas as pd
 import pytest
 
-from modelhub.stack.identity_resolution import IdentityResolutionPipeline
+from modelhub.pipelines.identity_resolution import IdentityResolutionPipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params
 
 
 def test_convert_dtypes(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
 
-    pipeline = IdentityResolutionPipeline(engine, db_params.table_name)
+    pipeline = IdentityResolutionPipeline()
 
     pdf = pd.DataFrame({'user_id': ['1']})
     df = bach.DataFrame.from_pandas(
@@ -29,8 +29,6 @@ def test_convert_dtypes(db_params) -> None:
 def test_anonymize_user_ids_without_identity(db_params) -> None:
     engine = create_engine_from_db_params(db_params)
 
-    pipeline = IdentityResolutionPipeline(engine, db_params.table_name)
-
     pdf = pd.DataFrame({'user_id': ['1']})
     df = bach.DataFrame.from_pandas(
         engine=engine,
@@ -39,4 +37,4 @@ def test_anonymize_user_ids_without_identity(db_params) -> None:
     ).reset_index(drop=True)
 
     with pytest.raises(Exception, match=r'Cannot anonymize'):
-        pipeline._anonymize_user_ids_without_identity(df)
+        IdentityResolutionPipeline.anonymize_user_ids_without_identity(df)

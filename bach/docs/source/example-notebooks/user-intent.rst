@@ -45,7 +45,9 @@ The root_location context in the location_stack uniquely represents the top-leve
 
 .. code-block:: python
 
-    modelhub.aggregate.unique_users(df, groupby=['application', 'root_location']).head(10)
+    # model hub: unique users per application and root location
+    users_root = modelhub.aggregate.unique_users(df, groupby=['application', 'root_location'])
+    users_root.sort_index().head(10)
 
 Exploring session duration
 --------------------------
@@ -53,7 +55,9 @@ The average `session_duration` model from the `open model hub </docs/modeling/op
 
 .. code-block:: python
 
-    modelhub.aggregate.session_duration(df, groupby=['application', 'root_location']).sort_index().head()
+    # model hub: duration, per application and root location
+    duration_root = modelhub.aggregate.session_duration(df, groupby=['application', 'root_location']).sort_index()
+    duration_root.head(10)
 
 Now, we can look at the distribution of time spent. We used the Bach quantile operation for this. We'll use this distribution to define the different stages of user intent.
 

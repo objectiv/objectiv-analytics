@@ -3,6 +3,7 @@
  */
 
 import { TagLocationOptions } from '../../definitions/TagLocationOptions';
+import { isTrackBlursAttribute } from './isTrackBlursAttribute';
 import { isTrackClicksAttribute } from './isTrackClicksAttribute';
 import { isTrackVisibilityAttribute } from './isTrackVisibilityAttribute';
 import { isValidateAttribute } from './isValidateAttribute';
@@ -19,7 +20,7 @@ export const isTagLocationOptions = (object: Partial<TagLocationOptions>): objec
     return false;
   }
 
-  if (object.trackBlurs !== undefined && object.trackBlurs !== true && object.trackBlurs !== false) {
+  if (object.trackBlurs !== undefined && !isTrackBlursAttribute(object.trackBlurs)) {
     return false;
   }
 

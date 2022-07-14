@@ -10,7 +10,7 @@ import pytest
 from sql_models.util import is_bigquery
 from tests.functional.bach.test_data_and_utils import assert_equals_data
 
-from modelhub import ExtractedContextsPipeline, get_extracted_contexts_df
+from modelhub import ExtractedContextsPipeline
 from tests_modelhub.data_and_utils.utils import create_engine_from_db_params, get_parsed_objectiv_data
 
 _EXPECTED_CONTEXT_COLUMNS = [
@@ -246,17 +246,4 @@ def test_apply_date_filter(db_params) -> None:
     expected = pdf[start_mask & end_mask].reset_index(drop=True)
 
     pd.testing.assert_frame_equal(expected, result.to_pandas(), check_index_type=False)
-
-
-def test_get_extracted_contexts_df(db_params) -> None:
-    engine = create_engine_from_db_params(db_params)
-
-    result = get_extracted_contexts_df(engine=engine, table_name=db_params.table_name)
-    result = result.sort_index()
-    expected = get_expected_context_pandas_df(engine).set_index('event_id')
-    pd.testing.assert_frame_equal(expected, result.to_pandas())
-
-    result = get_extracted_contexts_df(engine=engine, table_name=db_params.table_name, set_index=False)
-    assert 'event_id' not in result.index
-    assert 'event_id' in result.data
 
