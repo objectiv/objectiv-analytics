@@ -262,4 +262,4 @@ class SeriesDescribeOperation(DescribeOperation[Series]):
     """
     def _get_final_described_result(self, describe_df: DataFrame) -> Series:
         describe_series = describe_df[self.df.data_columns[0]]
-        return describe_series.sort_values(keys=[describe_df[f'{self.STAT_SERIES_NAME}_position']])
+        return describe_series.sort_by_series(by=[describe_df[f'{self.STAT_SERIES_NAME}_position']])
