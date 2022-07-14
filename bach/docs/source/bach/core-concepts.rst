@@ -65,16 +65,16 @@ BigQuery Tips
     .. code-block:: console
 
         table_name = 'objectiv-production.writable_dataset.table_name'
-        df.get_sample(table_name, sample_percentage=10, overwrite=True)
+        df.get_sample(table_name, sample_percentage=10)
 
-    It creates a permanent table, and if the table exists it overwrites it (make sure you have a write access). For BigQuery `seed` parameter is not implemented.
+    It creates a permanent table, so make sure you have a write access.
 
 3. Using temporary tables to limit query complexity
     Sometimes complex operations on Bach cannot be executed on BigQuery and you might get an error:
 
         Resources exceeded during query execution: Not enough resources for query planning - too many subqueries or query is too complex.
 
-    So, if the underlying SQL query is complex for your data and you still need to apply other operations, in order to avoid the query to become too complex one has to first materialize the current DataFrame as a temporary table:
+    So, if the underlying SQL query is complex for your data and you still need to apply other operations, in order to avoid the query to become too complex and get the error mentioned above one has to (before getting the error) materialize the current DataFrame as a temporary table:
 
     .. code-block:: console
 
