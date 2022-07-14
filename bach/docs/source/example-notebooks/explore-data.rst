@@ -12,12 +12,13 @@ In this example, we briefly demonstrate how you can easily explore your new data
 
 This example is also available in a `notebook
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/explore-your-data.ipynb>`_
-to run on your own data or use our
-`quickstart <https://objectiv.io/docs/home/quickstart-guide/>`_ to try it out with demo data in 5 minutes.
+to run on your own data or use our `quickstart <https://objectiv.io/docs/home/quickstart-guide/>`_ to try it 
+out with demo data in 5 minutes.
 
-At first we have to install the open model hub and instantiate the Objectiv DataFrame object. See
-:ref:`getting_started_with_objectiv` for more info on this. The data used in this example is
-based on the data set that comes with our quickstart docker demo.
+First we have to install the open model hub and instantiate the Objectiv DataFrame object; see
+:doc:`getting started in your notebook <../get-started-in-your-notebook>`.
+
+The data used in this example is based on the data set that comes with our quickstart docker demo.
 
 
 A first look at the data

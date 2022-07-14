@@ -9,21 +9,18 @@ Open model hub basics
 =====================
 
 In this example, we briefly demonstrate how you can use pre-built models from the open model hub in
-conjunction with, :ref:`Bach <bach>`, our modeling library.
+conjunction with, :ref:`Bach <bach>`, our modeling library. It's also available in a `notebook
+<https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/model-hub-demo-notebook.ipynb>`_
+to run on your own data or use our `quickstart <https://objectiv.io/docs/home/quickstart-guide/>`_ to try it 
+out with demo data in 5 minutes.
 
 This example uses real, unaltered data that was collected from https://objectiv.io with Objectiv’s Tracker. All models
 in the open model hub are compatible with data sets that have been validated against the
 `open analytics taxonomy
 <https://objectiv.io/docs/taxonomy/>`_.
 
-This example is also available in a `notebook
-<https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/model-hub-demo-notebook.ipynb>`_
-to run on your own data or use our
-`quickstart
-<https://objectiv.io/docs/home/quickstart-guide/>`_ to try it out with demo data in 5 minutes.
-
-At first we have to install the open model hub and instantiate the Objectiv DataFrame object. See
-:ref:`getting_started_with_objectiv` for more info on this.
+First we have to install the open model hub and instantiate the Objectiv DataFrame object; see
+:doc:`getting started in your notebook <../get-started-in-your-notebook>`.
 
 Using the open model hub
 ------------------------

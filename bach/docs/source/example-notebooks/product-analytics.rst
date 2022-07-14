@@ -8,19 +8,16 @@
 Basic product analytics
 =======================
 
-This example shows how the open model hub can be used for basic product analytics.
+This example shows how the open model hub can be used for basic product analytics. It's also available in a 
+`notebook <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/basic-product-analytics.ipynb>`_
+to run on your own data, or use our `quickstart <https://objectiv.io/docs/home/quickstart-guide/>`_ to try it 
+out with demo data in 5 minutes.
 
-This example is also available in a `notebook
-<https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/basic-product-analytics.ipynb>`_
-to run on your own data or use our
-`quickstart
-<https://objectiv.io/docs/home/quickstart-guide/>`_ to try it out with demo data in 5 minutes.
+First we have to install the open model hub and instantiate the Objectiv DataFrame object; see
+:doc:`getting started in your notebook <../get-started-in-your-notebook>`.
 
-At first we have to install the open model hub and instantiate the Objectiv DataFrame object. See
-:ref:`getting_started_with_objectiv` for more info on this. The data used in this example is
-based on the data set that comes with our quickstart docker demo.
-
-First we look at the data.
+The data used in this example is based on the data set that comes with our quickstart docker demo. Let's have 
+a look:
 
 .. code-block:: python
 
