@@ -2,32 +2,14 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { Optional } from '@objectiv/tracker-core';
 import { trackApplicationLoadedEvent } from '../../eventTrackers/trackApplicationLoadedEvent';
-import { EventTrackerHookParameters } from '../../types';
-import { useLocationStack } from '../consumers/useLocationStack';
-import { useTracker } from '../consumers/useTracker';
-
-/**
- * The parameters of useApplicationLoadedEventTracker. No extra attributes, same as EventTrackerHookParameters.
- */
-export type ApplicationLoadedEventTrackerHookParameters = EventTrackerHookParameters;
+import { EventTrackerHookCallbackParameters, EventTrackerHookParameters } from '../../types';
+import { useMergeEventTrackerHookAndCallbackParameters } from './useMergeEventTrackerHookAndCallbackParameters';
 
 /**
  * Returns an ApplicationLoadedEvent Tracker callback function, ready to be triggered.
  */
-export const useApplicationLoadedEventTracker = (parameters: ApplicationLoadedEventTrackerHookParameters = {}) => {
-  const { tracker = useTracker(), locationStack = useLocationStack(), globalContexts = [], options } = parameters;
-
-  return ({
-    locationStack: extraLocationStack = [],
-    globalContexts: extraGlobalContexts = [],
-    options: extraOptions,
-  }: Optional<ApplicationLoadedEventTrackerHookParameters, 'tracker'> = {}) =>
-    trackApplicationLoadedEvent({
-      tracker,
-      options: options || extraOptions ? { ...(options ?? {}), ...(extraOptions ?? {}) } : undefined,
-      locationStack: [...locationStack, ...extraLocationStack],
-      globalContexts: [...globalContexts, ...extraGlobalContexts],
-    });
-};
+export const useApplicationLoadedEventTracker =
+  (hookParameters: EventTrackerHookParameters = {}) =>
+  (callbackParameters: EventTrackerHookCallbackParameters = {}) =>
+    trackApplicationLoadedEvent(useMergeEventTrackerHookAndCallbackParameters(hookParameters, callbackParameters));

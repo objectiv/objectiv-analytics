@@ -264,7 +264,11 @@ describe('trackApplicationLoaded', () => {
       1,
       expect.objectContaining(
         makeApplicationLoadedEvent({
-          location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'override' })],
+          location_stack: [
+            expect.objectContaining({ _type: location1._type, id: location1.id }),
+            expect.objectContaining({ _type: location2._type, id: location2.id }),
+            expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'override' })
+          ],
         })
       ),
       undefined

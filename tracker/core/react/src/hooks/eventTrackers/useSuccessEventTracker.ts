@@ -5,26 +5,15 @@
 import { Optional } from '@objectiv/tracker-core';
 import { SuccessEventTrackerParameters, trackSuccessEvent } from '../../eventTrackers/trackSuccessEvent';
 import { EventTrackerHookParameters } from '../../types';
-import { useLocationStack } from '../consumers/useLocationStack';
-import { useTracker } from '../consumers/useTracker';
+import { useMergeEventTrackerHookAndCallbackParameters } from './useMergeEventTrackerHookAndCallbackParameters';
 
 /**
  * Returns a SuccessEvent Tracker callback function, ready to be triggered.
  */
-export const useSuccessEventTracker = (parameters: EventTrackerHookParameters = {}) => {
-  const { tracker = useTracker(), locationStack = useLocationStack(), globalContexts = [], options } = parameters;
-
-  return ({
-    message,
-    locationStack: extraLocationStack = [],
-    globalContexts: extraGlobalContexts = [],
-    options: extraOptions,
-  }: Optional<SuccessEventTrackerParameters, 'tracker'>) =>
+export const useSuccessEventTracker =
+  (hookParameters: EventTrackerHookParameters = {}) =>
+  ({ message, ...callbackParameters }: Optional<SuccessEventTrackerParameters, 'tracker'>) =>
     trackSuccessEvent({
       message,
-      tracker,
-      options: options || extraOptions ? { ...(options ?? {}), ...(extraOptions ?? {}) } : undefined,
-      locationStack: [...locationStack, ...extraLocationStack],
-      globalContexts: [...globalContexts, ...extraGlobalContexts],
+      ...useMergeEventTrackerHookAndCallbackParameters(hookParameters, callbackParameters),
     });
-};

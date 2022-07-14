@@ -45,6 +45,7 @@ export * from './hooks/eventTrackers/useMediaLoadEventTracker';
 export * from './hooks/eventTrackers/useMediaPauseEventTracker';
 export * from './hooks/eventTrackers/useMediaStartEventTracker';
 export * from './hooks/eventTrackers/useMediaStopEventTracker';
+export * from './hooks/eventTrackers/useMergeEventTrackerHookAndCallbackParameters';
 export * from './hooks/eventTrackers/useNonInteractiveEventTracker';
 export * from './hooks/eventTrackers/usePressEventTracker';
 export * from './hooks/eventTrackers/useSuccessEventTracker';
