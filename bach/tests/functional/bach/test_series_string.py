@@ -131,3 +131,18 @@ def test_string_replace(engine) -> None:
             expected_data[idx].append(m.replace(pat, '_'))
 
     assert_equals_data(result_df, expected_columns=expected_columns, expected_data=expected_data)
+
+
+def test_to_json_array(engine):
+    df = get_df_with_test_data(engine)
+    series_json_array = df['municipality'].to_json_array()
+    print(series_json_array.view_sql())
+    assert series_json_array.dtype == 'json'
+    assert_equals_data(
+        series_json_array,
+        use_to_pandas=True,
+        expected_columns=['municipality'],
+        # single row, single cell, with a list of strings in that cell
+        expected_data=[[['Leeuwarden', 'Súdwest-Fryslân', 'Súdwest-Fryslân']]]
+    )
+    print(series_json_array.view_sql())
