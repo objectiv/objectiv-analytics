@@ -302,15 +302,21 @@ def test_merge_right_join(engine):
     )
 
 
-def test_merge_right_join_shared_on() -> None:
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
+def test_merge_right_join_shared_on(engine) -> None:
+    bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city']]
     bt['station'] = None
+    # TODO: next two steps shouldn't be manual
+    bt['station'] = bt['station'].astype('int64').astype('string')
+    bt = bt.materialize()
+
     bt = bt.reset_index(drop=True)
 
-    mt = get_bt_with_railway_data()[['station', 'platforms']]
+    mt = get_df_with_railway_data(engine)[['station', 'platforms']]
     mt = mt.reset_index(drop=True)
 
     result = bt.merge(mt, how='right', on='station')
+    result = result.sort_values('station')
+    print(result.view_sql())
     assert_equals_data(
         result,
         expected_columns=[
@@ -320,11 +326,11 @@ def test_merge_right_join_shared_on() -> None:
             'platforms',
         ],
         expected_data=[
-            [None, None, 'IJlst', 1],
+            [None, None, 'Camminghaburen', 1],
             [None, None, 'Heerenveen', 1],
             [None, None, 'Heerenveen IJsstadion', 2],
+            [None, None, 'IJlst', 1],
             [None, None, 'Leeuwarden', 4],
-            [None, None, 'Camminghaburen', 1],
             [None, None, 'Sneek', 2],
             [None, None, 'Sneek Noord', 2],
         ],
