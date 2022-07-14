@@ -9,7 +9,7 @@ import { ApplicationContextPlugin } from '../src';
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
-const coreTracker = new Tracker({ applicationId: 'app-id' });
+const coreTracker = new Tracker({ applicationId: 'app-id', plugins: [new ApplicationContextPlugin()] });
 
 describe('ApplicationContextPlugin', () => {
   beforeEach(() => {

@@ -241,6 +241,9 @@ def test_code_deduplication_multiple_instances(dialect):
     assert sql.count('one.val + two.val') == 2
 
 
+# be explicit as this is also a performance test: max 1 sec runtime.
+# But conftests.py should already define limit for all unittests.
+@pytest.mark.timeout(1)
 def test_code_deduplication_multiple_reference_many_paths(dialect):
     # Similar to test_code_deduplication_multiple_reference above, but with a generated graph with a lot
     # more possible references paths
@@ -259,3 +262,4 @@ def test_code_deduplication_multiple_reference_many_paths(dialect):
     assert sql
     assert sql.count('select 1 as val') == 1
     assert sql.count('one.val + two.val') == depth
+    assert len(sql) < 6000  # If for any database we generate sql bigger than this, something might be wrong

@@ -21,7 +21,6 @@ describe('HttpContextPlugin - node', () => {
       new Tracker({
         applicationId: 'app-id',
         plugins: [new HttpContextPlugin()],
-        trackApplicationContext: false,
       })
     );
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
@@ -56,7 +55,6 @@ describe('HttpContextPlugin - node', () => {
         new Tracker({
           applicationId: 'app-id',
           plugins: [],
-          trackApplicationContext: false,
         })
       );
       expect(MockConsoleImplementation.error).not.toHaveBeenCalled();

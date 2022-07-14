@@ -26,7 +26,7 @@ A first look at the data
 .. code-block:: python
 
     # have a look at the data
-    df.sort_values('session_id', ascending=False).head()
+    df.sort_values(['session_id', 'session_hit_number'], ascending=False).head()
 
 Understanding the columns
 -------------------------

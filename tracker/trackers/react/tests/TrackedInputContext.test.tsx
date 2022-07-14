@@ -3,7 +3,7 @@
  */
 
 import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
-import { LocationContextName } from '@objectiv/tracker-core';
+import { GlobalContextName, LocationContextName } from '@objectiv/tracker-core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React, { createRef } from 'react';
 import { ObjectivProvider, ReactTracker, TrackedDiv, TrackedInputContext, TrackedRootLocationContext } from '../src';
@@ -168,6 +168,62 @@ describe('TrackedInputContext', () => {
           expect.objectContaining({
             _type: LocationContextName.InputContext,
             id: 'input-id',
+          }),
+        ]),
+        global_contexts: expect.not.arrayContaining([
+          expect.objectContaining({
+            _type: GlobalContextName.ApplicationContext,
+          }),
+          expect.objectContaining({
+            _type: GlobalContextName.PathContext,
+          }),
+          expect.objectContaining({
+            _type: GlobalContextName.HttpContext,
+          }),
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'input-id',
+            value: 'some new text',
+          }),
+        ]),
+      })
+    );
+  });
+
+  it('should allow tracking InputValueContext when an InputChangeEvent triggers', () => {
+    const logTransport = new LogTransport();
+    jest.spyOn(logTransport, 'handle');
+    const tracker = new ReactTracker({ applicationId: 'app-id', transport: logTransport });
+
+    render(
+      <ObjectivProvider tracker={tracker}>
+        <TrackedInputContext
+          Component={'input'}
+          type={'text'}
+          id={'input-id'}
+          defaultValue={'some text'}
+          data-testid={'test-input'}
+          trackValue={true}
+        />
+      </ObjectivProvider>
+    );
+
+    fireEvent.blur(screen.getByTestId('test-input'), { target: { value: 'some new text' } });
+
+    expect(logTransport.handle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _type: 'InputChangeEvent',
+        location_stack: expect.arrayContaining([
+          expect.objectContaining({
+            _type: LocationContextName.InputContext,
+            id: 'input-id',
+          }),
+        ]),
+        global_contexts: expect.arrayContaining([
+          expect.objectContaining({
+            _type: GlobalContextName.InputValueContext,
+            id: 'input-id',
+            value: 'some new text',
           }),
         ]),
       })

@@ -69,7 +69,7 @@ class CookieIdContext(AbstractGlobalContext):
 
         Attributes:
         cookie_id (str):
-                Unique identifier from the session cookie
+                Unique identifier from the session cookie.
         id (str):
                 A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
@@ -79,7 +79,7 @@ class CookieIdContext(AbstractGlobalContext):
     def __init__(self, cookie_id: str, id: str, **kwargs: Optional[Any]):
         """
         :param cookie_id: 
-            Unique identifier from the session cookie
+            Unique identifier from the session cookie.
         :param id: 
             A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
@@ -130,6 +130,50 @@ class HttpContext(AbstractGlobalContext):
                                        **kwargs)
 
 
+class InputValueContext(AbstractGlobalContext):
+    """
+        A GlobalContext containing the value of a single input element. Multiple can be present.
+
+        Attributes:
+        value (str):
+                The value of the input element.
+        id (str):
+                A unique string identifier to be combined with the Context Type (`_type`)
+                for Context instance uniqueness.
+    """
+    _type = 'InputValueContext'
+
+    def __init__(self, value: str, id: str, **kwargs: Optional[Any]):
+        """
+        :param value: 
+            The value of the input element.
+        :param id: 
+            A unique string identifier to be combined with the Context Type (`_type`)
+            for Context instance uniqueness.
+        """
+        AbstractGlobalContext.__init__(self, value=value, id=id, **kwargs)
+
+
+class LocaleContext(AbstractGlobalContext):
+    """
+        A GlobalContext describing the locale used by the user. E.g. an ISO 639-1 code.
+
+        Attributes:
+        id (str):
+                A unique string identifier to be combined with the Context Type (`_type`)
+                for Context instance uniqueness.
+    """
+    _type = 'LocaleContext'
+
+    def __init__(self, id: str, **kwargs: Optional[Any]):
+        """
+        :param id: 
+            A unique string identifier to be combined with the Context Type (`_type`)
+            for Context instance uniqueness.
+        """
+        AbstractGlobalContext.__init__(self, id=id, **kwargs)
+
+
 class PathContext(AbstractGlobalContext):
     """
         A GlobalContext describing the path where the user is when an event is sent.
@@ -178,19 +222,19 @@ class SessionContext(AbstractGlobalContext):
 class MarketingContext(AbstractGlobalContext):
     """
         a context that captures marketing channel info, so users can do attribution, campaign
-    effectiveness and other models
+    effectiveness and other models.
 
         Attributes:
         source (str):
-                Identifies the advertiser, site, publication, etc
+                Identifies the advertiser, site, publication, etc.
         medium (str):
-                Advertising or marketing medium: cpc, banner, email newsletter, etc
+                Advertising or marketing medium: cpc, banner, email newsletter, etc.
         campaign (str):
-                Individual campaign name, slogan, promo code, etc
+                Individual campaign name, slogan, promo code, etc.
         term (str):
-                [Optional] Search keywords
+                [Optional] Search keywords.
         content (str):
-                [Optional] Used to differentiate similar content, or links within the same ad
+                [Optional] Used to differentiate similar content, or links within the same ad.
         source_platform (str):
                 [Optional] To differentiate similar content, or links within the same ad.
         creative_format (str):
@@ -216,15 +260,15 @@ class MarketingContext(AbstractGlobalContext):
                  **kwargs: Optional[Any]):
         """
         :param source: 
-            Identifies the advertiser, site, publication, etc
+            Identifies the advertiser, site, publication, etc.
         :param medium: 
-            Advertising or marketing medium: cpc, banner, email newsletter, etc
+            Advertising or marketing medium: cpc, banner, email newsletter, etc.
         :param campaign: 
-            Individual campaign name, slogan, promo code, etc
+            Individual campaign name, slogan, promo code, etc.
         :param term: 
-            [Optional] Search keywords
+            [Optional] Search keywords.
         :param content: 
-            [Optional] Used to differentiate similar content, or links within the same ad
+            [Optional] Used to differentiate similar content, or links within the same ad.
         :param source_platform: 
             [Optional] To differentiate similar content, or links within the same ad.
         :param creative_format: 
@@ -251,30 +295,33 @@ class MarketingContext(AbstractGlobalContext):
 class IdentityContext(AbstractGlobalContext):
     """
         A Global Context to track the identity of users across sessions, platforms, devices. Multiple can be present.
+    The `id` field is used to specify the scope of identification e.g. backend, md5(email), supplier_cookie, etc.
+    The `value` field should contain the unique identifier within that scope.
 
         Attributes:
-        name (str):
-                The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`
+        value (str):
+                The unique identifier for this user/group/entity within the scope defined by `id`.
         id (str):
                 A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
     """
     _type = 'IdentityContext'
 
-    def __init__(self, name: str, id: str, **kwargs: Optional[Any]):
+    def __init__(self, value: str, id: str, **kwargs: Optional[Any]):
         """
-        :param name: 
-            The identity source, e.g. backend, authentication, email, etc. Possibly with hashing method, e.g. `md5(email)`
+        :param value: 
+            The unique identifier for this user/group/entity within the scope defined by `id`.
         :param id: 
             A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
         """
-        AbstractGlobalContext.__init__(self, name=name, id=id, **kwargs)
+        AbstractGlobalContext.__init__(self, value=value, id=id, **kwargs)
 
 
 class AbstractLocationContext(AbstractContext, ABC):
     """
-        AbstractLocationContext are the abstract parents of all Location Contexts. Location Contexts are meant to describe where an event originated from in the visual UI.
+        AbstractLocationContext are the abstract parents of all Location Contexts.
+    Location Contexts are meant to describe where an event originated from in the visual UI.
 
         Attributes:
         id (str):
@@ -340,7 +387,6 @@ class LinkContext(PressableContext):
         Attributes:
         href (str):
                 URL (href) the link points to.
-
         id (str):
                 A unique string identifier to be combined with the Context Type (`_type`)
                 for Context instance uniqueness.
@@ -351,7 +397,6 @@ class LinkContext(PressableContext):
         """
         :param href: 
             URL (href) the link points to.
-
         :param id: 
             A unique string identifier to be combined with the Context Type (`_type`)
             for Context instance uniqueness.
@@ -362,8 +407,6 @@ class LinkContext(PressableContext):
 class RootLocationContext(AbstractLocationContext):
     """
         A Location Context that uniquely represents the top-level UI location of the user.
-
-
 
         Attributes:
         id (str):
@@ -385,8 +428,6 @@ class ExpandableContext(AbstractLocationContext):
     """
         A Location Context that describes a section of the UI that can expand & collapse.
 
-
-
         Attributes:
         id (str):
                 A unique string identifier to be combined with the Context Type (`_type`)
@@ -406,8 +447,6 @@ class ExpandableContext(AbstractLocationContext):
 class MediaPlayerContext(AbstractLocationContext):
     """
         A Location Context that describes a section of the UI containing a media player.
-
-
 
         Attributes:
         id (str):
@@ -429,8 +468,6 @@ class NavigationContext(AbstractLocationContext):
     """
         A Location Context that describes a section of the UI containing navigational elements, for example a menu.
 
-
-
         Attributes:
         id (str):
                 A unique string identifier to be combined with the Context Type (`_type`)
@@ -451,8 +488,6 @@ class OverlayContext(AbstractLocationContext):
     """
         A Location Context that describes a section of the UI that represents an overlay, i.e. a Modal.
 
-    .
-
         Attributes:
         id (str):
                 A unique string identifier to be combined with the Context Type (`_type`)
@@ -471,7 +506,8 @@ class OverlayContext(AbstractLocationContext):
 
 class ContentContext(AbstractLocationContext):
     """
-        A Location Context that describes a logical section of the UI that contains other Location Contexts. Enabling Data Science to analyze this section specifically.
+        A Location Context that describes a logical section of the UI that contains other Location Contexts.
+    Enabling Data Science to analyze this section specifically.
 
         Attributes:
         id (str):
@@ -498,7 +534,6 @@ class AbstractEvent(SchemaEntity, ABC):
                 The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
                 deterministically describes where an event took place from global to specific.
                 The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         global_contexts (List[AbstractGlobalContext]):
                 Global contexts add global / general information about the event. They carry information that is not
                 related to where the Event originated (location), such as device, platform or business data.
@@ -507,7 +542,7 @@ class AbstractEvent(SchemaEntity, ABC):
                 implementing this. On the collector side, events should be unique, this means duplicate id's result
                 in `not ok` events.
         time (int):
-                Timestamp indicating when the event was generated
+                Timestamp indicating when the event was generated.
     """
     _type = 'AbstractEvent'
 
@@ -522,7 +557,6 @@ class AbstractEvent(SchemaEntity, ABC):
             The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
             deterministically describes where an event took place from global to specific.
             The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         :param global_contexts: 
             Global contexts add global / general information about the event. They carry information that is not
             related to where the Event originated (location), such as device, platform or business data.
@@ -531,7 +565,7 @@ class AbstractEvent(SchemaEntity, ABC):
             implementing this. On the collector side, events should be unique, this means duplicate id's result
             in `not ok` events.
         :param time: 
-            Timestamp indicating when the event was generated
+            Timestamp indicating when the event was generated.
         """
         SchemaEntity.__init__(self,
                               location_stack=location_stack,
@@ -550,7 +584,6 @@ class InteractiveEvent(AbstractEvent):
                 The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
                 deterministically describes where an event took place from global to specific.
                 The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         global_contexts (List[AbstractGlobalContext]):
                 Global contexts add global / general information about the event. They carry information that is not
                 related to where the Event originated (location), such as device, platform or business data.
@@ -559,7 +592,7 @@ class InteractiveEvent(AbstractEvent):
                 implementing this. On the collector side, events should be unique, this means duplicate id's result
                 in `not ok` events.
         time (int):
-                Timestamp indicating when the event was generated
+                Timestamp indicating when the event was generated.
     """
     _type = 'InteractiveEvent'
 
@@ -574,7 +607,6 @@ class InteractiveEvent(AbstractEvent):
             The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
             deterministically describes where an event took place from global to specific.
             The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         :param global_contexts: 
             Global contexts add global / general information about the event. They carry information that is not
             related to where the Event originated (location), such as device, platform or business data.
@@ -583,7 +615,7 @@ class InteractiveEvent(AbstractEvent):
             implementing this. On the collector side, events should be unique, this means duplicate id's result
             in `not ok` events.
         :param time: 
-            Timestamp indicating when the event was generated
+            Timestamp indicating when the event was generated.
         """
         AbstractEvent.__init__(self,
                                location_stack=location_stack,
@@ -602,7 +634,6 @@ class NonInteractiveEvent(AbstractEvent):
                 The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
                 deterministically describes where an event took place from global to specific.
                 The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         global_contexts (List[AbstractGlobalContext]):
                 Global contexts add global / general information about the event. They carry information that is not
                 related to where the Event originated (location), such as device, platform or business data.
@@ -611,7 +642,7 @@ class NonInteractiveEvent(AbstractEvent):
                 implementing this. On the collector side, events should be unique, this means duplicate id's result
                 in `not ok` events.
         time (int):
-                Timestamp indicating when the event was generated
+                Timestamp indicating when the event was generated.
     """
     _type = 'NonInteractiveEvent'
 
@@ -626,7 +657,6 @@ class NonInteractiveEvent(AbstractEvent):
             The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
             deterministically describes where an event took place from global to specific.
             The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         :param global_contexts: 
             Global contexts add global / general information about the event. They carry information that is not
             related to where the Event originated (location), such as device, platform or business data.
@@ -635,7 +665,7 @@ class NonInteractiveEvent(AbstractEvent):
             implementing this. On the collector side, events should be unique, this means duplicate id's result
             in `not ok` events.
         :param time: 
-            Timestamp indicating when the event was generated
+            Timestamp indicating when the event was generated.
         """
         AbstractEvent.__init__(self,
                                location_stack=location_stack,
@@ -654,7 +684,6 @@ class ApplicationLoadedEvent(NonInteractiveEvent):
                 The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
                 deterministically describes where an event took place from global to specific.
                 The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         global_contexts (List[AbstractGlobalContext]):
                 Global contexts add global / general information about the event. They carry information that is not
                 related to where the Event originated (location), such as device, platform or business data.
@@ -663,7 +692,7 @@ class ApplicationLoadedEvent(NonInteractiveEvent):
                 implementing this. On the collector side, events should be unique, this means duplicate id's result
                 in `not ok` events.
         time (int):
-                Timestamp indicating when the event was generated
+                Timestamp indicating when the event was generated.
     """
     _type = 'ApplicationLoadedEvent'
 
@@ -678,7 +707,6 @@ class ApplicationLoadedEvent(NonInteractiveEvent):
             The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
             deterministically describes where an event took place from global to specific.
             The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         :param global_contexts: 
             Global contexts add global / general information about the event. They carry information that is not
             related to where the Event originated (location), such as device, platform or business data.
@@ -687,7 +715,7 @@ class ApplicationLoadedEvent(NonInteractiveEvent):
             implementing this. On the collector side, events should be unique, this means duplicate id's result
             in `not ok` events.
         :param time: 
-            Timestamp indicating when the event was generated
+            Timestamp indicating when the event was generated.
         """
         NonInteractiveEvent.__init__(self,
                                      location_stack=location_stack,
@@ -709,7 +737,6 @@ class FailureEvent(NonInteractiveEvent):
                 The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
                 deterministically describes where an event took place from global to specific.
                 The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         global_contexts (List[AbstractGlobalContext]):
                 Global contexts add global / general information about the event. They carry information that is not
                 related to where the Event originated (location), such as device, platform or business data.
@@ -718,7 +745,7 @@ class FailureEvent(NonInteractiveEvent):
                 implementing this. On the collector side, events should be unique, this means duplicate id's result
                 in `not ok` events.
         time (int):
-                Timestamp indicating when the event was generated
+                Timestamp indicating when the event was generated.
     """
     _type = 'FailureEvent'
 
@@ -736,7 +763,6 @@ class FailureEvent(NonInteractiveEvent):
             The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
             deterministically describes where an event took place from global to specific.
             The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         :param global_contexts: 
             Global contexts add global / general information about the event. They carry information that is not
             related to where the Event originated (location), such as device, platform or business data.
@@ -745,7 +771,7 @@ class FailureEvent(NonInteractiveEvent):
             implementing this. On the collector side, events should be unique, this means duplicate id's result
             in `not ok` events.
         :param time: 
-            Timestamp indicating when the event was generated
+            Timestamp indicating when the event was generated.
         """
         NonInteractiveEvent.__init__(self,
                                      message=message,
@@ -765,7 +791,6 @@ class InputChangeEvent(InteractiveEvent):
                 The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
                 deterministically describes where an event took place from global to specific.
                 The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         global_contexts (List[AbstractGlobalContext]):
                 Global contexts add global / general information about the event. They carry information that is not
                 related to where the Event originated (location), such as device, platform or business data.
@@ -774,7 +799,7 @@ class InputChangeEvent(InteractiveEvent):
                 implementing this. On the collector side, events should be unique, this means duplicate id's result
                 in `not ok` events.
         time (int):
-                Timestamp indicating when the event was generated
+                Timestamp indicating when the event was generated.
     """
     _type = 'InputChangeEvent'
 
@@ -789,7 +814,6 @@ class InputChangeEvent(InteractiveEvent):
             The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
             deterministically describes where an event took place from global to specific.
             The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         :param global_contexts: 
             Global contexts add global / general information about the event. They carry information that is not
             related to where the Event originated (location), such as device, platform or business data.
@@ -798,7 +822,7 @@ class InputChangeEvent(InteractiveEvent):
             implementing this. On the collector side, events should be unique, this means duplicate id's result
             in `not ok` events.
         :param time: 
-            Timestamp indicating when the event was generated
+            Timestamp indicating when the event was generated.
         """
         InteractiveEvent.__init__(self,
                                   location_stack=location_stack,
@@ -818,7 +842,6 @@ class PressEvent(InteractiveEvent):
                 The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
                 deterministically describes where an event took place from global to specific.
                 The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         global_contexts (List[AbstractGlobalContext]):
                 Global contexts add global / general information about the event. They carry information that is not
                 related to where the Event originated (location), such as device, platform or business data.
@@ -827,7 +850,7 @@ class PressEvent(InteractiveEvent):
                 implementing this. On the collector side, events should be unique, this means duplicate id's result
                 in `not ok` events.
         time (int):
-                Timestamp indicating when the event was generated
+                Timestamp indicating when the event was generated.
     """
     _type = 'PressEvent'
 
@@ -842,7 +865,6 @@ class PressEvent(InteractiveEvent):
             The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
             deterministically describes where an event took place from global to specific.
             The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         :param global_contexts: 
             Global contexts add global / general information about the event. They carry information that is not
             related to where the Event originated (location), such as device, platform or business data.
@@ -851,7 +873,7 @@ class PressEvent(InteractiveEvent):
             implementing this. On the collector side, events should be unique, this means duplicate id's result
             in `not ok` events.
         :param time: 
-            Timestamp indicating when the event was generated
+            Timestamp indicating when the event was generated.
         """
         InteractiveEvent.__init__(self,
                                   location_stack=location_stack,
@@ -870,7 +892,6 @@ class HiddenEvent(NonInteractiveEvent):
                 The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
                 deterministically describes where an event took place from global to specific.
                 The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         global_contexts (List[AbstractGlobalContext]):
                 Global contexts add global / general information about the event. They carry information that is not
                 related to where the Event originated (location), such as device, platform or business data.
@@ -879,7 +900,7 @@ class HiddenEvent(NonInteractiveEvent):
                 implementing this. On the collector side, events should be unique, this means duplicate id's result
                 in `not ok` events.
         time (int):
-                Timestamp indicating when the event was generated
+                Timestamp indicating when the event was generated.
     """
     _type = 'HiddenEvent'
 
@@ -894,7 +915,6 @@ class HiddenEvent(NonInteractiveEvent):
             The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
             deterministically describes where an event took place from global to specific.
             The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         :param global_contexts: 
             Global contexts add global / general information about the event. They carry information that is not
             related to where the Event originated (location), such as device, platform or business data.
@@ -903,7 +923,7 @@ class HiddenEvent(NonInteractiveEvent):
             implementing this. On the collector side, events should be unique, this means duplicate id's result
             in `not ok` events.
         :param time: 
-            Timestamp indicating when the event was generated
+            Timestamp indicating when the event was generated.
         """
         NonInteractiveEvent.__init__(self,
                                      location_stack=location_stack,
@@ -917,14 +937,11 @@ class VisibleEvent(NonInteractiveEvent):
     """
         A NonInteractiveEvent that's emitted after a section LocationContext has become visible.
 
-
-
         Attributes:
         location_stack (List[AbstractLocationContext]):
                 The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
                 deterministically describes where an event took place from global to specific.
                 The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         global_contexts (List[AbstractGlobalContext]):
                 Global contexts add global / general information about the event. They carry information that is not
                 related to where the Event originated (location), such as device, platform or business data.
@@ -933,7 +950,7 @@ class VisibleEvent(NonInteractiveEvent):
                 implementing this. On the collector side, events should be unique, this means duplicate id's result
                 in `not ok` events.
         time (int):
-                Timestamp indicating when the event was generated
+                Timestamp indicating when the event was generated.
     """
     _type = 'VisibleEvent'
 
@@ -948,7 +965,6 @@ class VisibleEvent(NonInteractiveEvent):
             The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
             deterministically describes where an event took place from global to specific.
             The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         :param global_contexts: 
             Global contexts add global / general information about the event. They carry information that is not
             related to where the Event originated (location), such as device, platform or business data.
@@ -957,7 +973,7 @@ class VisibleEvent(NonInteractiveEvent):
             implementing this. On the collector side, events should be unique, this means duplicate id's result
             in `not ok` events.
         :param time: 
-            Timestamp indicating when the event was generated
+            Timestamp indicating when the event was generated.
         """
         NonInteractiveEvent.__init__(self,
                                      location_stack=location_stack,
@@ -979,7 +995,6 @@ class SuccessEvent(NonInteractiveEvent):
                 The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
                 deterministically describes where an event took place from global to specific.
                 The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         global_contexts (List[AbstractGlobalContext]):
                 Global contexts add global / general information about the event. They carry information that is not
                 related to where the Event originated (location), such as device, platform or business data.
@@ -988,7 +1003,7 @@ class SuccessEvent(NonInteractiveEvent):
                 implementing this. On the collector side, events should be unique, this means duplicate id's result
                 in `not ok` events.
         time (int):
-                Timestamp indicating when the event was generated
+                Timestamp indicating when the event was generated.
     """
     _type = 'SuccessEvent'
 
@@ -1006,7 +1021,6 @@ class SuccessEvent(NonInteractiveEvent):
             The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
             deterministically describes where an event took place from global to specific.
             The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         :param global_contexts: 
             Global contexts add global / general information about the event. They carry information that is not
             related to where the Event originated (location), such as device, platform or business data.
@@ -1015,7 +1029,7 @@ class SuccessEvent(NonInteractiveEvent):
             implementing this. On the collector side, events should be unique, this means duplicate id's result
             in `not ok` events.
         :param time: 
-            Timestamp indicating when the event was generated
+            Timestamp indicating when the event was generated.
         """
         NonInteractiveEvent.__init__(self,
                                      message=message,
@@ -1036,7 +1050,6 @@ class MediaEvent(NonInteractiveEvent):
                 The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
                 deterministically describes where an event took place from global to specific.
                 The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         global_contexts (List[AbstractGlobalContext]):
                 Global contexts add global / general information about the event. They carry information that is not
                 related to where the Event originated (location), such as device, platform or business data.
@@ -1045,7 +1058,7 @@ class MediaEvent(NonInteractiveEvent):
                 implementing this. On the collector side, events should be unique, this means duplicate id's result
                 in `not ok` events.
         time (int):
-                Timestamp indicating when the event was generated
+                Timestamp indicating when the event was generated.
     """
     _type = 'MediaEvent'
 
@@ -1060,7 +1073,6 @@ class MediaEvent(NonInteractiveEvent):
             The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
             deterministically describes where an event took place from global to specific.
             The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         :param global_contexts: 
             Global contexts add global / general information about the event. They carry information that is not
             related to where the Event originated (location), such as device, platform or business data.
@@ -1069,7 +1081,7 @@ class MediaEvent(NonInteractiveEvent):
             implementing this. On the collector side, events should be unique, this means duplicate id's result
             in `not ok` events.
         :param time: 
-            Timestamp indicating when the event was generated
+            Timestamp indicating when the event was generated.
         """
         NonInteractiveEvent.__init__(self,
                                      location_stack=location_stack,
@@ -1083,14 +1095,11 @@ class MediaLoadEvent(MediaEvent):
     """
         A MediaEvent that's emitted after a media item completes loading.
 
-
-
         Attributes:
         location_stack (List[AbstractLocationContext]):
                 The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
                 deterministically describes where an event took place from global to specific.
                 The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         global_contexts (List[AbstractGlobalContext]):
                 Global contexts add global / general information about the event. They carry information that is not
                 related to where the Event originated (location), such as device, platform or business data.
@@ -1099,7 +1108,7 @@ class MediaLoadEvent(MediaEvent):
                 implementing this. On the collector side, events should be unique, this means duplicate id's result
                 in `not ok` events.
         time (int):
-                Timestamp indicating when the event was generated
+                Timestamp indicating when the event was generated.
     """
     _type = 'MediaLoadEvent'
 
@@ -1114,7 +1123,6 @@ class MediaLoadEvent(MediaEvent):
             The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
             deterministically describes where an event took place from global to specific.
             The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         :param global_contexts: 
             Global contexts add global / general information about the event. They carry information that is not
             related to where the Event originated (location), such as device, platform or business data.
@@ -1123,7 +1131,7 @@ class MediaLoadEvent(MediaEvent):
             implementing this. On the collector side, events should be unique, this means duplicate id's result
             in `not ok` events.
         :param time: 
-            Timestamp indicating when the event was generated
+            Timestamp indicating when the event was generated.
         """
         MediaEvent.__init__(self,
                             location_stack=location_stack,
@@ -1137,14 +1145,11 @@ class MediaPauseEvent(MediaEvent):
     """
         A MediaEvent that's emitted after a media item pauses playback.
 
-
-
         Attributes:
         location_stack (List[AbstractLocationContext]):
                 The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
                 deterministically describes where an event took place from global to specific.
                 The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         global_contexts (List[AbstractGlobalContext]):
                 Global contexts add global / general information about the event. They carry information that is not
                 related to where the Event originated (location), such as device, platform or business data.
@@ -1153,7 +1158,7 @@ class MediaPauseEvent(MediaEvent):
                 implementing this. On the collector side, events should be unique, this means duplicate id's result
                 in `not ok` events.
         time (int):
-                Timestamp indicating when the event was generated
+                Timestamp indicating when the event was generated.
     """
     _type = 'MediaPauseEvent'
 
@@ -1168,7 +1173,6 @@ class MediaPauseEvent(MediaEvent):
             The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
             deterministically describes where an event took place from global to specific.
             The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         :param global_contexts: 
             Global contexts add global / general information about the event. They carry information that is not
             related to where the Event originated (location), such as device, platform or business data.
@@ -1177,7 +1181,7 @@ class MediaPauseEvent(MediaEvent):
             implementing this. On the collector side, events should be unique, this means duplicate id's result
             in `not ok` events.
         :param time: 
-            Timestamp indicating when the event was generated
+            Timestamp indicating when the event was generated.
         """
         MediaEvent.__init__(self,
                             location_stack=location_stack,
@@ -1191,14 +1195,11 @@ class MediaStartEvent(MediaEvent):
     """
         A MediaEvent that's emitted after a media item starts playback.
 
-
-
         Attributes:
         location_stack (List[AbstractLocationContext]):
                 The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
                 deterministically describes where an event took place from global to specific.
                 The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         global_contexts (List[AbstractGlobalContext]):
                 Global contexts add global / general information about the event. They carry information that is not
                 related to where the Event originated (location), such as device, platform or business data.
@@ -1207,7 +1208,7 @@ class MediaStartEvent(MediaEvent):
                 implementing this. On the collector side, events should be unique, this means duplicate id's result
                 in `not ok` events.
         time (int):
-                Timestamp indicating when the event was generated
+                Timestamp indicating when the event was generated.
     """
     _type = 'MediaStartEvent'
 
@@ -1222,7 +1223,6 @@ class MediaStartEvent(MediaEvent):
             The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
             deterministically describes where an event took place from global to specific.
             The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         :param global_contexts: 
             Global contexts add global / general information about the event. They carry information that is not
             related to where the Event originated (location), such as device, platform or business data.
@@ -1231,7 +1231,7 @@ class MediaStartEvent(MediaEvent):
             implementing this. On the collector side, events should be unique, this means duplicate id's result
             in `not ok` events.
         :param time: 
-            Timestamp indicating when the event was generated
+            Timestamp indicating when the event was generated.
         """
         MediaEvent.__init__(self,
                             location_stack=location_stack,
@@ -1245,14 +1245,11 @@ class MediaStopEvent(MediaEvent):
     """
         A MediaEvent that's emitted after a media item stops playback.
 
-
-
         Attributes:
         location_stack (List[AbstractLocationContext]):
                 The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
                 deterministically describes where an event took place from global to specific.
                 The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         global_contexts (List[AbstractGlobalContext]):
                 Global contexts add global / general information about the event. They carry information that is not
                 related to where the Event originated (location), such as device, platform or business data.
@@ -1261,7 +1258,7 @@ class MediaStopEvent(MediaEvent):
                 implementing this. On the collector side, events should be unique, this means duplicate id's result
                 in `not ok` events.
         time (int):
-                Timestamp indicating when the event was generated
+                Timestamp indicating when the event was generated.
     """
     _type = 'MediaStopEvent'
 
@@ -1276,7 +1273,6 @@ class MediaStopEvent(MediaEvent):
             The location stack is an ordered list (stack), that contains a hierarchy of location contexts that
             deterministically describes where an event took place from global to specific.
             The whole stack (list) is needed to exactly pinpoint where in the UI the event originated.
-
         :param global_contexts: 
             Global contexts add global / general information about the event. They carry information that is not
             related to where the Event originated (location), such as device, platform or business data.
@@ -1285,7 +1281,7 @@ class MediaStopEvent(MediaEvent):
             implementing this. On the collector side, events should be unique, this means duplicate id's result
             in `not ok` events.
         :param time: 
-            Timestamp indicating when the event was generated
+            Timestamp indicating when the event was generated.
         """
         MediaEvent.__init__(self,
                             location_stack=location_stack,
@@ -1306,6 +1302,10 @@ def make_context(_type: str, **kwargs) -> AbstractContext:
         return CookieIdContext(**kwargs)
     if _type == "HttpContext":
         return HttpContext(**kwargs)
+    if _type == "InputValueContext":
+        return InputValueContext(**kwargs)
+    if _type == "LocaleContext":
+        return LocaleContext(**kwargs)
     if _type == "PathContext":
         return PathContext(**kwargs)
     if _type == "SessionContext":

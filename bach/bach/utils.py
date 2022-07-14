@@ -88,7 +88,12 @@ def is_valid_column_name(dialect: Dialect, name: str) -> bool:
     raise DatabaseNotSupportedException(dialect)
 
 
-def validate_sorting_expressions(node: BachSqlModel, order_by: List[SortColumn]) -> None:
+def validate_node_column_references_in_sorting_expressions(
+    node: BachSqlModel, order_by: List[SortColumn],
+) -> None:
+    """
+    Validate that all ColumnReferenceTokens in order_by expressions refer columns that exist in node.
+    """
     for ob in order_by:
         invalid_column_references = [
             token.column_name

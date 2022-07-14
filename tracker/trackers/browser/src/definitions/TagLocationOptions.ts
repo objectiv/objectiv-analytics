@@ -3,6 +3,7 @@
  */
 
 import { TagLocationReturnValue } from './TagLocationReturnValue';
+import { TrackBlursAttribute } from './TrackBlursAttribute';
 import { TrackClicksAttribute } from './TrackClicksAttribute';
 import { TrackVisibilityAttribute } from './TrackVisibilityAttribute';
 import { ValidateAttribute } from './ValidateAttribute';
@@ -12,7 +13,7 @@ import { ValidateAttribute } from './ValidateAttribute';
  */
 export type TagLocationOptions = {
   trackClicks?: TrackClicksAttribute;
-  trackBlurs?: boolean;
+  trackBlurs?: TrackBlursAttribute;
   trackVisibility?: TrackVisibilityAttribute;
   parent?: TagLocationReturnValue;
   validate?: ValidateAttribute;

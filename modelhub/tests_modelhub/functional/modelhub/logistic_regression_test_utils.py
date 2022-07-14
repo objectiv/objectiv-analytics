@@ -30,8 +30,12 @@ class TestLR:
         self.X = X
         self.y = y
 
-        self.X_p = self.X.to_pandas()
-        self.y_p = self.y.to_pandas()
+        data = X.copy()
+        data[y.name] = y
+        pdf = data.to_pandas()
+
+        self.X_p = pdf[X.data_columns]
+        self.y_p = pdf[y.name]
 
         modelhub = ModelHub()
 
@@ -66,9 +70,11 @@ class TestLR:
         modelhub_args = tuple()
 
         if X:
-            sklearn_args = (self.X_p,)
-            modelhub_args = (self.X,)
+            # need sorting for the comparison
+            sklearn_args = (self.X_p.sort_index(),)
+            modelhub_args = (self.X.sort_index(),)
             if y:
+                # for now, we only calculate score, sorting is not needed
                 sklearn_args = (self.X_p, self.y_p)
                 modelhub_args = (self.X, self.y)
 
@@ -84,7 +90,7 @@ class TestLR:
         if method_name == 'score':
             equals = np.isclose(sklearn_data, modelhub_data)
         else:
-            modelhub_data = modelhub_data.to_numpy()
+            modelhub_data = modelhub_data.sort_index().to_numpy()
             equals = np.isclose(sklearn_data, modelhub_data).all()
 
         assert equals, f"modelhub_data: {modelhub_data} != sklearn_data: {sklearn_data}"

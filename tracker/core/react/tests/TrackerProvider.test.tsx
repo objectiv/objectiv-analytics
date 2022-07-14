@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import { MockConsoleImplementation } from '@objectiv/testing-tools';
 import { GlobalContextName, LocationContextName, Tracker, TrackerPlatform } from '@objectiv/tracker-core';
 import { render } from '@testing-library/react';
 import React from 'react';
@@ -65,16 +65,6 @@ describe('TrackerProvider', () => {
                 eventMatches: expect.any(Function),
               },
             ],
-          },
-          {
-            pluginName: 'ApplicationContextPlugin',
-            initialized: true,
-            applicationContext: {
-              __instance_id: matchUUID,
-              __global_context: true,
-              _type: GlobalContextName.ApplicationContext,
-              id: 'app-id',
-            },
           },
         ],
       }),

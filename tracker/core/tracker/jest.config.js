@@ -12,6 +12,5 @@ module.exports = {
     '@objectiv/tracker-core': '<rootDir>../../core/tracker/src',
     '@objectiv/developer-tools': '<rootDir>../../core/developer-tools/src',
     '@objectiv/testing-tools': '<rootDir>../../core/testing-tools/src',
-    '@objectiv/plugin-(.*)': '<rootDir>/../../plugins/$1/src',
   },
 };

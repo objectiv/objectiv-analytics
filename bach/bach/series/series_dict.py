@@ -1,7 +1,7 @@
 """
 Copyright 2022 Objectiv B.V.
 """
-from typing import Any, Tuple, TYPE_CHECKING, Dict, Optional, Mapping
+from typing import Any, Tuple, TYPE_CHECKING, Dict, Optional, Mapping, Union
 
 from sqlalchemy.engine import Dialect
 
@@ -9,6 +9,7 @@ from bach.series import Series
 from bach.expression import Expression, join_expressions
 from bach.types import DtypeOrAlias, get_series_type_from_dtype, StructuredDtype, Dtype, validate_dtype_value
 from sql_models.constants import DBDialect
+from sql_models.model import Materialization
 from sql_models.util import DatabaseNotSupportedException, is_bigquery
 
 
@@ -154,6 +155,7 @@ class SeriesDict(Series):
             node_name='manual_materialize',
             limit: Any = None,
             distinct: bool = False,
+            materialization: Union[Materialization, str] = Materialization.CTE
     ):
         raise Exception(f'{self.__class__.__name__} cannot be materialized.')
 

@@ -476,3 +476,27 @@ def test_set_pandas_series_different_shape_and_name(engine):
             [3, 3, 'Drylts', 'Súdwest-Fryslân', 3055, 1268, 'It Hearrenfean'],
         ]
     )
+
+
+def test_set_pandas_series_uuid(engine):
+
+    from tests.functional.bach.test_df_from_pandas import TYPES_DATA, TYPES_COLUMNS
+    from uuid import UUID
+
+    bt = get_df_with_test_data(engine)
+    pdf = pandas.DataFrame.from_records(TYPES_DATA, columns=TYPES_COLUMNS).set_index('int_column')
+
+    bt['u'] = pdf['uuid_column']
+    assert_equals_data(
+        bt,
+        expected_columns=[
+            '_index_skating_order',  # index
+            'skating_order', 'city', 'municipality', 'inhabitants', 'founding', 'u'
+        ],
+        expected_data=[
+            [1, 1, 'Ljouwert', 'Leeuwarden', 93485, 1285, UUID('36ca4c0b-804d-48ff-809f-28cf9afd078a')],
+            [2, 2, 'Snits', 'Súdwest-Fryslân', 33520, 1456, UUID('81a8ace2-273b-4b95-b6a6-0fba33858a22')],
+            [3, 3, 'Drylts', 'Súdwest-Fryslân', 3055, 1268, UUID('8a70b3d3-33ec-4300-859a-bb2efcf0b188')],
+        ],
+        convert_uuid=True,
+    )
