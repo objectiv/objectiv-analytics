@@ -180,8 +180,7 @@ def test_fillna(engine):
             bt['num'].fillna(val)
 
 
-def test_isnull(pg_engine):
-    engine = pg_engine  # TODO BigQuery, fix sorting for nullable columns
+def test_isnull(engine):
     values = ['a', 'b', None]
     pdf = pd.DataFrame(data=values, columns=['text_with_null'])
     pdf.set_index('text_with_null', drop=False, inplace=True)

@@ -17,8 +17,7 @@ def test_append_w_aligned_columns(engine) -> None:
     np.testing.assert_equal(expected.to_numpy(), result.to_numpy())
 
 
-def test_append_w_non_aligned_columns(pg_engine) -> None:
-    engine = pg_engine # TODO: BigQuery (sort values yields different results for nullable columns
+def test_append_w_non_aligned_columns(engine) -> None:
     caller_pdf = pd.DataFrame({'a': [1, 2, 3, 4, 5], 'b': ['a', 'b', 'c', 'd', 'e']})
     other_pdf = pd.DataFrame({'d': [6, 7, 8, 9], 'c': ['f', 'g', 'h', 'i']})
 
@@ -49,9 +48,7 @@ def test_append_w_non_aligned_columns(pg_engine) -> None:
     )
 
 
-def test_append_w_ignore_index_n_sort(pg_engine) -> None:
-    engine = pg_engine # TODO: BigQuery (sort values yields different results for nullable columns
-
+def test_append_w_ignore_index_n_sort(engine) -> None:
     caller_pdf = pd.DataFrame({'a': [1, 2, 3, 4, 5], 'b': ['a', 'b', 'c', 'd', 'e']})
     other_pdf = pd.DataFrame({'d': [6, 7, 8, 9], 'c': ['f', 'g', 'h', 'i']})
 
@@ -103,9 +100,7 @@ def test_append_w_ignore_index_n_sort(pg_engine) -> None:
     )
 
 
-def test_append_w_list_dfs(pg_engine) -> None:
-    engine = pg_engine # TODO: BigQuery (sort values yields different results for nullable columns
-
+def test_append_w_list_dfs(engine) -> None:
     caller_pdf = pd.DataFrame({'a': [1, 2, 3, 4, 5], 'b': ['a', 'b', 'c', 'd', 'e']})
     other_pdf = pd.DataFrame({'d': [6, 7, 8, 9], 'c': ['f', 'g', 'h', 'i']})
 
