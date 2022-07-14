@@ -3,20 +3,26 @@
  */
 
 import { trackPressEvent } from '../../eventTrackers/trackPressEvent';
-import { EventTrackerHookParameters } from '../../types';
+import { EventTrackerHookCallbackParameters, EventTrackerHookParameters } from '../../types';
 import { useLocationStack } from '../consumers/useLocationStack';
 import { useTracker } from '../consumers/useTracker';
-
-/**
- * The parameters of usePressEventTracker. No extra attributes, same as EventTrackerHookParameters.
- */
-export type PressEventTrackerHookParameters = EventTrackerHookParameters;
+import { mergeEventTrackerHookAndCallbackParameters } from './mergeEventTrackerHookAndCallbackParameters';
 
 /**
  * Returns a PressEvent Tracker callback function, ready to be triggered.
  */
-export const usePressEventTracker = (parameters: PressEventTrackerHookParameters = {}) => {
-  const { tracker = useTracker(), locationStack = useLocationStack(), globalContexts } = parameters;
+export const usePressEventTracker = ({
+  tracker = useTracker(),
+  locationStack = [],
+  ...hookParameters
+}: EventTrackerHookParameters = {}) => {
+  const combinedLocationStack = [...useLocationStack(), ...locationStack];
 
-  return () => trackPressEvent({ tracker, locationStack, globalContexts });
+  return (callbackParameters: EventTrackerHookCallbackParameters = {}) =>
+    trackPressEvent(
+      mergeEventTrackerHookAndCallbackParameters(
+        { tracker, locationStack: combinedLocationStack, ...hookParameters },
+        callbackParameters
+      )
+    );
 };

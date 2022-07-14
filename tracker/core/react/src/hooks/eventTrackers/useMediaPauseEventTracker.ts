@@ -3,20 +3,26 @@
  */
 
 import { trackMediaPauseEvent } from '../../eventTrackers/trackMediaPauseEvent';
-import { EventTrackerHookParameters } from '../../types';
+import { EventTrackerHookCallbackParameters, EventTrackerHookParameters } from '../../types';
 import { useLocationStack } from '../consumers/useLocationStack';
 import { useTracker } from '../consumers/useTracker';
-
-/**
- * The parameters of useMediaPauseEventTracker. No extra attributes, same as EventTrackerHookParameters.
- */
-export type MediaPauseEventTrackerHookParameters = EventTrackerHookParameters;
+import { mergeEventTrackerHookAndCallbackParameters } from './mergeEventTrackerHookAndCallbackParameters';
 
 /**
  * Returns a MediaPauseEvent Tracker callback function, ready to be triggered.
  */
-export const useMediaPauseEventTracker = (parameters: MediaPauseEventTrackerHookParameters = {}) => {
-  const { tracker = useTracker(), locationStack = useLocationStack(), globalContexts } = parameters;
+export const useMediaPauseEventTracker = ({
+  tracker = useTracker(),
+  locationStack = [],
+  ...hookParameters
+}: EventTrackerHookParameters = {}) => {
+  const combinedLocationStack = [...useLocationStack(), ...locationStack];
 
-  return () => trackMediaPauseEvent({ tracker, locationStack, globalContexts });
+  return (callbackParameters: EventTrackerHookCallbackParameters = {}) =>
+    trackMediaPauseEvent(
+      mergeEventTrackerHookAndCallbackParameters(
+        { tracker, locationStack: combinedLocationStack, ...hookParameters },
+        callbackParameters
+      )
+    );
 };

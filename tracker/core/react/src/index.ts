@@ -35,6 +35,7 @@ export * from './hooks/consumers/useParentLocationContext';
 export * from './hooks/consumers/useTracker';
 export * from './hooks/consumers/useTrackingContext';
 
+export * from './hooks/eventTrackers/mergeEventTrackerHookAndCallbackParameters';
 export * from './hooks/eventTrackers/useApplicationLoadedEventTracker';
 export * from './hooks/eventTrackers/useFailureEventTracker';
 export * from './hooks/eventTrackers/useHiddenEventTracker';
@@ -45,7 +46,6 @@ export * from './hooks/eventTrackers/useMediaLoadEventTracker';
 export * from './hooks/eventTrackers/useMediaPauseEventTracker';
 export * from './hooks/eventTrackers/useMediaStartEventTracker';
 export * from './hooks/eventTrackers/useMediaStopEventTracker';
-export * from './hooks/eventTrackers/useMergeEventTrackerHookAndCallbackParameters';
 export * from './hooks/eventTrackers/useNonInteractiveEventTracker';
 export * from './hooks/eventTrackers/usePressEventTracker';
 export * from './hooks/eventTrackers/useSuccessEventTracker';
