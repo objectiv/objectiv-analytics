@@ -3,7 +3,7 @@
  */
 
 import { makeInputValueContext } from '@objectiv/tracker-core';
-import { EventTrackerParameters, InputContextWrapper, trackInputChangeEvent, } from '@objectiv/tracker-react-core';
+import { EventTrackerParameters, InputContextWrapper, trackInputChangeEvent } from '@objectiv/tracker-react-core';
 import React from 'react';
 import { Switch, SwitchProps } from 'react-native';
 

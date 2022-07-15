@@ -1509,6 +1509,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@objectiv/developer-tools@workspace:core/developer-tools"
   dependencies:
+    "@objectiv/developer-tools": ^0.0.22
     "@objectiv/testing-tools": ^0.0.22
     "@objectiv/tracker-core": ^0.0.22
     "@types/jest": ^27.4.1
@@ -1531,6 +1532,7 @@ __metadata:
   resolution: "@objectiv/plugin-application-context@workspace:plugins/application-context"
   dependencies:
     "@objectiv/developer-tools": ^0.0.22
+    "@objectiv/schema": ^0.0.22
     "@objectiv/testing-tools": ^0.0.22
     "@types/jest": ^27.4.1
     jest: ^27.5.1
@@ -1563,11 +1565,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@objectiv/plugin-identity-context@workspace:plugins/identity-context":
+"@objectiv/plugin-identity-context@^0.0.22, @objectiv/plugin-identity-context@workspace:plugins/identity-context":
   version: 0.0.0-use.local
   resolution: "@objectiv/plugin-identity-context@workspace:plugins/identity-context"
   dependencies:
     "@objectiv/developer-tools": ^0.0.22
+    "@objectiv/plugin-identity-context": ^0.0.22
     "@objectiv/testing-tools": ^0.0.22
     "@types/jest": ^27.4.1
     jest: ^27.5.1
@@ -1804,6 +1807,8 @@ __metadata:
   resolution: "@objectiv/tracker-react-core@workspace:core/react"
   dependencies:
     "@objectiv/developer-tools": ^0.0.22
+    "@objectiv/plugin-application-context": ^0.0.22
+    "@objectiv/plugin-path-context-from-url": ^0.0.22
     "@objectiv/schema": ^0.0.22
     "@objectiv/testing-tools": ^0.0.22
     "@objectiv/tracker-core": ~0.0.22
@@ -1832,6 +1837,7 @@ __metadata:
   dependencies:
     "@objectiv/developer-tools": ^0.0.22
     "@objectiv/plugin-application-context": ^0.0.22
+    "@objectiv/plugin-root-location-context-from-url": ^0.0.22
     "@objectiv/testing-tools": ^0.0.22
     "@objectiv/tracker-core": ~0.0.22
     "@objectiv/tracker-react-core": ~0.0.22
@@ -1861,9 +1867,11 @@ __metadata:
     "@objectiv/developer-tools": ^0.0.22
     "@objectiv/plugin-application-context": ^0.0.22
     "@objectiv/plugin-http-context": ^0.0.22
+    "@objectiv/plugin-identity-context": ^0.0.22
     "@objectiv/plugin-path-context-from-url": ^0.0.22
     "@objectiv/plugin-root-location-context-from-url": ^0.0.22
     "@objectiv/queue-local-storage": ^0.0.22
+    "@objectiv/schema": ^0.0.22
     "@objectiv/testing-tools": ^0.0.22
     "@objectiv/tracker-core": ~0.0.22
     "@objectiv/tracker-react-core": ~0.0.22
