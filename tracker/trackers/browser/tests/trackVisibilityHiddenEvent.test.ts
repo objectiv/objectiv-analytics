@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { matchUUID, MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
+import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
 import { generateUUID } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker, TaggingAttribute } from '../src';
 import { trackVisibilityHiddenEvent } from '../src/mutationObserver/trackVisibilityHiddenEvent';
@@ -67,7 +67,6 @@ describe('trackVisibilityHiddenEvent', () => {
       1,
       expect.objectContaining({
         _type: 'HiddenEvent',
-        id: matchUUID,
         global_contexts: [],
         location_stack: [],
       })
@@ -89,7 +88,6 @@ describe('trackVisibilityHiddenEvent', () => {
       1,
       expect.objectContaining({
         _type: 'HiddenEvent',
-        id: matchUUID,
         global_contexts: [],
         location_stack: [],
       })

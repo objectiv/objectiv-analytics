@@ -27,7 +27,9 @@ describe('Validation Rules', () => {
 
       jest.resetAllMocks();
 
-      testGlobalContextValidationRule.validate(new TrackerEvent({ _type: 'PressEvent' }));
+      testGlobalContextValidationRule.validate(
+        new TrackerEvent({ _type: 'PressEvent', id: generateUUID(), time: Date.now() })
+      );
 
       expect(MockConsoleImplementation.groupCollapsed).not.toHaveBeenCalled();
     });
@@ -40,7 +42,9 @@ describe('Validation Rules', () => {
 
       jest.resetAllMocks();
 
-      testGlobalContextValidationRule.validate(new TrackerEvent({ _type: 'PressEvent' }));
+      testGlobalContextValidationRule.validate(
+        new TrackerEvent({ _type: 'PressEvent', id: generateUUID(), time: Date.now() })
+      );
 
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledWith(
@@ -59,7 +63,9 @@ describe('Validation Rules', () => {
 
       jest.resetAllMocks();
 
-      testGlobalContextValidationRule.validate(new TrackerEvent({ _type: 'PressEvent' }));
+      testGlobalContextValidationRule.validate(
+        new TrackerEvent({ _type: 'PressEvent', id: generateUUID(), time: Date.now() })
+      );
 
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledWith(
@@ -85,6 +91,8 @@ describe('Validation Rules', () => {
             { __instance_id: generateUUID(), __global_context: true, _type: GlobalContextName.PathContext, id: 'test' },
             { __instance_id: generateUUID(), __global_context: true, _type: GlobalContextName.PathContext, id: 'test' },
           ],
+          id: generateUUID(),
+          time: Date.now(),
         })
       );
 
@@ -107,7 +115,9 @@ describe('Validation Rules', () => {
 
       jest.resetAllMocks();
 
-      testLocationContextValidationRule.validate(new TrackerEvent({ _type: 'PressEvent' }));
+      testLocationContextValidationRule.validate(
+        new TrackerEvent({ _type: 'PressEvent', id: generateUUID(), time: Date.now() })
+      );
 
       expect(MockConsoleImplementation.groupCollapsed).not.toHaveBeenCalled();
     });
@@ -120,7 +130,9 @@ describe('Validation Rules', () => {
 
       jest.resetAllMocks();
 
-      testLocationContextValidationRule.validate(new TrackerEvent({ _type: 'PressEvent' }));
+      testLocationContextValidationRule.validate(
+        new TrackerEvent({ _type: 'PressEvent', id: generateUUID(), time: Date.now() })
+      );
 
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledWith(
@@ -139,7 +151,9 @@ describe('Validation Rules', () => {
 
       jest.resetAllMocks();
 
-      testLocationContextValidationRule.validate(new TrackerEvent({ _type: 'PressEvent' }));
+      testLocationContextValidationRule.validate(
+        new TrackerEvent({ _type: 'PressEvent', id: generateUUID(), time: Date.now() })
+      );
 
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledWith(
@@ -175,6 +189,8 @@ describe('Validation Rules', () => {
               id: 'test',
             },
           ],
+          id: generateUUID(),
+          time: Date.now(),
         })
       );
 
@@ -213,6 +229,8 @@ describe('Validation Rules', () => {
               id: 'test',
             },
           ],
+          id: generateUUID(),
+          time: Date.now(),
         })
       );
 

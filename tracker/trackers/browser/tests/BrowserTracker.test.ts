@@ -5,6 +5,7 @@
 import { RootLocationContextFromURLPlugin } from '@objectiv/plugin-root-location-context-from-url';
 import { expectToThrow, MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import {
+  generateUUID,
   GlobalContextName,
   TrackerEvent,
   TrackerPlugins,
@@ -199,7 +200,7 @@ describe('BrowserTracker', () => {
 
     it('should auto-track Application and Path Contexts by default', async () => {
       const testTracker = new BrowserTracker({ applicationId: 'app-id', transport: new LogTransport() });
-      const testEvent = new TrackerEvent({ _type: 'test-event' });
+      const testEvent = new TrackerEvent({ _type: 'test-event', id: generateUUID(), time: Date.now() });
       expect(testTracker).toBeInstanceOf(BrowserTracker);
       expect(testEvent.global_contexts).toHaveLength(0);
       expect(testEvent.location_stack).toHaveLength(0);

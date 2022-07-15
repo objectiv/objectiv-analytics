@@ -39,3 +39,4 @@ export * from './TrackerTransportRetryAttempt';
 export * from './TrackerTransportSwitch';
 export * from './TrackerValidationRuleInterface';
 export * from './TrackerValidationLifecycleInterface';
+export * from './UntrackedEvent';

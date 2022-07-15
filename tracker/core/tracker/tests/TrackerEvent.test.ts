@@ -32,7 +32,7 @@ describe('TrackerEvent', () => {
   };
 
   it('should instantiate with the given properties as one Config', () => {
-    const testEvent = new TrackerEvent({ _type: 'test-event', ...testContexts });
+    const testEvent = new TrackerEvent({ _type: 'test-event', ...testContexts, id: generateUUID(), time: Date.now() });
     expect(testEvent).toBeInstanceOf(TrackerEvent);
     expect(testEvent._type).toBe(testEventName);
     expect(testEvent.location_stack).toEqual(testContexts.location_stack);
@@ -40,7 +40,7 @@ describe('TrackerEvent', () => {
   });
 
   it('should instantiate with the given properties as multiple Configs', () => {
-    const testEvent = new TrackerEvent({ _type: 'test-event' }, testContexts);
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateUUID(), time: Date.now() }, testContexts);
     expect(testEvent).toBeInstanceOf(TrackerEvent);
     expect(testEvent._type).toBe(testEventName);
     expect(testEvent.location_stack).toEqual(testContexts.location_stack);
@@ -48,7 +48,10 @@ describe('TrackerEvent', () => {
   });
 
   it('should instantiate without location_stack', () => {
-    const testEvent = new TrackerEvent({ _type: 'test-event' }, { global_contexts: testContexts.global_contexts });
+    const testEvent = new TrackerEvent(
+      { _type: 'test-event', id: generateUUID(), time: Date.now() },
+      { global_contexts: testContexts.global_contexts }
+    );
     expect(testEvent).toBeInstanceOf(TrackerEvent);
     expect(testEvent._type).toBe(testEventName);
     expect(testEvent.location_stack).toEqual([]);
@@ -56,7 +59,10 @@ describe('TrackerEvent', () => {
   });
 
   it('should instantiate without global_contexts', () => {
-    const testEvent = new TrackerEvent({ _type: 'test-event' }, { location_stack: testContexts.location_stack });
+    const testEvent = new TrackerEvent(
+      { _type: 'test-event', id: generateUUID(), time: Date.now() },
+      { location_stack: testContexts.location_stack }
+    );
     expect(testEvent).toBeInstanceOf(TrackerEvent);
     expect(testEvent._type).toBe(testEventName);
     expect(testEvent.location_stack).toEqual(testContexts.location_stack);
@@ -83,7 +89,7 @@ describe('TrackerEvent', () => {
       ],
     };
     const composedEvent = new TrackerEvent(
-      { _type: 'test-event', ...eventContexts },
+      { _type: 'test-event', id: generateUUID(), time: Date.now(), ...eventContexts },
       sectionContexts1,
       sectionContexts2
     );
@@ -98,15 +104,19 @@ describe('TrackerEvent', () => {
   });
 
   it('should serialize to JSON without internal properties', () => {
-    const testEvent = new TrackerEvent(
-      makeMediaLoadEvent({
+    const testEvent = new TrackerEvent({
+      id: generateUUID(),
+      time: Date.now(),
+      ...makeMediaLoadEvent({
         location_stack: [makeOverlayContext({ id: 'player' })],
         global_contexts: [makeApplicationContext({ id: 'test-app' })],
-      })
-    );
+      }),
+    });
     const jsonStringEvent = JSON.stringify(testEvent, null, 2);
     expect(jsonStringEvent).toEqual(`{
   "_type": "MediaLoadEvent",
+  "id": "${testEvent.id}",
+  "time": ${testEvent.time},
   "location_stack": [
     {
       "_type": "OverlayContext",
@@ -118,13 +128,12 @@ describe('TrackerEvent', () => {
       "_type": "ApplicationContext",
       "id": "test-app"
     }
-  ],
-  "id": "${testEvent.id}"
+  ]
 }`);
   });
 
   it('should clone without generating a new id', () => {
-    const testEvent = new TrackerEvent({ _type: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateUUID(), time: Date.now() });
     expect(testEvent.id).not.toBeUndefined();
     const testEventClone1 = new TrackerEvent(testEvent);
     const testEventClone1_1 = new TrackerEvent(testEventClone1);
@@ -132,23 +141,5 @@ describe('TrackerEvent', () => {
     expect(testEventClone1.id).toBe(testEvent.id);
     expect(testEventClone1_1.id).toBe(testEvent.id);
     expect(testEventClone1_2.id).toBe(testEvent.id);
-  });
-
-  describe('setTime', () => {
-    it('should use Date.now() when timestampMs is not provided', () => {
-      const testEvent = new TrackerEvent({ _type: 'test-event' });
-      expect(testEvent.time).toBeUndefined();
-      testEvent.setTime();
-      expect(testEvent.time).toBe(mockedMs);
-    });
-
-    it('should use whatever timestampMs is provided', () => {
-      const testEvent = new TrackerEvent({ _type: 'test-event' });
-      expect(testEvent.time).toBeUndefined();
-      const timestampMs = 1234567890123;
-      testEvent.setTime(timestampMs);
-      expect(testEvent.time).toBe(timestampMs);
-      expect(testEvent.time).not.toBe(mockedMs);
-    });
   });
 });

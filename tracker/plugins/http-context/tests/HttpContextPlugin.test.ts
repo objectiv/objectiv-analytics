@@ -33,6 +33,8 @@ describe('HttpContextPlugin', () => {
           remote_address: 'test',
         }),
       ],
+      id: generateUUID(),
+      time: Date.now(),
     });
     testHttpContextPlugin.validate(validEvent);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
@@ -60,7 +62,7 @@ describe('HttpContextPlugin', () => {
         { __instance_id: generateUUID(), __global_context: true, _type: 'GlobalB', id: 'def' },
       ],
     };
-    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts });
+    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts, id: generateUUID(), time: Date.now() });
     expect(testEvent.location_stack).toHaveLength(2);
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(2);
@@ -93,7 +95,7 @@ describe('HttpContextPlugin', () => {
       applicationId: 'app-id',
       plugins: [new HttpContextPlugin()],
     });
-    const testEvent = new TrackerEvent({ _type: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateUUID(), time: Date.now() });
     expect(testEvent.location_stack).toHaveLength(0);
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(0);
@@ -145,6 +147,8 @@ describe('HttpContextPlugin', () => {
             remote_address: 'test',
           }),
         ],
+        id: generateUUID(),
+        time: Date.now(),
       });
       testHttpContextPlugin.validate(validEvent);
       expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
@@ -169,6 +173,8 @@ describe('HttpContextPlugin', () => {
             remote_address: 'test',
           }),
         ],
+        id: generateUUID(),
+        time: Date.now(),
       });
 
       jest.resetAllMocks();

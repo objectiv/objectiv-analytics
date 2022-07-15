@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import { MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
   generateUUID,
   LocationContextName,
@@ -46,7 +46,6 @@ describe('makeClickEventHandler', () => {
       1,
       expect.objectContaining({
         _type: 'PressEvent',
-        id: matchUUID,
         global_contexts: [],
         location_stack: [],
       })

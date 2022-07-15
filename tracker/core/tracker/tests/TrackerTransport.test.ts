@@ -25,7 +25,7 @@ const testContexts: ContextsConfig = {
   location_stack: [{ __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'test' }],
   global_contexts: [{ __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'test' }],
 };
-const testEvent = new TrackerEvent({ _type: testEventName, ...testContexts });
+const testEvent = new TrackerEvent({ _type: testEventName, ...testContexts, id: generateUUID(), time: Date.now() });
 
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);

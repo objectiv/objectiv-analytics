@@ -81,7 +81,7 @@ describe('IdentityContextPlugin', () => {
         { __instance_id: generateUUID(), __global_context: true, _type: 'Context', id: 'Y' },
       ],
     };
-    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts });
+    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts, id: generateUUID(), time: Date.now() });
     expect(testEvent.global_contexts).toHaveLength(2);
     const coreTracker = new Tracker({
       applicationId: 'app-id',
@@ -112,7 +112,7 @@ describe('IdentityContextPlugin', () => {
         { __instance_id: generateUUID(), __global_context: true, _type: 'Context', id: 'Y' },
       ],
     };
-    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts });
+    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts, id: generateUUID(), time: Date.now() });
     expect(testEvent.global_contexts).toHaveLength(2);
     const coreTracker = new Tracker({
       applicationId: 'app-id',
@@ -154,7 +154,7 @@ describe('IdentityContextPlugin', () => {
         { __instance_id: generateUUID(), __global_context: true, _type: 'Context', id: 'Y' },
       ],
     };
-    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts });
+    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts, id: generateUUID(), time: Date.now() });
     expect(testEvent.global_contexts).toHaveLength(2);
     const coreTracker = new Tracker({
       applicationId: 'app-id',
@@ -186,7 +186,7 @@ describe('IdentityContextPlugin', () => {
         { __instance_id: generateUUID(), __global_context: true, _type: 'Context', id: 'Y' },
       ],
     };
-    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts });
+    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts, id: generateUUID(), time: Date.now() });
     expect(testEvent.global_contexts).toHaveLength(2);
     const coreTracker = new Tracker({
       applicationId: 'app-id',

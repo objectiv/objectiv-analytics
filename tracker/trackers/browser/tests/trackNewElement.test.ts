@@ -3,7 +3,7 @@
  */
 
 import '@objectiv/developer-tools';
-import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import { MockConsoleImplementation } from '@objectiv/testing-tools';
 import { generateUUID, LocationContextName } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker, TaggingAttribute } from '../src';
 import { trackNewElement } from '../src/mutationObserver/trackNewElement';
@@ -107,7 +107,6 @@ describe('trackNewElement', () => {
       1,
       expect.objectContaining({
         _type: 'VisibleEvent',
-        id: matchUUID,
         global_contexts: [],
         location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'test' })],
       })

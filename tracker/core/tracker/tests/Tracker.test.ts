@@ -14,6 +14,7 @@ import {
   TrackerPluginInterface,
   TrackerQueue,
   TrackerQueueMemoryStore,
+  UntrackedEvent,
 } from '../src';
 
 require('@objectiv/developer-tools');
@@ -230,7 +231,7 @@ describe('Tracker', () => {
         { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'X' },
       ],
     };
-    const testEvent = new TrackerEvent(
+    const testEvent = new UntrackedEvent(
       {
         _type: 'test-event',
       },
@@ -456,8 +457,8 @@ describe('Tracker', () => {
       location_stack: [{ __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'test' }],
       global_contexts: [{ __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'test' }],
     };
-    const testEvent1 = new TrackerEvent({ _type: testEventName, ...testContexts });
-    const testEvent2 = new TrackerEvent({ _type: testEventName, ...testContexts });
+    const testEvent1 = { _type: testEventName, ...testContexts };
+    const testEvent2 = { _type: testEventName, ...testContexts };
     const processFunctionSpy = jest.fn(() => Promise.resolve());
 
     beforeEach(() => {
@@ -521,23 +522,23 @@ describe('Tracker', () => {
       expect(trackerQueue2.processFunction).not.toBeUndefined();
       expect(trackerQueue2.processFunction).not.toHaveBeenCalled();
 
-      await testTracker.trackEvent(testEvent1);
+      const trackedTestEvent1 = await testTracker.trackEvent(testEvent1);
       expect(trackerQueue1.processingEventIds).toHaveLength(0);
       expect(trackerQueue1.processFunction).toHaveBeenCalledTimes(1);
       expect(trackerQueue1.processFunction).toHaveBeenNthCalledWith(
         1,
         expect.objectContaining({
-          id: testEvent1.id,
+          id: trackedTestEvent1.id,
         })
       );
 
-      await testTrackerWithConsole.trackEvent(testEvent2);
+      const trackedTestEvent2 = await testTrackerWithConsole.trackEvent(testEvent2);
       expect(trackerQueue2.processingEventIds).toHaveLength(0);
       expect(trackerQueue2.processFunction).toHaveBeenCalledTimes(1);
       expect(trackerQueue2.processFunction).toHaveBeenNthCalledWith(
         1,
         expect.objectContaining({
-          id: testEvent2.id,
+          id: trackedTestEvent2.id,
         })
       );
     });
@@ -568,7 +569,9 @@ describe('Tracker', () => {
       expect(trackerQueue.processFunction).not.toBeUndefined();
       expect(trackerQueue.processFunction).not.toHaveBeenCalled();
 
-      await testTracker.queue?.store.write(testEvent1, testEvent2);
+      const trackedTestEvent1 = new TrackerEvent({ ...testEvent1, id: generateUUID(), time: Date.now() });
+      const trackedTestEvent2 = new TrackerEvent({ ...testEvent2, id: generateUUID(), time: Date.now() });
+      await testTracker.queue?.store.write(trackedTestEvent1, trackedTestEvent2);
 
       expect(queueStore.length).toBe(2);
 

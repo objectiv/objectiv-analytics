@@ -7,6 +7,7 @@ import { RootLocationContextFromURLPlugin } from '@objectiv/plugin-root-location
 import { AbstractGlobalContext } from '@objectiv/schema';
 import { expectToThrow, MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
+  generateUUID,
   GlobalContextName,
   makeIdentityContext,
   makeSuccessEvent,
@@ -196,7 +197,7 @@ describe('ReactTracker', () => {
 
     it('should auto-track Application Context by default', async () => {
       const testTracker = new ReactTracker({ applicationId: 'app-id', transport: new DebugTransport() });
-      const testEvent = new TrackerEvent({ _type: 'test-event' });
+      const testEvent = new TrackerEvent({ _type: 'test-event', id: generateUUID(), time: Date.now() });
       expect(testTracker).toBeInstanceOf(ReactTracker);
       expect(testEvent.global_contexts).toHaveLength(0);
 

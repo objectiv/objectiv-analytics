@@ -4,13 +4,14 @@
 
 import { AbstractGlobalContext, AbstractLocationContext, Contexts } from '@objectiv/schema';
 import { ContextsConfig } from './Context';
-import { waitForPromise } from './helpers';
-import { TrackerEvent, TrackerEventConfig } from './TrackerEvent';
+import { generateUUID, waitForPromise } from './helpers';
+import { TrackerEvent } from './TrackerEvent';
 import { TrackerPluginInterface } from './TrackerPluginInterface';
 import { TrackerPlugins } from './TrackerPlugins';
 import { TrackerQueueInterface } from './TrackerQueueInterface';
 import { TrackerTransportGroup } from './TrackerTransportGroup';
 import { TrackerTransportInterface } from './TrackerTransportInterface';
+import { UntrackedEvent, UntrackedEventConfig } from './UntrackedEvent';
 
 /**
  * Tracker platforms
@@ -268,47 +269,47 @@ export class Tracker implements TrackerInterface {
   /**
    * Merges Tracker Location and Global contexts, runs all Plugins and sends the Event via the TrackerTransport.
    */
-  async trackEvent(event: TrackerEventConfig, options?: TrackEventOptions): Promise<TrackerEvent> {
+  async trackEvent(event: UntrackedEventConfig, options?: TrackEventOptions): Promise<TrackerEvent> {
     // TrackerEvent and Tracker share the ContextsConfig interface. We can combine them by creating a new TrackerEvent.
-    const trackedEvent = new TrackerEvent(event, this);
+    const enrichedUntrackedEvent = new UntrackedEvent(event, this);
+
+    // Set id and time and make a TrackedEvent
+    const trackerEvent = new TrackerEvent({ ...enrichedUntrackedEvent, id: generateUUID(), time: Date.now() });
 
     // Do nothing if the TrackerInstance is inactive
     if (!this.active) {
-      return trackedEvent;
+      return trackerEvent;
     }
 
-    // Set tracking time
-    trackedEvent.setTime();
-
     // Execute all plugins `enrich` callback. Plugins may enrich or add Contexts to the TrackerEvent
-    this.plugins.enrich(trackedEvent);
+    this.plugins.enrich(trackerEvent);
 
     // Execute all plugins `validate` callback. In dev mode this will log to the console any issues.
-    this.plugins.validate(trackedEvent);
+    this.plugins.validate(trackerEvent);
 
     // Hand over TrackerEvent to TrackerTransport or TrackerQueue, if enabled and usable.
     if (this.transport && this.transport.isUsable()) {
       if (globalThis.objectiv.devTools) {
         globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(
           `｢objectiv:Tracker:${this.trackerId}｣ ${this.queue ? 'Queuing' : 'Tracking'} ${
-            trackedEvent._type
-          } (${globalThis.objectiv.devTools.getLocationPath(trackedEvent.location_stack)})`
+            trackerEvent._type
+          } (${globalThis.objectiv.devTools.getLocationPath(trackerEvent.location_stack)})`
         );
-        globalThis.objectiv.devTools.TrackerConsole.log(`Event ID: ${trackedEvent.id}`);
-        globalThis.objectiv.devTools.TrackerConsole.log(`Time: ${trackedEvent.time}`);
+        globalThis.objectiv.devTools.TrackerConsole.log(`Event ID: ${trackerEvent.id}`);
+        globalThis.objectiv.devTools.TrackerConsole.log(`Time: ${trackerEvent.time}`);
         globalThis.objectiv.devTools.TrackerConsole.group(`Location Stack:`);
-        globalThis.objectiv.devTools.TrackerConsole.log(trackedEvent.location_stack);
+        globalThis.objectiv.devTools.TrackerConsole.log(trackerEvent.location_stack);
         globalThis.objectiv.devTools.TrackerConsole.groupEnd();
         globalThis.objectiv.devTools.TrackerConsole.group(`Global Contexts:`);
-        globalThis.objectiv.devTools.TrackerConsole.log(trackedEvent.global_contexts);
+        globalThis.objectiv.devTools.TrackerConsole.log(trackerEvent.global_contexts);
         globalThis.objectiv.devTools.TrackerConsole.groupEnd();
         globalThis.objectiv.devTools.TrackerConsole.groupEnd();
       }
 
       if (this.queue) {
-        await this.queue.push(trackedEvent);
+        await this.queue.push(trackerEvent);
       } else {
-        await this.transport.handle(trackedEvent);
+        await this.transport.handle(trackerEvent);
       }
     }
 
@@ -328,6 +329,6 @@ export class Tracker implements TrackerInterface {
       }
     }
 
-    return trackedEvent;
+    return trackerEvent;
   }
 }

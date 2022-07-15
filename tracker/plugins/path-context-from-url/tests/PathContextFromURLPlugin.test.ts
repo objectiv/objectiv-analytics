@@ -30,7 +30,7 @@ describe('PathContextFromURLPlugin', () => {
         { __instance_id: generateUUID(), __global_context: true, _type: 'GlobalB', id: 'def' },
       ],
     };
-    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts });
+    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts, id: generateUUID(), time: Date.now() });
     expect(testEvent.location_stack).toHaveLength(2);
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(2);

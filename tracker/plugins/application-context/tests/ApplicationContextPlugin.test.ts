@@ -48,7 +48,7 @@ describe('ApplicationContextPlugin', () => {
         { __instance_id: generateUUID(), __global_context: true, _type: 'Context', id: 'Y' },
       ],
     };
-    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts });
+    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts, id: generateUUID(), time: Date.now() });
     expect(testEvent.global_contexts).toHaveLength(2);
     const trackedEvent = await coreTracker.trackEvent(testEvent);
     expect(trackedEvent.global_contexts).toHaveLength(3);
