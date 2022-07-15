@@ -67,7 +67,7 @@ describe('trackEvent', () => {
     jest.resetAllMocks();
   });
 
-  it('should track from a back of attributes', () => {
+  it('should track from a bag of attributes', () => {
     expect(getTracker().trackEvent).not.toHaveBeenCalled();
 
     trackEvent({ event: { _type: EventName.PressEvent }, element: testElement });
@@ -75,11 +75,9 @@ describe('trackEvent', () => {
     expect(getTracker().trackEvent).toHaveBeenCalledTimes(1);
     expect(getTracker().trackEvent).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining({
-        _type: 'PressEvent',
-        global_contexts: [],
-        location_stack: [],
-      })
+      {
+        _type: 'PressEvent'
+      }
     );
   });
 
