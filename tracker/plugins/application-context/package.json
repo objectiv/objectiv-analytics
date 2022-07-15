@@ -54,6 +54,7 @@
   "devDependencies": {
     "@objectiv/developer-tools": "^0.0.22",
     "@objectiv/testing-tools": "^0.0.22",
+    "@objectiv/schema": "^0.0.22",
     "@types/jest": "^27.4.1",
     "jest": "^27.5.1",
     "jest-standard-reporter": "^2.0.0",

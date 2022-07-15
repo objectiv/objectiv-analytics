@@ -54,6 +54,7 @@
   },
   "devDependencies": {
     "@objectiv/developer-tools": "^0.0.22",
+    "@objectiv/plugin-identity-context": "^0.0.22",
     "@objectiv/testing-tools": "^0.0.22",
     "@types/jest": "^27.4.1",
     "jest": "^27.5.1",

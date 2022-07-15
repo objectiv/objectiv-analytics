@@ -22,13 +22,15 @@ jobs:
       - name: Install dependencies
         working-directory: tracker
         run: yarn install
+      - name: Run TypeScript check
+        working-directory: tracker
+        run: yarn tsc
       - name: Run tests for all packages
         working-directory: tracker
         run: yarn test:ci
-# Temporarily disabled due to: https://github.com/depcheck/depcheck/issues/687
-#      - name: Check dependencies
-#        working-directory: tracker
-#        run: yarn check:dependencies
+      - name: Check dependencies
+        working-directory: tracker
+        run: yarn check:dependencies
       - name: Test if TS schema is up to date
         working-directory: tracker
         run: |

@@ -52,6 +52,8 @@
   },
   "devDependencies": {
     "@objectiv/developer-tools": "^0.0.22",
+    "@objectiv/plugin-application-context": "^0.0.22",
+    "@objectiv/plugin-path-context-from-url": "^0.0.22",
     "@objectiv/testing-tools": "^0.0.22",
     "@testing-library/react": "^12.1.4",
     "@testing-library/react-hooks": "^7.0.2",

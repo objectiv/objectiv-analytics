@@ -50,11 +50,12 @@
     "test": "jest --silent --runInBand",
     "test:ci": "jest --silent --ci --runInBand",
     "test:coverage": "jest --silent --coverage --runInBand",
-    "check:dependencies": "npx depcheck",
+    "check:dependencies": "npx depcheck --ignores=tsconfig-paths",
     "npm-publish": "npm publish --access=public --tag=$TAG",
     "npm-publish:verdaccio": "npm publish --tag=$TAG"
   },
   "devDependencies": {
+    "@objectiv/developer-tools": "^0.0.22",
     "@objectiv/testing-tools": "^0.0.22",
     "@objectiv/tracker-core": "^0.0.22",
     "@types/jest": "^27.4.1",

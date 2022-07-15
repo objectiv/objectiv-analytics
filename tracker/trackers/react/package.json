@@ -70,9 +70,11 @@
   "dependencies": {
     "@objectiv/plugin-application-context": "^0.0.22",
     "@objectiv/plugin-http-context": "^0.0.22",
+    "@objectiv/plugin-identity-context": "^0.0.22",
     "@objectiv/plugin-path-context-from-url": "^0.0.22",
     "@objectiv/plugin-root-location-context-from-url": "^0.0.22",
     "@objectiv/queue-local-storage": "^0.0.22",
+    "@objectiv/schema": "^0.0.22",
     "@objectiv/tracker-core": "~0.0.22",
     "@objectiv/tracker-react-core": "~0.0.22",
     "@objectiv/transport-fetch": "^0.0.22",
