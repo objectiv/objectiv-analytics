@@ -71,18 +71,20 @@ class SessionizedDataPipeline(BaseDataPipeline):
     def _validate_extracted_context_df(self, df: bach.DataFrame) -> None:
         # make sure the result has AT LEAST the following series
         # even though the ExtractedContextsPipeline already validates series
-        supported_dtypes = get_supported_dtypes_per_objectiv_column()
+        with_identity_resolution = (
+            ObjectivSupportedColumns.IDENTITY_USER_ID.value in df.data_columns
+        )
+        supported_dtypes = get_supported_dtypes_per_objectiv_column(
+            with_identity_resolution=with_identity_resolution
+        )
         expected_context_columns = [
             ObjectivSupportedColumns.EVENT_ID.value,
             ObjectivSupportedColumns.USER_ID.value,
             ObjectivSupportedColumns.MOMENT.value,
         ]
-        expected_dtypes = {col: supported_dtypes[col] for col in expected_context_columns}
-        if ObjectivSupportedColumns.IDENTITY_USER_ID.value in df.data_columns:
-            expected_dtypes[ObjectivSupportedColumns.USER_ID.value] = bach.SeriesString.dtype
 
         self._validate_data_dtypes(
-            expected_dtypes=expected_dtypes,
+            expected_dtypes={col: supported_dtypes[col] for col in expected_context_columns},
             current_dtypes=df.dtypes,
         )
 
@@ -95,6 +97,7 @@ class SessionizedDataPipeline(BaseDataPipeline):
             result,
             columns_to_check=ObjectivSupportedColumns.get_sessionized_columns(),
             check_dtypes=True,
+            infer_identity_resolution=True,
         )
 
     @property
@@ -265,25 +268,3 @@ class SessionizedDataPipeline(BaseDataPipeline):
         return session_count_series.copy_override(
             name=_BaseCalculatedSessionSeries.SESSION_COUNT.value,
         ).copy_override_type(bach.SeriesInt64)
-
-
-def get_sessionized_data(
-    session_gap_seconds: int,
-    set_index: bool = True,
-    extracted_contexts_df: bach.DataFrame = None,
-) -> bach.DataFrame:
-    """
-    Gets context and sessionized data from pipeline.
-    :param set_index: set index series for final dataframe
-    :poram extracted_contexts_df: DataFrame containing extracted context data,
-    :param session_gap_seconds: the session gap in seconds
-
-    returns a bach DataFrame
-    """
-    pipeline = SessionizedDataPipeline(session_gap_seconds=session_gap_seconds)
-    result = pipeline(extracted_contexts_df=extracted_contexts_df)
-    if set_index:
-        indexes = list(ObjectivSupportedColumns.get_index_columns())
-        result = result.set_index(keys=indexes)
-
-    return result

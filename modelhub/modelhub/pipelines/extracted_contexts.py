@@ -131,8 +131,9 @@ class ExtractedContextsPipeline(BaseDataPipeline):
     @property
     def result_series_dtypes(self) -> Dict[str, str]:
         context_columns = ObjectivSupportedColumns.get_extracted_context_columns()
+        supported_dtypes = get_supported_dtypes_per_objectiv_column(with_identity_resolution=False)
         return {
-            col: dtype for col, dtype in get_supported_dtypes_per_objectiv_column().items()
+            col: dtype for col, dtype in supported_dtypes.items()
             if col in context_columns
         }
 
@@ -244,6 +245,7 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             result,
             columns_to_check=ObjectivSupportedColumns.get_extracted_context_columns(),
             check_dtypes=True,
+            infer_identity_resolution=False,
         )
 
     def _apply_date_filter(
@@ -270,28 +272,3 @@ class ExtractedContextsPipeline(BaseDataPipeline):
             date_filters.append(df_cp[self.DATE_FILTER_COLUMN] <= end_date)
 
         return df_cp[reduce(operator.and_, date_filters)]
-
-
-def get_extracted_contexts_df(
-    engine: Engine,
-    table_name: str,
-    set_index=True,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-) -> bach.DataFrame:
-    """
-    Gets extracted context from pipeline.
-    :param engine: db connection
-    :param table_name: table from where to extract data
-    :param set_index: set index series for final dataframe
-    :param start_date: start_date to filter data
-    :param end_date: end_date to filter data
-
-    returns a bach DataFrame
-    """
-    pipeline = ExtractedContextsPipeline(engine=engine, table_name=table_name)
-    result = pipeline(start_date=start_date, end_date=end_date)
-    if set_index:
-        result = result.set_index(keys=ObjectivSupportedColumns.get_index_columns())
-
-    return result

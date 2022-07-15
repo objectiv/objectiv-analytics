@@ -185,14 +185,14 @@ def test_describe_time(engine) -> None:
     pd.testing.assert_frame_equal(expected_df, result.to_pandas())
 
 
-def test_describe_boolean(pg_engine) -> None:
+def test_describe_boolean(engine) -> None:
     pdf = pd.DataFrame(
         data=[
             [True], [False], [True],
         ],
         columns=['column'],
     )
-    df = DataFrame.from_pandas(engine=pg_engine, df=pdf, convert_objects=True)
+    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
 
     result = df.describe()
     result = result.reset_index(drop=False)

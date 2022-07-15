@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/plugin-identity-context",
-  "version": "0.0.22-3",
+  "version": "0.0.22",
   "description": "Plugin for Objectiv trackers to generate IdentityContext instances",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
@@ -53,8 +53,8 @@
     "npm-publish:verdaccio": "npm publish --tag=$TAG"
   },
   "devDependencies": {
-    "@objectiv/developer-tools": "^0.0.22-3",
-    "@objectiv/testing-tools": "^0.0.22-3",
+    "@objectiv/developer-tools": "^0.0.22",
+    "@objectiv/testing-tools": "^0.0.22",
     "@types/jest": "^27.4.1",
     "jest": "^27.5.1",
     "jest-standard-reporter": "^2.0.0",
@@ -64,6 +64,6 @@
     "typescript": "^4.6.2"
   },
   "peerDependencies": {
-    "@objectiv/tracker-core": "^0.0.22-3"
+    "@objectiv/tracker-core": "^0.0.22"
   }
 }
