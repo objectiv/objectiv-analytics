@@ -7,7 +7,7 @@ import {
   LogTransport,
   matchUUID,
   MockConsoleImplementation,
-  UUIDV4_REGEX
+  UUIDV4_REGEX,
 } from '@objectiv/testing-tools';
 import {
   ContextsConfig,
@@ -242,7 +242,7 @@ describe('Tracker', () => {
     };
     const trackerConfig: TrackerConfig = { applicationId: 'app-id' };
 
-    it("should allow overriding the generateUUID function", async () => {
+    it('should allow overriding the generateUUID function', async () => {
       const testTracker1 = new Tracker({ applicationId: 'app-id' });
       const testTracker2 = new Tracker({ applicationId: 'app-id', generateUUID: () => 'not-so-unique-after-all' });
       const trackedEvent1 = await testTracker1.trackEvent(testEvent);
