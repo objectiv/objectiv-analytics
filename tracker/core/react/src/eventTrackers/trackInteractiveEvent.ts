@@ -6,17 +6,7 @@ import { makeInteractiveEvent } from '@objectiv/tracker-core';
 import { EventTrackerParameters } from '../types';
 
 /**
- * The parameters of trackInteractiveEvent. No extra attributes, same as EventTrackerParameters.
- */
-export type InteractiveEventTrackerParameters = EventTrackerParameters;
-
-/**
  * Factors an InteractiveEvent and hands it over to the given `tracker` via its `trackEvent` method.
  */
-export const trackInteractiveEvent = ({
-  tracker,
-  locationStack,
-  globalContexts,
-  options,
-}: InteractiveEventTrackerParameters) =>
+export const trackInteractiveEvent = ({ tracker, locationStack, globalContexts, options }: EventTrackerParameters) =>
   tracker.trackEvent(makeInteractiveEvent({ location_stack: locationStack, global_contexts: globalContexts }), options);

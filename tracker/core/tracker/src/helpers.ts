@@ -14,6 +14,11 @@ export const getObjectKeys = Object.keys as <T extends object>(obj: T) => Array<
 export type NonEmptyArray<T> = [T, ...T[]];
 
 /**
+ * A TypeScript utility type to make one specific property optional
+ */
+export type Optional<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>;
+
+/**
  * A TypeScript NonEmptyArray guard
  */
 export function isNonEmptyArray<T>(array: T[]): array is NonEmptyArray<T> {

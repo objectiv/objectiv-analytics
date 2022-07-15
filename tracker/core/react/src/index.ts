@@ -35,6 +35,7 @@ export * from './hooks/consumers/useParentLocationContext';
 export * from './hooks/consumers/useTracker';
 export * from './hooks/consumers/useTrackingContext';
 
+export * from './hooks/eventTrackers/mergeEventTrackerHookAndCallbackParameters';
 export * from './hooks/eventTrackers/useApplicationLoadedEventTracker';
 export * from './hooks/eventTrackers/useFailureEventTracker';
 export * from './hooks/eventTrackers/useHiddenEventTracker';
