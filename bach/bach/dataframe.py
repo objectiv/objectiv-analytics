@@ -942,7 +942,7 @@ class DataFrame:
 
         Calling `copy(df)` will invoke this copy function, i.e. `copy(df)` is implemented as df.copy().
 
-        :returns: A copy of the dataframe.
+        :returns: A copy of the DataFrame.
         """
         return self.copy_override()
 
