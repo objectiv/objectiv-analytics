@@ -24,7 +24,7 @@ describe('InputContextWrapper', () => {
     const inputContextProps = { id: 'test-input' };
     const TrackedTextInput = () => {
       const trackInputChangeEvent = useInputChangeEventTracker();
-      return <input data-testid="input" type="text" onBlur={trackInputChangeEvent} />;
+      return <input data-testid="input" type="text" onBlur={() => trackInputChangeEvent()} />;
     };
     const { container } = render(
       <ObjectivProvider tracker={tracker}>

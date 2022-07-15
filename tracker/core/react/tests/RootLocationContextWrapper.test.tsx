@@ -24,7 +24,7 @@ describe('RootLocationContextWrapper', () => {
     const rootLocationContextProps = { id: 'test-root' };
     const TrackedButton = () => {
       const trackPressEvent = usePressEventTracker();
-      return <div onClick={trackPressEvent}>Trigger Event</div>;
+      return <div onClick={() => trackPressEvent()}>Trigger Event</div>;
     };
     const { container } = render(
       <ObjectivProvider tracker={tracker}>

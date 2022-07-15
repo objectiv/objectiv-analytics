@@ -24,7 +24,7 @@ describe('NavigationContextWrapper', () => {
     const navigationContextProps = { id: 'test-navigation' };
     const TrackedButton = () => {
       const trackPressEvent = usePressEventTracker();
-      return <nav onClick={trackPressEvent}>Trigger Event</nav>;
+      return <nav onClick={() => trackPressEvent()}>Trigger Event</nav>;
     };
     const { container } = render(
       <ObjectivProvider tracker={tracker}>

@@ -24,7 +24,7 @@ describe('PressableContextWrapper', () => {
     const buttonContextProps = { id: 'test-button' };
     const TrackedButton = () => {
       const trackPressEvent = usePressEventTracker();
-      return <button onClick={trackPressEvent}>Trigger Event</button>;
+      return <button onClick={() => trackPressEvent()}>Trigger Event</button>;
     };
     const { container } = render(
       <ObjectivProvider tracker={tracker}>

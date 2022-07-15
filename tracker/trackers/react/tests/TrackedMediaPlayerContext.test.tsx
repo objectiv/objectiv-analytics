@@ -36,7 +36,7 @@ describe('TrackedMediaPlayerContext', () => {
 
     const TrackedButton = () => {
       const trackPressEvent = usePressEventTracker();
-      return <video onClick={trackPressEvent}>Trigger Event</video>;
+      return <video onClick={() => trackPressEvent()}>Trigger Event</video>;
     };
 
     const { container } = render(
@@ -77,7 +77,7 @@ describe('TrackedMediaPlayerContext', () => {
 
     const TrackedButton = ({ children }: { children: React.ReactNode }) => {
       const trackPressEvent = usePressEventTracker();
-      return <div onClick={trackPressEvent}>{children}</div>;
+      return <div onClick={() => trackPressEvent()}>{children}</div>;
     };
 
     const { container } = render(

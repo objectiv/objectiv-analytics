@@ -4,7 +4,7 @@
 
 import { makeIdFromString, makeInputValueContext } from '@objectiv/tracker-core';
 import {
-  InputChangeEventTrackerParameters,
+  EventTrackerParameters,
   InputContextWrapper,
   TrackingContext,
   trackInputChangeEvent,
@@ -50,17 +50,17 @@ export const TrackedInputContext = React.forwardRef<HTMLInputElement, TrackedInp
     if (previousValue !== event.target.value) {
       setPreviousValue(event.target.value);
 
-      let inputChangeEventTrackerParameters: InputChangeEventTrackerParameters = trackingContext;
+      let eventTrackerParameters: EventTrackerParameters = trackingContext;
 
       // Add InputValueContext if trackValue has been set
       if (inputId && trackValue) {
-        inputChangeEventTrackerParameters = {
-          ...inputChangeEventTrackerParameters,
+        eventTrackerParameters = {
+          ...eventTrackerParameters,
           globalContexts: [makeInputValueContext({ id: inputId, value: event.target.value })],
         };
       }
 
-      trackInputChangeEvent(inputChangeEventTrackerParameters);
+      trackInputChangeEvent(eventTrackerParameters);
     }
 
     props.onBlur && props.onBlur(event);

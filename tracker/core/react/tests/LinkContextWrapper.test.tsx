@@ -24,7 +24,7 @@ describe('LinkContextWrapper', () => {
     const linkContextProps = { id: 'test-link', href: 'test' };
     const TrackedButton = () => {
       const trackPressEvent = usePressEventTracker();
-      return <a onClick={trackPressEvent}>Trigger Event</a>;
+      return <a onClick={() => trackPressEvent()}>Trigger Event</a>;
     };
     const { container } = render(
       <ObjectivProvider tracker={tracker}>
