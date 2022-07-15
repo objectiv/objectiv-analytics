@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { LocationStack, UntrackedEventConfig } from '@objectiv/tracker-core';
+import { LocationStack, TrackerEventAttributes } from '@objectiv/tracker-core';
 import { BrowserTracker } from '../BrowserTracker';
 import { getElementLocationStack } from '../common/getElementLocationStack';
 import { trackerErrorHandler } from '../common/trackerErrorHandler';
@@ -16,7 +16,7 @@ import { getTracker } from '../getTracker';
  * 3. Tracks the new Event via WebTracker
  */
 export const trackEvent = (parameters: {
-  event: UntrackedEventConfig;
+  event: TrackerEventAttributes;
   element?: TrackedElement;
   tracker?: BrowserTracker;
   trackerId?: string;

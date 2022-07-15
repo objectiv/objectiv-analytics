@@ -14,7 +14,6 @@ import {
   TrackerPluginInterface,
   TrackerQueue,
   TrackerQueueMemoryStore,
-  UntrackedEvent,
 } from '../src';
 
 require('@objectiv/developer-tools');
@@ -231,12 +230,10 @@ describe('Tracker', () => {
         { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'X' },
       ],
     };
-    const testEvent = new UntrackedEvent(
-      {
-        _type: 'test-event',
-      },
-      eventContexts
-    );
+    const testEvent = {
+      _type: 'test-event',
+      ...eventContexts,
+    };
     const trackerConfig: TrackerConfig = { applicationId: 'app-id' };
 
     it('should merge Tracker Location Stack and Global Contexts with the Event ones', async () => {

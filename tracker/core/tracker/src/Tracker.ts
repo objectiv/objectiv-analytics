@@ -5,13 +5,12 @@
 import { AbstractGlobalContext, AbstractLocationContext, Contexts } from '@objectiv/schema';
 import { ContextsConfig } from './Context';
 import { generateUUID, waitForPromise } from './helpers';
-import { TrackerEvent } from './TrackerEvent';
+import { TrackerEvent, TrackerEventAttributes } from './TrackerEvent';
 import { TrackerPluginInterface } from './TrackerPluginInterface';
 import { TrackerPlugins } from './TrackerPlugins';
 import { TrackerQueueInterface } from './TrackerQueueInterface';
 import { TrackerTransportGroup } from './TrackerTransportGroup';
 import { TrackerTransportInterface } from './TrackerTransportInterface';
-import { UntrackedEvent, UntrackedEventConfig } from './UntrackedEvent';
 
 /**
  * Tracker platforms
@@ -269,12 +268,9 @@ export class Tracker implements TrackerInterface {
   /**
    * Merges Tracker Location and Global contexts, runs all Plugins and sends the Event via the TrackerTransport.
    */
-  async trackEvent(event: UntrackedEventConfig, options?: TrackEventOptions): Promise<TrackerEvent> {
-    // TrackerEvent and Tracker share the ContextsConfig interface. We can combine them by creating a new TrackerEvent.
-    const enrichedUntrackedEvent = new UntrackedEvent(event, this);
-
-    // Set id and time and make a TrackedEvent
-    const trackerEvent = new TrackerEvent({ ...enrichedUntrackedEvent, id: generateUUID(), time: Date.now() });
+  async trackEvent(event: TrackerEventAttributes, options?: TrackEventOptions): Promise<TrackerEvent> {
+    // TrackerEvent and Tracker share the ContextsConfig interface. Combine them and Set id and time.
+    const trackerEvent = new TrackerEvent({ ...event, id: generateUUID(), time: Date.now() }, this);
 
     // Do nothing if the TrackerInstance is inactive
     if (!this.active) {

@@ -73,12 +73,9 @@ describe('trackEvent', () => {
     trackEvent({ event: { _type: EventName.PressEvent }, element: testElement });
 
     expect(getTracker().trackEvent).toHaveBeenCalledTimes(1);
-    expect(getTracker().trackEvent).toHaveBeenNthCalledWith(
-      1,
-      {
-        _type: 'PressEvent'
-      }
-    );
+    expect(getTracker().trackEvent).toHaveBeenNthCalledWith(1, {
+      _type: 'PressEvent',
+    });
   });
 
   it('should use the global tracker instance if available', () => {

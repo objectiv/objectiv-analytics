@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { UntrackedEventConfig } from '@objectiv/tracker-core';
+import { TrackerEventAttributes } from '@objectiv/tracker-core';
 import { TrackEventParameters } from '../types';
 import { useTracker } from './consumers/useTracker';
 import { useOnChange } from './useOnChange';
@@ -19,7 +19,7 @@ export type TrackOnChangeHookParameters<T> = Partial<TrackEventParameters> & {
   /**
    * The Event to track
    */
-  event: UntrackedEventConfig;
+  event: TrackerEventAttributes;
 };
 
 /**
