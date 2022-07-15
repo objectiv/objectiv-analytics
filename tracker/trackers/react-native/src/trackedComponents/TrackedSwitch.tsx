@@ -3,11 +3,7 @@
  */
 
 import { makeInputValueContext } from '@objectiv/tracker-core';
-import {
-  InputChangeEventTrackerParameters,
-  InputContextWrapper,
-  trackInputChangeEvent,
-} from '@objectiv/tracker-react-core';
+import { EventTrackerParameters, InputContextWrapper, trackInputChangeEvent } from '@objectiv/tracker-react-core';
 import React from 'react';
 import { Switch, SwitchProps } from 'react-native';
 
@@ -39,17 +35,17 @@ export function TrackedSwitch(props: TrackedSwitchProps) {
         <Switch
           {...switchProps}
           onValueChange={(value) => {
-            let inputChangeEventTrackerParameters: InputChangeEventTrackerParameters = trackingContext;
+            let eventTrackerParameters: EventTrackerParameters = trackingContext;
 
             // Add InputValueContext if trackValue has been set
             if (id && trackValue) {
-              inputChangeEventTrackerParameters = {
-                ...inputChangeEventTrackerParameters,
+              eventTrackerParameters = {
+                ...eventTrackerParameters,
                 globalContexts: [makeInputValueContext({ id, value: value ? '1' : '0' })],
               };
             }
 
-            trackInputChangeEvent(inputChangeEventTrackerParameters);
+            trackInputChangeEvent(eventTrackerParameters);
             props.onValueChange && props.onValueChange(value);
           }}
         />

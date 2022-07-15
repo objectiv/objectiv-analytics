@@ -3,11 +3,7 @@
  */
 
 import { makeInputValueContext } from '@objectiv/tracker-core';
-import {
-  InputChangeEventTrackerParameters,
-  InputContextWrapper,
-  trackInputChangeEvent,
-} from '@objectiv/tracker-react-core';
+import { EventTrackerParameters, InputContextWrapper, trackInputChangeEvent } from '@objectiv/tracker-react-core';
 import React from 'react';
 import { TextInput, TextInputProps } from 'react-native';
 
@@ -39,17 +35,17 @@ export function TrackedTextInput(props: TrackedTextInputProps) {
         <TextInput
           {...switchProps}
           onEndEditing={(event) => {
-            let inputChangeEventTrackerParameters: InputChangeEventTrackerParameters = trackingContext;
+            let eventTrackerParameters: EventTrackerParameters = trackingContext;
 
             // Add InputValueContext if trackValue has been set
             if (id && trackValue && event.nativeEvent && event.nativeEvent.text) {
-              inputChangeEventTrackerParameters = {
-                ...inputChangeEventTrackerParameters,
+              eventTrackerParameters = {
+                ...eventTrackerParameters,
                 globalContexts: [makeInputValueContext({ id, value: event.nativeEvent.text })],
               };
             }
 
-            trackInputChangeEvent(inputChangeEventTrackerParameters);
+            trackInputChangeEvent(eventTrackerParameters);
             props.onEndEditing && props.onEndEditing(event);
           }}
         />

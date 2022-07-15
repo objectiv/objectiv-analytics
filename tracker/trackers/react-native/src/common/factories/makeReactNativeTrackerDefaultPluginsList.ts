@@ -4,7 +4,7 @@
 
 import { ApplicationContextPlugin } from '@objectiv/plugin-application-context';
 import { TrackerPluginInterface } from '@objectiv/tracker-core';
-import { ReactNativeTrackerConfig } from '@objectiv/tracker-react-native';
+import { ReactNativeTrackerConfig } from '../../ReactNativeTracker';
 
 /**
  * The default list of Plugins of React Native Tracker

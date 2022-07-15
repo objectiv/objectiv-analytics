@@ -51,6 +51,7 @@
   },
   "devDependencies": {
     "@objectiv/developer-tools": "^0.0.22",
+    "@objectiv/plugin-root-location-context-from-url": "^0.0.22",
     "@objectiv/testing-tools": "^0.0.22",
     "@objectiv/transport-debug": "^0.0.22",
     "@testing-library/react-native": "^9.0.0",
