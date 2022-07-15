@@ -33,6 +33,11 @@ export type TrackerConfig = ContextsConfig & {
   applicationId: string;
 
   /**
+   * A function used by the Tracker to set the `id` of a TrackerEvent. Defaults to the `generateUUID` helper.
+   */
+  generateUUID?: () => string;
+
+  /**
    * Optional. The platform of the Tracker Instance. This affects error logging. Defaults to Core.
    */
   platform?: TrackerPlatform;
@@ -122,6 +127,7 @@ export class Tracker implements TrackerInterface {
   readonly queue?: TrackerQueueInterface;
   readonly transport?: TrackerTransportInterface;
   readonly plugins: TrackerPlugins;
+  readonly generateUUID: () => string;
 
   // Trackers are automatically activated, unless differently specified via config, during construction.
   active: boolean = false;
@@ -144,6 +150,7 @@ export class Tracker implements TrackerInterface {
     this.trackerId = trackerConfig.trackerId ?? trackerConfig.applicationId;
     this.queue = trackerConfig.queue;
     this.transport = trackerConfig.transport;
+    this.generateUUID = trackerConfig.generateUUID ?? generateUUID;
 
     // Process ContextConfigs
     let new_location_stack: AbstractLocationContext[] = trackerConfig.location_stack ?? [];
@@ -270,7 +277,7 @@ export class Tracker implements TrackerInterface {
    */
   async trackEvent(event: TrackerEventAttributes, options?: TrackEventOptions): Promise<TrackerEvent> {
     // TrackerEvent and Tracker share the ContextsConfig interface. Combine them and Set id and time.
-    const trackerEvent = new TrackerEvent({ ...event, id: generateUUID(), time: Date.now() }, this);
+    const trackerEvent = new TrackerEvent({ ...event, id: this.generateUUID(), time: Date.now() }, this);
 
     // Do nothing if the TrackerInstance is inactive
     if (!this.active) {

@@ -2,7 +2,13 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { ConfigurableMockTransport, LogTransport, matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import {
+  ConfigurableMockTransport,
+  LogTransport,
+  matchUUID,
+  MockConsoleImplementation,
+  UUIDV4_REGEX
+} from '@objectiv/testing-tools';
 import {
   ContextsConfig,
   generateUUID,
@@ -235,6 +241,15 @@ describe('Tracker', () => {
       ...eventContexts,
     };
     const trackerConfig: TrackerConfig = { applicationId: 'app-id' };
+
+    it("should allow overriding the generateUUID function", async () => {
+      const testTracker1 = new Tracker({ applicationId: 'app-id' });
+      const testTracker2 = new Tracker({ applicationId: 'app-id', generateUUID: () => 'not-so-unique-after-all' });
+      const trackedEvent1 = await testTracker1.trackEvent(testEvent);
+      const trackedEvent2 = await testTracker2.trackEvent(testEvent);
+      expect(trackedEvent1.id).toMatch(UUIDV4_REGEX);
+      expect(trackedEvent2.id).toBe('not-so-unique-after-all');
+    });
 
     it('should merge Tracker Location Stack and Global Contexts with the Event ones', async () => {
       const trackerContexts: TrackerConfig = {
