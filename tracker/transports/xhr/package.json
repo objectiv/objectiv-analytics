@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/transport-xhr",
-  "version": "0.0.22",
+  "version": "0.0.23-0",
   "description": "A TrackerTransport based on XMLHttpRequest API",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
@@ -52,8 +52,8 @@
     "npm-publish:verdaccio": "npm publish --tag=$TAG"
   },
   "devDependencies": {
-    "@objectiv/developer-tools": "^0.0.22",
-    "@objectiv/testing-tools": "^0.0.22",
+    "@objectiv/developer-tools": "^0.0.23-0",
+    "@objectiv/testing-tools": "^0.0.23-0",
     "@types/jest": "^27.4.1",
     "jest": "^27.5.1",
     "jest-standard-reporter": "^2.0.0",
@@ -64,6 +64,6 @@
     "xhr-mock": "^2.5.1"
   },
   "dependencies": {
-    "@objectiv/tracker-core": "~0.0.22"
+    "@objectiv/tracker-core": "~0.0.23-0"
   }
 }

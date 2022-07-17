@@ -4,9 +4,9 @@
 
 /**
  * Generates a v4 UUID. Automatically picks the best available implementation:
- *  - `crypto` available, `randomUUID` available: `uuidv4_Crypto_RandomUUID`.
- *  - `crypto` available, `randomUUID` not available, `getRandomValues` available: `uuidv4_Crypto_GetRandomValues`.
- *  - `crypto` not available: `uuidv4_DateNow_MathRandom`.
+ *  - `crypto` available, `randomUUID` available: `crypto_RandomUUID`.
+ *  - `crypto` available, `randomUUID` not available, `getRandomValues` available: `crypto_GetRandomValues`.
+ *  - `crypto` not available: `dateNow_MathRandom`.
  *
  * The different implementations are also callable individually:
  *  - uuidv4.crypto_RandomUUID()

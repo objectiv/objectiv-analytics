@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/tracker-browser",
-  "version": "0.0.22",
+  "version": "0.0.23-0",
   "description": "Objectiv Web application analytics tracker for the open analytics taxonomy",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
@@ -50,8 +50,8 @@
     "npm-publish:verdaccio": "npm publish --tag=$TAG"
   },
   "devDependencies": {
-    "@objectiv/developer-tools": "^0.0.22",
-    "@objectiv/testing-tools": "^0.0.22",
+    "@objectiv/developer-tools": "^0.0.23-0",
+    "@objectiv/testing-tools": "^0.0.23-0",
     "@types/jest": "^27.4.1",
     "jest": "^27.5.1",
     "jest-fetch-mock": "^3.0.3",
@@ -63,15 +63,15 @@
     "typescript": "^4.6.2"
   },
   "dependencies": {
-    "@objectiv/plugin-application-context": "^0.0.22",
-    "@objectiv/plugin-http-context": "^0.0.22",
-    "@objectiv/plugin-path-context-from-url": "^0.0.22",
-    "@objectiv/plugin-root-location-context-from-url": "^0.0.22",
-    "@objectiv/queue-local-storage": "^0.0.22",
-    "@objectiv/schema": "^0.0.22",
-    "@objectiv/tracker-core": "^0.0.22",
-    "@objectiv/transport-debug": "^0.0.22",
-    "@objectiv/transport-fetch": "^0.0.22",
-    "@objectiv/transport-xhr": "^0.0.22"
+    "@objectiv/plugin-application-context": "^0.0.23-0",
+    "@objectiv/plugin-http-context": "^0.0.23-0",
+    "@objectiv/plugin-path-context-from-url": "^0.0.23-0",
+    "@objectiv/plugin-root-location-context-from-url": "^0.0.23-0",
+    "@objectiv/queue-local-storage": "^0.0.23-0",
+    "@objectiv/schema": "^0.0.23-0",
+    "@objectiv/tracker-core": "^0.0.23-0",
+    "@objectiv/transport-debug": "^0.0.23-0",
+    "@objectiv/transport-fetch": "^0.0.23-0",
+    "@objectiv/transport-xhr": "^0.0.23-0"
   }
 }
