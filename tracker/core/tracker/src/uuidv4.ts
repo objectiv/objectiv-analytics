@@ -18,17 +18,14 @@ export function uuidv4() {
 
   if(crypto) {
     if(crypto['randomUUID']) {
-      console.log('using crypto.randomUUID');
       return uuidv4.uuidv4_Crypto_RandomUUID();
     }
 
     if(crypto['getRandomValues']) {
-      console.log('using crypto.getRandomValues');
       return uuidv4.uuidv4_Crypto_GetRandomValues();
     }
   }
 
-  console.log('using Date.now() & Math.random()');
   return uuidv4.uuidv4_DateNow_MathRandom();
 }
 
@@ -36,7 +33,7 @@ export function uuidv4() {
  * The most basic implementation is an alias of `crypto.randomUUID`
  */
 uuidv4.uuidv4_Crypto_RandomUUID = () => {
-  crypto.randomUUID()
+  globalThis.crypto.randomUUID()
 }
 
 /**
@@ -47,7 +44,7 @@ uuidv4.uuidv4_Crypto_RandomUUID = () => {
 uuidv4.uuidv4_Crypto_GetRandomValues = () => {
   return `${1e7}-${1e3}-${4e3}-${8e3}-${1e11}`.replace(/[018]/g, (character: string) => {
     const number = parseInt(character);
-    return (number ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (number / 4)))).toString(16);
+    return (number ^ (globalThis.crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (number / 4)))).toString(16);
   });
 }
 
