@@ -13,7 +13,7 @@
  *  - uuidv4.uuidv4_Crypto_GetRandomValues()
  *  - uuidv4.uuidv4_DateNow_MathRandom()
  */
-export function uuidv4() {
+export function uuidv4(): string {
   const crypto = globalThis.crypto;
 
   if(crypto) {
@@ -33,7 +33,7 @@ export function uuidv4() {
  * The most basic implementation is an alias of `crypto.randomUUID`
  */
 uuidv4.uuidv4_Crypto_RandomUUID = () => {
-  globalThis.crypto.randomUUID()
+  return globalThis.crypto.randomUUID()
 }
 
 /**
