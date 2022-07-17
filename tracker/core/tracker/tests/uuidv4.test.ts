@@ -5,9 +5,9 @@
 import { uuidv4 } from "@objectiv/tracker-core";
 
 describe('uuidv4', () => {
-  jest.spyOn(uuidv4, 'uuidv4_Crypto_RandomUUID');
-  jest.spyOn(uuidv4, 'uuidv4_Crypto_GetRandomValues');
-  jest.spyOn(uuidv4, 'uuidv4_DateNow_MathRandom');
+  jest.spyOn(uuidv4, 'crypto_RandomUUID');
+  jest.spyOn(uuidv4, 'crypto_GetRandomValues');
+  jest.spyOn(uuidv4, 'dateNow_MathRandom');
 
   beforeEach(()=>{
     jest.resetAllMocks();
@@ -17,15 +17,15 @@ describe('uuidv4', () => {
     jest.restoreAllMocks();
   })
 
-  it('should invoke uuidv4_DateNow_MathRandom when `crypto` is not available', function () {
+  it('should invoke `dateNow_MathRandom` when `crypto` is not available', function () {
     // @ts-ignore
     globalThis.crypto = undefined;
     expect(globalThis.crypto).toBeUndefined();
     uuidv4();
-    expect(uuidv4.uuidv4_DateNow_MathRandom).toHaveBeenCalled();
+    expect(uuidv4.dateNow_MathRandom).toHaveBeenCalled();
   });
 
-  it('should invoke uuidv4_Crypto_GetRandomValues when `crypto` is available but `randomUUID` is not ', function () {
+  it('should invoke `crypto_GetRandomValues` when `crypto` is available but `randomUUID` is not ', function () {
     // @ts-ignore
     globalThis.crypto = {
       getRandomValues: jest.fn()
@@ -34,35 +34,35 @@ describe('uuidv4', () => {
     expect(globalThis.crypto.randomUUID).toBeUndefined();
     expect(globalThis.crypto.getRandomValues).not.toBeUndefined();
     uuidv4();
-    expect(uuidv4.uuidv4_Crypto_GetRandomValues).toHaveBeenCalled();
+    expect(uuidv4.crypto_GetRandomValues).toHaveBeenCalled();
   });
 
-  it('should invoke uuidv4_Crypto_RandomUUID when `crypto` and its `randomUUID` method are available', function () {
+  it('should invoke `crypto_RandomUUID` when `crypto` and its `randomUUID` method are available', function () {
     // @ts-ignore
     globalThis.crypto = {
       randomUUID: jest.fn()
     };
     expect(globalThis.crypto).not.toBeUndefined();
     expect(globalThis.crypto.randomUUID).not.toBeUndefined();
-    expect(uuidv4.uuidv4_Crypto_RandomUUID).not.toHaveBeenCalled();
+    expect(uuidv4.crypto_RandomUUID).not.toHaveBeenCalled();
     uuidv4();
-    expect(uuidv4.uuidv4_Crypto_RandomUUID).toHaveBeenCalled();
+    expect(uuidv4.crypto_RandomUUID).toHaveBeenCalled();
   });
 });
 
-describe('uuidv4.uuidv4_Crypto_RandomUUID', () => {
+describe('uuidv4.crypto_RandomUUID', () => {
   it('should invoke `crypto.randomUUID`', function () {
     // @ts-ignore
     globalThis.crypto = {
       randomUUID: jest.fn()
     };
     expect(globalThis.crypto.randomUUID).not.toHaveBeenCalled();
-    uuidv4.uuidv4_Crypto_RandomUUID();
+    uuidv4.crypto_RandomUUID();
     expect(globalThis.crypto.randomUUID).toHaveBeenCalled();
   })
 })
 
-describe('uuidv4.uuidv4_Crypto_GetRandomValues', () => {
+describe('uuidv4.crypto_GetRandomValues', () => {
   it('should invoke `crypto.getRandomValues` 14 times', function () {
     // @ts-ignore
     globalThis.crypto = {
@@ -70,12 +70,12 @@ describe('uuidv4.uuidv4_Crypto_GetRandomValues', () => {
       getRandomValues: jest.fn(() => new Uint8Array(1))
     };
     expect(globalThis.crypto.getRandomValues).not.toHaveBeenCalled();
-    uuidv4.uuidv4_Crypto_GetRandomValues();
+    uuidv4.crypto_GetRandomValues();
     expect(globalThis.crypto.getRandomValues).toHaveBeenCalledTimes(31); // not 32, because one digit is always `4`
   })
 })
 
-describe('uuidv4.uuidv4_DateNow_MathRandom', () => {
+describe('uuidv4.dateNow_MathRandom', () => {
   const originalDateNow = Date.now.bind(globalThis.Date);
   const originalMathRandom = Math.random.bind(globalThis.Math);
 
@@ -94,7 +94,7 @@ describe('uuidv4.uuidv4_DateNow_MathRandom', () => {
     globalThis.crypto = undefined;
     expect(Date.now).not.toHaveBeenCalled();
     expect(Math.random).not.toHaveBeenCalled();
-    uuidv4.uuidv4_DateNow_MathRandom();
+    uuidv4.dateNow_MathRandom();
     expect(Date.now).toHaveBeenCalled();
     expect(Math.random).toHaveBeenCalled();
   })
