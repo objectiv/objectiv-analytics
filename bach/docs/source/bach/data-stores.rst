@@ -8,13 +8,13 @@
 Supported data stores
 =====================
 Our aim is to support all popular data stores with Bach. Currently we support PostgreSQL and Google BigQuery; 
-see below for more details and tips on each. Our roadmap includes Amazon Athena, Redshift, Clickhouse, 
-Databricks, etcetera.
+see below for more details and tips on each. Our roadmap includes Amazon Athena, Databrick, Redshift, 
+Clickhouse, etcetera.
 
 PostgreSQL
 ---------------
-Out of the box, Objectiv `comes with a PostgreSQL database </docs/tracking/>`_. There are no known 
-compatibility issues, please let us know if you find any.
+Out of the box, the Objectiv Collector `comes with a PostgreSQL database </docs/tracking/>`_. There are no 
+known compatibility issues - please let us know if you find any.
 
 Google BigQuery
 ---------------
@@ -62,9 +62,3 @@ One way of checking SQL complexity is to print the resulting query:
 .. code-block:: console
 
     display_sql_as_markdown(df)
-
-
-Coming soon: Amazon Athena
---------------------------
-We are currently working on supporting Amazon Athena. See 
-`our repository <https://github.com/objectiv/objectiv-analytics>`_ for our progress.
