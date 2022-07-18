@@ -783,8 +783,7 @@ class DataFrame:
             'engine': engine,
             'base_node': base_node,
             'group_by': group_by,
-            'sorted_ascending': None,
-            'index_sorting': [],
+            'order_by': [],
         }
         index: Dict[str, Series] = {
             name: get_series_type_from_dtype(dtype).get_class_instance(
@@ -911,8 +910,7 @@ class DataFrame:
                     name=name,
                     expression=expression_class.column_reference(name),
                     group_by=args['group_by'],
-                    sorted_ascending=None,
-                    index_sorting=[],
+                    order_by=[],
                     instance_dtype=dtype,
                     **extra_params
                 )

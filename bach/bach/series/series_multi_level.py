@@ -92,8 +92,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
         name: str,
         expression: Expression,
         group_by: Optional['GroupBy'],
-        sorted_ascending: Optional[bool],
-        index_sorting: List[bool],
+        order_by: Optional[List[SortColumn]],
         instance_dtype: StructuredDtype,
         **kwargs
     ):
@@ -107,8 +106,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
             'base_node': base_node,
             'group_by': group_by,
             'index': index,
-            'sorted_ascending': sorted_ascending,
-            'index_sorting': [] if index_sorting is None else index_sorting,
+            'order_by': order_by,
         }
 
         default_level_dtypes = cls.get_supported_level_dtypes()
@@ -158,8 +156,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
             name=name,
             expression=expression,
             group_by=group_by,
-            sorted_ascending=sorted_ascending,
-            index_sorting=[] if index_sorting is None else index_sorting,
+            order_by=order_by,
             instance_dtype=instance_dtype,
             **sub_levels
         )
@@ -239,8 +236,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
             name=name,
             expression=Expression.construct(''),
             group_by=None,
-            sorted_ascending=None,
-            index_sorting=[],
+            order_by=[],
             instance_dtype=dtype,
             **levels
         )
@@ -391,8 +387,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
             base_node=self.base_node,
             index=self.index,
             group_by=self.group_by,
-            sorted_ascending=self.sorted_ascending,
-            index_sorting=self.index_sorting,
+            order_by=self.order_by,
         )
 
 

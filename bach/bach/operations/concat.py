@@ -321,15 +321,19 @@ class SeriesConcatOperation(ConcatOperation[Series]):
         final_result_series: ResultSeries = list(self._get_series().values())[0]
 
         series_cls = get_series_type_from_dtype(final_result_series.dtype)
+        node = self._get_model(objects, variables={})
+        index = {
+            idx_name: idx.copy_override(base_node=node)
+            for idx_name, idx in main_series.index.items()
+        }
         return series_cls(
             engine=main_series.engine,
-            base_node=self._get_model(objects, variables={}),
+            base_node=node,
             name=final_result_series.name,
             expression=Expression.column_reference(final_result_series.name),
-            index={} if self.ignore_index else main_series.index,
+            index={} if self.ignore_index else index,
             group_by=None,
-            sorted_ascending=None,
-            index_sorting=[] if self.ignore_index else main_series.index_sorting,
+            order_by=[],
             instance_dtype=series_cls.dtype  # TODO: make this work for structural types too
         )
 

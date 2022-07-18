@@ -125,8 +125,6 @@ class Series(ABC):
         name: str,
         expression: Expression,
         group_by: Optional['GroupBy'],
-        sorted_ascending: Optional[bool],
-        index_sorting: List[bool],
         instance_dtype: StructuredDtype,
         order_by: Optional[List[SortColumn]] = None,
         **kwargs,
@@ -157,9 +155,6 @@ class Series(ABC):
         :param name: name of this Series
         :param expression: Expression that this Series represents
         :param group_by: The requested aggregation for this series.
-        :param sorted_ascending: None for no sorting, True for sorted ascending, False for sorted descending
-        :param index_sorting: list of bools indicating whether to sort ascending/descending on the different
-            columns of the index. Empty list for no sorting on index.
         :param instance_dtype: dtype of this specific instance. For basic scalar types this should be the
             same value as self.dtype. For structured types (e.g. SeriesDict) this should indicate what the
             structure of the data is.
@@ -193,11 +188,6 @@ class Series(ABC):
             raise ValueError(f'Series and aggregation index do not match: {group_by.index} != {index}')
         if not group_by and expression.has_aggregate_function:
             raise ValueError('Expression has an aggregation function set, but there is no group_by')
-        if sorted_ascending is not None and index_sorting:
-            raise ValueError('Series cannot be sorted by both value and index.')
-        if index_sorting and len(index_sorting) != len(index):
-            raise ValueError(f'Length of index_sorting ({len(index_sorting)}) should match '
-                             f'length of index ({len(index)}).')
         if not is_valid_column_name(dialect=engine.dialect, name=name):
             raise ValueError(f'Column name "{name}" is not valid for SQL dialect {engine.dialect}')
 
@@ -211,8 +201,6 @@ class Series(ABC):
         self._name = name
         self._expression = expression
         self._group_by = group_by
-        self._sorted_ascending = sorted_ascending
-        self._index_sorting = index_sorting
         self._instance_dtype = instance_dtype
         self._order_by = order_by or []
 
@@ -312,20 +300,6 @@ class Series(ABC):
         return copy(self._group_by)
 
     @property
-    def sorted_ascending(self) -> Optional[bool]:
-        """
-        Get this Series' sorting by value. None indicates that the Series is not sorted by value.
-        """
-        return self._sorted_ascending
-
-    @property
-    def index_sorting(self) -> List[bool]:
-        """
-        Get this Series' index sorting. An empty list indicates no sorting by index.
-        """
-        return copy(self._index_sorting)
-
-    @property
     def order_by(self) -> List[SortColumn]:
         """
         Get the series expressions for sorting this Series.
@@ -365,8 +339,7 @@ class Series(ABC):
         name: str,
         expression: Expression,
         group_by: Optional['GroupBy'],
-        sorted_ascending: Optional[bool],
-        index_sorting: List[bool],
+        order_by: Optional[List[SortColumn]],
         instance_dtype: StructuredDtype,
         **kwargs
     ):
@@ -378,8 +351,7 @@ class Series(ABC):
             name=name,
             expression=expression,
             group_by=group_by,
-            sorted_ascending=sorted_ascending,
-            index_sorting=[] if index_sorting is None else index_sorting,
+            order_by=order_by,
             instance_dtype=instance_dtype,
             **kwargs
         )
@@ -482,8 +454,7 @@ class Series(ABC):
             name=name,
             expression=expression,
             group_by=None,
-            sorted_ascending=None,
-            index_sorting=[],
+            order_by=[],
             instance_dtype=dtype
         )
         return result
@@ -526,8 +497,6 @@ class Series(ABC):
         name: Optional[str] = None,
         expression: Optional['Expression'] = None,
         group_by: Optional[Union['GroupBy', NotSet]] = not_set,
-        sorted_ascending: Optional[Union[bool, NotSet]] = not_set,
-        index_sorting: Optional[List[bool]] = None,
         instance_dtype: Optional[StructuredDtype] = None,
         order_by: Optional[Union[List[SortColumn]]] = None,
         **kwargs
@@ -538,9 +507,6 @@ class Series(ABC):
         Special case:
         * If index is not None, then index_sorting is automatically set to `[]` unless overridden
         """
-        if index and index_sorting is None:
-            index_sorting = []
-
         return self.__class__(
             engine=self._engine if engine is None else engine,
             base_node=self._base_node if base_node is None else base_node,
@@ -548,8 +514,6 @@ class Series(ABC):
             name=self._name if name is None else name,
             expression=self._expression if expression is None else expression,
             group_by=self._group_by if group_by is not_set else group_by,
-            sorted_ascending=self._sorted_ascending if sorted_ascending is not_set else sorted_ascending,
-            index_sorting=self._index_sorting if index_sorting is None else index_sorting,
             instance_dtype=self.instance_dtype if instance_dtype is None else instance_dtype,
             order_by=self.order_by if order_by is None else order_by,
             **kwargs
@@ -586,8 +550,6 @@ class Series(ABC):
             name=self._name,
             expression=self._expression,
             group_by=self._group_by,
-            sorted_ascending=self._sorted_ascending,
-            index_sorting=self._index_sorting,
             instance_dtype=instance_dtype,
             order_by=self.order_by,
             **kwargs,
@@ -736,6 +698,10 @@ class Series(ABC):
             other_series = df.all_series[mod_other_name]
             return caller_series, other_series
 
+        caller_index = {
+            idx_name: idx.copy_override(base_node=df.base_node)
+            for idx_name, idx in self.index.items()
+        }
         if (
             other.base_node == left.base_node
             and not set(self.base_node.columns) >= {other.name, f'{other.name}__other'}
@@ -748,10 +714,16 @@ class Series(ABC):
             # incorrect second expression = a + b - b
             # correct second expression = a + b__other - b
             caller_expr = self.expression.replace_column_references(other.name, f'{other.name}__other')
-            caller_series = self.copy_override(base_node=df.base_node, expression=caller_expr)
+            caller_series = self.copy_override(
+                base_node=df.base_node,
+                expression=caller_expr,
+                index=caller_index,
+            )
         else:
             # just update base node
-            caller_series = self.copy_override(base_node=df.base_node)
+            caller_series = self.copy_override(
+                base_node=df.base_node, index=caller_index,
+            )
         other_series = df.all_series[mod_other_name]
         return caller_series, other_series
 
@@ -873,9 +845,7 @@ class Series(ABC):
 
         :param ascending: Whether to sort ascending (True) or descending (False)
         """
-        if self._sorted_ascending is not None and self._sorted_ascending == ascending:
-            return self
-        return self.copy_override(sorted_ascending=ascending)
+        return self.sort_by_series(by=[self.copy()], ascending=ascending)
 
     def sort_by_series(self, by: List['Series'], ascending: Union[bool, List[bool]] = True):
         """
@@ -918,9 +888,8 @@ class Series(ABC):
         if not all(isinstance(asc, bool) for asc in ascending_list):
             raise ValueError('Parameter ascending should be a bool or a list of bools')
 
-        return self.copy_override(
-            sorted_ascending=None,
-            index_sorting=ascending_list
+        return self.sort_by_series(
+            by=list(self.index.values()), ascending=ascending_list,
         )
 
     def view_sql(self):
@@ -932,17 +901,6 @@ class Series(ABC):
 
         The DataFrame returned has the grouping and sorting also set like this Series had.
         """
-        if self._sorted_ascending is not None:
-            order_by = [SortColumn(expression=self.expression, asc=self._sorted_ascending)]
-        elif self.index_sorting:
-            order_by = []
-            for i, index_series in enumerate(self.index.values()):
-                asc = self.index_sorting[i]
-                order_by.append(SortColumn(expression=index_series.expression, asc=asc))
-        else:
-            order_by = []
-
-        order_by += self.order_by
         from bach.savepoints import Savepoints
         return DataFrame(
             engine=self._engine,
@@ -950,7 +908,7 @@ class Series(ABC):
             index=self._index,
             series={self._name: self},
             group_by=self._group_by,
-            order_by=order_by,
+            order_by=self.order_by,
             savepoints=Savepoints(),
             variables={}
         )
@@ -1061,8 +1019,7 @@ class Series(ABC):
                 self.expression == other.expression and
                 # avoid loops here.
                 (recursion == 'GroupBy' or self.group_by == other.group_by) and
-                self.sorted_ascending == other.sorted_ascending and
-                self.index_sorting == other.index_sorting and
+                self.order_by == other.order_by and
                 self.instance_dtype == other.instance_dtype
         )
 
@@ -1959,8 +1916,7 @@ def variable_series(
         name='__variable__',
         expression=ConstValueExpression(variable_expression),
         group_by=None,
-        sorted_ascending=None,
-        index_sorting=[],
+        order_by=[],
         instance_dtype=series_type.dtype  # TODO: make work for structural types too
     )
     return result
