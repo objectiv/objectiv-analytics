@@ -7,19 +7,19 @@
 =====================
 Supported data stores
 =====================
-Our aim is to support all popular data stores with Bach. Currently we support PostgreSQL and Google BigQuery; 
-see below for more details and tips on each. Our roadmap includes Amazon Athena, Databrick, Redshift, 
-Clickhouse, etcetera.
+Our aim is to support all popular data stores with Bach. Currently we support PostgreSQL and `Google BigQuery
+</docs/tracking/backend/snowplow/gcp-and-bigquery>`_; see below for more details and tips on each. Our roadmap 
+includes Amazon Athena, Databrick, Redshift, Clickhouse, etcetera.
 
 PostgreSQL
 ---------------
-Out of the box, the Objectiv Collector `comes with a PostgreSQL database </docs/tracking/>`_. There are no 
+Out of the box, the Objectiv Collector `comes with a PostgreSQL database </docs/tracking/backend/>`_. There are no 
 known compatibility issues - please let us know if you find any.
 
 Google BigQuery
 ---------------
-Google BigQuery is supported via a Snowplow pipeline. See `how to set up Google BigQuery 
-</docs/tracking/backend/snowplow/google-bigquery>`_.
+Google BigQuery is supported via a Snowplow pipeline. See `how to set up GCP & BigQuery 
+</docs/tracking/backend/snowplow/gcp-and-bigquery>`_.
 
 A few things are useful to keep in mind while modeling on BigQuery, see the tips below.
 
