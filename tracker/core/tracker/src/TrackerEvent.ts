@@ -22,18 +22,7 @@ export type TrackerEventAttributes = Pick<AbstractEvent, '_type'> & ContextsConf
 /**
  * The configuration object accepted by TrackerEvent's constructor
  * */
-export type TrackerEventConfig = Pick<AbstractEvent, '_type'> &
-  ContextsConfig & {
-    /**
-     * The event unique identifier.
-     */
-    id: string;
-
-    /**
-     * The tracking time.
-     */
-    time: number;
-  };
+export type TrackerEventConfig = Pick<AbstractEvent, '_type' | 'id' | 'time'> & ContextsConfig;
 
 /**
  * Our main TrackedEvent interface and basic implementation.
