@@ -17,11 +17,11 @@ export function uuidv4() {
   const crypto = globalThis.crypto;
 
   if(crypto) {
-    if(crypto['randomUUID']) {
+    if(crypto.hasOwnProperty('randomUUID')) {
       return uuidv4.crypto_RandomUUID();
     }
 
-    if(crypto['getRandomValues']) {
+    if(crypto.hasOwnProperty('getRandomValues')) {
       return uuidv4.crypto_GetRandomValues();
     }
   }
@@ -33,6 +33,7 @@ export function uuidv4() {
  * The most basic implementation is an alias of `crypto.randomUUID`
  */
 uuidv4.crypto_RandomUUID = () => {
+  //@ts-ignore silence TS warnings for older TS versions, we check availability in the method above.
   return globalThis.crypto.randomUUID()
 }
 
