@@ -16,12 +16,12 @@
 export function uuidv4() {
   const crypto = globalThis.crypto;
 
-  if(crypto) {
-    if(crypto.hasOwnProperty('randomUUID')) {
+  if (crypto) {
+    if (crypto.hasOwnProperty('randomUUID')) {
       return uuidv4.crypto_RandomUUID();
     }
 
-    if(crypto.hasOwnProperty('getRandomValues')) {
+    if (crypto.hasOwnProperty('getRandomValues')) {
       return uuidv4.crypto_GetRandomValues();
     }
   }
@@ -34,8 +34,8 @@ export function uuidv4() {
  */
 uuidv4.crypto_RandomUUID = () => {
   //@ts-ignore silence TS warnings for older TS versions, we check availability in the method above.
-  return globalThis.crypto.randomUUID()
-}
+  return globalThis.crypto.randomUUID();
+};
 
 /**
  * Kudos to Robert Kieffer (https://github.com/broofa), co-author of the uuid js module, for sharing this on SO.
@@ -47,7 +47,7 @@ uuidv4.crypto_GetRandomValues = () => {
     const number = parseInt(character);
     return (number ^ (globalThis.crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (number / 4)))).toString(16);
   });
-}
+};
 
 /**
  * A simplistic `Date.now()` & `Math.random()` based pseudo random UUID v4.
@@ -57,4 +57,4 @@ uuidv4.crypto_GetRandomValues = () => {
 uuidv4.dateNow_MathRandom = () => {
   const rng = Date.now().toString(16) + Math.random().toString(16) + '0'.repeat(16);
   return [rng.substring(0, 8), rng.substring(8, 12), '4000-8' + rng.substring(13, 16), rng.substring(16, 28)].join('-');
-}
+};
