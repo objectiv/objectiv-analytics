@@ -34,6 +34,16 @@ export type TrackerConfig = ContextsConfig & {
 
   /**
    * A function used by the Tracker to set the `id` of a TrackerEvent. Defaults to the `generateUUID` helper.
+   *
+   * TrackerEvents must have unique identifiers, at the very least in the same session, for deduplication.
+   *
+   * This is because Trackers may send the same events multiple times to the Collector in several situations:
+   *
+   *  - Tracker gets destroyed before receiving a response from the Collector.
+   *  - Tracker gets destroyed before having the time to clean the persistent Queue.
+   *  - Flaky connectivity may lead to timeouts and remote responses being lost, which results in retries.
+   *
+   * In general, Trackers will always re-send events when it's not 100% certain whether they were delivered or not.
    */
   generateUUID?: () => string;
 
