@@ -140,7 +140,8 @@ DataFrame then points to the data in the database, and all operations are done d
 
 **Google BigQuery**
 
-TODO
+Google BigQuery is supported via a Snowplow pipeline. See `how to set up Google BigQuery 
+</docs/tracking/backend/snowplow/google-bigquery>`_.
 
 .. currentmodule:: modelhub
 

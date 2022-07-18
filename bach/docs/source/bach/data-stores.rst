@@ -18,7 +18,8 @@ known compatibility issues - please let us know if you find any.
 
 Google BigQuery
 ---------------
-Google BigQuery is supported via Snowplow. See the [BigQuery documentation on how to set it up](TODO LINK).
+Google BigQuery is supported via a Snowplow pipeline. See `how to set up Google BigQuery 
+</docs/tracking/backend/snowplow/google-bigquery>`_.
 
 A few things are useful to keep in mind while modeling on BigQuery, see the tips below.
 
