@@ -4,7 +4,6 @@ Copyright 2021 Objectiv B.V.
 import pytest
 
 from bach import DataFrame, Series, SeriesDict
-from sql_models.util import is_bigquery, is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data, df_to_list, \
     get_df_with_test_data
 
