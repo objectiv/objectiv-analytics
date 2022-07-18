@@ -193,12 +193,12 @@ class SeriesAbstractMultiLevel(Series, ABC):
 
     @classmethod
     def from_value(
-        cls,
+        cls: Type[T],
         base: DataFrameOrSeries,
         value: Any,
         name: str,
         dtype: Optional[StructuredDtype] = None
-    ) -> 'Series':
+    ) -> T:
         """
         Create an instance of this class, that represents a column with the given value.
         The returned Series will be similar to the Series given as base. In case a DataFrame is given,
