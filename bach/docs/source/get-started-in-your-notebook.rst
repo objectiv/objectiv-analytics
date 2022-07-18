@@ -33,7 +33,7 @@ Jupyter
 
 	modelhub = ModelHub(time_aggregation='%Y-%m-%d')
 
-\4. See the section below on how to set up the database connection.
+\4. [See the section below on how to set up the database connection](#set-up-your-database-connection).
 
 
 Google Colab / Hex / Deepnote
@@ -41,7 +41,7 @@ Google Colab / Hex / Deepnote
 
 .. note:: 
     **For Deepnote only:** as a very first step, create a requirements.txt file, add `pandas==1.4.1` to it, 
-    and restart the machine:
+    and restart the machine.
 
 
 \1. Install the open model hub in the beginning of your notebook:
@@ -103,7 +103,7 @@ Google Colab / Hex / Deepnote
         os.remove(pk_path)
         raise(e)
 
-\5. See the section below on how to set up the database connection.
+\5. [See the section below on how to set up the database connection](#set-up-your-database-connection).
 
 
 Set up your database connection
@@ -112,7 +112,7 @@ Set up your database connection
 Now we can connect to the database, and create an Objectiv :class:`DataFrame <bach.DataFrame>`. This 
 DataFrame then points to the data in the database, and all operations are done directly on it.
 
-.. caution:: 
+.. note:: 
     When setting up the database connection and creating the Objectiv DataFrame, you can pass multiple 
     parameters (such as `start_date` and `end_date` above). See the 
     :py:meth:`get_objectiv_dataframe <ModelHub.get_objectiv_dataframe>` call for details.
