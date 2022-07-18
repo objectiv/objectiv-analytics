@@ -81,6 +81,9 @@ def test_df_numerical_describe(engine) -> None:
 
 def test_include_mixed() -> None:
     df = get_bt_with_test_data()
+    # duplicate last row. This will make the `mode` well-defined for all columns
+    df = df.append(df.sort_index()[2:3])
+
     df['inhabitants'] = df['inhabitants'].astype('float64')
     df['timedelta'] = datetime.timedelta(days=1)
     include_dtypes = ['string', 'float64', 'int64', 'timedelta']
@@ -89,22 +92,20 @@ def test_include_mixed() -> None:
 
     expected_df = pd.DataFrame(
         data=[
-            ['count', 3., '3', '3', 3., 3., '3'],
-            ['mean', 2., None, None, 43353.33, 1336.33, '1 day'],
-            ['std', 1., None, None, 46009.97, 103.98, None],
-            ['min', 1., 'Drylts', 'Leeuwarden', 3055., 1268., '1 day'],
-            ['max', 3., 'Snits', 'Súdwest-Fryslân', 93485., 1456., '1 day'],
-            ['nunique', 3., '3', '2', 3., 3., '1'],
-            ['mode', 1., 'Drylts', 'Súdwest-Fryslân', 3055., 1268., '1 day'],
-            ['0.25', 1.5, None, None, 18287.5, 1276.5, '1 day'],
-            ['0.5', 2., None, None, 33520.,  1285., '1 day'],
-            ['0.75', 2.5, None, None, 63502.5, 1370.5, '1 day'],
-        ],
+            ['count', 4.0, '4', '4', 4.0, 4.0, '4'],
+            ['mean', 2.25, None, None, 33278.75, 1319.25, '1 day'],
+            ['std', 0.96, None, None, 42629.41, 91.52, None],
+            ['min', 1.0, 'Drylts', 'Leeuwarden', 3055.0, 1268.0, '1 day'],
+            ['max', 3.0, 'Snits', 'Súdwest-Fryslân', 93485.0, 1456.0, '1 day'],
+            ['nunique', 3.0, '3', '2', 3.0, 3.0, '1'],
+            ['mode', 3.0, 'Drylts', 'Súdwest-Fryslân', 3055.0, 1268.0, '1 day'],
+            ['0.25', 1.75, None, None, 3055.0, 1268.0, '1 day'],
+            ['0.5', 2.5, None, None, 18287.5, 1276.5, '1 day'],
+            ['0.75', 3.0, None, None, 48511.25, 1327.75, '1 day']],
         columns=[
             '__stat', 'skating_order', 'city', 'municipality', 'inhabitants', 'founding', 'timedelta'
         ],
     )
-
     pd.testing.assert_frame_equal(result.to_pandas(), expected_df)
 
 
