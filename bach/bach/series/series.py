@@ -877,7 +877,9 @@ class Series(ABC):
             return self
         return self.copy_override(sorted_ascending=ascending)
 
-    def sort_by_series(self, by: List['Series'], ascending: Union[bool, List[bool]] = True):
+    def sort_by_series(
+        self: T, by: List['Series'], *, ascending: Union[bool, List[bool]] = True,
+    ) -> T:
         """
         Sort this Series by other Series that have the same base node as this Series.
         Returns a new instance and does not actually modify the instance it is called on.
