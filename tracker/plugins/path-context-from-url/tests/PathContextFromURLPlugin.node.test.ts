@@ -3,7 +3,7 @@
  * @jest-environment node
  */
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateUUID, TrackerEvent } from '@objectiv/tracker-core';
+import { generateGUID, TrackerEvent } from '@objectiv/tracker-core';
 import { PathContextFromURLPlugin } from '../src';
 
 require('@objectiv/developer-tools');
@@ -22,7 +22,7 @@ describe('PathContextFromURLPlugin - node', () => {
   it('when unusable, should not enrich and log an error message', () => {
     const testPathContextFromURLPlugin = new PathContextFromURLPlugin();
     testPathContextFromURLPlugin.enrich(
-      new TrackerEvent({ _type: 'test-event', id: generateUUID(), time: Date.now() })
+      new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() })
     );
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
       '｢objectiv:PathContextFromURLPlugin｣ Cannot enrich. Plugin is not usable (document: undefined).'
@@ -50,7 +50,7 @@ describe('PathContextFromURLPlugin - node', () => {
     it('when unusable, should not enrich and not log', () => {
       const testPathContextFromURLPlugin = new PathContextFromURLPlugin();
       testPathContextFromURLPlugin.enrich(
-        new TrackerEvent({ _type: 'test-event', id: generateUUID(), time: Date.now() })
+        new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() })
       );
       expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
     });

@@ -11,7 +11,7 @@ import {
 } from '@objectiv/testing-tools';
 import {
   ContextsConfig,
-  generateUUID,
+  generateGUID,
   GlobalContextName,
   LocationContextName,
   Tracker,
@@ -133,12 +133,12 @@ describe('Tracker', () => {
     const initialContextsState: TrackerConfig = {
       applicationId: 'app-id',
       location_stack: [
-        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'root' },
-        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'A' },
+        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'root' },
+        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'A' },
       ],
       global_contexts: [
-        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'A' },
-        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'B' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'A' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'B' },
       ],
     };
 
@@ -154,7 +154,7 @@ describe('Tracker', () => {
 
     // Refine Location Stack of the new Tracker with an extra Section
     newTestTracker.location_stack.push({
-      __instance_id: generateUUID(),
+      __instance_id: generateGUID(),
       __location_context: true,
       _type: 'section',
       id: 'X',
@@ -180,12 +180,12 @@ describe('Tracker', () => {
     const mainTrackerContexts: TrackerConfig = {
       applicationId: 'app-id',
       location_stack: [
-        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'root' },
-        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'A' },
+        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'root' },
+        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'A' },
       ],
       global_contexts: [
-        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'X' },
-        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'Y' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'X' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'Y' },
       ],
     };
     const mainTracker = new Tracker(mainTrackerContexts);
@@ -194,11 +194,11 @@ describe('Tracker', () => {
     const sectionTracker = new Tracker(
       mainTracker,
       {
-        location_stack: [{ __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'B' }],
-        global_contexts: [{ __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'Z' }],
+        location_stack: [{ __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'B' }],
+        global_contexts: [{ __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'Z' }],
       },
       {
-        location_stack: [{ __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'C' }],
+        location_stack: [{ __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'C' }],
       },
       // These last two configurations are useless, but we want to make sure nothing breaks with them
       {
@@ -228,12 +228,12 @@ describe('Tracker', () => {
   describe('trackEvent', () => {
     const eventContexts: ContextsConfig = {
       location_stack: [
-        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'B' },
-        { __instance_id: generateUUID(), __location_context: true, _type: 'item', id: 'C' },
+        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'B' },
+        { __instance_id: generateGUID(), __location_context: true, _type: 'item', id: 'C' },
       ],
       global_contexts: [
-        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'W' },
-        { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'X' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'W' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'X' },
       ],
     };
     const testEvent = {
@@ -242,9 +242,9 @@ describe('Tracker', () => {
     };
     const trackerConfig: TrackerConfig = { applicationId: 'app-id' };
 
-    it('should allow overriding the generateUUID function', async () => {
+    it('should allow overriding the generateGUID function', async () => {
       const testTracker1 = new Tracker({ applicationId: 'app-id' });
-      const testTracker2 = new Tracker({ applicationId: 'app-id', generateUUID: () => 'not-so-unique-after-all' });
+      const testTracker2 = new Tracker({ applicationId: 'app-id', generateGUID: () => 'not-so-unique-after-all' });
       const trackedEvent1 = await testTracker1.trackEvent(testEvent);
       const trackedEvent2 = await testTracker2.trackEvent(testEvent);
       expect(trackedEvent1.id).toMatch(UUIDV4_REGEX);
@@ -256,12 +256,12 @@ describe('Tracker', () => {
         transport: new LogTransport(),
         applicationId: 'app-id',
         location_stack: [
-          { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'root' },
-          { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'A' },
+          { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'root' },
+          { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'A' },
         ],
         global_contexts: [
-          { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'Y' },
-          { __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'Z' },
+          { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'Y' },
+          { __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'Z' },
         ],
       };
       const testTracker = new Tracker(trackerContexts);
@@ -466,8 +466,8 @@ describe('Tracker', () => {
   describe('TrackerQueue', () => {
     const testEventName = 'test-event';
     const testContexts: ContextsConfig = {
-      location_stack: [{ __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'test' }],
-      global_contexts: [{ __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'test' }],
+      location_stack: [{ __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'test' }],
+      global_contexts: [{ __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'test' }],
     };
     const testEvent1 = { _type: testEventName, ...testContexts };
     const testEvent2 = { _type: testEventName, ...testContexts };
@@ -581,8 +581,8 @@ describe('Tracker', () => {
       expect(trackerQueue.processFunction).not.toBeUndefined();
       expect(trackerQueue.processFunction).not.toHaveBeenCalled();
 
-      const trackedTestEvent1 = new TrackerEvent({ ...testEvent1, id: generateUUID(), time: Date.now() });
-      const trackedTestEvent2 = new TrackerEvent({ ...testEvent2, id: generateUUID(), time: Date.now() });
+      const trackedTestEvent1 = new TrackerEvent({ ...testEvent1, id: generateGUID(), time: Date.now() });
+      const trackedTestEvent2 = new TrackerEvent({ ...testEvent2, id: generateGUID(), time: Date.now() });
       await testTracker.queue?.store.write(trackedTestEvent1, trackedTestEvent2);
 
       expect(queueStore.length).toBe(2);

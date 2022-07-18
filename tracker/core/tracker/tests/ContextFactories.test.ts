@@ -4,7 +4,7 @@
 
 import { matchUUID } from '@objectiv/testing-tools';
 import {
-  generateUUID,
+  generateGUID,
   GlobalContextName,
   LocationContextName,
   makeApplicationContext,
@@ -183,7 +183,7 @@ describe('Context Factories', () => {
     expect(
       makeIdentityContext({
         id: 'backend',
-        value: generateUUID(),
+        value: generateGUID(),
       })
     ).toStrictEqual({
       __instance_id: matchUUID,

@@ -5,7 +5,7 @@
 import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import {
   EventName,
-  generateUUID,
+  generateGUID,
   LocationContextName,
   makeApplicationLoadedEvent,
   makeContentContext,
@@ -56,7 +56,7 @@ describe('trackEvent', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    makeTracker({ applicationId: generateUUID(), endpoint: 'test' });
+    makeTracker({ applicationId: generateGUID(), endpoint: 'test' });
     expect(getTracker()).toBeInstanceOf(BrowserTracker);
     jest.spyOn(getTracker(), 'trackEvent');
   });

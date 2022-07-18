@@ -4,7 +4,7 @@
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
-  generateUUID,
+  generateGUID,
   GlobalContextName,
   LocationContextName,
   makeApplicationContext,
@@ -38,7 +38,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
       _type: 'TestEvent',
       global_contexts: [makeApplicationContext({ id: 'test' })],
       location_stack: [makeRootLocationContext({ id: 'test' })],
-      id: generateUUID(),
+      id: generateGUID(),
       time: Date.now(),
     });
     OpenTaxonomyValidationPlugin.validate(validEvent);
@@ -53,7 +53,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
         _type: 'TestEvent',
         global_contexts: [makeApplicationContext({ id: 'test' })],
         location_stack: [makeRootLocationContext({ id: 'test' })],
-        id: generateUUID(),
+        id: generateGUID(),
         time: Date.now(),
       });
 
@@ -69,7 +69,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
       const eventWithoutApplicationContext = new TrackerEvent({
         _type: 'TestEvent',
         location_stack: [makeRootLocationContext({ id: 'test' })],
-        id: generateUUID(),
+        id: generateGUID(),
         time: Date.now(),
       });
 
@@ -92,7 +92,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
         _type: 'TestEvent',
         global_contexts: [makeApplicationContext({ id: 'test' }), makeApplicationContext({ id: 'test' })],
         location_stack: [makeRootLocationContext({ id: 'test' })],
-        id: generateUUID(),
+        id: generateGUID(),
         time: Date.now(),
       });
 
@@ -117,7 +117,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
         _type: 'TestEvent',
         location_stack: [makeRootLocationContext({ id: '/test' })],
         global_contexts: [makeApplicationContext({ id: 'test' })],
-        id: generateUUID(),
+        id: generateGUID(),
         time: Date.now(),
       });
 
@@ -135,7 +135,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
           message: ' ok',
           global_contexts: [makeApplicationContext({ id: 'test' })],
         }),
-        id: generateUUID(),
+        id: generateGUID(),
         time: Date.now(),
       });
 
@@ -152,7 +152,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
         ...makePressEvent({
           global_contexts: [makeApplicationContext({ id: 'test' }), makePathContext({ id: '/path' })],
         }),
-        id: generateUUID(),
+        id: generateGUID(),
         time: Date.now(),
       });
 
@@ -176,7 +176,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
           location_stack: [makeRootLocationContext({ id: '/test' }), makeRootLocationContext({ id: '/test' })],
           global_contexts: [makeApplicationContext({ id: 'test' }), makePathContext({ id: '/path' })],
         }),
-        id: generateUUID(),
+        id: generateGUID(),
         time: Date.now(),
       });
 
@@ -200,7 +200,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
           location_stack: [makeContentContext({ id: 'content-id' }), makeRootLocationContext({ id: '/test' })],
           global_contexts: [makeApplicationContext({ id: 'test' }), makePathContext({ id: '/path' })],
         }),
-        id: generateUUID(),
+        id: generateGUID(),
         time: Date.now(),
       });
 
@@ -235,7 +235,7 @@ describe('OpenTaxonomyValidationPlugin', () => {
         _type: 'TestEvent',
         global_contexts: [makeApplicationContext({ id: 'test' })],
         location_stack: [makeRootLocationContext({ id: 'test' })],
-        id: generateUUID(),
+        id: generateGUID(),
         time: Date.now(),
       });
       OpenTaxonomyValidationPlugin.validate(validEvent);

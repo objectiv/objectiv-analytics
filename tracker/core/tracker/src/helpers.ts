@@ -28,7 +28,7 @@ export function isNonEmptyArray<T>(array: T[]): array is NonEmptyArray<T> {
 /**
  * A UUID v4 generator
  */
-export const generateUUID = () => uuid();
+export const generateGUID = () => uuid();
 
 /**
  * Executes the given predicate every `intervalMs` for a maximum of `timeoutMs`.

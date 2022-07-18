@@ -3,7 +3,7 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateUUID, makeTransportSendError, TrackerEvent } from '@objectiv/tracker-core';
+import { generateGUID, makeTransportSendError, TrackerEvent } from '@objectiv/tracker-core';
 import xhrMock from 'xhr-mock';
 import { XHRTransport } from '../src';
 
@@ -27,7 +27,7 @@ describe('XHRTransport', () => {
 
   const testEvent = new TrackerEvent({
     _type: 'test-event',
-    id: generateUUID(),
+    id: generateGUID(),
     time: Date.now(),
   });
 

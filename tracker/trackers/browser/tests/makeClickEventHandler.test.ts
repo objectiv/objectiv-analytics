@@ -4,7 +4,7 @@
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
-  generateUUID,
+  generateGUID,
   LocationContextName,
   makePressEvent,
   TrackerQueue,
@@ -21,7 +21,7 @@ describe('makeClickEventHandler', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     makeTracker({
-      applicationId: generateUUID(),
+      applicationId: generateGUID(),
       endpoint: 'test',
       queue: new TrackerQueue({ store: new TrackerQueueMemoryStore(), batchDelayMs: 1 }),
     });

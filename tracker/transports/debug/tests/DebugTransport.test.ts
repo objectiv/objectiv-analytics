@@ -2,13 +2,13 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { generateUUID, TrackerEvent } from '@objectiv/tracker-core';
+import { generateGUID, TrackerEvent } from '@objectiv/tracker-core';
 import { DebugTransport } from '../src/';
 
 describe('DebugTransport', () => {
   const testEvent = new TrackerEvent({
     _type: 'test-event',
-    id: generateUUID(),
+    id: generateGUID(),
     time: Date.now(),
   });
 

@@ -3,7 +3,7 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateUUID, GlobalContextName, LocationContextName, makeInputChangeEvent } from '@objectiv/tracker-core';
+import { generateGUID, GlobalContextName, LocationContextName, makeInputChangeEvent } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker } from '../src/';
 import { makeBlurEventHandler } from '../src/mutationObserver/makeBlurEventHandler';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
@@ -14,7 +14,7 @@ globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplem
 describe('makeBlurEventHandler', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    makeTracker({ applicationId: generateUUID(), endpoint: 'test' });
+    makeTracker({ applicationId: generateGUID(), endpoint: 'test' });
     expect(getTracker()).toBeInstanceOf(BrowserTracker);
     jest.spyOn(getTracker(), 'trackEvent');
   });

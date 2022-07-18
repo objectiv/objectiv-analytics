@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { generateUUID, TrackerEvent } from '@objectiv/tracker-core';
+import { generateGUID, TrackerEvent } from '@objectiv/tracker-core';
 import { EventRecorder } from '../src/EventRecorder';
 
 describe('EventRecorder', () => {
@@ -72,9 +72,9 @@ describe('EventRecorder', () => {
   });
 
   it('should automatically assign a predictable identifier to Events of the same type', async () => {
-    const testPressEvent1 = new TrackerEvent({ _type: 'PressEvent', id: generateUUID(), time: Date.now() });
-    const testPressEvent2 = new TrackerEvent({ _type: 'PressEvent', id: generateUUID(), time: Date.now() });
-    const testPressEvent3 = new TrackerEvent({ _type: 'PressEvent', id: generateUUID(), time: Date.now() });
+    const testPressEvent1 = new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() });
+    const testPressEvent2 = new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() });
+    const testPressEvent3 = new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() });
 
     expect(EventRecorder._events).toStrictEqual([]);
 
@@ -88,9 +88,9 @@ describe('EventRecorder', () => {
   });
 
   it('should remove time information from recorded Events', async () => {
-    const testPressEvent1 = new TrackerEvent({ _type: 'PressEvent', id: generateUUID(), time: Date.now() });
-    const testPressEvent2 = new TrackerEvent({ _type: 'PressEvent', id: generateUUID(), time: Date.now() });
-    const testPressEvent3 = new TrackerEvent({ _type: 'PressEvent', id: generateUUID(), time: Date.now() });
+    const testPressEvent1 = new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() });
+    const testPressEvent2 = new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() });
+    const testPressEvent3 = new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() });
 
     expect(testPressEvent1.time).not.toBeUndefined();
     expect(testPressEvent2.time).not.toBeUndefined();

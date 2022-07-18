@@ -3,7 +3,7 @@
  */
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateUUID, isTransportSendError, makeTransportSendError, TrackerEvent } from '@objectiv/tracker-core';
+import { generateGUID, isTransportSendError, makeTransportSendError, TrackerEvent } from '@objectiv/tracker-core';
 import fetchMock from 'jest-fetch-mock';
 import { defaultFetchFunction, defaultFetchOptions, FetchTransport } from '../src';
 
@@ -11,7 +11,7 @@ const MOCK_ENDPOINT = 'http://test-endpoint';
 
 const testEvent = new TrackerEvent({
   _type: 'test-event',
-  id: generateUUID(),
+  id: generateGUID(),
   time: Date.now(),
 });
 

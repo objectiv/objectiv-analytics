@@ -37,7 +37,7 @@ describe('TrackingContextProvider', () => {
       platform: TrackerPlatform.CORE,
       active: true,
       applicationId: 'app-id',
-      generateUUID: expect.any(Function),
+      generateGUID: expect.any(Function),
       global_contexts: [],
       location_stack: [],
       plugins: expect.objectContaining({

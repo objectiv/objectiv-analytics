@@ -3,7 +3,7 @@
  */
 
 import { AbstractLocationContext } from '@objectiv/schema';
-import { generateUUID, LocationNode, LocationTreeInterface } from '@objectiv/tracker-core';
+import { generateGUID, LocationNode, LocationTreeInterface } from '@objectiv/tracker-core';
 import { EventRecorder } from './EventRecorder';
 import { getLocationPath } from './getLocationPath';
 import { TrackerConsole } from './TrackerConsole';
@@ -13,7 +13,7 @@ import { TrackerConsole } from './TrackerConsole';
  */
 export const rootNode: LocationNode = {
   __location_context: true,
-  __instance_id: generateUUID(),
+  __instance_id: generateGUID(),
   _type: 'LocationTreeRoot',
   id: 'location-tree-root',
   parentLocationId: null,
