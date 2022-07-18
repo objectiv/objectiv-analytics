@@ -195,6 +195,16 @@ class Series(ABC):
                              f'length of index ({len(index)}).')
         if not is_valid_column_name(dialect=engine.dialect, name=name):
             raise ValueError(f'Column name "{name}" is not valid for SQL dialect {engine.dialect}')
+
+        for value in index.values():
+            if value.base_node != base_node:
+                raise ValueError(
+                    (
+                        f'Base_node in `index` should match series. '
+                        f'series: {base_node}, {value.name}.base_node: {value.base_node}'
+                    )
+                )
+
         validate_instance_dtype(static_dtype=self.dtype, instance_dtype=instance_dtype)
 
         self._engine = engine
@@ -717,6 +727,10 @@ class Series(ABC):
             other_series = df.all_series[mod_other_name]
             return caller_series, other_series
 
+        caller_index = {
+            idx_name: idx.copy_override(base_node=df.base_node)
+            for idx_name, idx in self.index.items()
+        }
         if (
             other.base_node == left.base_node
             and not set(self.base_node.columns) >= {other.name, f'{other.name}__other'}
@@ -729,10 +743,16 @@ class Series(ABC):
             # incorrect second expression = a + b - b
             # correct second expression = a + b__other - b
             caller_expr = self.expression.replace_column_references(other.name, f'{other.name}__other')
-            caller_series = self.copy_override(base_node=df.base_node, expression=caller_expr)
+            caller_series = self.copy_override(
+                base_node=df.base_node,
+                expression=caller_expr,
+                index=caller_index,
+            )
         else:
             # just update base node
-            caller_series = self.copy_override(base_node=df.base_node)
+            caller_series = self.copy_override(
+                base_node=df.base_node, index=caller_index,
+            )
         other_series = df.all_series[mod_other_name]
         return caller_series, other_series
 
