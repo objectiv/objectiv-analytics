@@ -124,7 +124,7 @@ class GroupBy:
 
             # index columns have no index themselves, and can also be evaluated without group_by as
             # they will not be aggregated by this group_by
-            self._index[col.name] = col.copy_override(index={}, group_by=None, index_sorting=[])
+            self._index[col.name] = col.copy_override(index={}, group_by=None, order_by=[])
 
     @property
     def index(self) -> Dict[str, Series]:

@@ -503,9 +503,6 @@ class Series(ABC):
     ) -> T:
         """
         INTERNAL: Copy this instance into a new one, with the given overrides
-
-        Special case:
-        * If index is not None, then index_sorting is automatically set to `[]` unless overridden
         """
         return self.__class__(
             engine=self._engine if engine is None else engine,
@@ -1459,7 +1456,7 @@ class Series(ABC):
                     index=partition.index,
                     group_by=partition,
                     expression=expression,
-                    index_sorting=[],
+                    order_by=[],
                 )
         else:
             # The window expression already contains the full partition and sorting, no need

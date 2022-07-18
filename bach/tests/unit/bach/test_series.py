@@ -125,7 +125,7 @@ def test_equals_instance_dtype(dialect):
 
     # Currently we only have bigquery types that actual use the instance_dtype. So skip postgres here.
     sleft = dict_type(engine=engine, base_node=None, index={}, name='test',
-                      expression=expr_test, group_by=None, sorted_ascending=None, index_sorting=[],
+                      expression=expr_test, group_by=None, order_by=[],
                       instance_dtype={'a': 'int64', 'b': ['bool']})
     sright = sleft.copy_override()
     assert sleft.equals(sright)

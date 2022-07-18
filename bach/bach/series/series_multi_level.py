@@ -56,8 +56,6 @@ class SeriesAbstractMultiLevel(Series, ABC):
         name: Optional[str] = None,
         expression: Optional['Expression'] = None,
         group_by: Optional[Union['GroupBy', NotSet]] = not_set,
-        sorted_ascending: Optional[Union[bool, NotSet]] = not_set,
-        index_sorting: Optional[List[bool]] = None,
         instance_dtype: Optional[StructuredDtype] = None,
         order_by: Optional[List[SortColumn]] = None,
         **kwargs,
@@ -76,8 +74,6 @@ class SeriesAbstractMultiLevel(Series, ABC):
             name=name,
             expression=expression,
             group_by=group_by,
-            sorted_ascending=sorted_ascending,
-            index_sorting=index_sorting,
             instance_dtype=instance_dtype,
             order_by=order_by,
             **extra_params
