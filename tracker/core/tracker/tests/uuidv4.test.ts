@@ -2,7 +2,7 @@
  * Copyright 2022 Objectiv B.V.
  */
 
-import { uuidv4 } from "@objectiv/tracker-core";
+import { uuidv4 } from "../src/uuidv4";
 
 describe('uuidv4', () => {
   jest.spyOn(uuidv4, 'crypto_RandomUUID');
