@@ -143,9 +143,18 @@ DataFrame then points to the data in the database, and all operations are done d
 Google BigQuery is supported via a Snowplow pipeline. See `how to set up GCP & BigQuery 
 </docs/tracking/backend/snowplow/gcp-and-bigquery>`_.
 
-TODO: How to make the connection
+With `BQ_CREDENTIALS_PATH` the path to the credentials for your BigQuery connection, e.g. 
+`/home/myusername/myrepo/.secrets/production--bigquery.json`:
 
-.. currentmodule:: modelhub
+.. code-block:: python
+
+    df = modelhub.get_objectiv_dataframe(
+        db_url='USER://DATABASE/snowplow',
+        start_date='2022-06-01', 
+        end_date='2022-06-30',
+        table_name='events',
+        bq_credentials_path=BQ_CREDENTIALS_PATH)
+
 
 Next steps
 ----------
