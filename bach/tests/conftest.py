@@ -84,7 +84,6 @@ def pg_engine() -> Engine:
 @pytest.fixture()
 def unique_table_test_name(
     request: SubRequest,
-    engine: Engine,
     testrun_uid: str,
 ) -> str:
     """
@@ -97,6 +96,13 @@ def unique_table_test_name(
 
     Each generated table name is recorded for the pytest session.
     """
+    if 'engine' in request.fixturenames:
+        engine = request.node.funcargs['engine']
+    elif 'pg_engine' in request.fixturenames:
+        engine = _ENGINE_CACHE[DB.POSTGRES]
+    else:
+        raise Exception('can only generate table name if test uses engine or pg_engine fixtures.')
+
     # sqlalchemy will raise an error if we exceed this length
     _MAX_LENGTH_TABLE_NAME = 63
 
