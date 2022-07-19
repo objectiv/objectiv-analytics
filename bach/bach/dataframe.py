@@ -23,7 +23,7 @@ from sql_models.constants import NotSet, not_set
 from sql_models.graph_operations import update_placeholders_in_graph, get_all_placeholders
 from sql_models.model import SqlModel, Materialization, CustomSqlModelBuilder, RefPath
 
-from sql_models.sql_generator import to_sql, to_sql_materialized_nodes
+from sql_models.sql_generator import to_sql
 from sql_models.util import quote_identifier, is_bigquery, DatabaseNotSupportedException, is_postgres
 
 if TYPE_CHECKING:

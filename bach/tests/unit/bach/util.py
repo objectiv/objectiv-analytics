@@ -2,16 +2,16 @@
 Copyright 2021 Objectiv B.V.
 """
 from dataclasses import dataclass, field
-from typing import List, Dict, Union, cast, Optional, NamedTuple, Any
+from typing import List, Dict, Union, cast, Any
 
 import pandas
-from sqlalchemy.dialects.postgresql.base import PGDialect
-from sqlalchemy.engine import Dialect, Engine
+from sqlalchemy.engine import Dialect
 
-from bach import get_series_type_from_dtype, DataFrame
+from bach import get_series_type_from_dtype, DataFrame, Series
 from bach.expression import Expression
 from bach.savepoints import Savepoints
 from bach.sql_model import BachSqlModel
+from bach.types import StructuredDtype
 from sql_models.model import CustomSqlModelBuilder
 
 
@@ -24,6 +24,39 @@ class FakeEngine:
 
     def __post_init__(self):
         super().__setattr__('name', self.dialect.name)  # set the 'frozen' attribute self.name
+
+
+class FakeSeries(Series):
+
+    @classmethod
+    def supported_value_to_literal(cls, dialect: Dialect, value: Any, dtype: StructuredDtype) -> Expression:
+        pass
+
+    @classmethod
+    def dtype_to_expression(cls, dialect: Dialect, source_dtype: str, expression: Expression) -> Expression:
+        pass
+
+    def __lshift__(self, other) -> 'Series':
+        pass
+
+    def __rshift__(self, other) -> 'Series':
+        pass
+
+    def __invert__(self) -> 'Series':
+        pass
+
+    def __and__(self, other) -> 'Series':
+        pass
+
+    def __xor__(self, other) -> 'Series':
+        pass
+
+    def __or__(self, other) -> 'Series':
+        pass
+
+    @classmethod
+    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
+        pass
 
 
 def get_fake_df(
