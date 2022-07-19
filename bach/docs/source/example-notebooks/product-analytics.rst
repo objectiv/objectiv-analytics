@@ -225,7 +225,7 @@ Look at top used features by campaign for only user interactions.
 
 Conversions
 -----------
-First we define a conversion event in the Objectiv DataFrame we created for aquisition analysis.
+First we define a conversion event in the Objectiv DataFrame we created for acquisition analysis.
 
 .. code-block:: python
 
@@ -261,7 +261,8 @@ Conversions by marketing campaign.
 .. code-block:: python
 
     # model hub: calculate conversions per marketing canpaign based on UTM data in MarketingContext
-    campaign_conversions = modelhub.aggregate.unique_users(df_acquisition[df_acquisition.is_conversion_event], ['utm_source', 'utm_medium', 'utm_campaign'])
+    campaign_conversions = modelhub.aggregate.unique_users(df_acquisition[df_acquisition.is_conversion_event],
+                                                           groupby=['utm_source', 'utm_medium', 'utm_campaign'])
     campaign_conversions.reset_index().dropna(axis=0, how='any', subset='utm_source').head()
 
 From which product feature do users convert most?
