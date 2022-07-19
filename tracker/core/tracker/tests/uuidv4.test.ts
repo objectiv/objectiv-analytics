@@ -63,7 +63,7 @@ describe('uuidv4.crypto_RandomUUID', () => {
 });
 
 describe('uuidv4.crypto_GetRandomValues', () => {
-  it('should invoke `crypto.getRandomValues` 14 times', function () {
+  it('should invoke `crypto.getRandomValues` 31 times', function () {
     // @ts-ignore
     globalThis.crypto = {
       // @ts-ignore
