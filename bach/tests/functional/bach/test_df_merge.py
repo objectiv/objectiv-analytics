@@ -6,7 +6,7 @@ from decimal import Decimal
 import pandas as pd
 import pytest
 
-from bach import DataFrame
+from bach import DataFrame, SeriesString
 
 from tests.functional.bach.test_data_and_utils import (
     get_df_with_test_data, get_df_with_food_data,
@@ -301,12 +301,11 @@ def test_merge_right_join(engine):
         order_by=['_index_station_id']
     )
 
-
 def test_merge_right_join_shared_on(engine) -> None:
     bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city']]
-    bt['station'] = None
+    bt['station'] = SeriesString.from_value(base=bt, value=None, name='station')
     # TODO: next two steps shouldn't be manual
-    bt['station'] = bt['station'].astype('int64').astype('string')
+    #bt['station'] = bt['station'].astype('int64').astype('string')
     bt = bt.materialize()
 
     bt = bt.reset_index(drop=True)
@@ -317,6 +316,7 @@ def test_merge_right_join_shared_on(engine) -> None:
     result = bt.merge(mt, how='right', on='station')
     result = result.sort_values('station')
     print(result.view_sql())
+    print(bt.dtypes)
     assert_equals_data(
         result,
         expected_columns=[
