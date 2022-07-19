@@ -14,9 +14,9 @@ Three types of functions/models are provided:
 3. [Machine learning models](https://objectiv.io/docs/modeling/open-model-hub/models/machine-learning/).
 
 Modeling behavior of users and groups is enabled through configurable
-[Identity Resolution](https://objectiv.io/docs/modeling/open-model-hub/identity-resolution.mdx).
+[Identity Resolution](https://objectiv.io/docs/modeling/open-model-hub/identity-resolution/).
 
-See how to [get started in your notebook](https://objectiv.io/docs/modeling/get-started-in-your-notebook.mdx) 
+See how to [get started in your notebook](https://objectiv.io/docs/modeling/get-started-in-your-notebook/) 
 and the [example notebooks](https://objectiv.io/docs/modeling/example-notebooks/), and install the 
 model hub package directly from PyPI:
 
