@@ -10,13 +10,13 @@ from sql_models.util import is_bigquery, is_postgres
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_df_with_test_data
 
 
-def test_get_sample(engine):
+def test_get_sample(engine, unique_table_test_name):
     # For reliable asserts (see below) we need more rows than the standard dataset of 11 rows has.
     # Therefore we append the dataset to itself two times to get 33 rows in total.
     df = get_df_with_test_data(engine, True)
     df = df.append([df, df])
 
-    df_sample = df.get_sample(table_name='test_df_sample__get_sample',
+    df_sample = df.get_sample(table_name=unique_table_test_name,
                               sample_percentage=50,
                               overwrite=True)
     # We cannot know the exact rows in df_sample, as that's random.
@@ -30,14 +30,14 @@ def test_get_sample(engine):
 
     # If overwrite is not set, we expect an error
     with pytest.raises(Exception, match='[aA]lready [eE]xists'):
-        df_sample = df.get_sample(table_name='test_df_sample__get_sample',
+        df_sample = df.get_sample(table_name=unique_table_test_name,
                                   sample_percentage=50)
 
 
 @pytest.mark.skip_bigquery('We do not support the seed parameter for bigquery')
-def test_get_sample_seed(engine):
+def test_get_sample_seed(engine, unique_table_test_name):
     bt = get_df_with_test_data(engine, True)
-    bt_sample = bt.get_sample(table_name='test_df_sample__get_sample_seed',
+    bt_sample = bt.get_sample(table_name=unique_table_test_name,
                               sample_percentage=50,
                               seed=_get_seed(engine),
                               overwrite=True)
@@ -76,10 +76,10 @@ _EXPECTED_DATA_OPERATIONS = [
 ]
 
 
-def test_sample_operations(engine):
+def test_sample_operations(engine, unique_table_test_name):
     bt = get_df_with_test_data(engine, True)
     seed = _get_seed(engine)
-    bt_sample = bt.get_sample(table_name='test_df_sample__sample_operations',
+    bt_sample = bt.get_sample(table_name=unique_table_test_name,
                               sample_percentage=50,
                               seed=seed,
                               overwrite=True)
@@ -104,9 +104,9 @@ def test_sample_operations(engine):
     )
 
 
-def test_sample_operations_filter(engine):
+def test_sample_operations_filter(engine, unique_table_test_name):
     bt = get_df_with_test_data(engine, True)
-    bt_sample = bt.get_sample(table_name='test_df_sample__sample_operations_filter',
+    bt_sample = bt.get_sample(table_name=unique_table_test_name,
                               filter=bt.skating_order % 2 == 0,
                               overwrite=True)
 
@@ -125,12 +125,12 @@ def test_sample_operations_filter(engine):
     )
 
 
-def test_combine_unsampled_with_before_data(engine):
+def test_combine_unsampled_with_before_data(engine, unique_table_test_name):
     # Test that the get_unsampled() df has a base_node and state that is compatible with the base_node and
     # state of the original df
     dff = get_df_with_test_data(engine, True)
     dff_s = dff[['municipality', 'city']].get_sample(
-        'test_df_sample__combine_unsampled_with_before_data', overwrite=True, sample_percentage=50
+        unique_table_test_name, overwrite=True, sample_percentage=50
     )
     dff_s['e'] = dff_s.city + '_extended'
     new_dff = dff_s.get_unsampled()
@@ -138,7 +138,7 @@ def test_combine_unsampled_with_before_data(engine):
     dff['e'] = new_dff.e
 
 
-def test_get_unsampled_multiple_nodes(engine):
+def test_get_unsampled_multiple_nodes(engine, unique_table_test_name):
     # 1. Start with dataframe with multiple nodes in graph
     # 2. Create sampled dataframe
     # 3. Add node to sampled dataframe
@@ -153,7 +153,7 @@ def test_get_unsampled_multiple_nodes(engine):
     assert len(get_graph_nodes_info(bt.base_node)) >= 2
     assert len(get_graph_nodes_info(bt.base_node)) == num_start_nodes + 1
 
-    bt_sample = bt.get_sample(table_name='test_df_sample__get_unsampled_multiple_nodes',
+    bt_sample = bt.get_sample(table_name=unique_table_test_name,
                               sample_percentage=50,
                               overwrite=True)
     # bt_sample is based on newly created table, so there will only be a single node in the graph
@@ -183,7 +183,7 @@ def test_get_unsampled_multiple_nodes(engine):
     )
 
 
-def test_sample_w_temp_tables(engine):
+def test_sample_w_temp_tables(engine, unique_table_test_name):
     # Test to prevent regression: get_sample() should work after materialize(materialization='temp_table')
     df = get_df_with_test_data(engine, True)
     df = df.append([df, df])
@@ -193,7 +193,7 @@ def test_sample_w_temp_tables(engine):
     df['founding'] = df.founding + 1000
     df = df.materialize(node_name='second', materialization='temp_table')
 
-    df_sample = df.get_sample(table_name='test_df_sample__sample_w_temp_tables',
+    df_sample = df.get_sample(table_name=unique_table_test_name,
                               sample_percentage=50,
                               overwrite=True)
     pdf_sample = df_sample.to_pandas()
@@ -203,7 +203,7 @@ def test_sample_w_temp_tables(engine):
     assert len(pdf_sample) < 33
 
 
-def test_sample_grouped(engine):
+def test_sample_grouped(engine, unique_table_test_name):
     bt = get_df_with_test_data(engine, True)
     seed = _get_seed(engine)
     bt = bt[['municipality', 'inhabitants', 'founding']]
@@ -212,13 +212,13 @@ def test_sample_grouped(engine):
     btg_min = btg.min()
 
     with pytest.raises(ValueError, match='contains Series that have no aggregation function yet'):
-        btg_sample = btg.get_sample(table_name='test_df_sample__sample_grouped',
+        btg_sample = btg.get_sample(table_name=unique_table_test_name,
                                     sample_percentage=50,
                                     seed=seed,
                                     overwrite=True)
 
     btg_max = btg.max()
-    btg_sample_max = btg_max.get_sample(table_name='test_df_sample__sample_grouped',
+    btg_sample_max = btg_max.get_sample(table_name=unique_table_test_name,
                                     sample_percentage=50,
                                     seed=seed,
                                     overwrite=True)
@@ -267,12 +267,12 @@ def test_sample_grouped(engine):
     )
 
 
-def test_sample_operations_variable(engine):
+def test_sample_operations_variable(engine, unique_table_test_name):
     # Test to prevent regression: using variables and materializing them should not change the SqlModel type
     # and then break when calling `is_materialized` after unsample()
     bt = get_df_with_test_data(engine, True)
     seed = _get_seed(engine)
-    bt_sample = bt.get_sample(table_name='test_df_sample__sample_operations_variable',
+    bt_sample = bt.get_sample(table_name=unique_table_test_name,
                               sample_percentage=50,
                               seed=seed,
                               overwrite=True)

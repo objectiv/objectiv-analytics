@@ -9,6 +9,7 @@ from typing import Dict, Union, TYPE_CHECKING, Tuple, cast, Optional, List, Any,
 
 from sqlalchemy.engine import Dialect
 
+from bach import SortColumn
 from bach.series import Series
 from bach.expression import Expression, join_expressions
 from bach.series.series import WrappedPartition, ToPandasInfo
@@ -280,8 +281,7 @@ class SeriesJsonPostgres(SeriesJson):
                  name: str,
                  expression: Expression,
                  group_by: 'GroupBy',
-                 sorted_ascending: Optional[bool],
-                 index_sorting: List[bool],
+                 order_by: Optional[List[SortColumn]],
                  instance_dtype: StructuredDtype,
                  **kwargs):
 
@@ -291,8 +291,7 @@ class SeriesJsonPostgres(SeriesJson):
                          name=name,
                          expression=Expression.construct(f'cast({{}} as jsonb)', expression),
                          group_by=group_by,
-                         sorted_ascending=sorted_ascending,
-                         index_sorting=index_sorting,
+                         order_by=order_by,
                          instance_dtype=instance_dtype,
                          **kwargs)
 
