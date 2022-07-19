@@ -222,16 +222,16 @@ Look at top used features by campaign for only user interactions.
 
 Conversions
 -----------
-First we define a conversion event in the Objectiv DataFrame.
+First we define a conversion event in the Objectiv DataFrame we created for acquisition analysis.
 
 .. code-block:: python
 
     # create a column that extracts all location stacks that lead to our github
-    df['github_press'] = df.location_stack.json[{'id': 'objectiv-on-github', '_type': 'LinkContext'}:]
-    df.loc[df.location_stack.json[{'id': 'github', '_type': 'LinkContext'}:]!=[],'github_press'] = df.location_stack
+    df_acquisition['github_press'] = df_acquisition.location_stack.json[{'id': 'objectiv-on-github', '_type': 'LinkContext'}:]
+    df_acquisition.loc[df_acquisition.location_stack.json[{'id': 'github', '_type': 'LinkContext'}:]!=[],'github_press'] = df_acquisition.location_stack
 
     # define which events to use as conversion events
-    modelhub.add_conversion_event(location_stack=df.github_press,
+    modelhub.add_conversion_event(location_stack=df_acquisition.github_press,
                                   event_type='PressEvent',
                                   name='github_press')
 
@@ -241,8 +241,8 @@ the number of unique converted users.
 .. code-block:: python
 
     # model hub: calculate conversions
-    df['is_conversion_event'] = modelhub.map.is_conversion_event(df, 'github_press')
-    conversions = modelhub.aggregate.unique_users(df[df.is_conversion_event])
+    df_acquisition['is_conversion_event'] = modelhub.map.is_conversion_event(df_acquisition, 'github_press')
+    conversions = modelhub.aggregate.unique_users(df_acquisition[df_acquisition.is_conversion_event])
     conversions.to_frame().sort_index(ascending=False).head(10)
 
 We use the earlier created `daily_users` to calculate the daily conversion rate.
@@ -253,11 +253,20 @@ We use the earlier created `daily_users` to calculate the daily conversion rate.
     conversion_rate = conversions / daily_users
     conversion_rate.sort_index(ascending=False).head(10)
 
-From where do users convert most?
+Conversions by marketing campaign.
 
 .. code-block:: python
 
-    conversion_locations = modelhub.agg.unique_users(df[df.is_conversion_event],
+    # model hub: calculate conversions per marketing canpaign based on UTM data in MarketingContext
+    campaign_conversions = modelhub.aggregate.unique_users(df_acquisition[df_acquisition.is_conversion_event],
+                                                           groupby=['utm_source', 'utm_medium', 'utm_campaign'])
+    campaign_conversions.reset_index().dropna(axis=0, how='any', subset='utm_source').head()
+
+From which product feature do users convert most?
+
+.. code-block:: python
+
+    conversion_locations = modelhub.agg.unique_users(df_acquisition[df_acquisition.is_conversion_event],
                                                      groupby=['application', 'feature_nice_name', 'event_type'])
 
     # calling .to_frame() for nicer formatting
@@ -267,7 +276,7 @@ We can calculate what users did _before_ converting.
 
 .. code-block:: python
 
-    top_features_before_conversion = modelhub.agg.top_product_features_before_conversion(df, name='github_press')
+    top_features_before_conversion = modelhub.agg.top_product_features_before_conversion(df_acquisition, name='github_press')
     top_features_before_conversion.head()
 
 At last we want to know how much time users that converted spent on our site before they converted.
@@ -275,12 +284,12 @@ At last we want to know how much time users that converted spent on our site bef
 .. code-block:: python
 
     # label sessions with a conversion
-    df['converted_users'] = modelhub.map.conversions_counter(df, name='github_press') >= 1
+    df_acquisition['converted_users'] = modelhub.map.conversions_counter(df_acquisition, name='github_press') >= 1
 
     # label hits where at that point in time, there are 0 conversions in the session
-    df['zero_conversions_at_moment'] = modelhub.map.conversions_in_time(df, 'github_press') == 0
+    df_acquisition['zero_conversions_at_moment'] = modelhub.map.conversions_in_time(df_acquisition, 'github_press') == 0
 
     # filter on above created labels
-    converted_users = df[(df.converted_users & df.zero_conversions_at_moment)]
+    converted_users = df_acquisition[(df_acquisition.converted_users & df_acquisition.zero_conversions_at_moment)]
 
     modelhub.aggregate.session_duration(converted_users, groupby=None).to_frame().head()
