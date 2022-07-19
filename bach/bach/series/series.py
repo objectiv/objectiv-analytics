@@ -11,7 +11,7 @@ import numpy
 import pandas
 from sqlalchemy.engine import Dialect, Engine
 
-from bach import DataFrame, SortColumn, DataFrameOrSeries, get_series_type_from_dtype
+from bach import DataFrame, DataFrameOrSeries, get_series_type_from_dtype
 
 from bach.dataframe import ColumnFunction, dict_name_series_equals
 from bach.expression import Expression, NonAtomicExpression, ConstValueExpression, \
@@ -21,7 +21,9 @@ from bach.sql_model import BachSqlModel
 
 from bach.types import StructuredDtype, Dtype, validate_instance_dtype, DtypeOrAlias,\
     AllSupportedLiteralTypes, value_to_series_type
-from bach.utils import is_valid_column_name
+from bach.utils import (
+    is_valid_column_name, validate_node_column_references_in_sorting_expressions, SortColumn
+)
 from sql_models.constants import NotSet, not_set, DBDialect
 from sql_models.model import Materialization
 from sql_models.util import is_bigquery, DatabaseNotSupportedException
@@ -126,6 +128,7 @@ class Series(ABC):
         sorted_ascending: Optional[bool],
         index_sorting: List[bool],
         instance_dtype: StructuredDtype,
+        order_by: Optional[List[SortColumn]] = None,
         **kwargs,
     ):
         """
@@ -160,6 +163,8 @@ class Series(ABC):
         :param instance_dtype: dtype of this specific instance. For basic scalar types this should be the
             same value as self.dtype. For structured types (e.g. SeriesDict) this should indicate what the
             structure of the data is.
+        :param order_by: Optional list of sort-columns to order the Series by. Columns referenced on sorting
+            expressions must be valid for current base node.
         """
         # Series is an abstract class, besides the abstractmethods subclasses must/may override some
         #   properties:
@@ -195,6 +200,9 @@ class Series(ABC):
                              f'length of index ({len(index)}).')
         if not is_valid_column_name(dialect=engine.dialect, name=name):
             raise ValueError(f'Column name "{name}" is not valid for SQL dialect {engine.dialect}')
+
+        if order_by:
+            validate_node_column_references_in_sorting_expressions(node=base_node, order_by=order_by)
         validate_instance_dtype(static_dtype=self.dtype, instance_dtype=instance_dtype)
 
         self._engine = engine
@@ -206,6 +214,7 @@ class Series(ABC):
         self._sorted_ascending = sorted_ascending
         self._index_sorting = index_sorting
         self._instance_dtype = instance_dtype
+        self._order_by = order_by or []
 
     @classmethod
     @abstractmethod
@@ -315,6 +324,13 @@ class Series(ABC):
         Get this Series' index sorting. An empty list indicates no sorting by index.
         """
         return copy(self._index_sorting)
+
+    @property
+    def order_by(self) -> List[SortColumn]:
+        """
+        Get the series expressions for sorting this Series.
+        """
+        return copy(self._order_by)
 
     @property
     def expression(self) -> Expression:
@@ -513,6 +529,7 @@ class Series(ABC):
         sorted_ascending: Optional[Union[bool, NotSet]] = not_set,
         index_sorting: Optional[List[bool]] = None,
         instance_dtype: Optional[StructuredDtype] = None,
+        order_by: Optional[Union[List[SortColumn]]] = None,
         **kwargs
     ) -> T:
         """
@@ -534,6 +551,7 @@ class Series(ABC):
             sorted_ascending=self._sorted_ascending if sorted_ascending is not_set else sorted_ascending,
             index_sorting=self._index_sorting if index_sorting is None else index_sorting,
             instance_dtype=self.instance_dtype if instance_dtype is None else instance_dtype,
+            order_by=self.order_by if order_by is None else order_by,
             **kwargs
         )
 
@@ -571,6 +589,7 @@ class Series(ABC):
             sorted_ascending=self._sorted_ascending,
             index_sorting=self._index_sorting,
             instance_dtype=instance_dtype,
+            order_by=self.order_by,
             **kwargs,
         )
 
@@ -858,6 +877,30 @@ class Series(ABC):
             return self
         return self.copy_override(sorted_ascending=ascending)
 
+    def sort_by_series(
+        self: T, by: List['Series'], *, ascending: Union[bool, List[bool]] = True,
+    ) -> T:
+        """
+        Sort this Series by other Series that have the same base node as this Series.
+        Returns a new instance and does not actually modify the instance it is called on.
+
+        :param by:  list of Series to sort by.
+        :param ascending: Whether to sort ascending (True) or descending (False)
+        """
+        if any(series.base_node != self.base_node for series in by):
+            raise ValueError('All series provided as keys must have the same base_node as caller.')
+
+        if isinstance(ascending, bool):
+            ascending = [ascending] * len(by)
+        if len(by) != len(ascending):
+            raise ValueError(f'Length of ascending ({len(ascending)}) != length of by ({len(by)})')
+
+        order_by = [
+            SortColumn(expression=series.expression, asc=asc)
+            for series, asc in zip(by, ascending)
+        ]
+        return self.copy_override(order_by=order_by)
+
     def sort_index(self: T, *, ascending: Union[List[bool], bool] = True) -> T:
         """
         Sort this Series by its index.
@@ -900,6 +943,8 @@ class Series(ABC):
                 order_by.append(SortColumn(expression=index_series.expression, asc=asc))
         else:
             order_by = []
+
+        order_by += self.order_by
         from bach.savepoints import Savepoints
         return DataFrame(
             engine=self._engine,

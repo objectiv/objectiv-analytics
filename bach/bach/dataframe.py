@@ -12,11 +12,13 @@ import numpy
 import pandas
 from sqlalchemy.engine import Engine
 
-from bach.expression import Expression, SingleValueExpression, VariableToken, AggregateFunctionExpression
+from bach.expression import Expression, SingleValueExpression, VariableToken
 from bach.from_database import get_dtypes_from_table, get_dtypes_from_model
 from bach.sql_model import BachSqlModel, CurrentNodeSqlModel, get_variable_values_sql
 from bach.types import get_series_type_from_dtype, AllSupportedLiteralTypes, StructuredDtype
-from bach.utils import escape_parameter_characters
+from bach.utils import (
+    escape_parameter_characters, validate_node_column_references_in_sorting_expressions, SortColumn
+)
 from sql_models.constants import NotSet, not_set
 from sql_models.graph_operations import update_placeholders_in_graph, get_all_placeholders
 from sql_models.model import SqlModel, Materialization, CustomSqlModelBuilder, RefPath
@@ -45,11 +47,6 @@ ColumnFunction = Union[str, Callable, List[Union[str, Callable]]]
 #     - dict of axis labels -> functions, function names or list of such.
 
 Level = Union[int, List[int], str, List[str]]
-
-
-class SortColumn(NamedTuple):
-    expression: Expression
-    asc: bool
 
 
 class DtypeNamePair(NamedTuple):
@@ -172,7 +169,7 @@ class DataFrame:
             index: Dict[str, 'Series'],
             series: Dict[str, 'Series'],
             group_by: Optional['GroupBy'],
-            order_by: List[SortColumn],
+            order_by: Optional[List[SortColumn]],
             savepoints: 'Savepoints',
             variables: Dict['DtypeNamePair', Hashable] = None
     ):
@@ -227,6 +224,8 @@ class DataFrame:
         if set(index.keys()) & set(series.keys()):
             raise ValueError(f"The names of the index series and data series should not intersect. "
                              f"Index series: {sorted(index.keys())} data series: {sorted(series.keys())}")
+
+        validate_node_column_references_in_sorting_expressions(node=base_node, order_by=self.order_by)
 
     @property
     def engine(self):
@@ -545,7 +544,7 @@ class DataFrame:
 
         :param engine: a sqlalchemy engine for the database.
         :param table_name: the table name that contains the data to instantiate as DataFrame.
-            Can include project_id and dataset on BigQuery, e.g. 'project_id.dataset.table_name'
+            Can include project_id and dataset on BigQuery, e.g. 'project_id.dataset.table_name'.
         :param index: list of column names that make up the index. At least one column needs to be
             selected for the index.
         :param all_dtypes: Optional. Mapping from column name to dtype.
@@ -938,11 +937,11 @@ class DataFrame:
         Changes to data, index, sorting, grouping etc. on the copy will not affect the original.
         The savepoints on the other hand will be shared by the original and the copy.
 
-        If you want to create a snapshot of the data, have a look at :py:meth:`database_create_table()`
+        If you want to create a snapshot of the data, have a look at :py:meth:`database_create_table()`.
 
-        Calling `copy(df)` will invoke this copy function, i.e. `copy(df)` is implemented as df.copy()
+        Calling `copy(df)` will invoke this copy function, i.e. `copy(df)` is implemented as df.copy().
 
-        :returns: a copy of the dataframe
+        :returns: A copy of the DataFrame.
         """
         return self.copy_override()
 
@@ -1067,7 +1066,7 @@ class DataFrame:
             Between 0-100.
         :param overwrite: if True, the sample data is written to table_name, even if that table already
             exists.
-        :param seed: optional seed number used to generate the sample. Only supported for Postgres
+        :param seed: optional seed number used to generate the sample. Only supported for Postgres.
         :raises Exception: If overwrite=False and the table already exists. The exact exception depends on
             the underlying database.
         :returns: a sampled DataFrame of the current DataFrame.
@@ -1108,7 +1107,7 @@ class DataFrame:
         Will raise an error if the current DataFrame is not sample data of another DataFrame, i.e.
         :py:meth:`get_sample` has not been called.
 
-        :returns: an unsampled copy of the current sampled DataFrame.
+        :returns: An unsampled copy of the current sampled DataFrame.
         """
         from bach.sample import get_unsampled
         return get_unsampled(df=self)
@@ -1122,10 +1121,12 @@ class DataFrame:
         :param table_name: Name of the table to write to. Can include project_id and dataset
             on BigQuery, e.g. 'project_id.dataset.table_name'
         :param if_exists: {'fail', 'replace'}. How to behave if the table already exists:
+
             * fail: Raise an Exception.
-            * replace: Drop the table before inserting new values. All data in that table will be lost! Make
-            sure that `table_name` does not contain any valuable information. Additionally, make sure
+            * replace: Drop the table before inserting new values. All data in that table will be lost! Make \
+            sure that `table_name` does not contain any valuable information. Additionally, make sure \
             that it is not a source table of this DataFrame.
+
         :raises Exception: If if_exists='fail'' and the table already exists. The exact exception depends on
             the underlying database.
         :return: New DataFrame; the base_node consists of a query on the newly created table.
