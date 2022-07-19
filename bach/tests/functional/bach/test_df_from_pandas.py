@@ -145,17 +145,15 @@ def test_from_pandas_non_happy_path(pg_engine, unique_table_test_name):
             if_exists='replace'
         )
     # Create the same table twice. This will fail if if_exists='fail'
-
-    # creates table
-    DataFrame.from_pandas(
-        engine=pg_engine,
-        df=pdf,
-        convert_objects=True,
-        name=unique_table_test_name,
-        materialization='table',
-    )
+    # Might fail on either the first or second try. As we don't clean up between tests.
     with pytest.raises(ValueError, match=f"Table '{unique_table_test_name}' already exists"):
-        # raises error
+        DataFrame.from_pandas(
+            engine=pg_engine,
+            df=pdf,
+            convert_objects=True,
+            name=unique_table_test_name,
+            materialization='table',
+        )
         DataFrame.from_pandas(
             engine=pg_engine,
             df=pdf,
