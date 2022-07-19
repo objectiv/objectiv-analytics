@@ -788,7 +788,7 @@ class Series(ABC):
     def materialize(
             self,
             node_name: str = 'manual_materialize',
-            limit: Optional[Any] = None,
+            limit: Optional[Union[int, slice]] = None,
             distinct: bool = False,
             materialization: Union[Materialization, str] = Materialization.CTE
     ) -> 'Series':
@@ -1097,7 +1097,7 @@ class Series(ABC):
         from bach import SeriesBoolean
         return self.copy_override_type(SeriesBoolean).copy_override(expression=expression)
 
-    def fillna(self, other: AllSupportedLiteralTypes) -> 'Series':
+    def fillna(self: T, other: AllSupportedLiteralTypes) -> T:
         """
         Fill any NULL value with the given constant or other compatible Series
 
@@ -1112,9 +1112,15 @@ class Series(ABC):
         .. note::
             You can replace None with None, have fun, forever!
         """
-        return self._binary_operation(
-            other=other, operation='fillna', fmt_str='COALESCE({}, {})',
-            other_dtypes=tuple([self.dtype]))
+        return cast(
+            T,
+            self._binary_operation(
+                other=other,
+                operation='fillna',
+                fmt_str='COALESCE({}, {})',
+                other_dtypes=tuple([self.dtype]),
+            )
+        )
 
     def _binary_operation(
         self,
