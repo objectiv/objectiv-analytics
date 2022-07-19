@@ -36,6 +36,8 @@ or `skip_bigquery` marks.
 For all unittests we add a timeout of 1 second. If they take longer they will be stopped and considered
 failed.
 
+The fixture `unique_table_test_name` gives out a unique table name to each test that use it. These tables are
+automatically deleted at the end of the test session.
 """
 import os
 from collections import defaultdict
