@@ -17,10 +17,12 @@ export function uuidv4() {
   const crypto = globalThis.crypto;
 
   if (crypto) {
+    //@ts-ignore silence TS warnings for older TS versions, we check availability in the method above.
     if (typeof crypto.randomUUID === 'function') {
       return uuidv4.crypto_RandomUUID();
     }
 
+    //@ts-ignore silence TS warnings for older TS versions, we check availability in the method above.
     if (typeof crypto.getRandomValues === 'function') {
       return uuidv4.crypto_GetRandomValues();
     }
