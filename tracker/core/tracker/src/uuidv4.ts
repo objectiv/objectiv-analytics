@@ -17,12 +17,12 @@ export function uuidv4() {
   const crypto = globalThis.crypto;
 
   if (crypto) {
-    //@ts-ignore silence TS warnings for older TS versions, we check availability in the method above.
+    //@ts-ignore silence TS warnings for older TS versions. E.g. Angular 9 SDK.
     if (typeof crypto.randomUUID === 'function') {
       return uuidv4.crypto_RandomUUID();
     }
 
-    //@ts-ignore silence TS warnings for older TS versions, we check availability in the method above.
+    //@ts-ignore silence TS warnings for older TS versions.  E.g. Angular 9 SDK.
     if (typeof crypto.getRandomValues === 'function') {
       return uuidv4.crypto_GetRandomValues();
     }
@@ -35,7 +35,7 @@ export function uuidv4() {
  * The most basic implementation is an alias of `crypto.randomUUID`
  */
 uuidv4.crypto_RandomUUID = () => {
-  //@ts-ignore silence TS warnings for older TS versions, we check availability in the method above.
+  //@ts-ignore silence TS warnings for older TS versions (Angular 9 SDK.), we check availability in the method above.
   return globalThis.crypto.randomUUID();
 };
 
