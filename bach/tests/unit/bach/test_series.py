@@ -134,7 +134,7 @@ def test_equals_instance_dtype(dialect):
     assert not sleft.equals(sright)
 
 
-def test_init_conditions(dialect) -> None:
+def test_init_conditions(dialect, monkeypatch) -> None:
     engine = FakeEngine(dialect=dialect)
     base_node = BachSqlModel.from_sql_model(
         sql_model=CustomSqlModelBuilder('select * from x', name='base')(),
@@ -156,7 +156,7 @@ def test_init_conditions(dialect) -> None:
     with pytest.raises(NotImplementedError, match=r'Non-abstract Series subclasses must override `dtype`'):
         FakeSeries(**base_params)
 
-    FakeSeries.dtype = 'int64'
+    monkeypatch.setattr(FakeSeries, name='dtype', value='int64')
 
     # non-defined supported_db_dtype error
     with pytest.raises(
@@ -164,16 +164,16 @@ def test_init_conditions(dialect) -> None:
     ):
         FakeSeries(**base_params)
 
-    FakeSeries.supported_db_dtype = {'random': 'random'}
-
+    monkeypatch.setattr(FakeSeries, name='supported_db_dtype', value={'random': 'random'})
     # unsupported dialect
     with pytest.raises(
         DatabaseNotSupportedException, match=r'is not supported for database dialect'
     ):
         FakeSeries(**base_params)
 
-    FakeSeries.supported_db_dtype = {DBDialect.from_dialect(dialect): 'random'}
-
+    monkeypatch.setattr(
+        FakeSeries, name='supported_db_dtype', value={DBDialect.from_dialect(dialect): 'random'}
+    )
     df = get_fake_df(dialect, ['a'], ['b', 'c'])
 
     params_w_gb = base_params.copy()
