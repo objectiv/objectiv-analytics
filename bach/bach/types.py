@@ -217,7 +217,7 @@ class TypeRegistry:
         self._register_value_klass(float, SeriesFloat64)
         self._register_value_klass(numpy.float64, SeriesFloat64)
         self._register_value_klass(bool, SeriesBoolean)
-        self._register_value_klass(type(None), SeriesString)  # NoneType ends up as a string for now
+        # self._register_value_klass(type(None), SeriesString)  # NoneType ends up as a string for now
         self._register_value_klass(str, SeriesString)
         self._register_value_klass(pandas.Interval, SeriesNumericInterval)
 

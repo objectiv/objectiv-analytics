@@ -3333,7 +3333,7 @@ class DataFrame:
                 new_column_name = f'{column}__{curr_col}'
                 new_columns.append(new_column_name)
 
-                df[new_column_name] = None
+                df[new_column_name] = df[curr_col].from_value(base=df, value=None, name='new_column_name')
                 # previous statement will change dtype to string because value is None
                 df[new_column_name] = df[new_column_name].astype(df[curr_col].dtype)
                 df.loc[df[index_to_unstack] == column, new_column_name] = df[curr_col]
