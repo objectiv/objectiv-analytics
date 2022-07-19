@@ -122,14 +122,32 @@ def test_round(engine):
     )
     bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
 
-    for i in 0, 3, 5, 9:
-        result = bt.round(i).sort_values(by=['c']).to_pandas()
-        expected = pdf.round(i).sort_values(by='c')
-        pd.testing.assert_frame_equal(expected, result, check_names=False)
+    result = bt.copy()
+    expected = pdf.copy()
 
-        result2 = bt.round(decimals=i).sort_values(by=['c']).to_pandas()
-        expected2 = pdf.round(decimals=i).sort_values(by='c')
-        pd.testing.assert_frame_equal(expected2, result2, check_names=False)
+    columns_to_check = []
+    for i in 0, 3, 5, 9:
+        rounded_bt = bt.round(i)
+        rounded_bt_w_decimal_kwrd = bt.round(decimals=i)
+
+        rounded_pdf = pdf.round(i)
+        rounded_pdf_w_decimal_kwrd = pdf.round(decimals=i)
+        for series_name in bt.data_columns:
+            col = f'round_{i}_{series_name}'
+            result[col] = rounded_bt[series_name]
+            expected[col] = rounded_pdf[series_name]
+            columns_to_check.append(col)
+
+            col = f'round_{i}_{series_name}_w_decimal'
+            result[col] = rounded_bt_w_decimal_kwrd[series_name]
+            expected[col] = rounded_pdf_w_decimal_kwrd[series_name]
+            columns_to_check.append(col)
+
+    result = result.sort_values(by='c')[columns_to_check]
+    expected = expected.sort_values(by='c')[columns_to_check]
+    pd.testing.assert_frame_equal(
+        expected, result.to_pandas(), check_names=False,
+    )
 
 
 def test_quantile(engine) -> None:
