@@ -191,8 +191,18 @@ class Series(ABC):
         if not is_valid_column_name(dialect=engine.dialect, name=name):
             raise ValueError(f'Column name "{name}" is not valid for SQL dialect {engine.dialect}')
 
+        for value in index.values():
+            if value.base_node != base_node:
+                raise ValueError(
+                    (
+                        f'Base_node in `index` should match series. '
+                        f'series: {base_node}, {value.name}.base_node: {value.base_node}'
+                    )
+                )
+
         if order_by:
             validate_node_column_references_in_sorting_expressions(node=base_node, order_by=order_by)
+
         validate_instance_dtype(static_dtype=self.dtype, instance_dtype=instance_dtype)
 
         self._engine = engine
