@@ -236,7 +236,7 @@ this case.
 
 .. important::
     ``df.sort_index().loc['Sleat':, 'municipality'] = 'Fryslân'`` will have no effect on ``df``, since
-    :py:meth:`sort_index() <DataFrame.sort_index>` returns a new dataframe.
+    :py:meth:`sort_index() <DataFrame.sort_index>` returns a new DataFrame.
 
 .. _appendix_example_data:
 

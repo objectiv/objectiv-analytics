@@ -51,8 +51,9 @@ Sometimes complex operations on Bach cannot be executed on BigQuery and you migh
     Resources exceeded during query execution: Not enough resources for query planning - too many 
     subqueries or query is too complex.
 
-
-In this case, you can materialize the current DataFrame as a temporary table:
+If the underlying SQL query is complex for your dataset and you still need to apply other operations, in order 
+to avoid the query becoming too complex (and getting the error above), you should first materialize the 
+current DataFrame as a temporary table:
 
 .. code-block:: console
 
