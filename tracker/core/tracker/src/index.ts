@@ -17,6 +17,8 @@ export * from './EventFactories';
 export * from './EventNames';
 export * from './EventRecorderInterface';
 export * from './helpers';
+export * from './isAbstractContext';
+export * from './isContextEqual';
 export * from './LocationTreeInterface';
 export * from './RecordedEventsInterface';
 export * from './Tracker';

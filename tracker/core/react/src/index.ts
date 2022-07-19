@@ -52,13 +52,12 @@ export * from './hooks/eventTrackers/useSuccessEventTracker';
 export * from './hooks/eventTrackers/useVisibleEventTracker';
 export * from './hooks/eventTrackers/useVisibilityTracker';
 
-export * from './hooks/useOnChange';
+export * from './hooks/useOnContextChange';
 export * from './hooks/useOnMount';
 export * from './hooks/useOnMountOnce';
 export * from './hooks/useOnToggle';
 export * from './hooks/useOnUnmount';
 export * from './hooks/useOnUnmountOnce';
-export * from './hooks/useTrackOnChange';
 export * from './hooks/useTrackOnMount';
 export * from './hooks/useTrackOnMountOnce';
 export * from './hooks/useTrackOnToggle';
