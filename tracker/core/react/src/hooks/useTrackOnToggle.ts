@@ -14,7 +14,7 @@ export type TrackOnToggleHookParameters = Partial<TrackEventParameters> & {
   /**
    * A boolean variable this hook is going to be monitoring for determining when and which event to trigger
    */
-  state: boolean;
+  state: boolean | (() => boolean);
 
   /**
    * The Event to track when state changes from `false` to `true`

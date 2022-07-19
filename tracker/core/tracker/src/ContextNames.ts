@@ -47,3 +47,5 @@ export type AnyLocationContextName =
   | 'OverlayContext'
   | 'PressableContext'
   | 'RootLocationContext';
+
+export const ContextNames = new Set([...Object.keys(LocationContextName), ...Object.keys(GlobalContextName)]);
