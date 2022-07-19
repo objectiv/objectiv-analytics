@@ -758,6 +758,9 @@ Object.keys(object_declarations).forEach((definition_type) => {
   }
 });
 
+// Append ContextNames Set
+contentContextNamesTsFile += `export const ContextNames = new Set([...Object.keys(LocationContextName), ...Object.keys(GlobalContextName)]);\n\n`;
+
 // write ContextNames.ts to file, if we have any
 if (contentContextNamesTsFile) {
   fs.writeFileSync(contextNamesTsFile, COPYRIGHT);
