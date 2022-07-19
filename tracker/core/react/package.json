@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/tracker-react-core",
-  "version": "0.0.23-0",
+  "version": "0.0.23-1",
   "description": "Objectiv tracker core module for React trackers",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
@@ -51,10 +51,10 @@
     "npm-publish:verdaccio": "npm publish --tag=$TAG"
   },
   "devDependencies": {
-    "@objectiv/developer-tools": "^0.0.23-0",
-    "@objectiv/plugin-application-context": "^0.0.23-0",
-    "@objectiv/plugin-path-context-from-url": "^0.0.23-0",
-    "@objectiv/testing-tools": "^0.0.23-0",
+    "@objectiv/developer-tools": "^0.0.23-1",
+    "@objectiv/plugin-application-context": "^0.0.23-1",
+    "@objectiv/plugin-path-context-from-url": "^0.0.23-1",
+    "@objectiv/testing-tools": "^0.0.23-1",
     "@testing-library/react": "^12.1.4",
     "@testing-library/react-hooks": "^7.0.2",
     "@types/jest": "^27.4.1",
@@ -69,8 +69,8 @@
     "typescript": "^4.6.2"
   },
   "dependencies": {
-    "@objectiv/schema": "^0.0.23-0",
-    "@objectiv/tracker-core": "~0.0.23-0"
+    "@objectiv/schema": "^0.0.23-1",
+    "@objectiv/tracker-core": "~0.0.23-1"
   },
   "peerDependencies": {
     "react": ">=16.8",
