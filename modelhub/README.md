@@ -7,17 +7,17 @@ free to use, and can easily be combined to build advanced compound models.
 ## How to use the open model hub
 
 Three types of functions/models are provided:
-1. [Helper functions](https://objectiv.io/docs/modeling/open-model-hub/models/helper-functions/index.mdx): 
+1. [Helper functions](https://objectiv.io/docs/modeling/open-model-hub/models/helper-functions/): 
   simplify manipulating and analyzing the data.
-2. [Aggregation models](https://objectiv.io/docs/modeling/open-model-hub/models/aggregation/index.mdx): 
+2. [Aggregation models](https://objectiv.io/docs/modeling/open-model-hub/models/aggregation/): 
   enable running some of the more common data analyses and product analytics metrics.
-3. [Machine learning models](https://objectiv.io/docs/modeling/open-model-hub/models/machine-learning/index.mdx).
+3. [Machine learning models](https://objectiv.io/docs/modeling/open-model-hub/models/machine-learning/).
 
 Modeling behavior of users and groups is enabled through configurable
 [Identity Resolution](https://objectiv.io/docs/modeling/open-model-hub/identity-resolution.mdx).
 
 See how to [get started in your notebook](https://objectiv.io/docs/modeling/get-started-in-your-notebook.mdx) 
-and the [example notebooks](https://objectiv.io/docs/modeling/example-notebooks/index.mdx), and install the 
+and the [example notebooks](https://objectiv.io/docs/modeling/example-notebooks/), and install the 
 model hub package directly from PyPI:
 
 ```console
