@@ -10,6 +10,8 @@ describe('uuidv4', () => {
   jest.spyOn(uuidv4, 'dateNow_MathRandom');
 
   beforeEach(() => {
+    // @ts-ignore
+    globalThis.crypto = undefined;
     jest.resetAllMocks();
   });
 
@@ -26,8 +28,9 @@ describe('uuidv4', () => {
   });
 
   it('should invoke `crypto_GetRandomValues` when `crypto` is available but `randomUUID` is not ', function () {
-    // @ts-ignore
     globalThis.crypto = {
+      // @ts-ignore
+      randomUUID: undefined,
       getRandomValues: jest.fn(),
     };
     expect(globalThis.crypto).not.toBeUndefined();
