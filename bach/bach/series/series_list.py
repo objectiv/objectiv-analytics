@@ -137,8 +137,7 @@ class SeriesList(Series):
             name=name,
             expression=expression,
             group_by=None,
-            sorted_ascending=None,
-            index_sorting=[],
+            order_by=[],
             instance_dtype=dtype
         )
         return result

@@ -87,8 +87,7 @@ def get_fake_df(
             name=name,
             expression=Expression.column_reference(name),
             group_by=cast('GroupBy', None),
-            sorted_ascending=None,
-            index_sorting=[],
+            order_by=[],
             instance_dtype=series_type.dtype
         )
 
@@ -102,8 +101,7 @@ def get_fake_df(
             name=name,
             expression=Expression.column_reference(name),
             group_by=cast('GroupBy', None),
-            sorted_ascending=None,
-            index_sorting=[],
+            order_by=[],
             instance_dtype=series_type.dtype
         )
 

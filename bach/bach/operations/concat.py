@@ -333,8 +333,7 @@ class SeriesConcatOperation(ConcatOperation[Series]):
             expression=Expression.column_reference(final_result_series.name),
             index={} if self.ignore_index else index,
             group_by=None,
-            sorted_ascending=None,
-            index_sorting=[] if self.ignore_index else main_series.index_sorting,
+            order_by=[],
             instance_dtype=series_cls.dtype  # TODO: make this work for structural types too
         )
 

@@ -5,7 +5,7 @@ from typing import List
 
 import pytest
 
-from bach import get_series_type_from_dtype, Series
+from bach import get_series_type_from_dtype, SortColumn
 from bach.expression import Expression, AggregateFunctionExpression
 from bach.partitioning import GroupBy
 from bach.sql_model import BachSqlModel
@@ -52,65 +52,68 @@ def test_equals(dialect):
     expr_other = Expression.construct('test::text')
 
     sleft = int_type(engine=engine, base_node=None, index={}, name='test',
-                     expression=expr_test, group_by=None, sorted_ascending=None, index_sorting=[],
+                     expression=expr_test, group_by=None, order_by=[],
                      instance_dtype='int64')
     sright = int_type(engine=engine, base_node=None, index={}, name='test',
-                      expression=expr_test, group_by=None, sorted_ascending=None, index_sorting=[],
+                      expression=expr_test, group_by=None, order_by=[],
                       instance_dtype='int64')
     assert sleft.equals(sright)
 
     # different expression
     sright = int_type(engine=engine, base_node=None, index={}, name='test',
-                      expression=expr_other, group_by=None, sorted_ascending=None, index_sorting=[],
+                      expression=expr_other, group_by=None, order_by=[],
                       instance_dtype='int64')
     assert not sleft.equals(sright)
 
     # different name
     sright = int_type(engine=engine, base_node=None, index={}, name='test_2',
-                      expression=expr_test, group_by=None, sorted_ascending=None, index_sorting=[],
+                      expression=expr_test, group_by=None, order_by=[],
                       instance_dtype='int64')
     assert not sleft.equals(sright)
 
     # different base_node
     sright = int_type(engine=engine, base_node='test', index={}, name='test',
-                      expression=expr_test, group_by=None, sorted_ascending=None, index_sorting=[],
+                      expression=expr_test, group_by=None, order_by=[],
                       instance_dtype='int64')
     assert not sleft.equals(sright)
 
     # different engine
     sright = int_type(engine=engine_other, base_node=None, index={}, name='test',
-                      expression=expr_test, group_by=None, sorted_ascending=None, index_sorting=[],
+                      expression=expr_test, group_by=None, order_by=[],
                       instance_dtype='int64')
     assert not sleft.equals(sright)
 
     # different type
     sright = float_type(engine=engine, base_node=None, index={}, name='test',
-                        expression=expr_test, group_by=None, sorted_ascending=None, index_sorting=[],
+                        expression=expr_test, group_by=None, order_by=[],
                         instance_dtype='float64')
     assert not sleft.equals(sright)
 
     # different group_by
     sright = int_type(engine=engine, base_node=None, index={}, name='test', expression=expr_test,
-                      group_by=GroupBy(group_by_columns=[]), sorted_ascending=None, index_sorting=[],
+                      group_by=GroupBy(group_by_columns=[]), order_by=[],
                       instance_dtype='int64')
     assert not sleft.equals(sright)
 
     # different sorting
-    sright = int_type(engine=engine, base_node=None, index={}, name='test', expression=expr_test,
-                      group_by=None, sorted_ascending=True, index_sorting=[], instance_dtype='int64')
+    sright = int_type(
+        engine=engine, base_node=None, index={}, name='test', expression=expr_test,
+        group_by=None, order_by=[SortColumn(expression=expr_test, asc=True)],
+        instance_dtype='int64',
+    )
     assert not sleft.equals(sright)
-    sright = sright.copy_override(sorted_ascending=None)
+    sright = sright.copy_override(order_by=[])
     assert sleft.equals(sright)
 
     index_series = sleft
     sleft = int_type(engine=engine, base_node=None, index={'a': index_series}, name='test',
-                     expression=expr_test, group_by=None, sorted_ascending=None, index_sorting=[],
+                     expression=expr_test, group_by=None, order_by=[],
                      instance_dtype='int64')
     sright = int_type(engine=engine, base_node=None, index={'a': index_series}, name='test',
-                      expression=expr_test, group_by=None, sorted_ascending=None, index_sorting=[],
+                      expression=expr_test, group_by=None, order_by=[],
                       instance_dtype='int64')
     assert sleft.equals(sright)
-    sright = sright.copy_override(index_sorting=[True])
+    sright = sright.copy_override(order_by=[SortColumn(expression=expr_test, asc=True)])
     assert not sleft.equals(sright)
 
 
@@ -126,7 +129,7 @@ def test_equals_instance_dtype(dialect):
 
     # Currently we only have bigquery types that actual use the instance_dtype. So skip postgres here.
     sleft = dict_type(engine=engine, base_node=None, index={}, name='test',
-                      expression=expr_test, group_by=None, sorted_ascending=None, index_sorting=[],
+                      expression=expr_test, group_by=None, order_by=[],
                       instance_dtype={'a': 'int64', 'b': ['bool']})
     sright = sleft.copy_override()
     assert sleft.equals(sright)
@@ -202,21 +205,6 @@ def test_init_conditions(dialect, monkeypatch) -> None:
         ValueError, match=r'Expression has an aggregation function set'
     ):
         FakeSeries(**params_w_agg_expression_wo_gb)
-
-    # multiple sorting
-    params_w_sorting = base_params.copy()
-    params_w_sorting['index_sorting'] = [True]
-    params_w_sorting['sorted_ascending'] = True
-    with pytest.raises(
-        ValueError, match=r'cannot be sorted by both value and index.'
-    ):
-        FakeSeries(**params_w_sorting)
-
-    params_w_sorting['sorted_ascending'] = None
-
-    # invalid index sorting
-    with pytest.raises(ValueError, match=r'Length of index_sorting'):
-        FakeSeries(**params_w_sorting)
 
     params_w_wrong_name = base_params.copy()
     params_w_wrong_name['name'] = '-' * 65
