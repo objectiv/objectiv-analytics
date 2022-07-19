@@ -496,3 +496,104 @@ class Aggregate:
             plt.show()
 
         return retention_matrix
+
+    def get_df_consecutive_steps(self, df, step='root_location', event_type=None, groupby_column='user_id'):
+        if event_type is not None:
+            df = df[df['event_type'] == event_type]
+
+        if step == 'feature_nice_name':
+            df['long_feature_nice_name'] = df.location_stack.ls.nice_name
+            # df['feature_nice_name'] = df['long_feature_nice_name'].str.replace(' located at Root Location:', ',')
+            # df['feature_nice_name'] = df['feature_nice_name'].str.replace(' => ', ' > ')
+            df['step_name'] = df['long_feature_nice_name']
+        elif step == 'root_location':
+            df['step_name'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext',
+                                                                                     key='id')
+        # construct steps column which is a list of strings
+        df_steps = df.groupby(groupby_column)['step_name'].to_json_array().reset_index()
+        df_steps = df_steps.rename(columns={'step_name': 'step_sequences'})
+        df_steps = df.merge(df_steps, on=groupby_column)
+        return df_steps
+
+    def top_step_sequences(self, df, n_steps=3, n_examples=10, groupby_column='user_id',
+                           step='root_location', event_type=None, display=True):
+        from bach.list_operations import PostgresListShifterOperation, BigQueryListShifterOperation
+        df_steps = self.get_df_consecutive_steps(df, event_type=event_type, step=step,
+                                                 groupby_column=groupby_column)
+        df_steps = df_steps[[groupby_column, 'step_sequences']].drop_duplicates()
+
+        func_ngram = lambda data, n: [data[i: i + n] for i in range(len(data) - n + 1)]
+
+        from sql_models.util import DatabaseNotSupportedException, is_postgres, is_bigquery
+        engine = df.engine
+        if is_postgres(engine):
+            df_steps_counter = PostgresListShifterOperation(list_series=df_steps['step_sequences'],
+                                                            shifting_n=n_steps).count_sublist_occurrence().sort_values(
+                ascending=False)
+        elif is_bigquery(engine):
+            df_steps_counter = BigQueryListShifterOperation(list_series=df_steps['step_sequences'],
+                                                            shifting_n=n_steps).count_sublist_occurrence().sort_values(
+                ascending=False)
+        else:
+            raise DatabaseNotSupportedException(engine)
+
+        if n_examples is None:
+            df_steps_counter = df_steps_counter.to_pandas()
+        else:
+            df_steps_counter = df_steps_counter.head(n_examples)
+
+        if display:
+            _counter = df_steps_counter.reset_index().values.tolist()
+
+            label, source, target, value = [], [], [], []
+
+            import json
+            for elem in _counter:
+                # vertex
+                source_target_list = func_ngram(json.loads(elem[0]), 2)
+                # source_target_list = func_ngram(elem[0], 2)  # bq problem
+                source.extend([i[0] for i in source_target_list])
+                target.extend([i[1] for i in source_target_list])
+                # weight
+                weight = elem[-1]
+                value.extend([weight for i in range(len(source_target_list))])
+
+            import pandas as pd
+            df_links = pd.DataFrame({'source': source, 'target': target, 'value': value})
+            unique_source_target = list(pd.unique(df_links[['source', 'target']].values.ravel()))
+            mapping_dict = {k: v for v, k in enumerate(unique_source_target)}
+            df_links['source'] = df_links['source'].map(mapping_dict)
+            df_links['target'] = df_links['target'].map(mapping_dict)
+
+            # summing up loops - we want one link for a loop
+            df_links["value"] = df_links.groupby(['source', 'target'])['value'].transform('sum')
+            df_links = df_links.drop_duplicates(subset=['source', 'target'])
+
+            links_dict = df_links.to_dict(orient='list')
+
+            import plotly.graph_objects as go
+            fig = go.Figure(data=[go.Sankey(
+                textfont=dict(color="rgba(0,0,0,0)", size=1),
+                node=dict(
+                    pad=25,
+                    thickness=15,
+                    line=dict(color="black", width=0.5),
+                    label=unique_source_target,
+                ),
+                link=dict(
+                    source=links_dict["source"],
+                    target=links_dict["target"],
+                    value=links_dict["value"],
+                ),
+            )])
+
+            fig.update_layout(
+                hoverlabel=dict(
+                    bgcolor="white",
+                    font_size=16,
+                ),
+
+                title_text="Location Stack Movement", font_size=12)
+            fig.show()
+
+        return df_steps_counter
