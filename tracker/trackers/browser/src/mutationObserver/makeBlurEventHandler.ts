@@ -23,13 +23,16 @@ export const makeBlurEventHandler =
       (isTaggedElement(event.currentTarget) && event.currentTarget.hasAttribute(TaggingAttribute.trackBlurs))
     ) {
       const globalContexts: GlobalContexts = [];
-      const elementValue = element.getAttribute('value');
 
-      if (trackBlursOptions?.trackValue && locationId && elementValue) {
+      if (
+        trackBlursOptions?.trackValue &&
+        locationId &&
+        (event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement)
+      ) {
         globalContexts.push(
           makeInputValueContext({
             id: locationId,
-            value: elementValue,
+            value: event.target.value,
           })
         );
       }

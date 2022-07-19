@@ -52,7 +52,7 @@ def use_only_required_objectiv_series(
             *args,
             **kwargs,
         ) -> bach.Series:
-            from modelhub.stack.util import check_objectiv_dataframe, ObjectivSupportedColumns
+            from modelhub.util import check_objectiv_dataframe, ObjectivSupportedColumns
             check_objectiv_dataframe(
                 df=data,
                 columns_to_check=required_series,

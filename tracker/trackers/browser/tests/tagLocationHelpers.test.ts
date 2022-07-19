@@ -134,6 +134,23 @@ describe('tagLocationHelpers', () => {
     expect(taggingAttributes).toStrictEqual(expectedTaggingAttributes);
   });
 
+  it('tagInput with value tracking', () => {
+    const taggingAttributes = tagInput({ id: 'test-input', options: { trackBlurs: { trackValue: true } } });
+
+    const expectedTaggingAttributes = {
+      [TaggingAttribute.elementId]: matchUUID,
+      [TaggingAttribute.context]: JSON.stringify({
+        __instance_id: taggingAttributes ? JSON.parse(taggingAttributes[TaggingAttribute.context]).__instance_id : null,
+        __location_context: true,
+        _type: LocationContextName.InputContext,
+        id: 'test-input',
+      }),
+      [TaggingAttribute.trackBlurs]: '{"trackValue":true}',
+    };
+
+    expect(taggingAttributes).toStrictEqual(expectedTaggingAttributes);
+  });
+
   it('tagLink', () => {
     const taggingAttributes = tagLink({ id: 'link', href: '/test' });
 

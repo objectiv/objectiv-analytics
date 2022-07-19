@@ -163,7 +163,8 @@ class Series(ABC):
         :param instance_dtype: dtype of this specific instance. For basic scalar types this should be the
             same value as self.dtype. For structured types (e.g. SeriesDict) this should indicate what the
             structure of the data is.
-        :param order_by: Optional list of sort-columns to order the Series by
+        :param order_by: Optional list of sort-columns to order the Series by. Columns referenced on sorting
+            expressions must be valid for current base node.
         """
         # Series is an abstract class, besides the abstractmethods subclasses must/may override some
         #   properties:
@@ -327,8 +328,7 @@ class Series(ABC):
     @property
     def order_by(self) -> List[SortColumn]:
         """
-        Get the series expressions for sorting this Series. Columns referenced on sorting expressions
-        must be valid for current base node.
+        Get the series expressions for sorting this Series.
         """
         return copy(self._order_by)
 
@@ -877,9 +877,11 @@ class Series(ABC):
             return self
         return self.copy_override(sorted_ascending=ascending)
 
-    def sort_by_series(self, by: List['Series'], ascending: Union[bool, List[bool]] = True):
+    def sort_by_series(
+        self: T, by: List['Series'], *, ascending: Union[bool, List[bool]] = True,
+    ) -> T:
         """
-        Sort this Series by other Series that have the same base node as the caller.
+        Sort this Series by other Series that have the same base node as this Series.
         Returns a new instance and does not actually modify the instance it is called on.
 
         :param by:  list of Series to sort by.

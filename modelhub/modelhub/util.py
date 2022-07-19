@@ -22,6 +22,8 @@ class ObjectivSupportedColumns(Enum):
     SESSION_ID = 'session_id'
     SESSION_HIT_NUMBER = 'session_hit_number'
 
+    IDENTITY_USER_ID = 'identity_user_id'
+
     _DATA_SERIES = (
         DAY, MOMENT, USER_ID, GLOBAL_CONTEXTS, LOCATION_STACK, EVENT_TYPE,
         STACK_EVENT_TYPES, SESSION_ID, SESSION_HIT_NUMBER,
@@ -36,6 +38,8 @@ class ObjectivSupportedColumns(Enum):
     _SESSIONIZED_COLUMNS = (
         SESSION_ID, SESSION_HIT_NUMBER,
     )
+
+    _IDENTITY_RESOLUTION_COLUMNS = (IDENTITY_USER_ID, )
 
     @classmethod
     def get_extracted_context_columns(cls) -> List[str]:
@@ -70,6 +74,8 @@ _OBJECTIV_SUPPORTED_COLUMNS_X_SERIES_DTYPE = {
     ObjectivSupportedColumns.STACK_EVENT_TYPES: bach.SeriesJson.dtype,
     ObjectivSupportedColumns.SESSION_ID: bach.SeriesInt64.dtype,
     ObjectivSupportedColumns.SESSION_HIT_NUMBER: bach.SeriesInt64.dtype,
+
+    ObjectivSupportedColumns.IDENTITY_USER_ID: bach.SeriesString.dtype,
 }
 
 # mapping for series names and modelhub series dtypes
@@ -79,14 +85,21 @@ _OBJECTIV_SUPPORTED_COLUMNS_X_MODELHUB_SERIES_DTYPE = {
 }
 
 
-def get_supported_dtypes_per_objectiv_column(with_md_dtypes: bool = False) -> Dict[str, str]:
+def get_supported_dtypes_per_objectiv_column(
+    with_md_dtypes: bool = False, with_identity_resolution: bool = True,
+) -> Dict[str, str]:
     """
     Helper function that returns mapping between Objectiv series name and dtype
     If with_md_types is true, it will return mapping against modelhub own dtypes
+    If with_identity_resolution is true, the supported dtype for user_id is string
+        instead of UUID.
     """
     supported_dtypes = _OBJECTIV_SUPPORTED_COLUMNS_X_SERIES_DTYPE.copy()
     if with_md_dtypes:
         supported_dtypes.update(_OBJECTIV_SUPPORTED_COLUMNS_X_MODELHUB_SERIES_DTYPE)
+
+    if with_identity_resolution:
+        supported_dtypes.update({ObjectivSupportedColumns.USER_ID: bach.SeriesString.dtype})
 
     return {col.value: dtype for col, dtype in supported_dtypes.items()}
 
@@ -97,6 +110,7 @@ def check_objectiv_dataframe(
     check_index: bool = False,
     check_dtypes: bool = False,
     with_md_dtypes: bool = False,
+    infer_identity_resolution: bool = True,
 ) -> None:
     """
     Helper function that determines if provided dataframe is an objectiv dataframe.
@@ -106,9 +120,26 @@ def check_objectiv_dataframe(
     :param check_index: if true, will check if dataframe has expected index series
     :param check_dtypes: if true, will check if each series has expected dtypes
     :param with_md_dtypes: if true, will check if series has expected modelhub dtype
+    :param infer_identity_resolution: if true, will check if user_id series has string dtype
     """
     columns = columns_to_check if columns_to_check else ObjectivSupportedColumns.get_all_columns()
-    supported_dtypes = get_supported_dtypes_per_objectiv_column(with_md_dtypes=with_md_dtypes)
+
+    with_identity_resolution = False
+    if infer_identity_resolution:
+        if ObjectivSupportedColumns.IDENTITY_USER_ID.value in df.all_series:
+            # if df has identity_user_id series, we can infer user_id series was changed
+            # by IdentityResolutionPipeline
+            with_identity_resolution = True
+        elif (
+            ObjectivSupportedColumns.USER_ID.value in df.all_series
+            and df.all_series[ObjectivSupportedColumns.USER_ID.value].dtype == bach.SeriesString.dtype
+        ):
+            # user_id is dtype string, it was changed by IdentityResolutionPipeline
+            with_identity_resolution = True
+
+    supported_dtypes = get_supported_dtypes_per_objectiv_column(
+        with_md_dtypes=with_md_dtypes, with_identity_resolution=with_identity_resolution,
+    )
 
     for col in columns:
         if col not in supported_dtypes:

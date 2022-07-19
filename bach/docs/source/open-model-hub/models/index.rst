@@ -2,7 +2,7 @@
 
 .. currentmodule:: modelhub
 
-.. frontmatterposition:: 2
+.. frontmatterposition:: 3
 
 ======
 Models
