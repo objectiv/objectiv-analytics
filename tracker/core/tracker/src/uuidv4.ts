@@ -17,11 +17,11 @@ export function uuidv4() {
   const crypto = globalThis.crypto;
 
   if (crypto) {
-    if (crypto.hasOwnProperty('randomUUID')) {
+    if (typeof crypto.randomUUID !== undefined) {
       return uuidv4.crypto_RandomUUID();
     }
 
-    if (crypto.hasOwnProperty('getRandomValues')) {
+    if (typeof crypto.getRandomValues !== undefined) {
       return uuidv4.crypto_GetRandomValues();
     }
   }
