@@ -4,7 +4,7 @@ Copyright 2021 Objectiv B.V.
 from abc import ABC, abstractmethod
 from copy import copy, deepcopy
 from typing import Optional, Dict, Tuple, Union, Type, Any, List, cast, TYPE_CHECKING, Callable, Mapping, \
-    TypeVar, Sequence, NamedTuple
+    TypeVar, Sequence, NamedTuple, Generic
 from uuid import UUID
 
 import numpy
@@ -471,6 +471,36 @@ class Series(ABC):
             instance_dtype=dtype
         )
         return result
+
+    @classmethod
+    def new_value(cls: T, value: Any, dtype: Optional[StructuredDtype] = None) -> 'UnassignedSeries[T]':
+        """
+        Return an object that can be assigned directly to a DataFrame and that will represent the value, as
+        the type of this Series. This can be useful if the data-type is not clear from the value, e.g.
+        `None` has an unclear data-type.
+
+        The returned value can only be assigned to a DataFrame column.
+        Assigning the value will transform the value into a Series object. The return value cannot be used
+        for calculations directly.
+
+        .. code-block:: python
+            df['s'] = SeriesString.new_value('some string'')
+            df['i'] = SeriesFloat64.new_value(123)
+            df['sn'] = SeriesString.new_value(None)
+            df['in'] = SeriesFloat64.new_value(None)
+
+            assert df.dtypes['s'] == df.dtypes['sn'] == 'string'
+            assert df.dtypes['i'] == df.dtypes['in'] == 'float64'
+
+        :param value:   The value that this constant Series will have
+        :param dtype:   Optional dtype for structural types. Will default to cls.dtype
+        """
+        # TODO: tests, clear error when users mishandles this?
+        return UnassignedSeries(
+            series_type=cls,
+            value=value,
+            instance_dtype=dtype
+        )
 
     @classmethod
     def assert_engine_dialect_supported(cls, dialect_engine: Union[Dialect, Engine]):
@@ -1921,3 +1951,26 @@ def variable_series(
         instance_dtype=series_type.dtype  # TODO: make work for structural types too
     )
     return result
+
+
+class UnassignedSeries(Generic[T]):
+    """
+    Class representing a Series with a value that is not yet assigned to a DataFrame.
+
+    Generally should not be instantiated directly, but through :meth:`Series.new_value()`.
+    """
+    def __init__(self,
+                 series_type: T,
+                 value: Any,
+                 instance_dtype: Optional[StructuredDtype] = None):
+        self._series_type = series_type
+        self._value = value
+        self._instance_dtype = instance_dtype
+
+    def assign(self, base: DataFrameOrSeries, name: str) -> T:
+        return self._series_type.from_value(
+            base=base,
+            value=self._value,
+            name=name,
+            dtype=self._instance_dtype
+        )

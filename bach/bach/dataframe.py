@@ -1268,11 +1268,11 @@ class DataFrame:
 
     def __setitem__(self,
                     key: Union[str, List[str]],
-                    value: Union[AllSupportedLiteralTypes, 'Series', pandas.Series]):
+                    value: Union[AllSupportedLiteralTypes, 'Series', pandas.Series, 'UnassignedSeries']):
         """
         For usage see general introduction DataFrame class.
         """
-        from bach.series import Series, value_to_series, SeriesAbstractMultiLevel
+        from bach.series import Series, value_to_series, SeriesAbstractMultiLevel, UnassignedSeries
         if isinstance(key, str):
             if key in self.index:
                 # Cannot set an index column, and cannot have a column name both in self.index and self.data
@@ -1293,6 +1293,8 @@ class DataFrame:
                                            df,
                                            convert_objects=True)
                 value = bt[key]
+            if isinstance(value, UnassignedSeries):
+                value = value.assign(base=self, name = key)
             if not isinstance(value, Series):
                 series = value_to_series(base=self, value=value, name=key)
                 self._data[key] = series
@@ -3333,9 +3335,7 @@ class DataFrame:
                 new_column_name = f'{column}__{curr_col}'
                 new_columns.append(new_column_name)
 
-                df[new_column_name] = df[curr_col].from_value(base=df, value=None, name='new_column_name')
-                # previous statement will change dtype to string because value is None
-                df[new_column_name] = df[new_column_name].astype(df[curr_col].dtype)
+                df[new_column_name] = df[curr_col].new_value(value=None)
                 df.loc[df[index_to_unstack] == column, new_column_name] = df[curr_col]
 
         df = df.groupby(remaining_indexes).aggregate(aggregation)

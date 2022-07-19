@@ -186,7 +186,7 @@ def test_isnull(engine):
     pdf.set_index('text_with_null', drop=False, inplace=True)
     bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     bt['const_not_null'] = 'not_null'
-    bt['const_null'] = SeriesString.from_value(base=bt, value=None, name='const_null')
+    bt['const_null'] = SeriesString.new_value(value=None)
     bt['y'] = bt.text_with_null.isnull()
     bt['z'] = bt.text_with_null.notnull()
     assert bt.y.expression.is_constant == bt.text_with_null.expression.is_constant
