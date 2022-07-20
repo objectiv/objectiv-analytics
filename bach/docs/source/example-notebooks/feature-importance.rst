@@ -18,8 +18,8 @@ comes with our quickstart. To already try it out you have to use the model hub v
 is easiest to set up a development environment as detailed in the `readme
 <https://github.com/objectiv/objectiv-analytics/tree/main/modelhub#setup-development-environment>`_.
 
-To get started we instantiate the model hub and the Objectiv DataFrame objects, as explained in
-:ref:`getting_started_with_objectiv`.
+First we have to install the open model hub and instantiate the Objectiv DataFrame object; see
+:doc:`getting started in your notebook <../get-started-in-your-notebook>`.
 
 The feature importance model from the open model hub creates a Bach data set that can be used for the model
 as well as the model that returns the results. The model includes tools to assess the accuracy of your

@@ -19,8 +19,8 @@ to run on your own data or use our
 `quickstart
 <https://objectiv.io/docs/home/quickstart-guide/>`_ to try it out with demo data in 5 minutes.
 
-At first we have to install the open model hub and instantiate the Objectiv DataFrame object. See
-:ref:`getting_started_with_objectiv` for more info on this.
+First we have to install the open model hub and instantiate the Objectiv DataFrame object; see
+:doc:`getting started in your notebook <../get-started-in-your-notebook>`.
 
 This object points to all data in the data set. Without any aggregation, this dataset is too large to
 for pandas and sklearn. For the data set that we need, we aggregate to user level, at which point it is

@@ -16,12 +16,11 @@ data set prepared in Bach can be used for machine learning with sklearn
 
 This example is also available in a `notebook
 <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/feature-engineering.ipynb>`_
-to run on your own data or use our
-`quickstart
-<https://objectiv.io/docs/home/quickstart-guide/>`_ to try it out with demo data in 5 minutes.
+to run on your own data or use our `quickstart <https://objectiv.io/docs/home/quickstart-guide/>`_ to try it 
+out with demo data in 5 minutes.
 
-At first we have to install the open model hub and instantiate the Objectiv DataFrame object. See
-:ref:`getting_started_with_objectiv` for more info on this.
+First we have to install the open model hub and instantiate the Objectiv DataFrame object; see
+:doc:`getting started in your notebook <../get-started-in-your-notebook>`.
 
 This object points to all data in the data set. Too large to run in pandas and therefore sklearn. For the
 data set that we need, we aggregate to user level, at which point it is small enough to fit in memory.
