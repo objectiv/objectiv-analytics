@@ -25,7 +25,6 @@ AllSupportedLiteralTypes = Union[
     int, numpy.int64,
     float, numpy.float64,
     bool,
-    None,
     str,
     datetime.date, datetime.time, datetime.datetime, numpy.datetime64, datetime.timedelta, numpy.timedelta64,
     UUID,
