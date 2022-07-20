@@ -4,19 +4,19 @@ Copyright 2021 Objectiv B.V.
 import json
 import operator
 from functools import reduce
-from typing import Dict, Union, TYPE_CHECKING, Tuple, cast, Optional, List, Any, TypeVar, Generic, overload
+from typing import Dict, Union, TYPE_CHECKING, Tuple, cast, Optional, List, Any, TypeVar, Generic
 
 from sqlalchemy.engine import Dialect
 
-from bach import SortColumn, DataFrameOrSeries
+from bach import SortColumn
 from bach.series import Series
-from bach.expression import Expression, join_expressions
+from bach.expression import Expression
 from bach.series.series import WrappedPartition, ToPandasInfo
-from bach.sql_model import BachSqlModel, construct_references
+from bach.sql_model import BachSqlModel
 from bach.types import DtypeOrAlias, StructuredDtype, AllSupportedLiteralTypes
 from sql_models.constants import DBDialect
-from sql_models.model import Materialization, CustomSqlModelBuilder, SqlModel
-from sql_models.util import quote_string, is_postgres, DatabaseNotSupportedException, is_bigquery, quote_identifier
+from sql_models.model import Materialization
+from sql_models.util import quote_string, is_postgres, DatabaseNotSupportedException, is_bigquery
 
 if TYPE_CHECKING:
     from bach.dataframe import DataFrame
