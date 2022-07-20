@@ -84,11 +84,13 @@ def test_json_array_contains(engine, dtype):
     ]
     pdf = pandas.DataFrame.from_records(test_data, columns=['index', 'column'])
     pdf.set_index(pdf.columns[0], drop=True, inplace=True)
+    pdf['random'] = 1
     df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
     df['column'] = df.column.astype(dtype)
     df = df.materialize()
     # Done setting up custom test data
 
+    df.column.json.unnest_array()
     # Actual test below
     df['a'] = df.column.json.array_contains('a')
     df['b'] = df.column.json.array_contains('b')

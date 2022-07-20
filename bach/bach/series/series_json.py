@@ -4,22 +4,22 @@ Copyright 2021 Objectiv B.V.
 import json
 import operator
 from functools import reduce
-from abc import abstractmethod
-from typing import Dict, Union, TYPE_CHECKING, Tuple, cast, Optional, List, Any, TypeVar, Generic
+from typing import Dict, Union, TYPE_CHECKING, Tuple, cast, Optional, List, Any, TypeVar, Generic, overload
 
 from sqlalchemy.engine import Dialect
 
-from bach import SortColumn
+from bach import SortColumn, DataFrameOrSeries
 from bach.series import Series
 from bach.expression import Expression, join_expressions
 from bach.series.series import WrappedPartition, ToPandasInfo
-from bach.sql_model import BachSqlModel
-from bach.types import DtypeOrAlias, StructuredDtype, AllSupportedLiteralTypes, Dtype
+from bach.sql_model import BachSqlModel, construct_references
+from bach.types import DtypeOrAlias, StructuredDtype, AllSupportedLiteralTypes
 from sql_models.constants import DBDialect
-from sql_models.model import Materialization
-from sql_models.util import quote_string, is_postgres, DatabaseNotSupportedException, is_bigquery
+from sql_models.model import Materialization, CustomSqlModelBuilder
+from sql_models.util import quote_string, is_postgres, DatabaseNotSupportedException, is_bigquery, quote_identifier
 
 if TYPE_CHECKING:
+    from bach.dataframe import DataFrame
     from bach.series import SeriesBoolean, SeriesString, SeriesInt64
     from bach.partitioning import GroupBy
 
@@ -415,6 +415,9 @@ class JsonAccessor(Generic[TSeriesJson]):
 
         return self._implementation.array_contains(item)
 
+    def unnest_array(self) -> Tuple['SeriesJson', 'SeriesInt64']:
+        return self._implementation.unnest_array()
+
 
 class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
     """
@@ -594,6 +597,48 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
         return self._series_object\
             .copy_override(expression=expression)\
             .copy_override_type(SeriesBoolean)
+
+    def unnest_array(self) -> Tuple['SeriesJson', 'SeriesInt64']:
+        dialect = self._series_object.engine.dialect
+
+        unnested_ident_expr = Expression.identifier(name='_unnested_item')
+        offset_ident_expr = Expression.identifier(name='_unnested_offset')
+
+        column_expr = join_expressions(
+            [
+                *{idx.expression for idx in self._series_object.index.values()},
+                unnested_ident_expr,
+                offset_ident_expr,
+            ]
+        )
+        sql = (
+            'SELECT {column_stmt} '
+            'FROM {{base_node}} '
+            'CROSS JOIN UNNEST(JSON_QUERY_ARRAY({{base_node}}.{array_series_identifier}))'
+            'AS {array_item_identifier} WITH OFFSET AS {offset_identifier}'
+        )
+        model_builder = CustomSqlModelBuilder(sql=sql, name='unnest_array')
+        sql_model = model_builder(
+            column_stmt=column_expr.to_sql(dialect=dialect),
+            base_node=self._series_object.materialize(node_name='bq_unnest').base_node,
+            array_series_identifier=se.expression.to_sql(dialect),
+            array_item_identifier=unnested_ident_expr.to_sql(dialect),
+            offset_identifier=offset_ident_expr.to_sql(dialect),
+        )
+
+        from bach import DataFrame, SeriesInt64
+
+        unnested_array_df = DataFrame.from_model(
+            engine=array_series.engine,
+            model=sql_model,
+            index=list(array_series.index.keys()),
+            all_dtypes={
+                **{idx.name: idx.dtype for idx in array_series.index.values()},
+                array_series.name: array_series.dtype,
+                f'{array_series.name}_offset': SeriesInt64.dtype,
+            }
+        )
+        print('hola')
 
 
 class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
