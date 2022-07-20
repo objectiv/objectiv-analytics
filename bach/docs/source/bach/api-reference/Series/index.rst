@@ -41,7 +41,6 @@ Axes
     Series.name
     Series.index
     Series.group_by
-    Series.sorted_ascending
 
 Types
 +++++
