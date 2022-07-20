@@ -1,7 +1,7 @@
 """
 Copyright 2021 Objectiv B.V.
 """
-__version__ = '0.0.16'
+__version__ = '0.0.17'
 
 from bach.dataframe import DataFrame, DataFrameOrSeries, ColumnNames, SortColumn, \
     get_series_type_from_dtype
