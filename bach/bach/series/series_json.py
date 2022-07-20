@@ -19,7 +19,6 @@ from sql_models.model import Materialization
 from sql_models.util import quote_string, is_postgres, DatabaseNotSupportedException, is_bigquery
 
 if TYPE_CHECKING:
-    from bach.dataframe import DataFrame
     from bach.series import SeriesBoolean, SeriesString, SeriesInt64
     from bach.partitioning import GroupBy
 
@@ -437,8 +436,6 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
     """
     BigQuery specific implementation of JsonAccessor functions.
     """
-    UNNEST_ITEM_SERIES_NAME = '_unnested_item'
-    UNNEST_OFFSET_SERIES_NAME = '_unnested_item_offset'
 
     def __init__(self, series_object: 'TSeriesJson'):
         self._series_object = series_object
