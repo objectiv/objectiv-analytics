@@ -7,7 +7,7 @@ from copy import copy
 from functools import reduce
 from typing import Union, List, Optional, Dict, Any, cast, TypeVar, Tuple, Type, TYPE_CHECKING
 
-from bach import DataFrameOrSeries
+from bach import DataFrameOrSeries, SortColumn
 from bach.series.series import Series
 from bach.series.series_numeric import SeriesAbstractNumeric, SeriesFloat64, SeriesInt64
 from bach.series.series_string import SeriesString
@@ -56,9 +56,8 @@ class SeriesAbstractMultiLevel(Series, ABC):
         name: Optional[str] = None,
         expression: Optional['Expression'] = None,
         group_by: Optional[Union['GroupBy', NotSet]] = not_set,
-        sorted_ascending: Optional[Union[bool, NotSet]] = not_set,
-        index_sorting: Optional[List[bool]] = None,
         instance_dtype: Optional[StructuredDtype] = None,
+        order_by: Optional[List[SortColumn]] = None,
         **kwargs,
     ) -> T:
         """
@@ -75,9 +74,8 @@ class SeriesAbstractMultiLevel(Series, ABC):
             name=name,
             expression=expression,
             group_by=group_by,
-            sorted_ascending=sorted_ascending,
-            index_sorting=index_sorting,
             instance_dtype=instance_dtype,
+            order_by=order_by,
             **extra_params
         ))
 
@@ -90,8 +88,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
         name: str,
         expression: Expression,
         group_by: Optional['GroupBy'],
-        sorted_ascending: Optional[bool],
-        index_sorting: List[bool],
+        order_by: Optional[List[SortColumn]],
         instance_dtype: StructuredDtype,
         **kwargs
     ):
@@ -105,8 +102,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
             'base_node': base_node,
             'group_by': group_by,
             'index': index,
-            'sorted_ascending': sorted_ascending,
-            'index_sorting': [] if index_sorting is None else index_sorting,
+            'order_by': order_by,
         }
 
         default_level_dtypes = cls.get_supported_level_dtypes()
@@ -156,8 +152,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
             name=name,
             expression=expression,
             group_by=group_by,
-            sorted_ascending=sorted_ascending,
-            index_sorting=[] if index_sorting is None else index_sorting,
+            order_by=order_by,
             instance_dtype=instance_dtype,
             **sub_levels
         )
@@ -193,12 +188,12 @@ class SeriesAbstractMultiLevel(Series, ABC):
 
     @classmethod
     def from_value(
-        cls,
+        cls: Type[T],
         base: DataFrameOrSeries,
         value: Any,
         name: str,
         dtype: Optional[StructuredDtype] = None
-    ) -> 'Series':
+    ) -> T:
         """
         Create an instance of this class, that represents a column with the given value.
         The returned Series will be similar to the Series given as base. In case a DataFrame is given,
@@ -238,8 +233,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
             name=name,
             expression=Expression.construct(''),
             group_by=None,
-            sorted_ascending=None,
-            index_sorting=[],
+            order_by=[],
             instance_dtype=dtype,
             **levels
         )
@@ -390,8 +384,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
             base_node=self.base_node,
             index=self.index,
             group_by=self.group_by,
-            sorted_ascending=self.sorted_ascending,
-            index_sorting=self.index_sorting,
+            order_by=self.order_by,
         )
 
 

@@ -417,7 +417,6 @@ class SeriesFloat64(SeriesAbstractNumeric):
             name='random',
             expression=Expression.construct(expr_str),
             group_by=None,
-            sorted_ascending=None,
-            index_sorting=[],
+            order_by=[],
             instance_dtype=cls.dtype
         )

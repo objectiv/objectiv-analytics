@@ -12,16 +12,18 @@ import numpy
 import pandas
 from sqlalchemy.engine import Engine
 
-from bach.expression import Expression, SingleValueExpression, VariableToken, AggregateFunctionExpression
+from bach.expression import Expression, SingleValueExpression, VariableToken
 from bach.from_database import get_dtypes_from_table, get_dtypes_from_model
 from bach.sql_model import BachSqlModel, CurrentNodeSqlModel, get_variable_values_sql
 from bach.types import get_series_type_from_dtype, AllSupportedLiteralTypes, StructuredDtype
-from bach.utils import escape_parameter_characters
+from bach.utils import (
+    escape_parameter_characters, validate_node_column_references_in_sorting_expressions, SortColumn
+)
 from sql_models.constants import NotSet, not_set
 from sql_models.graph_operations import update_placeholders_in_graph, get_all_placeholders
 from sql_models.model import SqlModel, Materialization, CustomSqlModelBuilder, RefPath
 
-from sql_models.sql_generator import to_sql, to_sql_materialized_nodes
+from sql_models.sql_generator import to_sql
 from sql_models.util import quote_identifier, is_bigquery, DatabaseNotSupportedException, is_postgres
 
 if TYPE_CHECKING:
@@ -45,11 +47,6 @@ ColumnFunction = Union[str, Callable, List[Union[str, Callable]]]
 #     - dict of axis labels -> functions, function names or list of such.
 
 Level = Union[int, List[int], str, List[str]]
-
-
-class SortColumn(NamedTuple):
-    expression: Expression
-    asc: bool
 
 
 class DtypeNamePair(NamedTuple):
@@ -172,7 +169,7 @@ class DataFrame:
             index: Dict[str, 'Series'],
             series: Dict[str, 'Series'],
             group_by: Optional['GroupBy'],
-            order_by: List[SortColumn],
+            order_by: Optional[List[SortColumn]],
             savepoints: 'Savepoints',
             variables: Dict['DtypeNamePair', Hashable] = None
     ):
@@ -227,6 +224,8 @@ class DataFrame:
         if set(index.keys()) & set(series.keys()):
             raise ValueError(f"The names of the index series and data series should not intersect. "
                              f"Index series: {sorted(index.keys())} data series: {sorted(series.keys())}")
+
+        validate_node_column_references_in_sorting_expressions(node=base_node, order_by=self.order_by)
 
     @property
     def engine(self):
@@ -762,8 +761,7 @@ class DataFrame:
             'engine': engine,
             'base_node': base_node,
             'group_by': group_by,
-            'sorted_ascending': None,
-            'index_sorting': [],
+            'order_by': [],
         }
         index: Dict[str, Series] = {
             name: get_series_type_from_dtype(dtype).get_class_instance(
@@ -855,8 +853,7 @@ class DataFrame:
                     name=name,
                     expression=expression_class.column_reference(name),
                     group_by=args['group_by'],
-                    sorted_ascending=None,
-                    index_sorting=[],
+                    order_by=[],
                     instance_dtype=dtype
                 )
             args['index'] = new_index
@@ -890,8 +887,7 @@ class DataFrame:
                     name=name,
                     expression=expression_class.column_reference(name),
                     group_by=args['group_by'],
-                    sorted_ascending=None,
-                    index_sorting=[],
+                    order_by=[],
                     instance_dtype=dtype,
                     **extra_params
                 )
@@ -921,7 +917,7 @@ class DataFrame:
                 base_node=base_node,
                 group_by=group_by,
                 index=index,
-                index_sorting=[]
+                order_by=[]
             )
             for name, series in self.data.items()
         }
@@ -1487,7 +1483,7 @@ class DataFrame:
 
             new_index = {idx: series for idx, series in df.index.items() if idx not in levels_to_remove}
 
-        df._data = {n: s.copy_override(index=new_index, index_sorting=[]) for n, s in series.items()}
+        df._data = {n: s.copy_override(index=new_index, order_by=[]) for n, s in series.items()}
         df._index = new_index
         return df
 
@@ -1525,14 +1521,14 @@ class DataFrame:
                     raise ValueError(f'series \'{k}\' not found')
                 idx_series = df.all_series[k]
 
-            new_index[idx_series.name] = idx_series.copy_override(index={}, index_sorting=[])
+            new_index[idx_series.name] = idx_series.copy_override(index={}, order_by=[])
 
             if not drop and idx_series.name not in df._index and idx_series.name in df._data:
                 raise ValueError('When adding existing series to the index, drop must be True'
                                  ' because duplicate column names are not supported.')
 
         new_series = {
-            n: s.copy_override(index=new_index, index_sorting=[]) for n, s in df._data.items()
+            n: s.copy_override(index=new_index, order_by=[]) for n, s in df._data.items()
             if n not in new_index
         }
 
@@ -1658,7 +1654,7 @@ class DataFrame:
         Given a group_by, and a df create a new DataFrame that has all the right stuff set.
         It will not materialize, just prepared for more operations
         """
-        new_series = {s.name: s.copy_override(group_by=group_by, index=group_by.index, index_sorting=[])
+        new_series = {s.name: s.copy_override(group_by=group_by, index=group_by.index, order_by=[])
                       for n, s in df.data.items() if n not in group_by.index.keys()}
         return df.copy_override(
             index=group_by.index,
@@ -2673,8 +2669,8 @@ class DataFrame:
         :param datetime_is_numeric: not supported
         :returns: a new DataFrame with the descriptive statistics
         """
-        from bach.operations.describe import DescribeOperation
-        return DescribeOperation(
+        from bach.operations.describe import DataFrameDescribeOperation
+        return DataFrameDescribeOperation(
             obj=self,
             include=include,
             exclude=exclude,

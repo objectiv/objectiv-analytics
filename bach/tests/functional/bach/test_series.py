@@ -10,8 +10,9 @@ from bach.expression import Expression
 from sql_models.util import is_postgres, is_bigquery
 from tests.functional.bach.test_data_and_utils import (
     get_df_with_test_data, assert_equals_data, df_to_list,
-    get_df_with_railway_data, get_df_with_food_data, get_bt_with_test_data
+    get_df_with_railway_data, get_df_with_food_data, get_bt_with_test_data, TEST_DATA_CITIES_FULL, CITIES_COLUMNS,
 )
+from tests.unit.bach.util import get_pandas_df
 
 
 def test_series__getitem__(engine):
@@ -87,6 +88,7 @@ def test_series_value(engine):
 
 def test_series_sort_values(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)
+    pdf = get_pandas_df(TEST_DATA_CITIES_FULL, CITIES_COLUMNS)
     bt_series = bt.city
     kwargs_list = [
         {'ascending': True},
@@ -97,7 +99,7 @@ def test_series_sort_values(engine):
         assert_equals_data(
             bt_series.sort_values(**kwargs),
             expected_columns=['_index_skating_order', 'city'],
-            expected_data=df_to_list(bt.to_pandas()['city'].sort_values(**kwargs))
+            expected_data=df_to_list(pdf['city'].sort_values(**kwargs))
         )
 
 

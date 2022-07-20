@@ -29,11 +29,10 @@ def _create_test_table(engine: Engine, table_name: str):
 
 
 @pytest.mark.skip_postgres
-@pytest.mark.xdist_group(name="test_table_writers")
-def test_from_table_structural_big_query(engine):
+def test_from_table_structural_big_query(engine, unique_table_test_name):
     # Test specifically for structural types on BigQuery. We don't support that on Postgres, so we skip
     # postgres for this test
-    table_name = 'test_df_from_table_structural_types'
+    table_name = unique_table_test_name
     if is_bigquery(engine):
         sql = f'drop table if exists {table_name}; ' \
               f'create table {table_name}(' \
@@ -54,9 +53,8 @@ def test_from_table_structural_big_query(engine):
     assert df['c'].instance_dtype == [{'f1': 'int64', 'f2': 'int64'}]
 
 
-@pytest.mark.xdist_group(name="test_table_writers")
-def test_from_table_basic(engine):
-    table_name = 'test_df_from_table'
+def test_from_table_basic(engine, unique_table_test_name):
+    table_name = unique_table_test_name
     _create_test_table(engine, table_name)
 
     df = DataFrame.from_table(engine=engine, table_name=table_name, index=['a'])
@@ -78,12 +76,11 @@ def test_from_table_basic(engine):
     assert df == df_all_dtypes
 
 
-@pytest.mark.xdist_group(name="test_table_writers")
-def test_from_model_basic(pg_engine):
+def test_from_model_basic(pg_engine, unique_table_test_name):
     # This is essentially the same test as test_from_table_basic(), but tests creating the dataframe with
     # from_model instead of from_table
     engine = pg_engine
-    table_name = 'test_df_from_table'
+    table_name = unique_table_test_name
     _create_test_table(engine, table_name)
     sql_model: SqlModel = CustomSqlModelBuilder(sql=f'select * from {table_name}')()
 
@@ -106,10 +103,9 @@ def test_from_model_basic(pg_engine):
     assert df == df_all_dtypes
 
 
-@pytest.mark.xdist_group(name="test_table_writers")
-def test_from_table_column_ordering(engine):
+def test_from_table_column_ordering(engine, unique_table_test_name):
     # Create a Dataframe in which the index is not the first column in the table.
-    table_name = 'test_df_from_table'
+    table_name = unique_table_test_name
     _create_test_table(engine, table_name)
 
     df = DataFrame.from_table(engine=engine, table_name=table_name, index=['b'])
@@ -130,14 +126,13 @@ def test_from_table_column_ordering(engine):
     assert df == df_all_dtypes
 
 
-@pytest.mark.xdist_group(name="test_table_writers")
-def test_from_model_column_ordering(pg_engine):
+def test_from_model_column_ordering(pg_engine, unique_table_test_name):
     # This is essentially the same test as test_from_table_model_ordering(), but tests creating the dataframe with
     # from_model instead of from_table
 
     # Create a Dataframe in which the index is not the first column in the table.
     engine = pg_engine
-    table_name = 'test_df_from_table'
+    table_name = unique_table_test_name
     _create_test_table(engine, table_name)
     sql_model: SqlModel = CustomSqlModelBuilder(sql=f'select * from {table_name}')()
 
