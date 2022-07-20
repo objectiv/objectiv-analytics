@@ -49,29 +49,27 @@ TYPES_COLUMNS = ['int_column', 'float_column', 'bool_column', 'datetime_column',
                  'dict_column', 'timedelta_column', 'mixed_column']
 
 
-@pytest.mark.xdist_group(name="from_pd_table")
-def test_from_pandas_table(pg_engine):
+def test_from_pandas_table(pg_engine, unique_table_test_name):
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS)
     bt = DataFrame.from_pandas(
         engine=pg_engine,
         df=pdf,
         convert_objects=True,
-        name='test_from_pd_table',
+        name=unique_table_test_name,
         materialization='table',
         if_exists='replace'
     )
     assert_equals_data(bt, expected_columns=EXPECTED_COLUMNS, expected_data=EXPECTED_DATA)
 
 
-@pytest.mark.xdist_group(name="from_pd_table")
-def test_from_pandas_table_injection(engine):
+def test_from_pandas_table_injection(engine, unique_table_test_name):
     pdf = get_pandas_df(TEST_DATA_INJECTION, COLUMNS_INJECTION)
     if is_postgres(engine):
         bt = DataFrame.from_pandas(
             engine=engine,
             df=pdf,
             convert_objects=True,
-            name='test_from_pd_{table}_"injection"',
+            name=unique_table_test_name,
             materialization='table',
             if_exists='replace',
         )
@@ -83,7 +81,7 @@ def test_from_pandas_table_injection(engine):
                 engine=engine,
                 df=pdf,
                 convert_objects=True,
-                name='test_from_pd_{table}_"injection"',
+                name=unique_table_test_name,
                 materialization='table',
                 if_exists='replace',
             )
@@ -133,8 +131,7 @@ def test_from_pandas_ephemeral_injection(engine):
         raise Exception(f'Test does not support {engine.dialect}')
 
 
-@pytest.mark.xdist_group(name="from_pd_table")
-def test_from_pandas_non_happy_path(pg_engine):
+def test_from_pandas_non_happy_path(pg_engine, unique_table_test_name):
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS)
     with pytest.raises(TypeError):
         # if convert_objects is false, we'll get an error, because pdf's dtype for 'city' and 'municipality'
@@ -143,39 +140,38 @@ def test_from_pandas_non_happy_path(pg_engine):
             engine=pg_engine,
             df=pdf,
             convert_objects=False,
-            name='test_from_pd_table_convert_objects_false',
+            name=unique_table_test_name,
             materialization='table',
             if_exists='replace'
         )
     # Create the same table twice. This will fail if if_exists='fail'
     # Might fail on either the first or second try. As we don't clean up between tests.
-    with pytest.raises(ValueError, match="Table 'test_from_pd_table' already exists"):
+    with pytest.raises(ValueError, match=f"Table '{unique_table_test_name}' already exists"):
         DataFrame.from_pandas(
             engine=pg_engine,
             df=pdf,
             convert_objects=True,
-            name='test_from_pd_table',
+            name=unique_table_test_name,
             materialization='table',
         )
         DataFrame.from_pandas(
             engine=pg_engine,
             df=pdf,
             convert_objects=True,
-            name='test_from_pd_table',
+            name=unique_table_test_name,
             materialization='table',
         )
 
 
-@pytest.mark.xdist_group(name="from_pd_table")
 @pytest.mark.parametrize("materialization", ['cte', 'table'])
-def test_from_pandas_index(materialization: str, pg_engine):
+def test_from_pandas_index(materialization: str, pg_engine, unique_table_test_name):
     # test multilevel index
     pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS).set_index(['skating_order', 'city'])
     bt = DataFrame.from_pandas(
         engine=pg_engine,
         df=pdf,
         convert_objects=True,
-        name='test_from_pd_table',
+        name=unique_table_test_name,
         materialization=materialization,
         if_exists='replace'
     )
@@ -195,7 +191,7 @@ def test_from_pandas_index(materialization: str, pg_engine):
         engine=pg_engine,
         df=pdf,
         convert_objects=True,
-        name='test_from_pd_table',
+        name=unique_table_test_name,
         materialization=materialization,
         if_exists='replace'
     )
@@ -211,16 +207,15 @@ def test_from_pandas_index(materialization: str, pg_engine):
         expected_data=[[idx] + x[1:] for idx, x in enumerate(EXPECTED_DATA)])
 
 
-@pytest.mark.xdist_group(name="from_pd_table")
 @pytest.mark.parametrize("materialization", ['cte', 'table'])
-def test_from_pandas_types(materialization: str, pg_engine):
+def test_from_pandas_types(materialization: str, pg_engine, unique_table_test_name):
     pdf = pd.DataFrame.from_records(TYPES_DATA, columns=TYPES_COLUMNS)
     pdf.set_index(pdf.columns[0], drop=True, inplace=True)
     df = DataFrame.from_pandas(
         engine=pg_engine,
         df=pdf.loc[:, :'string_column'],
         convert_objects=True,
-        name='test_from_pd_table',
+        name=unique_table_test_name,
         materialization=materialization,
         if_exists='replace'
     )
@@ -248,7 +243,7 @@ def test_from_pandas_types(materialization: str, pg_engine):
         engine=pg_engine,
         df=pdf[['int32_column']],
         convert_objects=True,
-        name='test_from_pd_table',
+        name=unique_table_test_name,
         materialization=materialization,
         if_exists='replace'
     )
@@ -266,7 +261,7 @@ def test_from_pandas_types(materialization: str, pg_engine):
     )
 
 
-def test_from_pandas_types_cte(pg_engine):
+def test_from_pandas_types_cte(pg_engine, unique_table_test_name):
     pdf = pd.DataFrame.from_records(TYPES_DATA, columns=TYPES_COLUMNS)
     pdf.set_index(pdf.columns[0], drop=True, inplace=True)
     df = DataFrame.from_pandas(
@@ -307,7 +302,7 @@ def test_from_pandas_types_cte(pg_engine):
             engine=pg_engine,
             df=pdf.loc[:, :'timedelta_column'],
             convert_objects=True,
-            name='test_from_pd_table',
+            name=unique_table_test_name,
             materialization='table',
             if_exists='replace'
         )

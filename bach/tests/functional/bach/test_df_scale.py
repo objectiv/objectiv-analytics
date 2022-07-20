@@ -1,36 +1,36 @@
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-from tests.functional.bach.test_data_and_utils import get_df_with_test_data, assert_equals_data, \
-    get_bt_with_test_data
+from tests.functional.bach.test_data_and_utils import (
+    get_df_with_test_data, assert_equals_data, \
+    get_bt_with_test_data, TEST_DATA_CITIES_FULL, CITIES_COLUMNS
+)
 import numpy as np
+
+from tests.unit.bach.util import get_pandas_df
 
 
 def test_standard_scale(engine) -> None:
     numerical_cols = ['skating_order', 'inhabitants', 'founding']
     all_cols = ['city'] + numerical_cols
     bt = get_df_with_test_data(engine, full_data_set=True)[all_cols]
+    pdf = get_pandas_df(TEST_DATA_CITIES_FULL, CITIES_COLUMNS)
 
-    pdf = bt.to_pandas()
-
-    so_values = bt.skating_order.to_numpy()
+    so_values = pdf.skating_order.to_numpy()
     so_avg = np.mean(so_values)
     so_std = np.var(so_values)
     so_scale = so_std ** 0.5
 
-    inhbt_values = bt.inhabitants.to_numpy()
+    inhbt_values = pdf.inhabitants.to_numpy()
     inhbt_avg = np.mean(inhbt_values)
     inhbt_std = np.var(inhbt_values)
     inhbt_scale = inhbt_std ** 0.5
 
-    fnd_values = bt.founding.to_numpy()
+    fnd_values = pdf.founding.to_numpy()
     fnd_avg = np.mean(fnd_values)
     fnd_std = np.var(fnd_values)
     fnd_scale = fnd_std ** 0.5
 
-    expected_w_mean_std = StandardScaler(with_mean=True, with_std=True).fit_transform(pdf[numerical_cols])
     result_w_mean_std = bt.scale()
-
-    np.testing.assert_almost_equal(expected_w_mean_std, result_w_mean_std[numerical_cols].to_numpy(), decimal=4)
 
     expected_data_w_mean_std = [
         [1, 'Ljouwert', (1 - so_avg) / so_scale, (93485 - inhbt_avg) / inhbt_scale, (1285 - fnd_avg) / fnd_scale],
@@ -45,18 +45,20 @@ def test_standard_scale(engine) -> None:
         [10, 'Frjentsjer', (10 - so_avg) / so_scale, (12760 - inhbt_avg) / inhbt_scale, (1374 - fnd_avg) / fnd_scale],
         [11, 'Dokkum', (11 - so_avg) / so_scale, (12675 - inhbt_avg) / inhbt_scale, (1298 - fnd_avg) / fnd_scale],
     ]
-    assert_equals_data(
+    result_w_mean_std_db = assert_equals_data(
         result_w_mean_std,
         expected_columns=['_index_skating_order', 'city', 'skating_order', 'inhabitants', 'founding'],
         expected_data=expected_data_w_mean_std,
         round_decimals=True,
     )
+    expected_w_mean_std = StandardScaler(with_mean=True, with_std=True).fit_transform(pdf[numerical_cols])
+    np.testing.assert_almost_equal(
+        expected_w_mean_std,
+        (np.array(result_w_mean_std_db)[:, 2:]).astype(float),
+        decimal=4,
+    )
 
-    expected_w_std = StandardScaler(with_mean=False, with_std=True).fit_transform(pdf[numerical_cols])
     result_w_std = bt.scale(with_mean=False, with_std=True)
-
-    np.testing.assert_almost_equal(expected_w_std, result_w_std[numerical_cols].to_numpy(), decimal=4)
-
     expected_data_w_std = [
         [1, 'Ljouwert', 1 / so_scale, 93485 / inhbt_scale, 1285 / fnd_scale],
         [2, 'Snits', 2 / so_scale, 33520 / inhbt_scale, 1456 / fnd_scale],
@@ -70,17 +72,20 @@ def test_standard_scale(engine) -> None:
         [10, 'Frjentsjer', 10 / so_scale, 12760 / inhbt_scale, 1374 / fnd_scale],
         [11, 'Dokkum', 11 / so_scale, 12675 / inhbt_scale, 1298 / fnd_scale],
     ]
-    assert_equals_data(
+    expected_w_std = StandardScaler(with_mean=False, with_std=True).fit_transform(pdf[numerical_cols])
+    result_w_std_db = assert_equals_data(
         result_w_std,
         expected_columns=['_index_skating_order', 'city', 'skating_order', 'inhabitants', 'founding'],
         expected_data=expected_data_w_std,
         round_decimals=True,
     )
+    np.testing.assert_almost_equal(
+        expected_w_std,
+        (np.array(result_w_std_db)[:, 2:]).astype(float),
+        decimal=4,
+    )
 
-    expected_w_mean = StandardScaler(with_mean=True, with_std=False).fit_transform(pdf[numerical_cols])
     result_w_mean = bt.scale(with_mean=True, with_std=False)
-
-    np.testing.assert_almost_equal(expected_w_mean, result_w_mean[numerical_cols].to_numpy(), decimal=4)
 
     expected_data_w_mean = [
         [1, 'Ljouwert', 1 - so_avg, 93485 - inhbt_avg, 1285 - fnd_avg],
@@ -95,19 +100,28 @@ def test_standard_scale(engine) -> None:
         [10, 'Frjentsjer', 10 - so_avg, 12760 - inhbt_avg, 1374 - fnd_avg],
         [11, 'Dokkum', 11 - so_avg, 12675 - inhbt_avg, 1298 - fnd_avg],
     ]
-    assert_equals_data(
+    result_w_mean_db = assert_equals_data(
         result_w_mean,
         expected_columns=['_index_skating_order', 'city', 'skating_order', 'inhabitants', 'founding'],
         expected_data=expected_data_w_mean,
         round_decimals=True,
     )
 
+    expected_w_mean = StandardScaler(with_mean=True, with_std=False).fit_transform(pdf[numerical_cols])
+    np.testing.assert_almost_equal(
+        expected_w_mean,
+        (np.array(result_w_mean_db)[:, 2:]).astype(float),
+        decimal=4,
+    )
+
 
 def test_min_max_scale() -> None:
     numerical_cols = ['skating_order', 'inhabitants', 'founding']
     all_cols = ['city'] + numerical_cols
+    pdf = get_pandas_df(TEST_DATA_CITIES_FULL, CITIES_COLUMNS)
     bt = get_bt_with_test_data(full_data_set=True)[all_cols]
-    pdf = bt.to_pandas()
+    # bt = bt.sort_index()  # TODO: This breaks later on, it shouldn't.
+                            #  Required to make this test deterministicly pass/fail
 
     min_so = 1
     max_so = 11
@@ -160,3 +174,4 @@ def test_min_max_scale() -> None:
         expected_data=expected_data_fr,
         round_decimals=True,
     )
+

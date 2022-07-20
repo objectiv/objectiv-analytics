@@ -52,6 +52,30 @@ describe('useOnToggle', () => {
       expect(mockFalseEffectCallback).not.toHaveBeenCalled();
     });
 
+    it('should execute the given side effect callback on re-render each time state changes', () => {
+      const newState1 = true;
+      const newState2 = false;
+      const { rerender } = renderHook((state) => useOnToggle(state, mockTrueEffectCallback), {
+        initialProps: initialState,
+      });
+
+      rerender(newState1);
+      rerender(newState1);
+      rerender(newState1);
+
+      expect(mockTrueEffectCallback).toHaveBeenCalledTimes(1);
+      expect(mockTrueEffectCallback).toHaveBeenCalledWith(initialState, newState1);
+
+      jest.resetAllMocks();
+
+      rerender(newState2);
+      rerender(newState2);
+      rerender(newState2);
+
+      expect(mockTrueEffectCallback).toHaveBeenCalledTimes(1);
+      expect(mockTrueEffectCallback).toHaveBeenCalledWith(newState1, newState2);
+    });
+
     it('should execute the correct side effect callback on re-render each time state changes', () => {
       const newState1 = true;
       const newState2 = false;
@@ -166,6 +190,30 @@ describe('useOnToggle', () => {
 
       expect(mockTrueEffectCallback).not.toHaveBeenCalled();
       expect(mockFalseEffectCallback).not.toHaveBeenCalled();
+    });
+
+    it('should execute the given side effect callback on re-render each time state changes', () => {
+      const newState1 = () => true;
+      const newState2 = () => false;
+      const { rerender } = renderHook((state) => useOnToggle(state, mockTrueEffectCallback), {
+        initialProps: initialState,
+      });
+
+      rerender(newState1);
+      rerender(newState1);
+      rerender(newState1);
+
+      expect(mockTrueEffectCallback).toHaveBeenCalledTimes(1);
+      expect(mockTrueEffectCallback).toHaveBeenCalledWith(false, true);
+
+      jest.resetAllMocks();
+
+      rerender(newState2);
+      rerender(newState2);
+      rerender(newState2);
+
+      expect(mockTrueEffectCallback).toHaveBeenCalledTimes(1);
+      expect(mockTrueEffectCallback).toHaveBeenCalledWith(true, false);
     });
 
     it('should execute the correct side effect callback on re-render each time state changes', () => {

@@ -1,14 +1,12 @@
-import itertools
 from copy import copy
 from enum import Enum
 from typing import List, Dict, Optional, cast, TypeVar
 
 from sqlalchemy.engine import Dialect
 
-from bach import SeriesAbstractMultiLevel
+from bach import SeriesAbstractMultiLevel, SortColumn
 from bach.series import Series
 from bach.expression import Expression, WindowFunctionExpression
-from bach.dataframe import SortColumn
 from bach.sql_model import BachSqlModel
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
 
@@ -126,7 +124,7 @@ class GroupBy:
 
             # index columns have no index themselves, and can also be evaluated without group_by as
             # they will not be aggregated by this group_by
-            self._index[col.name] = col.copy_override(index={}, group_by=None, index_sorting=[])
+            self._index[col.name] = col.copy_override(index={}, group_by=None, order_by=[])
 
     @property
     def index(self) -> Dict[str, Series]:

@@ -24,8 +24,7 @@ def test_db_not_supported_error_on_not_supported_db(dialect):
             name='test',
             expression=Expression.construct('NULL'),
             group_by=None,
-            sorted_ascending=None,
-            index_sorting=[],
+            order_by=[],
             instance_dtype={'a': 'int64'},
         )
 

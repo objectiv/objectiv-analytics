@@ -10,7 +10,7 @@ from sql_models.sql_generator import to_sql
 from sql_models.util import quote_identifier
 
 
-def test_database_create_table(engine):
+def test_database_create_table(engine, unique_table_test_name: str):
     df = get_df_with_test_data(engine)
 
     # We add a random value to the dataframe, that way we can check that it was actually this test run
@@ -26,9 +26,11 @@ def test_database_create_table(engine):
         [3, 3, 'Drylts', 'Súdwest-Fryslân', 3055, 1268, random_value]
     ]
 
+    table_name = unique_table_test_name
+
     # First test: write dataframe to table. We expect success
     df_from_table = df.database_create_table(
-        table_name='test_df_database_create__database_create_table',
+        table_name=table_name,
         if_exists='replace'
     )
     assert_equals_data(df_from_table, expected_columns=expected_columns, expected_data=expected_data)
@@ -38,7 +40,7 @@ def test_database_create_table(engine):
     assert df_from_table.base_node != df.base_node
     assert len(df_from_table.base_node.references) == 0
     new_sql = to_sql(dialect=dialect, model=df_from_table.base_node)
-    quoted_table_name = quote_identifier(dialect, 'test_df_database_create__database_create_table')
+    quoted_table_name = quote_identifier(dialect, table_name)
     expected_sql_fragment = f'FROM {quoted_table_name}'
     assert expected_sql_fragment in new_sql
 
@@ -48,8 +50,8 @@ def test_database_create_table(engine):
     # raise an error containing the phrase 'already exists', but with different capitalization
     with pytest.raises(Exception, match='[aA]lready [eE]xists'):
         df_from_table = df.database_create_table(
-            table_name='test_df_database_create__database_create_table',
-            if_exists = 'fail'
+            table_name=table_name,
+            if_exists='fail'
         )
     # table should be unchanged after the last failed call
     assert_equals_data(df_from_table, expected_columns=expected_columns, expected_data=expected_data)
@@ -58,7 +60,7 @@ def test_database_create_table(engine):
     expected_columns = expected_columns + ['y']
     expected_data = [row + [random_value] for row in expected_data]
     df_from_table = df.database_create_table(
-        table_name='test_df_database_create__database_create_table',
+        table_name=table_name,
         if_exists='replace'
     )
     assert_equals_data(df_from_table, expected_columns=expected_columns, expected_data=expected_data)

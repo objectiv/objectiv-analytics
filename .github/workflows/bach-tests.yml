@@ -63,7 +63,7 @@ jobs:
       - name: Typecheck with mypy
         run: |
           cd bach
-          mypy --check-untyped-defs bach sql_models
+          mypy bach sql_models
       - name: Stylecheck with pycodestyle
         run: |
           cd bach
