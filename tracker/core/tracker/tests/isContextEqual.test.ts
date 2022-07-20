@@ -34,34 +34,30 @@ describe('isContextEqual', () => {
   });
 
   it(`should return false: attribute count mismatch`, () => {
-    const contextA = makePressableContext({ id: 'pressable-id' });
-    const contextB = makePressableContext({ id: 'pressable-id' });
-    const mutatedContextA = { ...contextA, customAttributeA: 1 };
-    expect(isContextEqual(mutatedContextA, contextB)).toBe(false);
-    expect(isContextEqual(contextB, mutatedContextA)).toBe(false);
+    const context = makePressableContext({ id: 'pressable-id' });
+    const mutatedContext = { ...context, customAttributeA: 1 };
+    expect(isContextEqual(mutatedContext, context)).toBe(false);
+    expect(isContextEqual(context, mutatedContext)).toBe(false);
   });
 
   it(`should return false: attribute name mismatch`, () => {
-    const contextA = makePressableContext({ id: 'pressable-id' });
-    const contextB = makePressableContext({ id: 'pressable-id' });
-    const mutatedContextA = { ...contextA, customAttributeA: 1 };
-    const mutatedContextB = { ...contextB, customAttributeB: 1 };
+    const context = makePressableContext({ id: 'pressable-id' });
+    const mutatedContextA = { ...context, customAttributeA: 1 };
+    const mutatedContextB = { ...context, customAttributeB: 1 };
     expect(isContextEqual(mutatedContextA, mutatedContextB)).toBe(false);
     expect(isContextEqual(mutatedContextB, mutatedContextA)).toBe(false);
   });
 
   it(`should return false: attribute value mismatch`, () => {
-    const contextA = makePressableContext({ id: 'pressable-id' });
-    const contextB = makePressableContext({ id: 'pressable-id' });
-    const mutatedContextA = { ...contextA, customAttribute: 1 };
-    const mutatedContextB = { ...contextB, customAttribute: 2 };
+    const context = makePressableContext({ id: 'pressable-id' });
+    const mutatedContextA = { ...context, customAttribute: 1 };
+    const mutatedContextB = { ...context, customAttribute: 2 };
     expect(isContextEqual(mutatedContextA, mutatedContextB)).toBe(false);
     expect(isContextEqual(mutatedContextB, mutatedContextA)).toBe(false);
   });
 
   it(`should return true: different instances of identical contexts`, () => {
-    const contextA = makePressableContext({ id: 'pressable-id' });
-    const contextB = makePressableContext({ id: 'pressable-id' });
-    expect(isContextEqual(contextA, contextB)).toBe(true);
+    const context = makePressableContext({ id: 'pressable-id' });
+    expect(isContextEqual(context, context)).toBe(true);
   });
 });
