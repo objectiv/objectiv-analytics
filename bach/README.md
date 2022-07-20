@@ -9,12 +9,14 @@ Visit [Objectiv Docs](https://objectiv.io/docs/modeling/bach/) to learn more
 ## Using Bach
 To use Bach, use the following command:
 ```bash
-pip install objectiv-bach
+pip install objectiv-bach           # For Postgres only
+pip install objectiv-bach[bigquery] # To also get bigquery requirements
 ```
 
 If you want the latest and greatest from your local checkout, install objectiv_bach in edit mode:
 ```bash
 pip install -e .
+pip install -e .[bigquery]  # To also get bigquery requirements
 ```
 
 This will install Bach in edit mode, meaning you get the latest version from the local checkout.
