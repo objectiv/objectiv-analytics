@@ -14,8 +14,18 @@ jobs:
       # make sure we don't run the various python versions in parallel,
       # as that may break write tests on the DB
       max-parallel: 1
-      matrix:
-        python-version: [3.7, 3.8, 3.9]
+    matrix:
+      python-version: [3.7, 3.8, 3.9, 3.10]
+      isMaster:
+        - ${{ contains(github.ref, 'workflow_limit_python_versions') }}
+      exclude:
+        - isMain: false
+          flavor: 3.8
+        - isMain: false
+          flavor: 3.9
+        - isMain: false
+          flavor: 3.10
+          
     services:
       # based on https://docs.github.com/en/actions/guides/creating-postgresql-service-containers
       postgres:
