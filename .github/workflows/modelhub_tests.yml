@@ -16,7 +16,7 @@ jobs:
       matrix:
         python-version: ['3.7', '3.8', '3.9', '3.10']
         isMain:
-          - ${{ github.ref == 'notmain' }}
+          - ${{ github.ref == 'workflow_limit_python_versions' }}
         exclude:
           - isMain: false
             python-version: '3.8'
