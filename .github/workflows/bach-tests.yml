@@ -18,7 +18,11 @@ jobs:
           - ${{ github.ref == 'main' }}
         exclude:
           - isMain: false
-            python-version: ['3.8', '3.9', '3.10']
+            python-version: '3.8'
+          - isMain: false
+            python-version: '3.9'
+          - isMain: false
+            python-version: '3.10'
           
     services:
       # based on https://docs.github.com/en/actions/guides/creating-postgresql-service-containers
