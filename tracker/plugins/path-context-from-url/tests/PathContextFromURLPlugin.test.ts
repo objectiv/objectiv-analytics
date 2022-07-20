@@ -3,7 +3,7 @@
  */
 
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { ContextsConfig, generateUUID, GlobalContextName, Tracker, TrackerEvent } from '@objectiv/tracker-core';
+import { ContextsConfig, generateGUID, GlobalContextName, Tracker, TrackerEvent } from '@objectiv/tracker-core';
 import { PathContextFromURLPlugin } from '../src';
 
 require('@objectiv/developer-tools');
@@ -22,15 +22,15 @@ describe('PathContextFromURLPlugin', () => {
   it('should add the PathContext to the Event when `enrich` is executed by the Tracker', async () => {
     const eventContexts: ContextsConfig = {
       location_stack: [
-        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'A' },
-        { __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'B' },
+        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'A' },
+        { __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'B' },
       ],
       global_contexts: [
-        { __instance_id: generateUUID(), __global_context: true, _type: 'GlobalA', id: 'abc' },
-        { __instance_id: generateUUID(), __global_context: true, _type: 'GlobalB', id: 'def' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'GlobalA', id: 'abc' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'GlobalB', id: 'def' },
       ],
     };
-    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts });
+    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts, id: generateGUID(), time: Date.now() });
     expect(testEvent.location_stack).toHaveLength(2);
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.location_stack).toHaveLength(2);

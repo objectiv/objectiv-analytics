@@ -3,7 +3,7 @@
  */
 
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { GlobalContextName, Tracker, TrackerEvent } from '@objectiv/tracker-core';
+import { generateGUID, GlobalContextName, Tracker, TrackerEvent } from '@objectiv/tracker-core';
 import { LocaleContextPlugin } from '../src';
 
 require('@objectiv/developer-tools');
@@ -31,7 +31,7 @@ describe('LocaleContextPlugin', () => {
       ],
     });
 
-    const testEvent = new TrackerEvent({ _type: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.global_contexts).toHaveLength(0);
     expect(MockConsoleImplementation.warn).toHaveBeenCalledWith(
@@ -56,7 +56,7 @@ describe('LocaleContextPlugin', () => {
       ],
     });
 
-    const testEvent = new TrackerEvent({ _type: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
     const trackedEvent = await testTracker.trackEvent(testEvent);
     expect(trackedEvent.global_contexts).toHaveLength(1);
     expect(trackedEvent.global_contexts).toEqual(

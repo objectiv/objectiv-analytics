@@ -38,6 +38,7 @@ describe('ObjectivProvider', () => {
       platform: TrackerPlatform.CORE,
       active: true,
       applicationId: 'app-id',
+      generateGUID: expect.any(Function),
       global_contexts: [],
       location_stack: [],
       plugins: expect.objectContaining({

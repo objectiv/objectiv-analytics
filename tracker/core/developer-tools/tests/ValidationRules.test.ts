@@ -4,7 +4,7 @@
 
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
-  generateUUID,
+  generateGUID,
   GlobalContextName,
   LocationContextName,
   TrackerEvent,
@@ -27,7 +27,9 @@ describe('Validation Rules', () => {
 
       jest.resetAllMocks();
 
-      testGlobalContextValidationRule.validate(new TrackerEvent({ _type: 'PressEvent' }));
+      testGlobalContextValidationRule.validate(
+        new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() })
+      );
 
       expect(MockConsoleImplementation.groupCollapsed).not.toHaveBeenCalled();
     });
@@ -40,7 +42,9 @@ describe('Validation Rules', () => {
 
       jest.resetAllMocks();
 
-      testGlobalContextValidationRule.validate(new TrackerEvent({ _type: 'PressEvent' }));
+      testGlobalContextValidationRule.validate(
+        new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() })
+      );
 
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledWith(
@@ -59,7 +63,9 @@ describe('Validation Rules', () => {
 
       jest.resetAllMocks();
 
-      testGlobalContextValidationRule.validate(new TrackerEvent({ _type: 'PressEvent' }));
+      testGlobalContextValidationRule.validate(
+        new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() })
+      );
 
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledWith(
@@ -82,9 +88,11 @@ describe('Validation Rules', () => {
         new TrackerEvent({
           _type: 'PressEvent',
           global_contexts: [
-            { __instance_id: generateUUID(), __global_context: true, _type: GlobalContextName.PathContext, id: 'test' },
-            { __instance_id: generateUUID(), __global_context: true, _type: GlobalContextName.PathContext, id: 'test' },
+            { __instance_id: generateGUID(), __global_context: true, _type: GlobalContextName.PathContext, id: 'test' },
+            { __instance_id: generateGUID(), __global_context: true, _type: GlobalContextName.PathContext, id: 'test' },
           ],
+          id: generateGUID(),
+          time: Date.now(),
         })
       );
 
@@ -107,7 +115,9 @@ describe('Validation Rules', () => {
 
       jest.resetAllMocks();
 
-      testLocationContextValidationRule.validate(new TrackerEvent({ _type: 'PressEvent' }));
+      testLocationContextValidationRule.validate(
+        new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() })
+      );
 
       expect(MockConsoleImplementation.groupCollapsed).not.toHaveBeenCalled();
     });
@@ -120,7 +130,9 @@ describe('Validation Rules', () => {
 
       jest.resetAllMocks();
 
-      testLocationContextValidationRule.validate(new TrackerEvent({ _type: 'PressEvent' }));
+      testLocationContextValidationRule.validate(
+        new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() })
+      );
 
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledWith(
@@ -139,7 +151,9 @@ describe('Validation Rules', () => {
 
       jest.resetAllMocks();
 
-      testLocationContextValidationRule.validate(new TrackerEvent({ _type: 'PressEvent' }));
+      testLocationContextValidationRule.validate(
+        new TrackerEvent({ _type: 'PressEvent', id: generateGUID(), time: Date.now() })
+      );
 
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledTimes(1);
       expect(MockConsoleImplementation.groupCollapsed).toHaveBeenCalledWith(
@@ -163,18 +177,20 @@ describe('Validation Rules', () => {
           _type: 'PressEvent',
           location_stack: [
             {
-              __instance_id: generateUUID(),
+              __instance_id: generateGUID(),
               __location_context: true,
               _type: LocationContextName.ContentContext,
               id: 'test',
             },
             {
-              __instance_id: generateUUID(),
+              __instance_id: generateGUID(),
               __location_context: true,
               _type: LocationContextName.ContentContext,
               id: 'test',
             },
           ],
+          id: generateGUID(),
+          time: Date.now(),
         })
       );
 
@@ -201,18 +217,20 @@ describe('Validation Rules', () => {
           _type: 'PressEvent',
           location_stack: [
             {
-              __instance_id: generateUUID(),
+              __instance_id: generateGUID(),
               __location_context: true,
               _type: LocationContextName.RootLocationContext,
               id: 'test',
             },
             {
-              __instance_id: generateUUID(),
+              __instance_id: generateGUID(),
               __location_context: true,
               _type: LocationContextName.ContentContext,
               id: 'test',
             },
           ],
+          id: generateGUID(),
+          time: Date.now(),
         })
       );
 

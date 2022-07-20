@@ -14,9 +14,9 @@ describe('LocalStorageQueueStore', () => {
     jest.resetAllMocks();
   });
 
-  const TrackerEvent1 = new TrackerEvent({ id: 'a', _type: 'a' });
-  const TrackerEvent2 = new TrackerEvent({ id: 'b', _type: 'b' });
-  const TrackerEvent3 = new TrackerEvent({ id: 'c', _type: 'c' });
+  const TrackerEvent1 = new TrackerEvent({ id: 'a', _type: 'a', time: Date.now() });
+  const TrackerEvent2 = new TrackerEvent({ id: 'b', _type: 'b', time: Date.now() });
+  const TrackerEvent3 = new TrackerEvent({ id: 'c', _type: 'c', time: Date.now() });
 
   describe('Isolation', () => {
     afterEach(() => {

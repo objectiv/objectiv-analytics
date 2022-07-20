@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { LocationStack, TrackerEvent, UntrackedEvent } from '@objectiv/tracker-core';
+import { LocationStack, TrackerEventAttributes } from '@objectiv/tracker-core';
 import { BrowserTracker } from '../BrowserTracker';
 import { getElementLocationStack } from '../common/getElementLocationStack';
 import { trackerErrorHandler } from '../common/trackerErrorHandler';
@@ -16,7 +16,7 @@ import { getTracker } from '../getTracker';
  * 3. Tracks the new Event via WebTracker
  */
 export const trackEvent = (parameters: {
-  event: UntrackedEvent;
+  event: TrackerEventAttributes;
   element?: TrackedElement;
   tracker?: BrowserTracker;
   trackerId?: string;
@@ -26,16 +26,13 @@ export const trackEvent = (parameters: {
     const { event, element, tracker = getTracker(parameters.trackerId) } = parameters;
 
     // If the Location Stack of the given Event is empty, and we have an Element, attempt to generate one from the DOM
-    let locationStack: LocationStack = event.location_stack;
-    if (locationStack.length === 0 && element) {
+    let locationStack: LocationStack | undefined = event.location_stack;
+    if (locationStack?.length === 0 && element) {
       locationStack = getElementLocationStack({ element });
     }
 
-    // Clone the given Event onto a new one with an updated Location Stack that may have been generated
-    const newEvent = new TrackerEvent({ ...event, location_stack: locationStack });
-
     // Track
-    tracker.trackEvent(newEvent);
+    tracker.trackEvent({ ...event, location_stack: locationStack });
   } catch (error) {
     trackerErrorHandler(error, parameters, parameters.onError);
   }

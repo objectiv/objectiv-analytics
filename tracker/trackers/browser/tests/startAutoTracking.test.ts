@@ -4,7 +4,7 @@
 
 import '@objectiv/developer-tools';
 import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
-import { generateUUID } from '@objectiv/tracker-core';
+import { generateGUID } from '@objectiv/tracker-core';
 import {
   AutoTrackingState,
   BrowserTracker,
@@ -20,7 +20,7 @@ globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplem
 describe('startAutoTracking', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    makeTracker({ applicationId: generateUUID(), endpoint: 'test' });
+    makeTracker({ applicationId: generateGUID(), endpoint: 'test' });
     expect(getTracker()).toBeInstanceOf(BrowserTracker);
     jest.spyOn(getTracker(), 'trackEvent');
   });

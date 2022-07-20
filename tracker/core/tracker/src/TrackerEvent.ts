@@ -11,53 +11,43 @@ import {
 } from '@objectiv/schema';
 import { cleanObjectFromInternalProperties } from './cleanObjectFromInternalProperties';
 import { ContextsConfig } from './Context';
-import { generateUUID } from './helpers';
 
 /**
- * TrackerEvents are simply a combination of an `event` name and their Contexts.
+ * TrackerEvents can be constructed with simply an Event `type` and, optionally, their Contexts.
  * Contexts are entirely optional, although Collectors will mostly likely enforce minimal requirements around them.
- * Eg. An interactive TrackerEvent without a Location Stack is probably not descriptive enough to be acceptable.
+ * E.g. An interactive TrackerEvent without a Location Stack is probably not descriptive enough to be acceptable.
  */
-export type TrackerEventConfig = Pick<AbstractEvent, '_type'> &
-  ContextsConfig & {
-    // Unless the Event config has been preconfigured with an id the TrackerEvent will generate one for us
-    id?: string;
-  };
+export type TrackerEventAttributes = Pick<AbstractEvent, '_type'> & ContextsConfig;
 
 /**
- * An Event before it has been handed over to the Tracker.
- * Properties that will be set by the Tracker or Transport are omitted: `id`, `time`
- */
-export type UntrackedEvent = Omit<AbstractEvent, 'id' | 'time'>;
+ * The configuration object accepted by TrackerEvent's constructor
+ * */
+export type TrackerEventConfig = Pick<AbstractEvent, '_type' | 'id' | 'time'> & ContextsConfig;
 
 /**
- * Our main TrackerEvent interface and basic implementation
+ * Our main TrackedEvent interface and basic implementation.
  */
-export class TrackerEvent implements UntrackedEvent, Contexts {
-  // Event interface
+export class TrackerEvent implements Contexts {
   readonly _type: string;
-  id: string;
-  time?: number;
-
-  // Contexts interface
+  readonly id: string;
+  readonly time: number;
   readonly location_stack: AbstractLocationContext[];
   readonly global_contexts: AbstractGlobalContext[];
 
   /**
-   * Configures the TrackerEvent instance via a TrackerEventConfig and optionally one or more ContextConfig.
-   *
-   * TrackerEventConfig is used mainly to configure the `event` property, although it can also carry Contexts.
+   * Configures the TrackerEvent instance via a TrackerEvent or TrackerEventConfig.
+   * Optionally one or more ContextConfig can be specified as additional parameters.
    *
    * ContextConfigs are used to configure location_stack and global_contexts. If multiple configurations have been
    * provided they will be merged onto each other to produce a single location_stack and global_contexts.
    */
-  constructor({ _type, id, ...otherEventProps }: TrackerEventConfig, ...contextConfigs: ContextsConfig[]) {
-    // Let's copy the entire eventConfiguration in state
+  constructor({ _type, id, time, ...otherProps }: TrackerEventConfig, ...contextConfigs: ContextsConfig[]) {
     this._type = _type;
-    Object.assign(this, otherEventProps);
+    this.id = id;
+    this.time = time;
 
-    // If the Event does not have an id yet, generate one
-    this.id = id ?? generateUUID();
+    // Let's also set all the other props in state, this includes discriminatory properties and other internals
+    Object.assign(this, otherProps);
 
     // Start with empty context lists
     let new_location_stack: AbstractLocationContext[] = [];
@@ -70,16 +60,8 @@ export class TrackerEvent implements UntrackedEvent, Contexts {
     });
 
     // And finally add the TrackerEvent Contexts on top. For Global Contexts instead we do the opposite.
-    this.location_stack = [...new_location_stack, ...(otherEventProps.location_stack ?? [])];
-    this.global_contexts = [...(otherEventProps.global_contexts ?? []), ...new_global_contexts];
-  }
-
-  /**
-   * Tracking time setter.
-   * Defaults to Date.now() if not timestampMs is provided.
-   */
-  setTime(timestampMs: number = Date.now()) {
-    this.time = timestampMs;
+    this.location_stack = [...new_location_stack, ...(otherProps.location_stack ?? [])];
+    this.global_contexts = [...(otherProps.global_contexts ?? []), ...new_global_contexts];
   }
 
   /**

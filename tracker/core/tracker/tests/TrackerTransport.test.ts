@@ -10,7 +10,7 @@ import {
 } from '@objectiv/testing-tools';
 import {
   ContextsConfig,
-  generateUUID,
+  generateGUID,
   makeTransportSendError,
   Tracker,
   TrackerEvent,
@@ -22,10 +22,10 @@ import {
 
 const testEventName = 'test-event';
 const testContexts: ContextsConfig = {
-  location_stack: [{ __instance_id: generateUUID(), __location_context: true, _type: 'section', id: 'test' }],
-  global_contexts: [{ __instance_id: generateUUID(), __global_context: true, _type: 'global', id: 'test' }],
+  location_stack: [{ __instance_id: generateGUID(), __location_context: true, _type: 'section', id: 'test' }],
+  global_contexts: [{ __instance_id: generateGUID(), __global_context: true, _type: 'global', id: 'test' }],
 };
-const testEvent = new TrackerEvent({ _type: testEventName, ...testContexts });
+const testEvent = new TrackerEvent({ _type: testEventName, ...testContexts, id: generateGUID(), time: Date.now() });
 
 require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
