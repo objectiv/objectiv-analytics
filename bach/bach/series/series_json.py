@@ -415,8 +415,18 @@ class JsonAccessor(Generic[TSeriesJson]):
 
         return self._implementation.array_contains(item)
 
-    def unnest_array(self) -> Tuple['SeriesJson', 'SeriesInt64']:
-        return self._implementation.unnest_array()
+    def flatten_array(self) -> Tuple['TSeriesJson', 'SeriesInt64']:
+        """
+        Converts elements in an array into a set of rows.
+
+        Since the operation might destroy the order of the elements,
+        a series containing the offset is also returned.
+
+        :returns: Tuple with SeriesJson (element from the array) and SeriesInt64 (offset of the element)
+
+        This assumes the top-level item in the json is an array.
+        """
+        return self._implementation.flatten_array()
 
 
 class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
@@ -600,76 +610,10 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
             .copy_override(expression=expression)\
             .copy_override_type(SeriesBoolean)
 
-    def unnest_array(self) -> Tuple['SeriesJson', 'SeriesInt64']:
-        from bach import DataFrame, SeriesInt64
-
-        unnested_array_df = DataFrame.from_model(
-            engine=self._series_object.engine,
-            model=self._get_unnest_model(),
-            index=list(self._series_object.index.keys()),
-            all_dtypes={
-                **{idx.name: idx.dtype for idx in self._series_object.index.values()},
-                self.UNNEST_ITEM_SERIES_NAME: self._series_object.dtype,
-                self.UNNEST_OFFSET_SERIES_NAME: SeriesInt64.dtype,
-            }
-        )
-
-        unnested_list_item = (
-            unnested_array_df['_unnested_item']
-            .copy_override(name=self._series_object.name)
-            .copy_override_type(SeriesJson)
-        )
-        unnested_list_offset = (
-            unnested_array_df['_unnested_offset']
-            .copy_override(name=f'{self._series_object.name}_offset')
-            .copy_override_type(SeriesInt64)
-        )
-        return unnested_list_item, unnested_list_offset
-
-    def _get_unnest_model(self) -> SqlModel:
-        list_series = self._series_object.materialize(node_name='unnest_bq_array')
-
-        unnested_ident_expr = Expression.identifier(name=self.UNNEST_ITEM_SERIES_NAME)
-        offset_ident_expr = Expression.identifier(name=self.UNNEST_OFFSET_SERIES_NAME)
-        column_exprs = [
-            *[idx.expression for idx in list_series.index.values()],
-            unnested_ident_expr,
-            offset_ident_expr,
-        ]
-
-        cross_join_expr = Expression.construct(
-            'UNNEST(JSON_QUERY_ARRAY({}.{})) AS {} WITH OFFSET AS {}',
-            Expression.model_reference(list_series.base_node),
-            list_series,
-            unnested_ident_expr,
-            offset_ident_expr,
-        )
-
-        all_expressions = [
-            *column_exprs,
-            unnested_ident_expr,
-            offset_ident_expr,
-            cross_join_expr,
-        ]
-
-        references = construct_references(
-            base_references={'base_node': list_series.base_node},
-            expressions=all_expressions,
-        )
-
-        column_str
-        sql = (
-            f'SELECT {column_stmt} '
-            'FROM {{model_reference_name}} '
-            'CROSS JOIN {cross_join_stmt}'
-        )
-        return BachSqlModel(
-            model_spec=CustomSqlModelBuilder(sql=sql, name='unnest_array'),
-            placeholders={},
-            references=references,
-            materialization=Materialization.CTE,
-            materialization_name=None,
-        )
+    def flatten_array(self) -> Tuple['TSeriesJson', 'SeriesInt64']:
+        """ For documentation, see implementation in class :class:`JsonAccessor` """
+        from bach.series.array_operations.flattening import BigQueryArrayFlattening
+        return BigQueryArrayFlattening(self._series_object)()
 
 
 class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
@@ -785,3 +729,8 @@ class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
     def array_contains(self, item: Union[int, float, bool, str, None]) -> 'SeriesBoolean':
         """ For documentation, see implementation in class :class:`JsonAccessor` """
         return self._series_object._comparator_operation([item], "@>")
+
+    def flatten_array(self) -> Tuple['TSeriesJson', 'SeriesInt64']:
+        """ For documentation, see implementation in class :class:`JsonAccessor` """
+        from bach.series.array_operations.flattening import PostgresArrayFlattening
+        return PostgresArrayFlattening(self._series_object)()
