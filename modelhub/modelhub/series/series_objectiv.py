@@ -175,7 +175,8 @@ class SeriesLocationStack(SeriesJson):
 
             Returns the navigation stack from the location stack.
             """
-            return self[{'_type': 'NavigationContext'}: None]
+            # type ignore, as mypy doesn't like a dict in a Slice
+            return self[{'_type': 'NavigationContext'}: None]  # type: ignore
 
         @property
         def feature_stack(self) -> 'SeriesLocationStack':

@@ -133,8 +133,7 @@ class SeriesDict(Series):
             name=name,
             expression=expr,
             group_by=None,
-            sorted_ascending=None,
-            index_sorting=[],
+            order_by=[],
             instance_dtype=dtype
         )
         return result

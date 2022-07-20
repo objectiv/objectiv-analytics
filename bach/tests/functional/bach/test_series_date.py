@@ -157,109 +157,72 @@ def test_date_trunc(engine):
     mt = get_df_with_food_data(engine)
     mt['date'] = mt['date'].astype('date')
 
-    # second
-    dt = mt.moment.dt.date_trunc('second')
-    assert_equals_data(
-        dt,
-        expected_columns=['_index_skating_order', 'moment'],
-        expected_data=[
-            [1, datetime.datetime(2021, 5, 3, 11, 28, 36)],
-            [2, datetime.datetime(2021, 5, 4, 23, 28, 36)],
-            [4, datetime.datetime(2022, 5, 3, 14, 13, 13)],
+    result = mt.copy()
+    series_x_date_parts = {
+        'moment': [
+            'second',
+            'minute',
+            'hour',
+            'day',
+            'week',
         ],
-        use_to_pandas=True,
-    )
+        'date': [
+            'month',
+            'quarter',
+            'year',
+        ]
+    }
+    for series, date_parts in series_x_date_parts.items():
+        for dp in date_parts:
+            col = f'{series}_{dp}'
+            result[col] = mt[series].dt.date_trunc(dp)
 
-    # minute
-    dt = mt.moment.dt.date_trunc('minute')
-    assert_equals_data(
-        dt,
-        expected_columns=['_index_skating_order', 'moment'],
-        expected_data=[
-            [1, datetime.datetime(2021, 5, 3, 11, 28)],
-            [2, datetime.datetime(2021, 5, 4, 23, 28)],
-            [4, datetime.datetime(2022, 5, 3, 14, 13)],
-        ],
-        use_to_pandas=True,
-    )
-
-    # hour
-    dt = mt.moment.dt.date_trunc('hour')
-    assert_equals_data(
-        dt,
-        expected_columns=['_index_skating_order', 'moment'],
-        expected_data=[
-            [1, datetime.datetime(2021, 5, 3, 11)],
-            [2, datetime.datetime(2021, 5, 4, 23)],
-            [4, datetime.datetime(2022, 5, 3, 14)],
-        ],
-        use_to_pandas=True,
-    )
-
-    # day
-    dt = mt.moment.dt.date_trunc('day')
-    assert_equals_data(
-        dt,
-        expected_columns=['_index_skating_order', 'moment'],
-        expected_data=[
-            [1, datetime.datetime(2021, 5, 3)],
-            [2, datetime.datetime(2021, 5, 4)],
-            [4, datetime.datetime(2022, 5, 3)],
-        ],
-        use_to_pandas=True,
-    )
-
-    # week
-    dt = mt.moment.dt.date_trunc('week')
-    assert_equals_data(
-        dt,
-        expected_columns=['_index_skating_order', 'moment'],
-        expected_data=[
-            [1, datetime.datetime(2021, 5, 3)],
-            [2, datetime.datetime(2021, 5, 3)],
-            [4, datetime.datetime(2022, 5, 2)],
-        ],
-        use_to_pandas=True,
-    )
+    expected_columns = [
+        '_index_skating_order',
+        'moment_second', 'moment_minute', 'moment_hour', 'moment_day', 'moment_week',
+        'date_month', 'date_quarter', 'date_year',
+    ]
 
     from datetime import date
-
-    # month
-    dt = mt.date.dt.date_trunc('month')
-    assert_equals_data(
-        dt,
-        expected_columns=['_index_skating_order', 'date'],
-        expected_data=[
-            [1, date(2021, 5, 1)],
-            [2, date(2021, 5, 1)],
-            [4, date(2022, 5, 1)],
+    expected_data = [
+        [
+            1,
+            datetime.datetime(2021, 5, 3, 11, 28, 36),
+            datetime.datetime(2021, 5, 3, 11, 28),
+            datetime.datetime(2021, 5, 3, 11),
+            datetime.datetime(2021, 5, 3),
+            datetime.datetime(2021, 5, 3),
+            date(2021, 5, 1),
+            date(2021, 4, 1),
+            date(2021, 1, 1),
         ],
-        use_to_pandas=True,
-    )
-
-    # quarter
-    dt = mt.date.dt.date_trunc('quarter')
-    assert_equals_data(
-        dt,
-        expected_columns=['_index_skating_order', 'date'],
-        expected_data=[
-            [1, date(2021, 4, 1)],
-            [2, date(2021, 4, 1)],
-            [4, date(2022, 4, 1)],
+        [
+            2,
+            datetime.datetime(2021, 5, 4, 23, 28, 36),
+            datetime.datetime(2021, 5, 4, 23, 28),
+            datetime.datetime(2021, 5, 4, 23),
+            datetime.datetime(2021, 5, 4),
+            datetime.datetime(2021, 5, 3),
+            date(2021, 5, 1),
+            date(2021, 4, 1),
+            date(2021, 1, 1),
         ],
-        use_to_pandas=True,
-    )
-
-    # year
-    dt = mt.date.dt.date_trunc('year')
-    assert_equals_data(
-        dt,
-        expected_columns=['_index_skating_order', 'date'],
-        expected_data=[
-            [1, date(2021, 1, 1)],
-            [2, date(2021, 1, 1)],
-            [4, date(2022, 1, 1)],
+        [
+            4,
+            datetime.datetime(2022, 5, 3, 14, 13, 13),
+            datetime.datetime(2022, 5, 3, 14, 13),
+            datetime.datetime(2022, 5, 3, 14),
+            datetime.datetime(2022, 5, 3),
+            datetime.datetime(2022, 5, 2),
+            date(2022, 5, 1),
+            date(2022, 4, 1),
+            date(2022, 1, 1),
         ],
+    ]
+    assert_equals_data(
+        result[expected_columns[1:]],
+        expected_columns=expected_columns,
+        expected_data=expected_data,
         use_to_pandas=True,
     )
 

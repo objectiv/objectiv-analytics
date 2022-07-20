@@ -391,7 +391,9 @@ class Aggregate:
         data = data[columns]
 
         # get the first cohort
-        cohorts = data.groupby('user_id')['moment'].min().reset_index()
+        cohorts = cast(
+            bach.DataFrame, data.groupby('user_id')['moment'].min().reset_index()
+        )
         cohorts = cohorts.rename(columns={'moment': 'first_cohort_ts'})
 
         # add first cohort to our data DataFrame
