@@ -20,11 +20,11 @@ jobs:
         - ${{ contains(github.ref, 'workflow_limit_python_versions') }}
       exclude:
         - isMain: false
-          flavor: 3.8
+          python-version: 3.8
         - isMain: false
-          flavor: 3.9
+          python-version: 3.9
         - isMain: false
-          flavor: 3.10
+          python-version: 3.10
           
     services:
       # based on https://docs.github.com/en/actions/guides/creating-postgresql-service-containers
