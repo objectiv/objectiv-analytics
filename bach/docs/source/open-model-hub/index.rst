@@ -2,7 +2,7 @@
 
 .. currentmodule:: modelhub
 
-.. frontmatterposition:: 1
+.. frontmatterposition:: 3
 .. frontmatterslug:: /modeling/open-model-hub/
 
 ==============

@@ -8,17 +8,14 @@
 Open taxonomy how-to
 ====================
 
-This example demonstrates what you can do with the Objectiv Bach modeling library and a dataset that was validated against the `open analytics taxonomy
-<https://objectiv.io/docs/taxonomy/>`_.
+This example demonstrates what you can do with the Objectiv Bach modeling library and a dataset that was 
+validated against the `open analytics taxonomy <https://objectiv.io/docs/taxonomy/>`_. It's also available in 
+a `notebook <https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/open-taxonomy-how-to.ipynb>`_
+to run on your own data or use our `quickstart <https://objectiv.io/docs/home/quickstart-guide/>`_ to try it 
+out with demo data in 5 minutes.
 
-This example is also available in a `notebook
-<https://github.com/objectiv/objectiv-analytics/blob/main/notebooks/open-taxonomy-how-to.ipynb>`_
-to run on your own data or use our
-`quickstart
-<https://objectiv.io/docs/home/quickstart-guide/>`_ to try it out with demo data in 5 minutes.
-
-At first we have to install the open model hub and instantiate the Objectiv DataFrame object. See
-:ref:`getting_started_with_objectiv` for more info on this.
+First we have to install the open model hub and instantiate the Objectiv DataFrame object; see
+:doc:`getting started in your notebook <../get-started-in-your-notebook>`.
 
 The data
 --------
