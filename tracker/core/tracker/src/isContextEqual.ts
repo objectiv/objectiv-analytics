@@ -7,17 +7,13 @@ import { getObjectKeys } from './helpers';
 import { isAbstractContext } from './isAbstractContext';
 
 /**
- * A predicate to match a Context to another. The comparison purposely ignores instance identifiers.
+ * A predicate to match Context instances.
  */
-export const isContextEqual = (contextA: AbstractContext, contextB: AbstractContext) => {
+export const isContextEqual = (a: AbstractContext, b: AbstractContext) => {
   // Input check
-  if (!isAbstractContext(contextA) || !isAbstractContext(contextB)) {
+  if (!isAbstractContext(a) || !isAbstractContext(b)) {
     return false;
   }
-
-  // Discard __instance_id by destructuring it out, as it's always different by design
-  const { __instance_id: _a, ...a } = contextA;
-  const { __instance_id: _b, ...b } = contextB;
 
   // Gather context A keys and length, reused in multiple tests below
   const aKeys = getObjectKeys(a);

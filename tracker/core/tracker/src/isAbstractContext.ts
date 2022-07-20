@@ -15,7 +15,7 @@ export const isAbstractContext = (context: AbstractContext): context is Abstract
   }
 
   // Attributes check
-  if (!context.__instance_id || !context._type || !context.id) {
+  if (!context._type || !context.id) {
     return false;
   }
 

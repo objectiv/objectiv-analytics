@@ -8,12 +8,15 @@ import { OnToggleEffectCallback } from '../types';
 /**
  * Monitors a boolean variable, or a predicate, and runs the given `trueEffect` or
  * `falseEffect` depending on the state value.
+ *
+ * If `falseEffect` is omitted, `trueEffect` is used for both states.
  */
 export const useOnToggle = (
   state: boolean | (() => boolean),
   trueEffect: OnToggleEffectCallback,
-  falseEffect: OnToggleEffectCallback
+  maybeFalseEffect?: OnToggleEffectCallback
 ) => {
+  const falseEffect = maybeFalseEffect ?? trueEffect;
   const stateValue = typeof state === 'function' ? state() : state;
   let previousStateRef = useRef<boolean>(stateValue);
   let latestTrueEffectRef = useRef(trueEffect);
