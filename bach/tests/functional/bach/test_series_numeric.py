@@ -54,11 +54,18 @@ def test_round(engine):
     bt['const'] = 14.12345
     assert bt.const.expression.is_constant
 
+    result = bt.drop(columns=['const']).reset_index(drop=True)
     for i in 0, 3, 5, 9:
         assert bt.const.round(i).expression.is_constant
         assert not bt['num'].round(i).expression.is_constant
-        np.testing.assert_equal(pdf['num'].round(i).to_numpy(), bt['num'].round(i).to_numpy())
-        np.testing.assert_equal(pdf['num'].round(decimals=i).to_numpy(), bt['num'].round(decimals=i).to_numpy())
+
+        result[f'num_round_{i}'] = bt['num'].round(i)
+        pdf[f'num_round_{i}'] = pdf['num'].round(i)
+
+    pd.testing.assert_frame_equal(
+        pdf.sort_values(by='num').reset_index(drop=True),
+        result.sort_values(by='num').to_pandas()
+    )
 
 
 def test_round_integer(engine):
@@ -66,14 +73,16 @@ def test_round_integer(engine):
     pdf = pd.DataFrame(data={'num': values})
     bt = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
 
-    for i in 0, 3, 5, 9:
-        result = bt['num'].round(i).sort_values().to_pandas()
-        expected = pdf['num'].round(i).sort_values()
-        pd.testing.assert_series_equal(expected, result, check_names=False, check_index=False)
+    result = bt.reset_index(drop=True)
 
-        result2 = bt['num'].round(decimals=i).sort_values().to_pandas()
-        expected2 = pdf['num'].round(decimals=i).sort_values()
-        pd.testing.assert_series_equal(expected2, result2, check_names=False, check_index=False)
+    for i in 0, 3, 5, 9:
+        result[f'num_round_{i}'] = bt['num'].round(decimals=i)
+        pdf[f'num_round_{i}'] = pdf['num'].round(decimals=i)
+
+    pd.testing.assert_frame_equal(
+        pdf.sort_values(by='num').reset_index(drop=True),
+        result.sort_values(by='num').to_pandas()
+    )
 
 
 def test_aggregations_simple_tests(engine):
