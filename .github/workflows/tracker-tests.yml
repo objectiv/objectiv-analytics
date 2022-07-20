@@ -9,17 +9,12 @@ on:
       - '.github/**'
 
 jobs:
-  run-tracker-tests:
+  install-dependencies:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '16'
-          check-latest: true
-
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
@@ -28,18 +23,34 @@ jobs:
         working-directory: tracker
         run: yarn install
 
-      - name: Run TypeScript check
-        working-directory: tracker
-        run: yarn tsc
-
-      - name: Run tests for all packages
-        working-directory: tracker
-        run: yarn test:ci
-
+  run-check-dependencies:
+    runs-on: ubuntu-latest
+    needs: [install-dependencies]
+    steps:
       - name: Check dependencies
         working-directory: tracker
         run: yarn check:dependencies
 
+  run-ts-check:
+    runs-on: ubuntu-latest
+    needs: [install-dependencies]
+    steps:
+      - name: Run TypeScript check
+        working-directory: tracker
+        run: yarn tsc
+
+  run-unit-tests:
+    runs-on: ubuntu-latest
+    needs: [install-dependencies]
+    steps:
+      - name: Run unit tests
+        working-directory: tracker
+        run: yarn test:ci
+
+  run-ts-schema-check:
+    runs-on: ubuntu-latest
+    needs: [install-dependencies]
+    steps:
       - name: Test if TS schema is up to date
         working-directory: tracker
         run: |
