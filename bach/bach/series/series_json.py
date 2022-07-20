@@ -15,7 +15,7 @@ from bach.series.series import WrappedPartition, ToPandasInfo
 from bach.sql_model import BachSqlModel, construct_references
 from bach.types import DtypeOrAlias, StructuredDtype, AllSupportedLiteralTypes
 from sql_models.constants import DBDialect
-from sql_models.model import Materialization, CustomSqlModelBuilder
+from sql_models.model import Materialization, CustomSqlModelBuilder, SqlModel
 from sql_models.util import quote_string, is_postgres, DatabaseNotSupportedException, is_bigquery, quote_identifier
 
 if TYPE_CHECKING:
@@ -423,6 +423,8 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
     """
     BigQuery specific implementation of JsonAccessor functions.
     """
+    UNNEST_ITEM_SERIES_NAME = '_unnested_item'
+    UNNEST_OFFSET_SERIES_NAME = '_unnested_item_offset'
 
     def __init__(self, series_object: 'TSeriesJson'):
         self._series_object = series_object
@@ -599,46 +601,75 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
             .copy_override_type(SeriesBoolean)
 
     def unnest_array(self) -> Tuple['SeriesJson', 'SeriesInt64']:
-        dialect = self._series_object.engine.dialect
-
-        unnested_ident_expr = Expression.identifier(name='_unnested_item')
-        offset_ident_expr = Expression.identifier(name='_unnested_offset')
-
-        column_expr = join_expressions(
-            [
-                *{idx.expression for idx in self._series_object.index.values()},
-                unnested_ident_expr,
-                offset_ident_expr,
-            ]
-        )
-        sql = (
-            'SELECT {column_stmt} '
-            'FROM {{base_node}} '
-            'CROSS JOIN UNNEST(JSON_QUERY_ARRAY({{base_node}}.{array_series_identifier}))'
-            'AS {array_item_identifier} WITH OFFSET AS {offset_identifier}'
-        )
-        model_builder = CustomSqlModelBuilder(sql=sql, name='unnest_array')
-        sql_model = model_builder(
-            column_stmt=column_expr.to_sql(dialect=dialect),
-            base_node=self._series_object.materialize(node_name='bq_unnest').base_node,
-            array_series_identifier=se.expression.to_sql(dialect),
-            array_item_identifier=unnested_ident_expr.to_sql(dialect),
-            offset_identifier=offset_ident_expr.to_sql(dialect),
-        )
-
         from bach import DataFrame, SeriesInt64
 
         unnested_array_df = DataFrame.from_model(
-            engine=array_series.engine,
-            model=sql_model,
-            index=list(array_series.index.keys()),
+            engine=self._series_object.engine,
+            model=self._get_unnest_model(),
+            index=list(self._series_object.index.keys()),
             all_dtypes={
-                **{idx.name: idx.dtype for idx in array_series.index.values()},
-                array_series.name: array_series.dtype,
-                f'{array_series.name}_offset': SeriesInt64.dtype,
+                **{idx.name: idx.dtype for idx in self._series_object.index.values()},
+                self.UNNEST_ITEM_SERIES_NAME: self._series_object.dtype,
+                self.UNNEST_OFFSET_SERIES_NAME: SeriesInt64.dtype,
             }
         )
-        print('hola')
+
+        unnested_list_item = (
+            unnested_array_df['_unnested_item']
+            .copy_override(name=self._series_object.name)
+            .copy_override_type(SeriesJson)
+        )
+        unnested_list_offset = (
+            unnested_array_df['_unnested_offset']
+            .copy_override(name=f'{self._series_object.name}_offset')
+            .copy_override_type(SeriesInt64)
+        )
+        return unnested_list_item, unnested_list_offset
+
+    def _get_unnest_model(self) -> SqlModel:
+        list_series = self._series_object.materialize(node_name='unnest_bq_array')
+
+        unnested_ident_expr = Expression.identifier(name=self.UNNEST_ITEM_SERIES_NAME)
+        offset_ident_expr = Expression.identifier(name=self.UNNEST_OFFSET_SERIES_NAME)
+        column_exprs = [
+            *[idx.expression for idx in list_series.index.values()],
+            unnested_ident_expr,
+            offset_ident_expr,
+        ]
+
+        cross_join_expr = Expression.construct(
+            'UNNEST(JSON_QUERY_ARRAY({}.{})) AS {} WITH OFFSET AS {}',
+            Expression.model_reference(list_series.base_node),
+            list_series,
+            unnested_ident_expr,
+            offset_ident_expr,
+        )
+
+        all_expressions = [
+            *column_exprs,
+            unnested_ident_expr,
+            offset_ident_expr,
+            cross_join_expr,
+        ]
+
+        references = construct_references(
+            base_references={'base_node': list_series.base_node},
+            expressions=all_expressions,
+        )
+
+        column_str
+        sql = (
+            f'SELECT {column_stmt} '
+            'FROM {{model_reference_name}} '
+            'CROSS JOIN {cross_join_stmt}'
+        )
+        return BachSqlModel(
+            model_spec=CustomSqlModelBuilder(sql=sql, name='unnest_array'),
+            placeholders={},
+            references=references,
+            materialization=Materialization.CTE,
+            materialization_name=None,
+        )
 
 
 class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
