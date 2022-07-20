@@ -19,6 +19,7 @@ If you want to use Bach, install the package from PyPI as follows:
 .. code-block:: console
 
     pip install objectiv-bach
+    pip install objectiv-bach[bigquery]  # when you want bigquery support
 
 To get a taste of what you can do with Objectiv Bach, there's also a `demo </docs/home/quickstart-guide>`_ 
 that enables you to run the full Objectiv pipeline on your local machine. It includes our website as a demo 
