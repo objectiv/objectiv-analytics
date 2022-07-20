@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from bach.partitioning import GroupBy, Window, WindowFunction
     from bach.series import SeriesBoolean, SeriesInt64, SeriesFloat64
 
-T = TypeVar('T', bound='Series')
+SeriesSubType = TypeVar('SeriesSubType', bound='Series')
 
 WrappedPartition = Union['GroupBy', 'DataFrame']
 WrappedWindow = Union['Window', 'DataFrame']
@@ -342,7 +342,7 @@ class Series(ABC):
 
     @classmethod
     def get_class_instance(
-        cls: Type[T],
+        cls: Type[SeriesSubType],
         engine: Engine,
         base_node: BachSqlModel,
         index: Dict[str, 'Series'],
@@ -352,7 +352,7 @@ class Series(ABC):
         order_by: Optional[List[SortColumn]],
         instance_dtype: StructuredDtype,
         **kwargs
-    ) -> T:
+    ) -> SeriesSubType:
         """ INTERNAL: Create an instance of this class. """
         return cls(
             engine=engine,
@@ -440,11 +440,11 @@ class Series(ABC):
         return ConstValueExpression(const_expression)
 
     @classmethod
-    def from_value(cls: Type[T],
+    def from_value(cls: Type[SeriesSubType],
                    base: DataFrameOrSeries,
                    value: Any,
                    name: str,
-                   dtype: Optional[StructuredDtype] = None) -> T:
+                   dtype: Optional[StructuredDtype] = None) -> SeriesSubType:
         """
         Create an instance of this class, that represents a column with the given value.
         The given base Series/DataFrame will be used to set the engine, base_node, and index.
@@ -483,7 +483,7 @@ class Series(ABC):
             message_override = f'{cls.__name__} is not supported for database dialect {dialect_engine.name}'
             raise DatabaseNotSupportedException(dialect_engine, message_override=message_override)
 
-    def copy(self: T) -> T:
+    def copy(self: SeriesSubType) -> SeriesSubType:
         """
         Return a copy of this Series.
 
@@ -499,7 +499,7 @@ class Series(ABC):
         return self.copy_override()
 
     def copy_override(
-        self: T,
+        self: SeriesSubType,
         *,
         engine: Optional[Engine] = None,
         base_node: Optional[BachSqlModel] = None,
@@ -510,7 +510,7 @@ class Series(ABC):
         instance_dtype: Optional[StructuredDtype] = None,
         order_by: Optional[Union[List[SortColumn]]] = None,
         **kwargs
-    ) -> T:
+    ) -> SeriesSubType:
         """
         INTERNAL: Copy this instance into a new one, with the given overrides
         """
@@ -541,11 +541,11 @@ class Series(ABC):
 
     def copy_override_type(
         self,
-        series_type: Type[T],
+        series_type: Type[SeriesSubType],
         *,
         instance_dtype: Optional[StructuredDtype] = None,
         **kwargs
-    ) -> T:
+    ) -> SeriesSubType:
         """
         INTERNAL: create an instance of the given Series subtype, copy all values from self.
         """
@@ -844,7 +844,7 @@ class Series(ABC):
 
         return result
 
-    def sort_values(self: T, *, ascending: bool = True) -> T:
+    def sort_values(self: SeriesSubType, *, ascending: bool = True) -> SeriesSubType:
         """
         Sort this Series by its values.
         Returns a new instance and does not actually modify the instance it is called on.
@@ -854,8 +854,8 @@ class Series(ABC):
         return self.sort_by_series(by=[self.copy()], ascending=ascending)
 
     def sort_by_series(
-        self: T, by: List['Series'], *, ascending: Union[bool, List[bool]] = True,
-    ) -> T:
+        self: SeriesSubType, by: List['Series'], *, ascending: Union[bool, List[bool]] = True,
+    ) -> SeriesSubType:
         """
         Sort this Series by other Series that have the same base node as this Series.
         Returns a new instance and does not actually modify the instance it is called on.
@@ -877,7 +877,7 @@ class Series(ABC):
         ]
         return self.copy_override(order_by=order_by)
 
-    def sort_index(self: T, *, ascending: Union[List[bool], bool] = True) -> T:
+    def sort_index(self: SeriesSubType, *, ascending: Union[List[bool], bool] = True) -> SeriesSubType:
         """
         Sort this Series by its index.
         Returns a new instance and does not modify the instance it is called on.
@@ -1031,7 +1031,7 @@ class Series(ABC):
                 self.instance_dtype == other.instance_dtype
         )
 
-    def __getitem__(self: T, key: Union[Any, slice]) -> T:
+    def __getitem__(self: SeriesSubType, key: Union[Any, slice]) -> SeriesSubType:
         """
         Get a single value from the series. This is not returning the value,
         use the .value accessor for that instead.
@@ -1043,7 +1043,7 @@ class Series(ABC):
         if isinstance(key, slice):
             if self.expression.is_single_value:
                 raise ValueError('Slicing on single value expressions is not supported.')
-            return cast(T, frame[key][self.name])
+            return cast(SeriesSubType, frame[key][self.name])
 
         if len(self.index) == 0:
             raise Exception('Not supported on Series without index. '
@@ -1055,7 +1055,7 @@ class Series(ABC):
         # Apply Boolean selection on index == key, help mypy a bit
         frame = cast(DataFrame, frame[list(frame.index.values())[0] == key])
         # limit to 1 row, will make all series SingleValueExpression, and get that series.
-        return cast(T, frame[:1][self.name])
+        return cast(SeriesSubType, frame[:1][self.name])
 
     def isnull(self) -> 'SeriesBoolean':
         """
@@ -1097,7 +1097,7 @@ class Series(ABC):
         from bach import SeriesBoolean
         return self.copy_override_type(SeriesBoolean).copy_override(expression=expression)
 
-    def fillna(self: T, other: AllSupportedLiteralTypes) -> T:
+    def fillna(self: SeriesSubType, other: AllSupportedLiteralTypes) -> SeriesSubType:
         """
         Fill any NULL value with the given constant or other compatible Series
 
@@ -1113,7 +1113,7 @@ class Series(ABC):
             You can replace None with None, have fun, forever!
         """
         return cast(
-            T,
+            SeriesSubType,
             self._binary_operation(
                 other=other,
                 operation='fillna',
@@ -1133,7 +1133,7 @@ class Series(ABC):
         """
         The standard way to perform a binary operation
 
-        :param self: The left hand side expression (lhs) in the operation
+        :param self: SeriesSubTypehe left hand side expression (lhs) in the operation
         :param other: The right hand side expression (rhs) in the operation
         :param operation: A user-readable representation of the operation
         :param fmt_str: An Expression.construct format string, accepting lhs and rhs as the only parameters,
@@ -1505,7 +1505,7 @@ class Series(ABC):
             'SeriesInt64', self._derived_agg_func(partition, 'count', 'int64', skipna=skipna)
         )
 
-    def max(self: T, partition: WrappedPartition = None, skipna: bool = True) -> T:
+    def max(self: SeriesSubType, partition: WrappedPartition = None, skipna: bool = True) -> SeriesSubType:
         """
         Returns the maximum value in each partition or for all values if none is given.
 
@@ -1514,9 +1514,9 @@ class Series(ABC):
         :returns: a new Series with the aggregation applied
         """
         result = self._derived_agg_func(partition, 'max', skipna=skipna)
-        return cast(T, result)
+        return cast(SeriesSubType, result)
 
-    def median(self: T, partition: WrappedPartition = None, skipna: bool = True) -> T:
+    def median(self: SeriesSubType, partition: WrappedPartition = None, skipna: bool = True) -> SeriesSubType:
         """
         Returns the median in each partition or for all values if none is given.
 
@@ -1530,9 +1530,9 @@ class Series(ABC):
                 f'percentile_disc(0.5) WITHIN GROUP (ORDER BY {{}})', self),
             skipna=skipna
         )
-        return cast(T, result)
+        return cast(SeriesSubType, result)
 
-    def min(self: T, partition: WrappedPartition = None, skipna: bool = True) -> 'T':
+    def min(self: SeriesSubType, partition: WrappedPartition = None, skipna: bool = True) -> SeriesSubType:
         """
         Returns the minimum value in each partition or for all values if none is given.
 
@@ -1541,9 +1541,9 @@ class Series(ABC):
         :returns: a new Series with the aggregation applied
         """
         result = self._derived_agg_func(partition, 'min', skipna=skipna)
-        return cast(T, result)
+        return cast(SeriesSubType, result)
 
-    def mode(self: T, partition: WrappedPartition = None, skipna: bool = True) -> T:
+    def mode(self: SeriesSubType, partition: WrappedPartition = None, skipna: bool = True) -> SeriesSubType:
         """
         Returns the mode in each partition or for all values if none is given.
 
@@ -1575,7 +1575,7 @@ class Series(ABC):
             expression=AggregateFunctionExpression.construct(agg_expr, self),
             skipna=skipna
         )
-        return cast(T, result)
+        return cast(SeriesSubType, result)
 
     def nunique(self, partition: WrappedPartition = None, skipna: bool = True) -> 'SeriesInt64':
         """
@@ -1594,7 +1594,7 @@ class Series(ABC):
 
         return cast('SeriesInt64', result)
 
-    def unique(self: T, partition: WrappedPartition = None, skipna: bool = True) -> T:
+    def unique(self: SeriesSubType, partition: WrappedPartition = None, skipna: bool = True) -> SeriesSubType:
         """
         Return all unique values in this Series.
 
@@ -1614,7 +1614,7 @@ class Series(ABC):
         df[f'{self.name}_unique'] = df[self.name]
         df = df.set_index(self.name)
 
-        return cast(T, df[f'{self.name}_unique'])
+        return cast(SeriesSubType, df[f'{self.name}_unique'])
 
     # Window functions applicable for all types of data, but only with a window
     # TODO more specific docs
@@ -1714,8 +1714,8 @@ class Series(ABC):
         )
 
     def window_lag(
-        self: T, offset: int = 1, default: Any = None, window: Optional[WrappedWindow] = None,
-    ) -> T:
+        self: SeriesSubType, offset: int = 1, default: Any = None, window: Optional[WrappedWindow] = None,
+    ) -> SeriesSubType:
         """
         Returns value evaluated at the row that is offset rows before the current row within the window
 
@@ -1734,11 +1734,14 @@ class Series(ABC):
             Expression.construct(f'lag({{}}, {offset}, {{}})', self, default_expr),
             self.dtype
         )
-        return cast(T, result)
+        return cast(SeriesSubType, result)
 
     def window_lead(
-        self: T, offset: int = 1, default: Optional[Any] = None, window: Optional[WrappedWindow] = None,
-    ) -> T:
+        self: SeriesSubType,
+        offset: int = 1,
+        default: Optional[Any] = None,
+        window: Optional[WrappedWindow] = None,
+    ) -> SeriesSubType:
         """
         Returns value evaluated at the row that is offset rows after the current row within the window.
 
@@ -1756,9 +1759,9 @@ class Series(ABC):
             Expression.construct(f'lead({{}}, {offset}, {{}})', self, default_expr),
             self.dtype
         )
-        return cast(T, result)
+        return cast(SeriesSubType, result)
 
-    def window_first_value(self: T, window: Optional[WrappedWindow] = None) -> T:
+    def window_first_value(self: SeriesSubType, window: Optional[WrappedWindow] = None) -> SeriesSubType:
         """
         Returns value evaluated at the row that is the first row of the window frame.
         """
@@ -1769,9 +1772,9 @@ class Series(ABC):
             Expression.construct('first_value({})', self),
             self.dtype
         )
-        return cast(T, result)
+        return cast(SeriesSubType, result)
 
-    def window_last_value(self: T, window: Optional[WrappedWindow] = None) -> T:
+    def window_last_value(self: SeriesSubType, window: Optional[WrappedWindow] = None) -> SeriesSubType:
         """
         Returns value evaluated at the row that is the last row of the window frame.
         """
@@ -1779,9 +1782,11 @@ class Series(ABC):
         window = self._check_window(WindowFunction.LAST_VALUE, window)
         result = self._derived_agg_func(window, Expression.construct('last_value({})', self), self.dtype)
 
-        return cast(T, result)
+        return cast(SeriesSubType, result)
 
-    def window_nth_value(self: T, n: int, window: Optional[WrappedWindow] = None) -> T:
+    def window_nth_value(
+        self: SeriesSubType, n: int, window: Optional[WrappedWindow] = None,
+    ) -> SeriesSubType:
         """
         Returns value evaluated at the row that is the n'th row of the window frame.
         (counting from 1); returns NULL if there is no such row.
@@ -1793,7 +1798,7 @@ class Series(ABC):
             Expression.construct(f'nth_value({{}}, {n})', self),
             self.dtype
         )
-        return cast(T, result)
+        return cast(SeriesSubType, result)
 
     def append(
         self,
@@ -1836,7 +1841,7 @@ class Series(ABC):
             obj=self, datetime_is_numeric=datetime_is_numeric, percentiles=percentiles,
         )()
 
-    def drop_duplicates(self: T, keep: Union[str, bool] = 'first') -> T:
+    def drop_duplicates(self: SeriesSubType, keep: Union[str, bool] = 'first') -> SeriesSubType:
         """
         Return a series with duplicated rows removed.
 
@@ -1854,9 +1859,9 @@ class Series(ABC):
         df = df.materialize()
 
         result = df.all_series[self.name]
-        return cast(T, result)
+        return cast(SeriesSubType, result)
 
-    def dropna(self: T) -> T:
+    def dropna(self: SeriesSubType) -> SeriesSubType:
         """
         Removes rows with missing values.
 
@@ -1864,7 +1869,7 @@ class Series(ABC):
         """
         df = self.to_frame().dropna()
         assert isinstance(df, DataFrame)
-        return cast(T, df.all_series[self.name])
+        return cast(SeriesSubType, df.all_series[self.name])
 
     def value_counts(
         self,
