@@ -76,7 +76,11 @@ _RECORDED_TEST_TABLES_PER_ENGINE: [Engine, List[str]] = defaultdict(list)
 
 
 @pytest.fixture()
-def pg_engine() -> Engine:
+def pg_engine(request: SubRequest) -> Engine:
+    if request.config.getoption("big_query"):
+        # Skip tests using this fixture when running only for big_query
+        pytest.skip()
+
     # TODO: port all tests that use this to be multi-database. Or explicitly mark them as skip-bigquery
     return _ENGINE_CACHE[DB.POSTGRES]
 
