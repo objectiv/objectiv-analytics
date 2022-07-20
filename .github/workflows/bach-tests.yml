@@ -16,7 +16,7 @@ jobs:
       max-parallel: 1
       matrix:
         python-version: [3.7, 3.8, 3.9, 3.10]
-        isMaster:
+        isMain:
           - ${{ contains(github.ref, 'workflow_limit_python_versions') }}
         exclude:
           - isMain: false
