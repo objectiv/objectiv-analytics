@@ -37,12 +37,11 @@ a single command.
 
 :doc:`Learn more about the Objectiv Bach modeling libary <bach/index>`
 
-### Example notebooks
+## Get started
 
-To see how all components work together, there are several example notebooks that show how you can analyze 
-and model data using the open analytics taxonomy, the open model hub, and the Bach modeling library.
+See how you can get up-and-running with your own notebook and data store in minutes.
 
-:doc:`See the example notebooks <example-notebooks/index>`
+:doc:`Learn how to get started <./get-started-in-your-notebook>`
 
 
 .. toctree::
