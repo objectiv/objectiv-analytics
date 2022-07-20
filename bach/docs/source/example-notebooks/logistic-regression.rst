@@ -63,8 +63,8 @@ After the model is fitted, it can be used to predict the labels for the _entire_
 
 .. code-block:: python
 
-    # seed parameter is supported only for Postgres
-    features_set_sample = features_unstacked.get_sample('test_lr_sample', sample_percentage=10, overwrite=True, seed=42)
+    # for BigQuery the table name should be 'YOUR_PROJECT.YOUR_WRITABLE_DATASET.YOUR_TABLE_NAME'
+    features_set_sample = features_unstacked.get_sample('test_lr_sample', sample_percentage=10, overwrite=True)
 
 Using a logistic regression we will predict whether a user clicked in the modeling section or not. We will predict this by the number of clicks in any of the other sections. `X` is a Bach DataFrame that contains the explanatory variables. `y` is a Bach SeriesBoolean with the labels we want to predict.
 

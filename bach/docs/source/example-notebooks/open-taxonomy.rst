@@ -147,6 +147,7 @@ Below we create a sample that randomly selects ~1% of all the rows in the data. 
 
 .. code-block:: python
 
+    # for BigQuery the table name should be 'YOUR_PROJECT.YOUR_WRITABLE_DATASET.YOUR_TABLE_NAME'
     df_sample = df.get_sample(table_name='sample_data', sample_percentage=10, overwrite=True)
 
 Two new columns are created in the sample.

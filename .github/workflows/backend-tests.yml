@@ -13,8 +13,19 @@ jobs:
   typecheck-and-run-tests:
     runs-on: ubuntu-latest
     strategy:
+      max-parallel: 4
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+        # See https://docs.github.com/en/actions/learn-github-actions/contexts#github-context on why we use endsWith
+        isMain:
+          - ${{ endsWith(github.ref,'/main') }}
+        exclude:
+          - isMain: false
+            python-version: '3.8'
+          - isMain: false
+            python-version: '3.9'
+          - isMain: false
+            python-version: '3.10'
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
