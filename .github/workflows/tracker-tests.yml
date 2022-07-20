@@ -19,7 +19,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: '**/node_modules'
-          key: node-modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
 
       - if: ${{ steps.cache-npm.outputs.cache-hit == 'false' }}
         name: List the state of node modules
@@ -41,7 +41,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: '**/node_modules'
-          key: node-modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
 
       - name: Check dependencies
         working-directory: tracker
@@ -58,7 +58,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: '**/node_modules'
-          key: node-modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
 
       - name: Run TypeScript check
         working-directory: tracker
@@ -75,7 +75,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: '**/node_modules'
-          key: node-modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
 
       - name: Run unit tests
         working-directory: tracker
@@ -92,7 +92,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: '**/node_modules'
-          key: node-modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
 
       - name: Test if TS schema is up to date
         working-directory: tracker
@@ -111,7 +111,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: '**/node_modules'
-          key: node-modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
 
       - name: Build all SDKs
         working-directory: tracker
