@@ -48,10 +48,6 @@ class SeriesList(Series):
     supported_value_types = (list, )
 
     @classmethod
-    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        return literal
-
-    @classmethod
     def supported_value_to_literal(
         cls,
         dialect: Dialect,

@@ -51,10 +51,6 @@ class SeriesBoolean(Series, ABC):
     # See https://www.postgresql.org/docs/14/datatype-boolean.html
 
     @classmethod
-    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        return literal
-
-    @classmethod
     def supported_value_to_literal(
         cls,
         dialect: Dialect,

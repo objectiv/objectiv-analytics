@@ -14,10 +14,10 @@ from sqlalchemy.engine import Dialect
 from bach import DataFrame
 from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64
 from bach.expression import Expression, join_expressions
-from bach.series.series import WrappedPartition, ToPandasInfo
+from bach.series.series import WrappedPartition, ToPandasInfo, value_to_series
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
     parse_c_code_to_bigquery_code
-from bach.types import DtypeOrAlias, StructuredDtype
+from bach.types import DtypeOrAlias, StructuredDtype, AllSupportedLiteralTypes
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
 
@@ -370,10 +370,6 @@ class SeriesTimestamp(SeriesAbstractDateTime):
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.date, str)
 
     @classmethod
-    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
-
-    @classmethod
     def supported_value_to_literal(
         cls,
         dialect: Dialect,
@@ -440,6 +436,20 @@ class SeriesTimestamp(SeriesAbstractDateTime):
                                           other_dtypes=tuple(type_mapping.keys()),
                                           dtype=type_mapping)
 
+    def _comparator_operation(
+        self,
+        other: Union['Series', AllSupportedLiteralTypes],
+        comparator: str,
+        other_dtypes: Tuple[str, ...] = ('timestamp',)
+    ) -> 'SeriesBoolean':
+        # Always convert to a series first.
+        # We also support direct comparisons against string literals, which requires a cast to the correct
+        # type, which requires turning it into a series first.
+        other = value_to_series(base=self, value=other)
+        if isinstance(other, Series) and not isinstance(other, SeriesTimestamp):
+            other = other.astype('timestamp')
+        return super()._comparator_operation(other, comparator, other_dtypes)
+
 
 class SeriesDate(SeriesAbstractDateTime):
     """
@@ -457,10 +467,6 @@ class SeriesDate(SeriesAbstractDateTime):
         DBDialect.BIGQUERY: 'DATE'
     }
     supported_value_types = (datetime.datetime, datetime.date, str)
-
-    @classmethod
-    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        return Expression.construct(f'cast({{}} as date)', literal)
 
     @classmethod
     def supported_value_to_literal(
@@ -510,6 +516,20 @@ class SeriesDate(SeriesAbstractDateTime):
                                        dtype=type_mapping)
         )
 
+    def _comparator_operation(
+        self,
+        other: Union['Series', AllSupportedLiteralTypes],
+        comparator: str,
+        other_dtypes: Tuple[str, ...] = ('date',)
+    ) -> 'SeriesBoolean':
+        # Always convert to a series first.
+        # We also support direct comparisons against string literals, which requires a cast to the correct
+        # type, which requires turning it into a series first.
+        other = value_to_series(base=self, value=other)
+        if isinstance(other, Series) and not isinstance(other, SeriesDate):
+            other = other.astype('date')
+        return super()._comparator_operation(other, comparator, other_dtypes)
+
 
 class SeriesTime(SeriesAbstractDateTime):
     """
@@ -528,10 +548,6 @@ class SeriesTime(SeriesAbstractDateTime):
         DBDialect.BIGQUERY: 'TIME',
     }
     supported_value_types = (datetime.time, str)
-
-    @classmethod
-    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
 
     @classmethod
     def supported_value_to_literal(
@@ -573,10 +589,6 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         DBDialect.BIGQUERY: 'INTERVAL',
     }
     supported_value_types = (datetime.timedelta, numpy.timedelta64, str)
-
-    @classmethod
-    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
 
     @classmethod
     def supported_value_to_literal(

@@ -167,10 +167,6 @@ class SeriesString(Series):
     supported_value_types = (str, type(None))  # NoneType ends up as a string for now
 
     @classmethod
-    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        return literal
-
-    @classmethod
     def supported_value_to_literal(
         cls,
         dialect: Dialect,

@@ -22,10 +22,6 @@ class ReversedStringType(Series):
     supported_value_types = (str,)
 
     @classmethod
-    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        return literal
-
-    @classmethod
     def supported_value_to_literal(cls, dialect: Dialect, value: str) -> Expression:
         return Expression.string_value(str(reversed(value)))
 
