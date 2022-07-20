@@ -2,19 +2,17 @@ import numpy as np
 import pytest
 
 from tests.functional.bach.test_data_and_utils import assert_equals_data, \
-get_df_with_railway_data, get_df_with_test_data
+    get_df_with_railway_data, get_df_with_test_data, TEST_DATA_CITIES, CITIES_COLUMNS, RAILWAYS_COLUMNS, \
+    TEST_DATA_RAILWAYS
+from tests.unit.bach.util import get_pandas_df
 
 
 def test_value_counts_basic(engine):
     bt = get_df_with_test_data(engine)[['municipality']]
+    pdf = get_pandas_df(TEST_DATA_CITIES, CITIES_COLUMNS)[['municipality']]
     result = bt.value_counts()
 
-    np.testing.assert_equal(
-        bt.to_pandas().value_counts().to_numpy(),
-        result.to_numpy(),
-    )
-
-    assert_equals_data(
+    result_db = assert_equals_data(
         result.to_frame(),
         expected_columns=['municipality', 'value_counts'],
         expected_data=[
@@ -23,13 +21,14 @@ def test_value_counts_basic(engine):
         ],
     )
 
-    result_normalized = bt.value_counts(normalize=True)
-    np.testing.assert_almost_equal(
-        bt.to_pandas().value_counts(normalize=True).to_numpy(),
-        result_normalized.to_numpy(),
-        decimal=2,
+    np.testing.assert_equal(
+        pdf.value_counts().reset_index(drop=False).to_numpy(),
+        np.array(result_db, dtype='object'),
     )
-    assert_equals_data(
+
+    result_normalized = bt.value_counts(normalize=True)
+
+    result_normalized_db = assert_equals_data(
         result_normalized.to_frame(),
         expected_columns=['municipality', 'value_counts'],
         expected_data=[
@@ -37,16 +36,18 @@ def test_value_counts_basic(engine):
             ['Leeuwarden', 1 / 3]
         ],
     )
+    np.testing.assert_equal(
+        pdf.value_counts(normalize=True).reset_index(drop=False).to_numpy(),
+        np.array(result_normalized_db, dtype='object'),
+    )
 
 
 def test_value_counts_w_subset(engine):
     bt = get_df_with_railway_data(engine)
+    pdf = get_pandas_df(TEST_DATA_RAILWAYS, RAILWAYS_COLUMNS)
     result = bt.value_counts(subset=['town', 'platforms'])
-    np.testing.assert_equal(
-        bt.to_pandas().value_counts(subset=['town', 'platforms']).to_numpy(),
-        result.to_numpy(),
-    )
-    assert_equals_data(
+
+    result_db = assert_equals_data(
         result.to_frame().sort_index(),
         expected_columns=['town', 'platforms', 'value_counts'],
         expected_data=[
@@ -59,13 +60,15 @@ def test_value_counts_w_subset(engine):
         ],
     )
 
-    result_normalized = bt.value_counts(subset=['town', 'platforms'], normalize=True)
-    np.testing.assert_almost_equal(
-        bt.to_pandas().value_counts(subset=['town', 'platforms'], normalize=True).to_numpy(),
-        result_normalized.to_numpy(),
-        decimal=2,
+    expected = (
+        pdf.value_counts(subset=['town', 'platforms'])
+        .sort_index()
+        .reset_index(drop=False).to_numpy()
     )
-    assert_equals_data(
+    np.testing.assert_equal(expected, np.array(result_db, dtype='object'))
+
+    result_normalized = bt.value_counts(subset=['town', 'platforms'], normalize=True)
+    result_normalized_db = assert_equals_data(
         result_normalized.to_frame().sort_index(),
         expected_columns=['town', 'platforms', 'value_counts'],
         expected_data=[
@@ -76,6 +79,16 @@ def test_value_counts_w_subset(engine):
             ['Ljouwert', 4, 1 / 7],
             ['Snits', 2, 2 / 7],
         ],
+    )
+
+    expected = (
+        pdf.value_counts(subset=['town', 'platforms'], normalize=True)
+        .sort_index()
+        .reset_index(drop=False).to_numpy()
+    )
+    np.testing.assert_equal(
+        expected,
+        np.array(result_normalized_db, dtype='object'),
     )
 
 

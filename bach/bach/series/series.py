@@ -30,9 +30,9 @@ from sql_models.util import is_bigquery, DatabaseNotSupportedException
 
 if TYPE_CHECKING:
     from bach.partitioning import GroupBy, Window, WindowFunction
-    from bach.series import SeriesBoolean
+    from bach.series import SeriesBoolean, SeriesInt64, SeriesFloat64
 
-T = TypeVar('T', bound='Series')
+SeriesSubType = TypeVar('SeriesSubType', bound='Series')
 
 WrappedPartition = Union['GroupBy', 'DataFrame']
 WrappedWindow = Union['Window', 'DataFrame']
@@ -128,7 +128,7 @@ class Series(ABC):
         instance_dtype: StructuredDtype,
         order_by: Optional[List[SortColumn]] = None,
         **kwargs,
-    ):
+    ) -> None:
         """
         Initialize a new Series object.
         If a Series is associated with a DataFrame. The engine, base_node and index
@@ -275,7 +275,7 @@ class Series(ABC):
         raise NotImplementedError()
 
     @property
-    def engine(self):
+    def engine(self) -> Engine:
         """
         INTERNAL: Get the engine
         """
@@ -342,7 +342,7 @@ class Series(ABC):
 
     @classmethod
     def get_class_instance(
-        cls,
+        cls: Type[SeriesSubType],
         engine: Engine,
         base_node: BachSqlModel,
         index: Dict[str, 'Series'],
@@ -352,7 +352,7 @@ class Series(ABC):
         order_by: Optional[List[SortColumn]],
         instance_dtype: StructuredDtype,
         **kwargs
-    ):
+    ) -> SeriesSubType:
         """ INTERNAL: Create an instance of this class. """
         return cls(
             engine=engine,
@@ -440,11 +440,11 @@ class Series(ABC):
         return ConstValueExpression(const_expression)
 
     @classmethod
-    def from_value(cls,
+    def from_value(cls: Type[SeriesSubType],
                    base: DataFrameOrSeries,
                    value: Any,
                    name: str,
-                   dtype: Optional[StructuredDtype] = None) -> 'Series':
+                   dtype: Optional[StructuredDtype] = None) -> SeriesSubType:
         """
         Create an instance of this class, that represents a column with the given value.
         The given base Series/DataFrame will be used to set the engine, base_node, and index.
@@ -470,7 +470,7 @@ class Series(ABC):
         return result
 
     @classmethod
-    def assert_engine_dialect_supported(cls, dialect_engine: Union[Dialect, Engine]):
+    def assert_engine_dialect_supported(cls, dialect_engine: Union[Dialect, Engine]) -> None:
         """
         INTERNAL: check that the given dialect/engine is in cls.supported_db_dtype.
         :raises DatabaseNotSupportedException: if dialect/engine is not supported.
@@ -483,7 +483,7 @@ class Series(ABC):
             message_override = f'{cls.__name__} is not supported for database dialect {dialect_engine.name}'
             raise DatabaseNotSupportedException(dialect_engine, message_override=message_override)
 
-    def copy(self):
+    def copy(self: SeriesSubType) -> SeriesSubType:
         """
         Return a copy of this Series.
 
@@ -499,7 +499,7 @@ class Series(ABC):
         return self.copy_override()
 
     def copy_override(
-        self: T,
+        self: SeriesSubType,
         *,
         engine: Optional[Engine] = None,
         base_node: Optional[BachSqlModel] = None,
@@ -510,7 +510,7 @@ class Series(ABC):
         instance_dtype: Optional[StructuredDtype] = None,
         order_by: Optional[Union[List[SortColumn]]] = None,
         **kwargs
-    ) -> T:
+    ) -> SeriesSubType:
         """
         INTERNAL: Copy this instance into a new one, with the given overrides
         """
@@ -541,11 +541,11 @@ class Series(ABC):
 
     def copy_override_type(
         self,
-        series_type: Type[T],
+        series_type: Type[SeriesSubType],
         *,
         instance_dtype: Optional[StructuredDtype] = None,
         **kwargs
-    ) -> T:
+    ) -> SeriesSubType:
         """
         INTERNAL: create an instance of the given Series subtype, copy all values from self.
         """
@@ -604,7 +604,7 @@ class Series(ABC):
         result = self.to_frame().unstack(level, fill_value, aggregation)
         return result.rename(columns={col: col.replace(f'__{self.name}', '') for col in result.data_columns})
 
-    def get_column_expression(self, table_alias: str = None) -> Expression:
+    def get_column_expression(self, table_alias: Optional[str] = None) -> Expression:
         """ INTERNAL: Get the column expression for this Series """
         expression = self.expression.resolve_column_references(self.engine.dialect, table_alias)
         return Expression.construct_expr_as_name(expression, self.name)
@@ -621,7 +621,6 @@ class Series(ABC):
 
         :returns: the (modified) series and (modified) other.
         """
-        from bach.merge import MergeSqlModel
         if not (other.expression.is_constant or other.expression.is_independent_subquery):
             # we should maybe create a subquery
             if self.base_node != other.base_node or self.group_by != other.group_by:
@@ -752,7 +751,7 @@ class Series(ABC):
         return self.to_pandas(limit=n)
 
     @property
-    def value(self):
+    def value(self) -> Any:
         """
         Retrieve the actual single value of this series. If it's not sure that there is only one value,
         a ValueError is raised. In that case use Series.values[0] to retrieve the value.
@@ -766,7 +765,7 @@ class Series(ABC):
         return self.to_numpy()[0]
 
     @property
-    def array(self):
+    def array(self) -> pandas.core.arrays.ExtensionArray:
         """
         .array property accessor akin pandas.Series.array
 
@@ -788,8 +787,8 @@ class Series(ABC):
 
     def materialize(
             self,
-            node_name='manual_materialize',
-            limit: Any = None,
+            node_name: str = 'manual_materialize',
+            limit: Optional[Union[int, slice]] = None,
             distinct: bool = False,
             materialization: Union[Materialization, str] = Materialization.CTE
     ) -> 'Series':
@@ -845,7 +844,7 @@ class Series(ABC):
 
         return result
 
-    def sort_values(self, *, ascending=True):
+    def sort_values(self: SeriesSubType, *, ascending: bool = True) -> SeriesSubType:
         """
         Sort this Series by its values.
         Returns a new instance and does not actually modify the instance it is called on.
@@ -855,8 +854,8 @@ class Series(ABC):
         return self.sort_by_series(by=[self.copy()], ascending=ascending)
 
     def sort_by_series(
-        self: T, by: List['Series'], *, ascending: Union[bool, List[bool]] = True,
-    ) -> T:
+        self: SeriesSubType, by: List['Series'], *, ascending: Union[bool, List[bool]] = True,
+    ) -> SeriesSubType:
         """
         Sort this Series by other Series that have the same base node as this Series.
         Returns a new instance and does not actually modify the instance it is called on.
@@ -878,7 +877,7 @@ class Series(ABC):
         ]
         return self.copy_override(order_by=order_by)
 
-    def sort_index(self: T, *, ascending: Union[List[bool], bool] = True) -> T:
+    def sort_index(self: SeriesSubType, *, ascending: Union[List[bool], bool] = True) -> SeriesSubType:
         """
         Sort this Series by its index.
         Returns a new instance and does not modify the instance it is called on.
@@ -901,7 +900,7 @@ class Series(ABC):
             by=list(self.index.values()), ascending=ascending_list,
         )
 
-    def view_sql(self):
+    def view_sql(self) -> str:
         return self.to_frame().view_sql()
 
     def to_frame(self) -> DataFrame:
@@ -959,14 +958,14 @@ class Series(ABC):
             .copy_override(expression=expr, index={}, group_by=None)
         return s
 
-    def exists(self):
+    def exists(self) -> 'SeriesBoolean':
         """
         Boolean operation that returns True if there are one or more values in this Series
         """
         s = Series.as_independent_subquery(self, 'exists', dtype='bool')
-        return s.copy_override(expression=SingleValueExpression(s.expression))
+        return cast('SeriesBoolean', s.copy_override(expression=SingleValueExpression(s.expression)))
 
-    def any_value(self):
+    def any_value(self) -> 'Series':
         """
         For every row in this Series, do multiple evaluations where _any_ sub-evaluation should be True
 
@@ -974,7 +973,7 @@ class Series(ABC):
         """
         return Series.as_independent_subquery(self, 'any')
 
-    def all_values(self):
+    def all_values(self) -> 'Series':
         """
         For every row in this Series, do multiple evaluations where _all_ sub-evaluations should be True
 
@@ -1011,7 +1010,7 @@ class Series(ABC):
         new_dtype = series_type.dtype
         return self.copy_override_dtype(dtype=new_dtype).copy_override(expression=expression)
 
-    def equals(self, other: Any, recursion: str = None) -> bool:
+    def equals(self, other: Any, recursion: Optional[str] = None) -> bool:
         """
         INTERNAL: Checks whether other is the same as self. This implements the check that would normally be
         implemented in __eq__, but we already use that method for other purposes.
@@ -1032,7 +1031,7 @@ class Series(ABC):
                 self.instance_dtype == other.instance_dtype
         )
 
-    def __getitem__(self, key: Union[Any, slice]):
+    def __getitem__(self: SeriesSubType, key: Union[Any, slice]) -> SeriesSubType:
         """
         Get a single value from the series. This is not returning the value,
         use the .value accessor for that instead.
@@ -1044,7 +1043,7 @@ class Series(ABC):
         if isinstance(key, slice):
             if self.expression.is_single_value:
                 raise ValueError('Slicing on single value expressions is not supported.')
-            return frame[key][self.name]
+            return cast(SeriesSubType, frame[key][self.name])
 
         if len(self.index) == 0:
             raise Exception('Not supported on Series without index. '
@@ -1056,7 +1055,7 @@ class Series(ABC):
         # Apply Boolean selection on index == key, help mypy a bit
         frame = cast(DataFrame, frame[list(frame.index.values())[0] == key])
         # limit to 1 row, will make all series SingleValueExpression, and get that series.
-        return frame[:1][self.name]
+        return cast(SeriesSubType, frame[:1][self.name])
 
     def isnull(self) -> 'SeriesBoolean':
         """
@@ -1098,7 +1097,7 @@ class Series(ABC):
         from bach import SeriesBoolean
         return self.copy_override_type(SeriesBoolean).copy_override(expression=expression)
 
-    def fillna(self, other: AllSupportedLiteralTypes):
+    def fillna(self: SeriesSubType, other: AllSupportedLiteralTypes) -> SeriesSubType:
         """
         Fill any NULL value with the given constant or other compatible Series
 
@@ -1113,9 +1112,15 @@ class Series(ABC):
         .. note::
             You can replace None with None, have fun, forever!
         """
-        return self._binary_operation(
-            other=other, operation='fillna', fmt_str='COALESCE({}, {})',
-            other_dtypes=tuple([self.dtype]))
+        return cast(
+            SeriesSubType,
+            self._binary_operation(
+                other=other,
+                operation='fillna',
+                fmt_str='COALESCE({}, {})',
+                other_dtypes=tuple([self.dtype]),
+            )
+        )
 
     def _binary_operation(
         self,
@@ -1123,12 +1128,12 @@ class Series(ABC):
         operation: str,
         fmt_str: str,
         other_dtypes: Tuple[str, ...] = (),
-        dtype: Union[str, None, Mapping[str, Optional[str]]] = None
+        dtype: Optional[Union[str, Mapping[str, Optional[str]]]] = None
     ) -> 'Series':
         """
         The standard way to perform a binary operation
 
-        :param self: The left hand side expression (lhs) in the operation
+        :param self: SeriesSubTypehe left hand side expression (lhs) in the operation
         :param other: The right hand side expression (rhs) in the operation
         :param operation: A user-readable representation of the operation
         :param fmt_str: An Expression.construct format string, accepting lhs and rhs as the only parameters,
@@ -1164,7 +1169,7 @@ class Series(ABC):
         operation: str,
         fmt_str: str,
         other_dtypes: Tuple[str, ...] = (),
-        dtype: Union[str, Mapping[str, Optional[str]]] = None
+        dtype: Optional[Union[str, Mapping[str, Optional[str]]]] = None
     ) -> 'Series':
         """
         implement this in a subclass to have boilerplate support for all arithmetic functions
@@ -1178,36 +1183,40 @@ class Series(ABC):
                             f'{self.__class__} and {other.__class__}')
         return self._binary_operation(other, operation, fmt_str, other_dtypes, dtype)
 
-    def __add__(self, other) -> 'Series':
+    def __add__(self, other: Union[AllSupportedLiteralTypes, 'Series']) -> 'Series':
         return self._arithmetic_operation(other, 'add', '{} + {}')
 
-    def __sub__(self, other) -> 'Series':
+    def __sub__(self, other: Union[AllSupportedLiteralTypes, 'Series']) -> 'Series':
         return self._arithmetic_operation(other, 'sub', '{} - {}')
 
-    def __truediv__(self, other) -> 'Series':
+    def __truediv__(self, other: Union[AllSupportedLiteralTypes, 'Series']) -> 'Series':
         """ This case is not generically okay. subclasses should check that"""
         return self._arithmetic_operation(other, 'div', '{} / {}')
 
-    def __floordiv__(self, other) -> 'Series':
+    def __floordiv__(self, other: Union[AllSupportedLiteralTypes, 'Series']) -> 'Series':
         return self._arithmetic_operation(other, 'floordiv', 'floor({} / {})', dtype='int64')
 
-    def __mul__(self, other) -> 'Series':
+    def __mul__(self, other: Union[AllSupportedLiteralTypes, 'Series']) -> 'Series':
         return self._arithmetic_operation(other, 'mul', '{} * {}')
 
-    def __mod__(self, other) -> 'Series':
+    def __mod__(self, other: Union[AllSupportedLiteralTypes, 'Series']) -> 'Series':
         # PG is picky in data types, so we solve it like this.
         # dividend - floor(dividend / divisor) * divisor';
         return self - self // other * other
 
-    def __pow__(self, other, modulo=None) -> 'Series':
+    def __pow__(
+        self,
+        other: 'Series',
+        modulo: Optional[Union[AllSupportedLiteralTypes, 'Series']] = None,
+    ) -> 'Series':
         if modulo is not None:
             return (self.__pow__(other, None)).__mod__(modulo)
         return self._arithmetic_operation(other, 'pow', 'POWER({}, {})')
 
-    def __lshift__(self, other) -> 'Series':
+    def __lshift__(self, other: Union[AllSupportedLiteralTypes, 'Series']) -> 'Series':
         raise NotImplementedError()
 
-    def __rshift__(self, other) -> 'Series':
+    def __rshift__(self, other: Union[AllSupportedLiteralTypes, 'Series']) -> 'Series':
         raise NotImplementedError()
 
     # Boolean operations
@@ -1239,22 +1248,22 @@ class Series(ABC):
             other_dtypes=other_dtypes, dtype='bool'
         ))
 
-    def __ne__(self, other) -> 'SeriesBoolean':     # type: ignore
+    def __ne__(self, other: Union['Series', AllSupportedLiteralTypes]) -> 'SeriesBoolean':   # type: ignore
         return self._comparator_operation(other, "<>")
 
-    def __eq__(self, other) -> 'SeriesBoolean':     # type: ignore
+    def __eq__(self, other: Union['Series', AllSupportedLiteralTypes]) -> 'SeriesBoolean':   # type: ignore
         return self._comparator_operation(other, "=")
 
-    def __lt__(self, other) -> 'SeriesBoolean':
+    def __lt__(self, other: Union['Series', AllSupportedLiteralTypes]) -> 'SeriesBoolean':
         return self._comparator_operation(other, "<")
 
-    def __le__(self, other) -> 'SeriesBoolean':
+    def __le__(self, other: Union['Series', AllSupportedLiteralTypes]) -> 'SeriesBoolean':
         return self._comparator_operation(other, "<=")
 
-    def __ge__(self, other) -> 'SeriesBoolean':
+    def __ge__(self, other: Union['Series', AllSupportedLiteralTypes]) -> 'SeriesBoolean':
         return self._comparator_operation(other, ">=")
 
-    def __gt__(self, other) -> 'SeriesBoolean':
+    def __gt__(self, other: Union['Series', AllSupportedLiteralTypes]) -> 'SeriesBoolean':
         return self._comparator_operation(other, ">")
 
     def apply_func(self, func: ColumnFunction, *args, **kwargs) -> List['Series']:
@@ -1342,9 +1351,12 @@ class Series(ABC):
                          order_by=[],
                          savepoints=Savepoints())
 
-    def _check_unwrap_groupby(self,
-                              wrapped: Optional[WrappedPartition],
-                              isin=None, notin=()) -> 'GroupBy':
+    def _check_unwrap_groupby(
+        self,
+        wrapped: Optional[WrappedPartition],
+        isin: Optional[Tuple[Type['GroupBy'], ...]] = None,
+        notin: Optional[Tuple[Type['GroupBy'], ...]] = None,
+    ) -> 'GroupBy':
         """
         1. If `wrapped` is a GroupBy, or if it contains one, use that.
         2. If it's None, check whether this Series has a group_by set and use that.
@@ -1359,7 +1371,8 @@ class Series(ABC):
         :returns: The potentially unwrapped GroupBy
         """
         from bach.partitioning import GroupBy
-        isin = (GroupBy) if isin is None else isin
+        isin = (GroupBy, ) if isin is None else isin
+        notin = () if notin is None else notin
 
         if wrapped is None:
             if self._group_by:
@@ -1389,9 +1402,9 @@ class Series(ABC):
         self,
         partition: Optional[WrappedPartition],
         expression: Union[str, Expression],
-        dtype: str = None,
+        dtype: Optional[str] = None,
         skipna: bool = True,
-        min_count: int = None,
+        min_count: Optional[int] = None,
     ) -> 'Series':
         """
         Create a derived Series that aggregates underlying Series through the given expression.
@@ -1478,7 +1491,7 @@ class Series(ABC):
                     expression=partition.get_window_expression(expression),
                 )
 
-    def count(self, partition: WrappedPartition = None, skipna: bool = True):
+    def count(self, partition: WrappedPartition = None, skipna: bool = True) -> 'SeriesInt64':
         """
         Returns the amount of rows in each partition or for all values if none is given.
 
@@ -1488,9 +1501,11 @@ class Series(ABC):
         """
         # count is not constant because it depends on the number of rows in the selection.
         # See the comment in Expression.AggregationFunctionExpression
-        return self._derived_agg_func(partition, 'count', 'int64', skipna=skipna)
+        return cast(
+            'SeriesInt64', self._derived_agg_func(partition, 'count', 'int64', skipna=skipna)
+        )
 
-    def max(self, partition: WrappedPartition = None, skipna: bool = True):
+    def max(self: SeriesSubType, partition: WrappedPartition = None, skipna: bool = True) -> SeriesSubType:
         """
         Returns the maximum value in each partition or for all values if none is given.
 
@@ -1498,9 +1513,10 @@ class Series(ABC):
         :param skipna: only ``skipna=True`` supported. This means NULL values are ignored.
         :returns: a new Series with the aggregation applied
         """
-        return self._derived_agg_func(partition, 'max', skipna=skipna)
+        result = self._derived_agg_func(partition, 'max', skipna=skipna)
+        return cast(SeriesSubType, result)
 
-    def median(self, partition: WrappedPartition = None, skipna: bool = True):
+    def median(self: SeriesSubType, partition: WrappedPartition = None, skipna: bool = True) -> SeriesSubType:
         """
         Returns the median in each partition or for all values if none is given.
 
@@ -1508,14 +1524,15 @@ class Series(ABC):
         :param skipna: only ``skipna=True`` supported. This means NULL values are ignored.
         :returns: a new Series with the aggregation applied
         """
-        return self._derived_agg_func(
+        result = self._derived_agg_func(
             partition=partition,
             expression=AggregateFunctionExpression.construct(
                 f'percentile_disc(0.5) WITHIN GROUP (ORDER BY {{}})', self),
             skipna=skipna
         )
+        return cast(SeriesSubType, result)
 
-    def min(self, partition: WrappedPartition = None, skipna: bool = True):
+    def min(self: SeriesSubType, partition: WrappedPartition = None, skipna: bool = True) -> SeriesSubType:
         """
         Returns the minimum value in each partition or for all values if none is given.
 
@@ -1523,9 +1540,10 @@ class Series(ABC):
         :param skipna: only ``skipna=True`` supported. This means NULL values are ignored.
         :returns: a new Series with the aggregation applied
         """
-        return self._derived_agg_func(partition, 'min', skipna=skipna)
+        result = self._derived_agg_func(partition, 'min', skipna=skipna)
+        return cast(SeriesSubType, result)
 
-    def mode(self, partition: WrappedPartition = None, skipna: bool = True):
+    def mode(self: SeriesSubType, partition: WrappedPartition = None, skipna: bool = True) -> SeriesSubType:
         """
         Returns the mode in each partition or for all values if none is given.
 
@@ -1552,13 +1570,14 @@ class Series(ABC):
             # https://cloud.google.com/bigquery/docs/reference/standard-sql/approximate_aggregate_functions
             agg_expr = f'approx_top_count({{}}, 1)[offset(0)].value'
 
-        return self._derived_agg_func(
+        result = self._derived_agg_func(
             partition=partition,
             expression=AggregateFunctionExpression.construct(agg_expr, self),
             skipna=skipna
         )
+        return cast(SeriesSubType, result)
 
-    def nunique(self, partition: WrappedPartition = None, skipna: bool = True):
+    def nunique(self, partition: WrappedPartition = None, skipna: bool = True) -> 'SeriesInt64':
         """
         Returns the amount of unique values in each partition or for all values if none is given.
 
@@ -1567,13 +1586,15 @@ class Series(ABC):
         :returns: a new Series with the aggregation applied
         """
         from bach.partitioning import Window
-        partition = self._check_unwrap_groupby(partition, notin=Window)
-        return self._derived_agg_func(
+        partition = self._check_unwrap_groupby(partition, notin=(Window, ))
+        result = self._derived_agg_func(
             partition=partition, dtype='int64',
             expression=AggregateFunctionExpression.construct('count(distinct {})', self),
             skipna=skipna)
 
-    def unique(self, partition: WrappedPartition = None, skipna: bool = True):
+        return cast('SeriesInt64', result)
+
+    def unique(self: SeriesSubType, partition: WrappedPartition = None, skipna: bool = True) -> SeriesSubType:
         """
         Return all unique values in this Series.
 
@@ -1593,7 +1614,7 @@ class Series(ABC):
         df[f'{self.name}_unique'] = df[self.name]
         df = df.set_index(self.name)
 
-        return df[f'{self.name}_unique']
+        return cast(SeriesSubType, df[f'{self.name}_unique'])
 
     # Window functions applicable for all types of data, but only with a window
     # TODO more specific docs
@@ -1605,7 +1626,7 @@ class Series(ABC):
         Validate that the given partition or the stored group_by is a true Window or raise an exception
         """
         from bach.partitioning import Window
-        checked_window = cast(Window, self._check_unwrap_groupby(window, isin=Window))
+        checked_window = cast(Window, self._check_unwrap_groupby(window, isin=(Window, )))
 
         if not agg_function.supports_window_frame_clause(dialect=self.engine.dialect):
             # remove boundaries if the functions does not support window frame clause
@@ -1613,33 +1634,45 @@ class Series(ABC):
 
         return checked_window
 
-    def window_row_number(self, window: WrappedWindow = None):
+    def window_row_number(self, window: Optional[WrappedWindow] = None) -> 'SeriesInt64':
         """
         Returns the number of the current row within its window, counting from 1.
         """
         from bach.partitioning import WindowFunction
         window = self._check_window(WindowFunction.ROW_NUMBER, window)
-        return self._derived_agg_func(window, Expression.construct('row_number()'), 'int64')
 
-    def window_rank(self, window: WrappedWindow = None):
+        return cast(
+            'SeriesInt64',
+            self._derived_agg_func(window, Expression.construct('row_number()'), 'int64')
+        )
+
+    def window_rank(self, window: Optional[WrappedWindow] = None) -> 'Series':
         """
         Returns the rank of the current row, with gaps; that is, the row_number of the first row
         in its peer group.
         """
         from bach.partitioning import WindowFunction
         window = self._check_window(WindowFunction.RANK, window)
-        return self._derived_agg_func(window, Expression.construct('rank()'), 'int64')
 
-    def window_dense_rank(self, window: WrappedWindow = None):
+        return cast(
+            'SeriesInt64',
+            self._derived_agg_func(window, Expression.construct('rank()'), 'int64')
+        )
+
+    def window_dense_rank(self, window: Optional[WrappedWindow] = None) -> 'SeriesInt64':
         """
         Returns the rank of the current row, without gaps; this function effectively counts peer
         groups.
         """
         from bach.partitioning import WindowFunction
         window = self._check_window(WindowFunction.DENSE_RANK, window)
-        return self._derived_agg_func(window, Expression.construct('dense_rank()'), 'int64')
 
-    def window_percent_rank(self, window: WrappedWindow = None):
+        return cast(
+            'SeriesInt64',
+            self._derived_agg_func(window, Expression.construct('dense_rank()'), 'int64')
+        )
+
+    def window_percent_rank(self, window: Optional[WrappedWindow] = None) -> 'SeriesFloat64':
         """
         Returns the relative rank of the current row, that is
         (rank - 1) / (total partition rows - 1).
@@ -1647,9 +1680,13 @@ class Series(ABC):
         """
         from bach.partitioning import WindowFunction
         window = self._check_window(WindowFunction.PERCENT_RANK, window)
-        return self._derived_agg_func(window, Expression.construct('percent_rank()'), "double precision")
 
-    def window_cume_dist(self, window: WrappedWindow = None):
+        return cast(
+            'SeriesFloat64',
+            self._derived_agg_func(window, Expression.construct('percent_rank()'), "double precision"),
+        )
+
+    def window_cume_dist(self, window: Optional[WrappedWindow] = None) -> 'SeriesFloat64':
         """
         Returns the cumulative distribution, that is
         (number of partition rows preceding or peers with current row) / (total partition rows).
@@ -1657,18 +1694,28 @@ class Series(ABC):
         """
         from bach.partitioning import WindowFunction
         window = self._check_window(WindowFunction.CUME_DIST, window)
-        return self._derived_agg_func(window, Expression.construct('cume_dist()'), "double precision")
 
-    def window_ntile(self, num_buckets: int = 1, window: WrappedWindow = None):
+        return cast(
+            'SeriesFloat64',
+            self._derived_agg_func(window, Expression.construct('cume_dist()'), "double precision"),
+        )
+
+    def window_ntile(self, num_buckets: int = 1, window: Optional[WrappedWindow] = None) -> 'SeriesInt64':
         """
         Returns an integer ranging from 1 to the argument value,
         dividing the partition as equally as possible.
         """
         from bach.partitioning import WindowFunction
         window = self._check_window(WindowFunction.NTILE, window)
-        return self._derived_agg_func(window, Expression.construct(f'ntile({num_buckets})'), "int64")
 
-    def window_lag(self, offset: int = 1, default: Any = None, window: WrappedWindow = None):
+        return cast(
+            'SeriesInt64',
+            self._derived_agg_func(window, Expression.construct(f'ntile({num_buckets})'), "int64"),
+        )
+
+    def window_lag(
+        self: SeriesSubType, offset: int = 1, default: Any = None, window: Optional[WrappedWindow] = None,
+    ) -> SeriesSubType:
         """
         Returns value evaluated at the row that is offset rows before the current row within the window
 
@@ -1682,13 +1729,19 @@ class Series(ABC):
         # TODO Lag, lead etc. could check whether the window is setup correctly to include that value
         window = self._check_window(WindowFunction.LAG, window)
         default_expr = self.value_to_expression(dialect=self.engine.dialect, value=default, dtype=self.dtype)
-        return self._derived_agg_func(
+        result = self._derived_agg_func(
             window,
             Expression.construct(f'lag({{}}, {offset}, {{}})', self, default_expr),
             self.dtype
         )
+        return cast(SeriesSubType, result)
 
-    def window_lead(self, offset: int = 1, default: Any = None, window: WrappedWindow = None):
+    def window_lead(
+        self: SeriesSubType,
+        offset: int = 1,
+        default: Optional[Any] = None,
+        window: Optional[WrappedWindow] = None,
+    ) -> SeriesSubType:
         """
         Returns value evaluated at the row that is offset rows after the current row within the window.
 
@@ -1701,44 +1754,51 @@ class Series(ABC):
         from bach.partitioning import WindowFunction
         window = self._check_window(WindowFunction.LEAD, window)
         default_expr = self.value_to_expression(dialect=self.engine.dialect, value=default, dtype=self.dtype)
-        return self._derived_agg_func(
+        result = self._derived_agg_func(
             window,
             Expression.construct(f'lead({{}}, {offset}, {{}})', self, default_expr),
             self.dtype
         )
+        return cast(SeriesSubType, result)
 
-    def window_first_value(self, window: WrappedWindow = None):
+    def window_first_value(self: SeriesSubType, window: Optional[WrappedWindow] = None) -> SeriesSubType:
         """
         Returns value evaluated at the row that is the first row of the window frame.
         """
         from bach.partitioning import WindowFunction
         window = self._check_window(WindowFunction.FIRST_VALUE, window)
-        return self._derived_agg_func(
+        result = self._derived_agg_func(
             window,
             Expression.construct('first_value({})', self),
             self.dtype
         )
+        return cast(SeriesSubType, result)
 
-    def window_last_value(self, window: WrappedWindow = None):
+    def window_last_value(self: SeriesSubType, window: Optional[WrappedWindow] = None) -> SeriesSubType:
         """
         Returns value evaluated at the row that is the last row of the window frame.
         """
         from bach.partitioning import WindowFunction
         window = self._check_window(WindowFunction.LAST_VALUE, window)
-        return self._derived_agg_func(window, Expression.construct('last_value({})', self), self.dtype)
+        result = self._derived_agg_func(window, Expression.construct('last_value({})', self), self.dtype)
 
-    def window_nth_value(self, n: int, window: WrappedWindow = None):
+        return cast(SeriesSubType, result)
+
+    def window_nth_value(
+        self: SeriesSubType, n: int, window: Optional[WrappedWindow] = None,
+    ) -> SeriesSubType:
         """
         Returns value evaluated at the row that is the n'th row of the window frame.
         (counting from 1); returns NULL if there is no such row.
         """
         from bach.partitioning import WindowFunction
         window = self._check_window(WindowFunction.NTH_VALUE, window)
-        return self._derived_agg_func(
+        result = self._derived_agg_func(
             window,
             Expression.construct(f'nth_value({{}}, {n})', self),
             self.dtype
         )
+        return cast(SeriesSubType, result)
 
     def append(
         self,
@@ -1751,7 +1811,7 @@ class Series(ABC):
         :param other: objects to be added
         :param ignore_index: if true, drops indexes of all objects to be appended
 
-        :return:  a new series with all rows from appended other or self if other is empty.
+        :return: a new series with all rows from appended other or self if other is empty.
         """
         from bach.operations.concat import SeriesConcatOperation
         if not other:
@@ -1776,13 +1836,12 @@ class Series(ABC):
         :param datetime_is_numeric: not supported
         :returns: a new Series with the descriptive statistics
         """
-        from bach.operations.describe import DescribeOperation
-        describe_df = DescribeOperation(
+        from bach.operations.describe import SeriesDescribeOperation
+        return SeriesDescribeOperation(
             obj=self, datetime_is_numeric=datetime_is_numeric, percentiles=percentiles,
         )()
-        return describe_df.all_series[self.name]
 
-    def drop_duplicates(self: T, keep: Union[str, bool] = 'first') -> T:
+    def drop_duplicates(self: SeriesSubType, keep: Union[str, bool] = 'first') -> SeriesSubType:
         """
         Return a series with duplicated rows removed.
 
@@ -1800,9 +1859,9 @@ class Series(ABC):
         df = df.materialize()
 
         result = df.all_series[self.name]
-        return cast(T, result)
+        return cast(SeriesSubType, result)
 
-    def dropna(self: T) -> T:
+    def dropna(self: SeriesSubType) -> SeriesSubType:
         """
         Removes rows with missing values.
 
@@ -1810,7 +1869,7 @@ class Series(ABC):
         """
         df = self.to_frame().dropna()
         assert isinstance(df, DataFrame)
-        return cast(T, df.all_series[self.name])
+        return cast(SeriesSubType, df.all_series[self.name])
 
     def value_counts(
         self,
