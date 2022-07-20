@@ -199,13 +199,6 @@ def get_df_with_railway_data(engine: Engine) -> DataFrame:
     raise ValueError(f'engine of type {engine.name} is not supported.')
 
 
-def get_bt_with_railway_data() -> DataFrame:
-    """
-    DEPRECATED: Use get_df_with_railway_data()
-    """
-    return get_bt(TEST_DATA_RAILWAYS, RAILWAYS_COLUMNS, True)
-
-
 def get_df_with_json_data(engine: Engine, dtype='json') -> DataFrame:
     assert dtype in ('string', 'json', 'json_postgres')
     df = DataFrame.from_pandas(
