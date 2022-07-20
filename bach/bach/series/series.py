@@ -447,7 +447,7 @@ class Series(ABC):
     def from_value(cls: Type[T],
                    base: DataFrameOrSeries,
                    value: Any,
-                   name: str,
+                   name: Optional[str] = 'new_series',
                    dtype: Optional[StructuredDtype] = None) -> T:
         """
         Create an instance of this class, that represents a column with the given value.

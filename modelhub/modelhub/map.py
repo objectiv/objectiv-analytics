@@ -4,7 +4,6 @@ Copyright 2021 Objectiv B.V.
 from enum import Enum
 
 import bach
-from bach import SeriesInt64
 from bach.partitioning import WindowFrameBoundary, WindowFrameMode
 from typing import TYPE_CHECKING, Dict, List
 
@@ -376,7 +375,7 @@ class Map:
 
         calc_series_name = series_to_calculate.private_name
         data[calc_series_name] = 1
-        data.loc[~pch_mask, calc_series_name] = SeriesInt64.from_value(base=data, value=None, name='__')
+        data.loc[~pch_mask, calc_series_name] = bach.SeriesInt64.from_value(base=data, value=None)
 
         pre_conversion_hit_number = (
             data[calc_series_name].astype('int64')

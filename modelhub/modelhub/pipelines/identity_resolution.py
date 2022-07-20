@@ -103,7 +103,7 @@ class IdentityResolutionPipeline(BaseDataPipeline):
 
         df = df.copy()
         has_no_identity = df[resolved_user_id_series_name].isnull()
-        null_series = bach.SeriesString.from_value(base=df, value=None, name='__')
+        null_series = bach.SeriesString.from_value(base=df, value=None)
         df.loc[has_no_identity, ObjectivSupportedColumns.USER_ID.value] = null_series
         return df
 
