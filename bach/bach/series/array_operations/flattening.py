@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TypeVar, TYPE_CHECKING, Union, Dict, Tuple
+from typing import TypeVar, Dict, Tuple, cast
 
 from bach.expression import Expression, join_expressions
 from bach.sql_model import BachSqlModel, construct_references
@@ -14,11 +14,26 @@ _OFFSET_IDENTIFIER_EXPR = Expression.identifier(name='__unnest_item_offset')
 
 
 class ArrayFlattening(ABC):
-    def __init__(self, series_object: Union['TSeriesJson']):
+    """
+    Abstract class that expands an array-type column into a set of rows.
+
+    Child classes are in charge of specifying the correct expressions for unnesting arrays with
+    the correct offset per each item.
+
+    .. note::
+        Final result will always have different base node than provided Series object.
+
+    returns Tuple with:
+        - SeriesJson: Representing the element of the array.
+        - SeriesInt64: Offset of the element in the array
+    """
+    def __init__(self, series_object: 'TSeriesJson'):
         self._series_object = series_object.copy()
 
         if not self._series_object.is_materialized:
-            self._series_object = self._series_object.materialize(node_name='array_flatten')
+            self._series_object = cast(
+                TSeriesJson, self._series_object.materialize(node_name='array_flatten')
+            )
 
     def __call__(self, *args, **kwargs) -> Tuple['TSeriesJson', 'SeriesInt64']:
         from bach import DataFrame, SeriesInt64
@@ -32,20 +47,29 @@ class ArrayFlattening(ABC):
         item_series = unnested_array_df[self.item_series_name]
         offset_series = unnested_array_df[self.item_offset_series_name]
         return (
-            item_series.copy_override_type(SeriesJson),
+            cast(TSeriesJson, item_series),
             offset_series.copy_override_type(SeriesInt64),
         )
 
     @property
     def item_series_name(self) -> str:
+        """
+        Final name of the series containing the array elements.
+        """
         return self._series_object.name
 
     @property
     def item_offset_series_name(self) -> str:
+        """
+        Final name of the series containing the offset of the element in the array.
+        """
         return f'{self._series_object.name}_offset'
 
     @property
     def all_dtypes(self) -> Dict[str, str]:
+        """
+        Mapping of all dtypes of all referenced columns in generated model
+        """
         return {
             self.item_series_name: self._series_object.dtype,
             self.item_offset_series_name: 'int64',
@@ -53,13 +77,12 @@ class ArrayFlattening(ABC):
         }
 
     def _get_unnest_model(self) -> BachSqlModel:
-        list_series = self._series_object.copy()
-        if not list_series.is_materialized:
-            list_series = list_series.materialize(node_name='array_flatten')
-
+        """
+        Creates a BachSqlModel in charge of expanding the array column.
+        """
         column_expressions = self._get_column_expressions()
         select_column_expr = join_expressions(list(column_expressions.values()))
-        from_model_expr = Expression.model_reference(list_series.base_node)
+        from_model_expr = Expression.model_reference(self._series_object.base_node)
         cross_join_expr = self._get_cross_join_expression()
 
         sql_exprs = [select_column_expr, from_model_expr, cross_join_expr]
@@ -76,6 +99,9 @@ class ArrayFlattening(ABC):
         )
 
     def _get_column_expressions(self) -> Dict[str, Expression]:
+        """
+        Final column expressions for the generated model
+        """
         return {
             **{
                 idx.name: idx.expression for idx in self._series_object.index.values()
@@ -90,11 +116,16 @@ class ArrayFlattening(ABC):
 
     @abstractmethod
     def _get_cross_join_expression(self) -> Expression:
+        """
+        Expression that unnest/extract elements and offsets from array column. Later used
+        in a cross join operation for joining the new set of rows back to the source.
+        """
         raise NotImplementedError()
 
 
 class BigQueryArrayFlattening(ArrayFlattening):
     def _get_cross_join_expression(self) -> Expression:
+        """ For documentation, see implementation in class :class:`ArrayFlattening` """
         return Expression.construct(
             'UNNEST(JSON_QUERY_ARRAY({}.{})) AS {} WITH OFFSET AS {}',
             Expression.model_reference(self._series_object.base_node),
@@ -106,6 +137,7 @@ class BigQueryArrayFlattening(ArrayFlattening):
 
 class PostgresArrayFlattening(ArrayFlattening):
     def _get_cross_join_expression(self) -> Expression:
+        """ For documentation, see implementation in class :class:`ArrayFlattening` """
         return Expression.construct(
             'JSONB_ARRAY_ELEMENTS({}.{}) WITH ORDINALITY AS _unnested({}, {})',
             Expression.model_reference(self._series_object.base_node),
@@ -115,9 +147,11 @@ class PostgresArrayFlattening(ArrayFlattening):
         )
 
     def _get_column_expressions(self) -> Dict[str, Expression]:
+        """
+            Updates column expression for offset columns, since Postgres uses ordinality instead of offset.
+        """
         column_expressions = super()._get_column_expressions()
 
-        # Postgres uses ordinality instead of offset, therefore we need to subtract
         offset_expr = Expression.construct(
             '{} - 1 AS {}',
             _OFFSET_IDENTIFIER_EXPR,

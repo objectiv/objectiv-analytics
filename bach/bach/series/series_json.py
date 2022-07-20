@@ -424,6 +424,10 @@ class JsonAccessor(Generic[TSeriesJson]):
 
         :returns: Tuple with SeriesJson (element from the array) and SeriesInt64 (offset of the element)
 
+        .. note::
+            Both returned series objects will share same base node, but this node is not
+            the same as the unflatten Series.
+
         This assumes the top-level item in the json is an array.
         """
         return self._implementation.flatten_array()
