@@ -38,10 +38,6 @@ jobs:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('**/yarn.lock') }}
 
-      - name: Install dependencies
-        working-directory: tracker
-        run: yarn install
-
       - name: Check dependencies
         working-directory: tracker
         run: yarn check:dependencies
@@ -58,10 +54,6 @@ jobs:
         with:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('**/yarn.lock') }}
-
-      - name: Install dependencies
-        working-directory: tracker
-        run: yarn install
 
       - name: Run TypeScript check
         working-directory: tracker
@@ -80,10 +72,6 @@ jobs:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('**/yarn.lock') }}
 
-      - name: Install dependencies
-        working-directory: tracker
-        run: yarn install
-
       - name: Run unit tests
         working-directory: tracker
         run: yarn test:ci
@@ -100,10 +88,6 @@ jobs:
         with:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('**/yarn.lock') }}
-
-      - name: Install dependencies
-        working-directory: tracker
-        run: yarn install
 
       - name: Test if TS schema is up to date
         working-directory: tracker
