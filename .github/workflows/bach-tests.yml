@@ -93,11 +93,11 @@ jobs:
         run: |
           cd bach
           echo $GCP_SERVICE_ACCOUNT > $OBJ_DB_BQ_CREDENTIALS_PATH
-      - name: Unit tests ALL
+      - name: Unit tests big-query
         run: |
           cd bach
-          pytest --all tests/unit
-      - name: Functional tests ALL
+          pytest --big-query tests/unit
+      - name: Functional tests big-query
         run: |
           cd bach
-          pytest -n 4 --dist loadgroup --all tests/functional
+          pytest -n 4 --dist loadgroup --big-query tests/functional
