@@ -10,8 +10,7 @@ from bach import DataFrame, SeriesString
 
 from tests.functional.bach.test_data_and_utils import (
     get_df_with_test_data, get_df_with_food_data,
-    assert_equals_data, get_df_with_railway_data,
-    get_bt_with_test_data, get_bt_with_railway_data
+    assert_equals_data, get_df_with_railway_data
 )
 
 
