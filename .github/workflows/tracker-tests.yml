@@ -27,6 +27,17 @@ jobs:
     runs-on: ubuntu-latest
     needs: [install-dependencies]
     steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install dependencies
+        working-directory: tracker
+        run: yarn install
+
       - name: Check dependencies
         working-directory: tracker
         run: yarn check:dependencies
@@ -35,6 +46,17 @@ jobs:
     runs-on: ubuntu-latest
     needs: [install-dependencies]
     steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install dependencies
+        working-directory: tracker
+        run: yarn install
+
       - name: Run TypeScript check
         working-directory: tracker
         run: yarn tsc
@@ -43,6 +65,17 @@ jobs:
     runs-on: ubuntu-latest
     needs: [install-dependencies]
     steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install dependencies
+        working-directory: tracker
+        run: yarn install
+
       - name: Run unit tests
         working-directory: tracker
         run: yarn test:ci
@@ -51,6 +84,17 @@ jobs:
     runs-on: ubuntu-latest
     needs: [install-dependencies]
     steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install dependencies
+        working-directory: tracker
+        run: yarn install
+
       - name: Test if TS schema is up to date
         working-directory: tracker
         run: |
