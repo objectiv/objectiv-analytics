@@ -191,7 +191,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
         cls: Type[T],
         base: DataFrameOrSeries,
         value: Any,
-        name: str,
+        name: str = 'new_series',
         dtype: Optional[StructuredDtype] = None
     ) -> T:
         """

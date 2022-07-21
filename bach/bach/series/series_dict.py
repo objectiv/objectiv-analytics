@@ -80,7 +80,7 @@ class SeriesDict(Series):
         cls,
         base: 'DataFrameOrSeries',
         value: Dict[str, Any],
-        name: str,
+        name: str = 'new_series',
         dtype: Optional[StructuredDtype] = None
     ) -> 'SeriesDict':
         """

@@ -79,7 +79,7 @@ class SeriesList(Series):
         cls,
         base: 'DataFrameOrSeries',
         value: List[Any],
-        name: str,
+        name: str = 'new_series',
         dtype: Optional[StructuredDtype] = None
     ) -> 'SeriesList':
         """

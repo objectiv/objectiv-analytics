@@ -7,7 +7,7 @@ from typing import Union, TYPE_CHECKING, Optional, Pattern
 from sqlalchemy.engine import Dialect
 
 from bach.series import Series
-from bach.expression import Expression
+from bach.expression import Expression, get_variable_tokens
 from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
 
@@ -165,6 +165,19 @@ class SeriesString(Series):
         DBDialect.BIGQUERY: 'STRING'
     }
     supported_value_types = (str, type(None))  # NoneType ends up as a string for now
+
+    @ classmethod
+    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
+        # We override the parent class here because strings are really common, and we don't strictly need
+        # to cast them. As all supported databases will interpret a string literal as a string.
+        # Not casting string literals greatly improves the readability of the generated SQL.
+
+        # However, there is an edge case: NULL values should be cast to string. e.g. BigQuery considers a
+        # naked NULL to be INT64. Additionally, we'll always cast variables, just so this keeps working if
+        # the variable get set to `None`
+        if literal.to_sql(dialect=dialect).upper() == 'NULL' or get_variable_tokens([literal]):
+            return super().supported_literal_to_expression(dialect=dialect, literal=literal)
+        return literal
 
     @classmethod
     def supported_value_to_literal(
