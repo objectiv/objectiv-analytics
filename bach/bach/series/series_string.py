@@ -2,18 +2,20 @@
 Copyright 2021 Objectiv B.V.
 """
 import re
-from typing import Union, TYPE_CHECKING, Optional, Pattern
+from typing import Union, TYPE_CHECKING, Optional, Pattern, List
 
 from sqlalchemy.engine import Dialect
 
 from bach.series import Series
-from bach.expression import Expression
+from bach.expression import Expression, AggregateFunctionExpression, join_expressions
+from bach.series.series import WrappedPartition
 from bach.types import StructuredDtype
 from sql_models.constants import DBDialect
+from sql_models.util import DatabaseNotSupportedException, is_bigquery, is_postgres
 
 if TYPE_CHECKING:
     from bach.series import SeriesBoolean
-    from bach import DataFrame
+    from bach import DataFrame, SortColumn, SeriesJson
 
 
 class StringOperation:
@@ -226,3 +228,66 @@ class SeriesString(Series):
 
     def _comparator_operation(self, other, comparator, other_dtypes=tuple(['string'])) -> 'SeriesBoolean':
         return super()._comparator_operation(other, comparator, other_dtypes)
+
+    def to_json_array(self, partition: WrappedPartition = None) -> 'SeriesJson':
+        """
+        Aggregate function: Concatenate the values of this Series into a json array
+
+        The order of the values in the array will be based of the order of the values in this Series. If
+        this Series does not have a deterministic sorting, then the values are sorted by the values
+        themselves. A difference in sorting can occur between the resulting array and the values in a Series
+        when the Series contains None/NULL values. Null values will be sorted first when sorting ascending,
+        contrary to sorting inside a DataFrame or a Series where they come last.
+
+        :param partition: The partition to apply
+        """
+        order_by = self.order_by
+        # Add this series as the final column to sort on. If the order_by is deterministic then this won't
+        # change the sorting. If order_by was not deterministic, then this will make it deterministic.
+        from bach import SortColumn
+        order_by += [SortColumn(expression=self.expression, asc=True)]
+
+        order_by_expr = self._get_order_by_expression(order_by)
+        array_agg_expression = AggregateFunctionExpression.construct('array_agg({} {})', self, order_by_expr)
+        if is_postgres(self.engine):
+            expression = Expression.construct('to_jsonb({})', array_agg_expression)
+        elif is_bigquery(self.engine):
+            expression = Expression.construct('to_json_string({})', array_agg_expression)
+        else:
+            raise DatabaseNotSupportedException(self.engine)
+
+        result = self._derived_agg_func(partition, expression)
+        from bach import SeriesJson
+        return result.copy_override_type(SeriesJson)
+
+    @staticmethod
+    def _get_order_by_expression(order_by: List['SortColumn']) -> Expression:
+        """
+        Internal helper function: Convert order_by into an order by expression that is usable inside an
+        array_agg() function
+
+        Note: ordering is slightly different from regular ordering of rows inside a DataFrame or Series, as
+        BigQuery does not support 'asc nulls last' inside aggregations. So we sort 'asc nulls first'.
+        """
+
+        # This logic is partially duplicating DataFrame._get_order_by_clause(), but we can't quite re-use
+        # that as some of the checks there are not applicable (e.g. it's fine to use a column that we are not
+        # grouping on), and the sorting of null values is slightly different.
+        if not order_by:
+            raise ValueError('order_by is empty')
+
+        expressions: List[Expression] = []
+        for sc in order_by:
+            if sc.expression.has_multi_level_expressions:
+                multi_lvl_exprs = [
+                    level_expr for level_expr in sc.expression.data if isinstance(level_expr, Expression)
+                ]
+            else:
+                multi_lvl_exprs = [sc.expression]
+            for level_expr in multi_lvl_exprs:
+                asc_expr = Expression.construct(f"{'asc nulls first' if sc.asc else 'desc nulls last'}")
+                expr = Expression.construct('{} {}', level_expr, asc_expr)
+                expressions.append(expr)
+
+        join_expressions(expressions)
+        return Expression.construct('order by {}', join_expressions(expressions))
