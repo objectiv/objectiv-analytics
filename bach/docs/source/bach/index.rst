@@ -24,6 +24,7 @@ The package can be installed from PyPI:
 .. code-block:: console
 
     pip install objectiv-bach
+    pip install objectiv-bach[bigquery]  # when you want bigquery support
 
 
 How to use
