@@ -34,8 +34,9 @@ Create a DataFrame from a database table
 The above fragment queries the database to get the table structure of the 'example' table. But it does not
 query any of the data in 'example', and this thus works equally well for a tiny table as for a huge table.
 
-It is also possible to create a DataFrame from an arbitrary sql query (using `from_model`) or from an
-existing pandas DataFrame (using `from_pandas`).
+It is also possible to create a DataFrame from an arbitrary sql query (using 
+:py:meth:`from_model <DataFrame.from_model>`) or from an existing pandas DataFrame (using 
+:py:meth:`from_pandas <DataFrame.from_pandas>`).
 
 Basic operations
 ----------------
@@ -59,11 +60,12 @@ Basic operations
     df.to_pandas()
 
 The above operations add/remove/rename some columns of the DataFrame. However no actual query is executed
-on the Database, until `df.to_pandas()` is called. The DataFrame operations merely change the symbolic
-representation of the data in the DataFrame and its Series.
+on the Database, until :py:meth:`df.to_pandas() <DataFrame.to_pandas>` is called. The DataFrame operations 
+merely change the symbolic representation of the data in the DataFrame and its Series.
 
-The call to `df.to_pandas()` here is merely for demonstration purposes, in situations with bigger data sets it
-should be avoided until the data is needed as it will query the database and transfer all data.
+The call to :py:meth:`df.to_pandas() <DataFrame.to_pandas>` here is merely for demonstration purposes, in 
+situations with bigger data sets it should be avoided until the data is needed as it will query the database 
+and transfer all data.
 
 
 Aggregate operations
@@ -85,9 +87,10 @@ Aggregate operations
     # When executing in a notebook this will print the dataframe.
     df.to_pandas()
 
-The above example demonstrates how we can calculate aggregate functions (in this case `max()`) on a group of
-row within a window that contains rows. Additionally it shows how to merge two DataFrames. Again only
-the optional debug statement `df.to_pandas()` runs a query, the other operations merely update the internal
+The above example demonstrates how we can calculate aggregate functions (in this case 
+:py:meth:`max() <DataFrame.max>`) on a group of row within a window that contains rows. Additionally it shows 
+how to merge two DataFrames. Again only the optional debug statement 
+:py:meth:`df.to_pandas() <DataFrame.to_pandas>` runs a query, the other operations merely update the internal 
 state of the DataFrame and its Series.
 
 
@@ -117,16 +120,18 @@ Filtering, sorting, and output
     print(df.view_sql())
 
 
-The above example demonstrates filtering out rows and sorting a DataFrame. Without the `sort_values()` the
-order of the returned rows is non-deterministic. `view_sql()` can be used to show the compiled SQL query that
+The above example demonstrates filtering out rows and sorting a DataFrame. Without the 
+:py:meth:`sort_values() <DataFrame.sort_values>` the order of the returned rows is non-deterministic. 
+:py:meth:`view_sql() <DataFrame.view_sql>` can be used to show the compiled SQL query that
 encompasses all operations done so far.
 
 
 Filtering by Index Labels
 ------------------------------
 .. important::
-    In the following examples we call multiple times ``to_pandas`` method, we do it only for visualization purposes.
-    Please use only ``df.to_pandas`` when necessary, as this will execute the frame's current query.
+    In the following examples we call the :py:meth:`to_pandas() <DataFrame.to_pandas>` method multiple times, 
+    but we do it only for visualization purposes. Please use :py:meth:`to_pandas() <DataFrame.to_pandas>` 
+    only when necessary, as this will execute the frame's current query.
 
 Here we construct a simple dataframe for illustrating the label selection functionality:
 
@@ -146,7 +151,8 @@ Here we construct a simple dataframe for illustrating the label selection functi
     df.to_pandas()
 
 
-If you want to select a specific row from the frame, you can simply pass the label to the ``loc`` property:
+If you want to select a specific row from the frame, you can simply pass the label to the 
+:py:meth:`loc() <DataFrame.loc>` property:
 
 .. ipython:: python
 
@@ -186,11 +192,12 @@ The code from above will return a **Bach DataFrame** instead, this will always b
 
     df.sort_index().loc['Sleat':, 'municipality':].to_pandas()
 
-In case you need to select a value based on a condition, a series boolean can also be passed to ``loc`` property.
+In case you need to select a value based on a condition, a series boolean can also be passed to the 
+:py:meth:`loc() <DataFrame.loc>` property.
 
 .. ipython:: python
 
-   df.loc[df['inhabitants'] > 1300].to_pandas()
+  df.loc[df['inhabitants'] > 1300].to_pandas()
 
 In previous examples, we selected rows by labels that actually exist in the frame. In case a label doesn't exist
 in the frame, this will not raise any error since Bach has no notion of which values exist in the frame.
@@ -202,14 +209,14 @@ in the frame, this will not raise any error since Bach has no notion of which va
 Setting Values to DataFrame Subset
 ----------------------------------
 
-In previous section we played around a bit with ``loc`` property, by just filtering the frame using labels.
-As in pandas, you are also able to set values to a specific group of rows and update the main frame. This works
-for all types of selections.
+In previous section we played around a bit with the :py:meth:`loc() <DataFrame.loc>` property, by just 
+filtering the frame using labels. As in pandas, you are also able to set values to a specific group of rows 
+and update the main frame. This works for all types of selections.
 
 .. ipython:: python
 
-   df.loc['Drylts'] = 'x'
-   df.to_pandas()
+    df.loc['Drylts'] = 'x'
+    df.to_pandas()
 
 You can see that the previous code block, sets all series to 'x' where the index is equal to `Drylts`.
 
@@ -220,16 +227,16 @@ You can see that the previous code block, sets all series to 'x' where the index
 
 .. ipython:: python
 
-   df = df.sort_index()
-   df.loc['Sleat':, 'municipality'] = 'Fryslân'
-   df.to_pandas()
+    df = df.sort_index()
+    df.loc['Sleat':, 'municipality'] = 'Fryslân'
+    df.to_pandas()
 
 As we mentioned, setting a value is possible for any type of selection. Notice that sorting is also needed for
 this case.
 
 .. important::
-   ``df.sort_index().loc['Sleat':, 'municipality'] = 'Fryslân'`` will have no effect on ``df``, since
-   ``df.sort_index()`` returns a new dataframe.
+    ``df.sort_index().loc['Sleat':, 'municipality'] = 'Fryslân'`` will have no effect on ``df``, since
+    :py:meth:`sort_index() <DataFrame.sort_index>` returns a new DataFrame.
 
 .. _appendix_example_data:
 

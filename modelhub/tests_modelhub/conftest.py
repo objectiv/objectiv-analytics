@@ -51,7 +51,7 @@ def pytest_addoption(parser: Parser):
     # https://docs.pytest.org/en/6.2.x/reference.html#initialization-hooks
     parser.addoption('--postgres', action='store_true', help='run the functional tests for Postgres')
     parser.addoption('--big-query', action='store_true', help='run the functional tests for BigQuery')
-    parser.addoption('--all', action='store_true', help='run the functional tests for all databases.')
+    parser.addoption('--all', action='store_true', help='run the functional tests for Postgres & BigQuery')
 
 
 def pytest_generate_tests(metafunc: Metafunc):

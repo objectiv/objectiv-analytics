@@ -86,20 +86,31 @@ If BQ is only used for Objectiv, there are obviously a lot of unused columns, of
 solved in a few steps (as it's not possible to simply drop columns from BQ):
 1. Stop the Snowplow bigquery streamloader, to make sure we don't lose any data during the migration
 2. [optional] Create a backup of the events table
-3. Create a copy of the events table called `events_copy`
-4. Drop the `events` table
-5. Query desired columns:
+3. [Rename the events table](https://cloud.google.com/bigquery/docs/managing-tables#renaming-table):
 ```sql
-SELECT app_id, platform, etl_tstamp, collector_tstamp, event, event_id, 
+ALTER TABLE `project.snowplow.events`
+RENAME TO `project.snowplow.events_copy`
+```
+ Alternatively (if rename doesn't work):
+- Create a copy: `events_copy`
+- Drop `events`
+4. Query desired columns into new table:
+```sql
+-- Make sure to add any columns that contain custom contexts here
+-- Be very careful here!
+CREATE TABLE `project.snowplow.events` 
+PARTITION BY date_trunc(load_tstamp, DAY)
+AS SELECT app_id, platform, etl_tstamp, collector_tstamp, event, event_id, 
   v_tracker, v_collector, v_etl, user_ipaddress, network_userid, 
-  page_url, page_urlscheme, page_urlhost, page_urlport, page_urlpath,
+  page_url, page_urlscheme, page_urlhost, page_urlport, page_urlpath, page_urlquery, page_urlfragment,
+  
+  mkt_medium, mkt_source, mkt_term, mkt_content, mkt_campaign, mkt_network, mkt_clickid,
+  refr_medium, refr_source, refr_term,
   useragent, 
   derived_tstamp, event_vendor, event_name, event_format, event_version, event_fingerprint,
-  load_tstamp, 
-  contexts_io_objectiv_taxonomy_1_0_0
-FROM `project.dataset.events_copy`;
+  load_tstamp
+FROM `project.snowplow.events_copy`;
 ```
-6. Now select `Save results as BigQuery table`, and save the data as a new table in the current dataset called `events`. 
-7. Restart the Snowplow bigquery streamloader
-8. Verify new events end up in the `events` table
-9. Remove `events_copy`
+5. Restart the Snowplow bigquery streamloader
+6. Verify new events end up in the `events` table, and check the failed-inserts PubSub topic
+7. Remove `events_copy`
