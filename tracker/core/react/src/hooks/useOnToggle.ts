@@ -6,15 +6,19 @@ import { useEffect, useRef } from 'react';
 import { OnToggleEffectCallback } from '../types';
 
 /**
- * A variant of the onChange side effect that monitors a boolean `state` and runs the given `trueEffect` or
+ * Monitors a boolean variable, or a predicate, and runs the given `trueEffect` or
  * `falseEffect` depending on the state value.
+ *
+ * If `falseEffect` is omitted, `trueEffect` is used for both states.
  */
 export const useOnToggle = (
-  state: boolean,
+  state: boolean | (() => boolean),
   trueEffect: OnToggleEffectCallback,
-  falseEffect: OnToggleEffectCallback
+  maybeFalseEffect?: OnToggleEffectCallback
 ) => {
-  let previousStateRef = useRef<boolean>(state);
+  const falseEffect = maybeFalseEffect ?? trueEffect;
+  const stateValue = typeof state === 'function' ? state() : state;
+  let previousStateRef = useRef<boolean>(stateValue);
   let latestTrueEffectRef = useRef(trueEffect);
   let latestFalseEffectRef = useRef(falseEffect);
 
@@ -22,12 +26,12 @@ export const useOnToggle = (
   latestFalseEffectRef.current = falseEffect;
 
   useEffect(() => {
-    if (!previousStateRef.current && state) {
-      trueEffect(previousStateRef.current, state);
-      previousStateRef.current = state;
-    } else if (previousStateRef.current && !state) {
-      falseEffect(previousStateRef.current, state);
-      previousStateRef.current = state;
+    if (!previousStateRef.current && stateValue) {
+      trueEffect(previousStateRef.current, stateValue);
+      previousStateRef.current = stateValue;
+    } else if (previousStateRef.current && !stateValue) {
+      falseEffect(previousStateRef.current, stateValue);
+      previousStateRef.current = stateValue;
     }
-  }, [state]);
+  }, [stateValue]);
 };

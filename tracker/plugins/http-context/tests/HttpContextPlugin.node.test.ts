@@ -3,7 +3,7 @@
  * @jest-environment node
  */
 import { MockConsoleImplementation } from '@objectiv/testing-tools';
-import { Tracker, TrackerEvent } from '@objectiv/tracker-core';
+import { generateGUID, Tracker, TrackerEvent } from '@objectiv/tracker-core';
 import { HttpContextPlugin } from '../src';
 
 require('@objectiv/developer-tools');
@@ -30,7 +30,7 @@ describe('HttpContextPlugin - node', () => {
 
   it('when unusable, should not validate and log an error message', () => {
     const testHttpContextPlugin = new HttpContextPlugin();
-    const testEvent = new TrackerEvent({ _type: 'test-event' });
+    const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
     testHttpContextPlugin.validate(testEvent);
     expect(MockConsoleImplementation.error).toHaveBeenCalledWith(
       '｢objectiv:HttpContextPlugin｣ Cannot validate. Plugin is not usable (document: undefined, navigator: undefined).'
@@ -62,7 +62,7 @@ describe('HttpContextPlugin - node', () => {
 
     it('when unusable, should not validate and not log', () => {
       const testHttpContextPlugin = new HttpContextPlugin();
-      const testEvent = new TrackerEvent({ _type: 'test-event' });
+      const testEvent = new TrackerEvent({ _type: 'test-event', id: generateGUID(), time: Date.now() });
       testHttpContextPlugin.validate(testEvent);
       expect(MockConsoleImplementation.error).not.toHaveBeenCalled();
     });

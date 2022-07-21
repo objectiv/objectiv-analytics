@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { GlobalContexts, LocationStack, Tracker, TrackEventOptions } from '@objectiv/tracker-core';
+import { GlobalContexts, LocationStack, Optional, Tracker, TrackEventOptions } from '@objectiv/tracker-core';
 import { useEffect } from 'react';
 
 /**
@@ -56,3 +56,9 @@ export type EventTrackerParameters = TrackEventParameters & {
  * Hooks will be automatically invoked to retrieve a Tracker instance and LocationStack.
  */
 export type EventTrackerHookParameters = Partial<EventTrackerParameters>;
+
+/**
+ * The base parameters of all EventTracker hooks' callbacks.
+ * The `tracker` attribute is optional. Hooks automatically retrieve Tracker instance.
+ */
+export type EventTrackerHookCallbackParameters = Optional<EventTrackerHookParameters, 'tracker'>;

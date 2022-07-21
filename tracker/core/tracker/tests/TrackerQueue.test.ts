@@ -2,16 +2,16 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { TrackerEvent, TrackerQueue, TrackerQueueMemoryStore } from '../src';
+import { generateGUID, TrackerEvent, TrackerQueue, TrackerQueueMemoryStore } from '../src';
 
 describe('TrackerQueueMemoryStore', () => {
   beforeEach(() => {
     jest.resetAllMocks();
   });
 
-  const TrackerEvent1 = new TrackerEvent({ id: 'a', _type: 'a' });
-  const TrackerEvent2 = new TrackerEvent({ id: 'b', _type: 'b' });
-  const TrackerEvent3 = new TrackerEvent({ id: 'c', _type: 'c' });
+  const TrackerEvent1 = new TrackerEvent({ id: 'a', _type: 'a', time: Date.now() });
+  const TrackerEvent2 = new TrackerEvent({ id: 'b', _type: 'b', time: Date.now() });
+  const TrackerEvent3 = new TrackerEvent({ id: 'c', _type: 'c', time: Date.now() });
 
   it('should read all Events', async () => {
     const trackerQueueStore = new TrackerQueueMemoryStore();
@@ -71,9 +71,9 @@ describe('TrackerQueue', () => {
     jest.resetAllMocks();
   });
 
-  const TrackerEvent1 = new TrackerEvent({ _type: 'a' });
-  const TrackerEvent2 = new TrackerEvent({ _type: 'b' });
-  const TrackerEvent3 = new TrackerEvent({ _type: 'c' });
+  const TrackerEvent1 = new TrackerEvent({ _type: 'a', id: generateGUID(), time: Date.now() });
+  const TrackerEvent2 = new TrackerEvent({ _type: 'b', id: generateGUID(), time: Date.now() });
+  const TrackerEvent3 = new TrackerEvent({ _type: 'c', id: generateGUID(), time: Date.now() });
 
   it('should instantiate to a 0 length Queue', () => {
     const testQueue = new TrackerQueue({ batchDelayMs: 1 });
@@ -136,10 +136,10 @@ describe('TrackerQueue', () => {
   });
 
   it('should support concurrent batches', async () => {
-    const TrackerEvent4 = new TrackerEvent({ _type: 'd' });
-    const TrackerEvent5 = new TrackerEvent({ _type: 'e' });
-    const TrackerEvent6 = new TrackerEvent({ _type: 'f' });
-    const TrackerEvent7 = new TrackerEvent({ _type: 'g' });
+    const TrackerEvent4 = new TrackerEvent({ _type: 'd', id: generateGUID(), time: Date.now() });
+    const TrackerEvent5 = new TrackerEvent({ _type: 'e', id: generateGUID(), time: Date.now() });
+    const TrackerEvent6 = new TrackerEvent({ _type: 'f', id: generateGUID(), time: Date.now() });
+    const TrackerEvent7 = new TrackerEvent({ _type: 'g', id: generateGUID(), time: Date.now() });
     const testQueue = new TrackerQueue({ batchSize: 3, concurrency: 3, batchDelayMs: 1 });
     const processFunctionSpy = jest.fn(() => Promise.resolve());
     testQueue.setProcessFunction(processFunctionSpy);

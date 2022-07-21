@@ -4,7 +4,7 @@
 
 import { PathContextFromURLPlugin } from '@objectiv/plugin-path-context-from-url';
 import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
-import { generateUUID, LocationStack, makeContentContext, TrackerPluginInterface } from '@objectiv/tracker-core';
+import { generateGUID, LocationStack, makeContentContext, TrackerPluginInterface } from '@objectiv/tracker-core';
 import { BrowserTracker, getElementLocationStack, TaggableElement } from '../src';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
 
@@ -12,12 +12,12 @@ require('@objectiv/developer-tools');
 globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplementation);
 
 describe('getElementLocationStack', () => {
-  const mainSection = makeTaggedElement(generateUUID(), 'main', 'section');
+  const mainSection = makeTaggedElement(generateGUID(), 'main', 'section');
   const div = document.createElement('div');
-  const parentSection = makeTaggedElement(generateUUID(), 'parent', 'div');
+  const parentSection = makeTaggedElement(generateGUID(), 'parent', 'div');
   const section = document.createElement('section');
-  const childSection = makeTaggedElement(generateUUID(), 'child', 'span');
-  const button = makeTaggedElement(generateUUID(), 'button', 'button', true);
+  const childSection = makeTaggedElement(generateGUID(), 'child', 'span');
+  const button = makeTaggedElement(generateGUID(), 'button', 'button', true);
 
   mainSection.appendChild(div);
   div.appendChild(parentSection);

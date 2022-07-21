@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { TrackerEventConfig } from '@objectiv/tracker-core';
+import { TrackerEventAttributes } from '@objectiv/tracker-core';
 import { TrackEventParameters } from '../types';
 import { useTracker } from './consumers/useTracker';
 import { useOnToggle } from './useOnToggle';
@@ -14,17 +14,17 @@ export type TrackOnToggleHookParameters = Partial<TrackEventParameters> & {
   /**
    * A boolean variable this hook is going to be monitoring for determining when and which event to trigger
    */
-  state: boolean;
+  state: boolean | (() => boolean);
 
   /**
    * The Event to track when state changes from `false` to `true`
    */
-  trueEvent: TrackerEventConfig;
+  trueEvent: TrackerEventAttributes;
 
   /**
    * The Event to track when state changes from `true` to `false`
    */
-  falseEvent: TrackerEventConfig;
+  falseEvent: TrackerEventAttributes;
 };
 
 /**

@@ -2,8 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateUUID, GlobalContextName, LocationContextName, makeInputChangeEvent } from '@objectiv/tracker-core';
+import { MockConsoleImplementation } from '@objectiv/testing-tools';
+import { generateGUID, GlobalContextName, LocationContextName, makeInputChangeEvent } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker } from '../src/';
 import { makeBlurEventHandler } from '../src/mutationObserver/makeBlurEventHandler';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
@@ -14,7 +14,7 @@ globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplem
 describe('makeBlurEventHandler', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    makeTracker({ applicationId: generateUUID(), endpoint: 'test' });
+    makeTracker({ applicationId: generateGUID(), endpoint: 'test' });
     expect(getTracker()).toBeInstanceOf(BrowserTracker);
     jest.spyOn(getTracker(), 'trackEvent');
   });
@@ -37,7 +37,6 @@ describe('makeBlurEventHandler', () => {
       1,
       expect.objectContaining({
         _type: 'InputChangeEvent',
-        id: matchUUID,
         global_contexts: [],
         location_stack: [],
       })
@@ -57,7 +56,6 @@ describe('makeBlurEventHandler', () => {
       1,
       expect.objectContaining({
         _type: 'InputChangeEvent',
-        id: matchUUID,
         global_contexts: expect.arrayContaining([
           expect.objectContaining({
             _type: GlobalContextName.InputValueContext,
@@ -91,7 +89,6 @@ describe('makeBlurEventHandler', () => {
       1,
       expect.objectContaining({
         _type: 'InputChangeEvent',
-        id: matchUUID,
         global_contexts: expect.arrayContaining([
           expect.objectContaining({
             _type: GlobalContextName.InputValueContext,

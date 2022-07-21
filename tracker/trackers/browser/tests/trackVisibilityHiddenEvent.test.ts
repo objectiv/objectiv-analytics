@@ -2,8 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { matchUUID, MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
-import { generateUUID } from '@objectiv/tracker-core';
+import { LogTransport, MockConsoleImplementation } from '@objectiv/testing-tools';
+import { generateGUID } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker, TaggingAttribute } from '../src';
 import { trackVisibilityHiddenEvent } from '../src/mutationObserver/trackVisibilityHiddenEvent';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
@@ -16,7 +16,7 @@ describe('trackVisibilityHiddenEvent', () => {
     getTrackerRepository().trackersMap = new Map();
     getTrackerRepository().defaultTracker = undefined;
     jest.resetAllMocks();
-    makeTracker({ applicationId: generateUUID(), endpoint: 'test' });
+    makeTracker({ applicationId: generateGUID(), endpoint: 'test' });
     expect(getTracker()).toBeInstanceOf(BrowserTracker);
     jest.spyOn(getTracker(), 'trackEvent');
   });
@@ -67,7 +67,6 @@ describe('trackVisibilityHiddenEvent', () => {
       1,
       expect.objectContaining({
         _type: 'HiddenEvent',
-        id: matchUUID,
         global_contexts: [],
         location_stack: [],
       })
@@ -89,7 +88,6 @@ describe('trackVisibilityHiddenEvent', () => {
       1,
       expect.objectContaining({
         _type: 'HiddenEvent',
-        id: matchUUID,
         global_contexts: [],
         location_stack: [],
       })

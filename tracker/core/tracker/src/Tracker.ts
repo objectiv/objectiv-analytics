@@ -4,8 +4,8 @@
 
 import { AbstractGlobalContext, AbstractLocationContext, Contexts } from '@objectiv/schema';
 import { ContextsConfig } from './Context';
-import { waitForPromise } from './helpers';
-import { TrackerEvent, TrackerEventConfig } from './TrackerEvent';
+import { generateGUID, waitForPromise } from './helpers';
+import { TrackerEvent, TrackerEventAttributes } from './TrackerEvent';
 import { TrackerPluginInterface } from './TrackerPluginInterface';
 import { TrackerPlugins } from './TrackerPlugins';
 import { TrackerQueueInterface } from './TrackerQueueInterface';
@@ -31,6 +31,41 @@ export type TrackerConfig = ContextsConfig & {
    * Application ID. Used to generate ApplicationContext (global context).
    */
   applicationId: string;
+
+  /**
+   * Optional. Function to generate unique identifiers used by the Tracker to set the `id` of TrackerEvents.
+   *
+   * Format
+   *  The current format we use for these identifiers is Universally Unique Identifier version 4 (UUID v4).
+   *
+   * Default implementation
+   *  The default implementation uses `v4` from the `uuid` js module. See: https://github.com/uuidjs/uuid.
+   *
+   * Why are unique identifiers so important?
+   *  TrackerEvents must have globally unique identifiers, at the very least in the same session, for deduplication.
+   *
+   *  This is because Trackers may send the same events multiple times to the Collector in several situations:
+   *
+   *   - Tracker gets destroyed before receiving a response from the Collector.
+   *   - Tracker gets destroyed before having the time to clean the persistent Queue.
+   *   - Flaky connectivity may lead to timeouts and remote responses being lost, which results in retries.
+   *
+   *  In general, Trackers will always re-send events when it's not 100% certain whether they were delivered or not.
+   *
+   *  Unique identifiers are also essential across devices/platforms. E.g. web vs mobile, to ensure data may be
+   *  correlated across them without collisions.
+   *
+   * What if the target platform doesn't have a GUID/UUID generator?
+   *  On platforms that don't have a native method to generate a UUID/GUID but have native random generators, such as
+   *  React Native, a polyfill may be used to gain access to the native random generators. These implementations
+   *  usually expose the underlying system's SecureRandom (Android) or SecRandomCopyBytes (iOS).
+   *  For example https://github.com/LinusU/react-native-get-random-values.
+   *
+   * What if the platform has no secure generator?
+   *  Worst case scenario, the uuidv4 module included in Core Tracker can be used. It comes with a generator that uses
+   *  Date.now() & Math.random as rng source. While not ideal, it's also not that bad: https://v8.dev/blog/math-random
+   */
+  generateGUID?: () => string;
 
   /**
    * Optional. The platform of the Tracker Instance. This affects error logging. Defaults to Core.
@@ -122,6 +157,7 @@ export class Tracker implements TrackerInterface {
   readonly queue?: TrackerQueueInterface;
   readonly transport?: TrackerTransportInterface;
   readonly plugins: TrackerPlugins;
+  readonly generateGUID: () => string;
 
   // Trackers are automatically activated, unless differently specified via config, during construction.
   active: boolean = false;
@@ -144,6 +180,7 @@ export class Tracker implements TrackerInterface {
     this.trackerId = trackerConfig.trackerId ?? trackerConfig.applicationId;
     this.queue = trackerConfig.queue;
     this.transport = trackerConfig.transport;
+    this.generateGUID = trackerConfig.generateGUID ?? generateGUID;
 
     // Process ContextConfigs
     let new_location_stack: AbstractLocationContext[] = trackerConfig.location_stack ?? [];
@@ -268,47 +305,44 @@ export class Tracker implements TrackerInterface {
   /**
    * Merges Tracker Location and Global contexts, runs all Plugins and sends the Event via the TrackerTransport.
    */
-  async trackEvent(event: TrackerEventConfig, options?: TrackEventOptions): Promise<TrackerEvent> {
-    // TrackerEvent and Tracker share the ContextsConfig interface. We can combine them by creating a new TrackerEvent.
-    const trackedEvent = new TrackerEvent(event, this);
+  async trackEvent(event: TrackerEventAttributes, options?: TrackEventOptions): Promise<TrackerEvent> {
+    // TrackerEvent and Tracker share the ContextsConfig interface. Combine them and Set id and time.
+    const trackerEvent = new TrackerEvent({ ...event, id: this.generateGUID(), time: Date.now() }, this);
 
     // Do nothing if the TrackerInstance is inactive
     if (!this.active) {
-      return trackedEvent;
+      return trackerEvent;
     }
 
-    // Set tracking time
-    trackedEvent.setTime();
-
     // Execute all plugins `enrich` callback. Plugins may enrich or add Contexts to the TrackerEvent
-    this.plugins.enrich(trackedEvent);
+    this.plugins.enrich(trackerEvent);
 
     // Execute all plugins `validate` callback. In dev mode this will log to the console any issues.
-    this.plugins.validate(trackedEvent);
+    this.plugins.validate(trackerEvent);
 
     // Hand over TrackerEvent to TrackerTransport or TrackerQueue, if enabled and usable.
     if (this.transport && this.transport.isUsable()) {
       if (globalThis.objectiv.devTools) {
         globalThis.objectiv.devTools.TrackerConsole.groupCollapsed(
           `｢objectiv:Tracker:${this.trackerId}｣ ${this.queue ? 'Queuing' : 'Tracking'} ${
-            trackedEvent._type
-          } (${globalThis.objectiv.devTools.getLocationPath(trackedEvent.location_stack)})`
+            trackerEvent._type
+          } (${globalThis.objectiv.devTools.getLocationPath(trackerEvent.location_stack)})`
         );
-        globalThis.objectiv.devTools.TrackerConsole.log(`Event ID: ${trackedEvent.id}`);
-        globalThis.objectiv.devTools.TrackerConsole.log(`Time: ${trackedEvent.time}`);
+        globalThis.objectiv.devTools.TrackerConsole.log(`Event ID: ${trackerEvent.id}`);
+        globalThis.objectiv.devTools.TrackerConsole.log(`Time: ${trackerEvent.time}`);
         globalThis.objectiv.devTools.TrackerConsole.group(`Location Stack:`);
-        globalThis.objectiv.devTools.TrackerConsole.log(trackedEvent.location_stack);
+        globalThis.objectiv.devTools.TrackerConsole.log(trackerEvent.location_stack);
         globalThis.objectiv.devTools.TrackerConsole.groupEnd();
         globalThis.objectiv.devTools.TrackerConsole.group(`Global Contexts:`);
-        globalThis.objectiv.devTools.TrackerConsole.log(trackedEvent.global_contexts);
+        globalThis.objectiv.devTools.TrackerConsole.log(trackerEvent.global_contexts);
         globalThis.objectiv.devTools.TrackerConsole.groupEnd();
         globalThis.objectiv.devTools.TrackerConsole.groupEnd();
       }
 
       if (this.queue) {
-        await this.queue.push(trackedEvent);
+        await this.queue.push(trackerEvent);
       } else {
-        await this.transport.handle(trackedEvent);
+        await this.transport.handle(trackerEvent);
       }
     }
 
@@ -328,6 +362,6 @@ export class Tracker implements TrackerInterface {
       }
     }
 
-    return trackedEvent;
+    return trackerEvent;
   }
 }

@@ -2,8 +2,8 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { generateUUID, LocationContextName } from '@objectiv/tracker-core';
+import { MockConsoleImplementation } from '@objectiv/testing-tools';
+import { generateGUID, LocationContextName } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeTracker, TaggingAttribute } from '../src';
 import { trackRemovedElements } from '../src/mutationObserver/trackRemovedElements';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
@@ -14,7 +14,7 @@ globalThis.objectiv.devTools?.TrackerConsole.setImplementation(MockConsoleImplem
 describe('trackRemovedElements', () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    makeTracker({ applicationId: generateUUID(), endpoint: 'test' });
+    makeTracker({ applicationId: generateGUID(), endpoint: 'test' });
     expect(getTracker()).toBeInstanceOf(BrowserTracker);
     jest.spyOn(getTracker(), 'trackEvent');
   });
@@ -67,7 +67,6 @@ describe('trackRemovedElements', () => {
       1,
       expect.objectContaining({
         _type: 'HiddenEvent',
-        id: matchUUID,
         global_contexts: [],
         location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'div' })],
       })

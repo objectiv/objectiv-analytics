@@ -8,7 +8,7 @@ import { LocationProvider } from '../common/providers/LocationProvider';
 import { TrackingContext } from '../common/providers/TrackingContext';
 import { useParentLocationContext } from '../hooks/consumers/useParentLocationContext';
 import { useTracker } from '../hooks/consumers/useTracker';
-import { useOnChange } from '../hooks/useOnChange';
+import { useOnContextChange } from '../hooks/useOnContextChange';
 import { useOnMount } from '../hooks/useOnMount';
 import { useOnUnmount } from '../hooks/useOnUnmount';
 
@@ -47,7 +47,7 @@ export const LocationContextWrapper = ({ children, locationContext }: LocationCo
     }
   });
 
-  useOnChange<AbstractLocationContext>(locationContext, (previousLocationContext) => {
+  useOnContextChange<AbstractLocationContext>(locationContext, (previousLocationContext) => {
     if (globalThis.objectiv.devTools) {
       globalThis.objectiv.devTools.LocationTree.remove(previousLocationContext);
       globalThis.objectiv.devTools.LocationTree.add(locationContext, parentLocationContext);

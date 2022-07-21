@@ -2,8 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import '@objectiv/developer-tools';
-import { matchUUID, MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
+import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import { LocationContextName } from '@objectiv/tracker-core';
 import { BrowserTracker, getTracker, getTrackerRepository, makeMutationCallback, TaggingAttribute } from '../src';
 import { makeTaggedElement } from './mocks/makeTaggedElement';
@@ -40,7 +39,6 @@ describe('makeMutationCallback - new nodes', () => {
       1,
       expect.objectContaining({
         _type: 'VisibleEvent',
-        id: matchUUID,
         global_contexts: [],
         location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'div' })],
       })
@@ -49,7 +47,6 @@ describe('makeMutationCallback - new nodes', () => {
       2,
       expect.objectContaining({
         _type: 'VisibleEvent',
-        id: matchUUID,
         global_contexts: [],
         location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'div' })],
       })
@@ -111,7 +108,6 @@ describe('makeMutationCallback - removed nodes', () => {
       1,
       expect.objectContaining({
         _type: 'HiddenEvent',
-        id: matchUUID,
         global_contexts: [],
         location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'div' })],
       })

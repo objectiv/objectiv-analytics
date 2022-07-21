@@ -24,7 +24,7 @@ describe('ExpandableContextWrapper', () => {
     const expandableContentContextProps = { id: 'test-expandable-section' };
     const ClickableDiv = () => {
       const trackPressEvent = usePressEventTracker();
-      return <span onClick={trackPressEvent}>Trigger Event</span>;
+      return <span onClick={() => trackPressEvent()}>Trigger Event</span>;
     };
     const { container } = render(
       <ObjectivProvider tracker={tracker}>

@@ -3,7 +3,7 @@
  */
 
 import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
-import { ContextsConfig, generateUUID, GlobalContextName, Tracker, TrackerEvent } from '@objectiv/tracker-core';
+import { ContextsConfig, generateGUID, GlobalContextName, Tracker, TrackerEvent } from '@objectiv/tracker-core';
 import { ApplicationContextPlugin } from '../src';
 
 require('@objectiv/developer-tools');
@@ -44,11 +44,11 @@ describe('ApplicationContextPlugin', () => {
   it('should add the ApplicationContext to the Event when `enrich` is executed by the Tracker', async () => {
     const eventContexts: ContextsConfig = {
       global_contexts: [
-        { __instance_id: generateUUID(), __global_context: true, _type: 'Context', id: 'X' },
-        { __instance_id: generateUUID(), __global_context: true, _type: 'Context', id: 'Y' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'Context', id: 'X' },
+        { __instance_id: generateGUID(), __global_context: true, _type: 'Context', id: 'Y' },
       ],
     };
-    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts });
+    const testEvent = new TrackerEvent({ _type: 'test-event', ...eventContexts, id: generateGUID(), time: Date.now() });
     expect(testEvent.global_contexts).toHaveLength(2);
     const trackedEvent = await coreTracker.trackEvent(testEvent);
     expect(trackedEvent.global_contexts).toHaveLength(3);

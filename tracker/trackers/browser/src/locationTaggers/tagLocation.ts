@@ -2,7 +2,7 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { generateUUID, getObjectKeys, LocationContextName } from '@objectiv/tracker-core';
+import { generateGUID, getObjectKeys, LocationContextName } from '@objectiv/tracker-core';
 import { isPressableContext } from '../common/guards/isPressableContext';
 import { isShowableContext } from '../common/guards/isShowableContext';
 import { isTagLocationParameters } from '../common/guards/isTagLocationParameters';
@@ -57,7 +57,7 @@ export const tagLocation = (parameters: TagLocationParameters): TagLocationRetur
 
     // Create output attributes object
     const LocationTaggingAttributes = {
-      [TaggingAttribute.elementId]: generateUUID(),
+      [TaggingAttribute.elementId]: generateGUID(),
       [TaggingAttribute.parentElementId]: parentElementId,
       [TaggingAttribute.context]: stringifyLocationContext(instance),
       [TaggingAttribute.trackClicks]: runIfValueIsNotUndefined(stringifyTrackClicks, trackClicks),

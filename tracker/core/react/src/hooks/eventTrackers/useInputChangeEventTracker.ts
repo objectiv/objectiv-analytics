@@ -3,20 +3,26 @@
  */
 
 import { trackInputChangeEvent } from '../../eventTrackers/trackInputChangeEvent';
-import { EventTrackerHookParameters } from '../../types';
+import { EventTrackerHookCallbackParameters, EventTrackerHookParameters } from '../../types';
 import { useLocationStack } from '../consumers/useLocationStack';
 import { useTracker } from '../consumers/useTracker';
-
-/**
- * The parameters of useInputChangeEventTracker. No extra attributes, same as EventTrackerHookParameters.
- */
-export type InputChangeEventTrackerHookParameters = EventTrackerHookParameters;
+import { mergeEventTrackerHookAndCallbackParameters } from './mergeEventTrackerHookAndCallbackParameters';
 
 /**
  * Returns an InputChangeEvent Tracker callback function, ready to be triggered.
  */
-export const useInputChangeEventTracker = (parameters: InputChangeEventTrackerHookParameters = {}) => {
-  const { tracker = useTracker(), locationStack = useLocationStack(), globalContexts } = parameters;
+export const useInputChangeEventTracker = ({
+  tracker = useTracker(),
+  locationStack = [],
+  ...hookParameters
+}: EventTrackerHookParameters = {}) => {
+  const combinedLocationStack = [...useLocationStack(), ...locationStack];
 
-  return () => trackInputChangeEvent({ tracker, locationStack, globalContexts });
+  return (callbackParameters: EventTrackerHookCallbackParameters = {}) =>
+    trackInputChangeEvent(
+      mergeEventTrackerHookAndCallbackParameters(
+        { tracker, locationStack: combinedLocationStack, ...hookParameters },
+        callbackParameters
+      )
+    );
 };

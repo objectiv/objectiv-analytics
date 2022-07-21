@@ -2,9 +2,10 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { matchUUID, MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
+import { MockConsoleImplementation, LogTransport } from '@objectiv/testing-tools';
 import {
-  generateUUID,
+  EventName,
+  generateGUID,
   LocationContextName,
   makeApplicationLoadedEvent,
   makeContentContext,
@@ -55,7 +56,7 @@ describe('trackEvent', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    makeTracker({ applicationId: generateUUID(), endpoint: 'test' });
+    makeTracker({ applicationId: generateGUID(), endpoint: 'test' });
     expect(getTracker()).toBeInstanceOf(BrowserTracker);
     jest.spyOn(getTracker(), 'trackEvent');
   });
@@ -64,6 +65,17 @@ describe('trackEvent', () => {
     getTrackerRepository().trackersMap = new Map();
     getTrackerRepository().defaultTracker = undefined;
     jest.resetAllMocks();
+  });
+
+  it('should track from a bag of attributes', () => {
+    expect(getTracker().trackEvent).not.toHaveBeenCalled();
+
+    trackEvent({ event: { _type: EventName.PressEvent }, element: testElement });
+
+    expect(getTracker().trackEvent).toHaveBeenCalledTimes(1);
+    expect(getTracker().trackEvent).toHaveBeenNthCalledWith(1, {
+      _type: 'PressEvent',
+    });
   });
 
   it('should use the global tracker instance if available', () => {
@@ -76,7 +88,6 @@ describe('trackEvent', () => {
       1,
       expect.objectContaining({
         _type: 'PressEvent',
-        id: matchUUID,
         global_contexts: [],
         location_stack: [],
       })
@@ -106,7 +117,6 @@ describe('trackEvent', () => {
       1,
       expect.objectContaining({
         _type: 'PressEvent',
-        id: matchUUID,
         global_contexts: [],
         location_stack: [
           expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'main' }),
@@ -124,7 +134,6 @@ describe('trackEvent', () => {
       2,
       expect.objectContaining({
         _type: 'PressEvent',
-        id: matchUUID,
         global_contexts: [],
         location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'custom' })],
       })
@@ -137,7 +146,6 @@ describe('trackEvent', () => {
       3,
       expect.objectContaining({
         _type: 'PressEvent',
-        id: matchUUID,
         global_contexts: [],
         location_stack: [expect.objectContaining({ _type: LocationContextName.ContentContext, id: 'custom' })],
       })
@@ -159,7 +167,6 @@ describe('trackEvent', () => {
       1,
       expect.objectContaining({
         _type: 'PressEvent',
-        id: matchUUID,
         global_contexts: [],
         location_stack: [],
       })

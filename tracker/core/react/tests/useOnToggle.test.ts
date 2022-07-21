@@ -6,7 +6,6 @@ import { renderHook } from '@testing-library/react-hooks';
 import { useOnToggle } from '../src';
 
 describe('useOnToggle', () => {
-  const initialState = false;
   const mockTrueEffectCallback = jest.fn();
   const mockFalseEffectCallback = jest.fn();
 
@@ -18,112 +17,283 @@ describe('useOnToggle', () => {
     jest.resetAllMocks();
   });
 
-  it('should not execute on mount', () => {
-    renderHook((state) => useOnToggle(state, mockTrueEffectCallback, mockFalseEffectCallback), {
-      initialProps: initialState,
+  describe('state as boolean variable', () => {
+    const initialState = false;
+    it('should not execute on mount', () => {
+      renderHook((state) => useOnToggle(state, mockTrueEffectCallback, mockFalseEffectCallback), {
+        initialProps: initialState,
+      });
+
+      expect(mockTrueEffectCallback).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback).not.toHaveBeenCalled();
     });
 
-    expect(mockTrueEffectCallback).not.toHaveBeenCalled();
-    expect(mockFalseEffectCallback).not.toHaveBeenCalled();
-  });
+    it('should not execute on unmount', () => {
+      const { unmount } = renderHook((state) => useOnToggle(state, mockTrueEffectCallback, mockFalseEffectCallback), {
+        initialProps: initialState,
+      });
 
-  it('should not execute on unmount', () => {
-    const { unmount } = renderHook((state) => useOnToggle(state, mockTrueEffectCallback, mockFalseEffectCallback), {
-      initialProps: initialState,
+      unmount();
+
+      expect(mockTrueEffectCallback).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback).not.toHaveBeenCalled();
     });
 
-    unmount();
+    it('should not execute on re-render if the state did not change', () => {
+      const { rerender } = renderHook((state) => useOnToggle(state, mockTrueEffectCallback, mockFalseEffectCallback), {
+        initialProps: initialState,
+      });
 
-    expect(mockTrueEffectCallback).not.toHaveBeenCalled();
-    expect(mockFalseEffectCallback).not.toHaveBeenCalled();
-  });
+      rerender(initialState);
+      rerender(initialState);
+      rerender(initialState);
 
-  it('should not execute on re-render if the state did not change', () => {
-    const { rerender } = renderHook((state) => useOnToggle(state, mockTrueEffectCallback, mockFalseEffectCallback), {
-      initialProps: initialState,
+      expect(mockTrueEffectCallback).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback).not.toHaveBeenCalled();
     });
 
-    rerender(initialState);
-    rerender(initialState);
-    rerender(initialState);
+    it('should execute the given side effect callback on re-render each time state changes', () => {
+      const newState1 = true;
+      const newState2 = false;
+      const { rerender } = renderHook((state) => useOnToggle(state, mockTrueEffectCallback), {
+        initialProps: initialState,
+      });
 
-    expect(mockTrueEffectCallback).not.toHaveBeenCalled();
-    expect(mockFalseEffectCallback).not.toHaveBeenCalled();
-  });
+      rerender(newState1);
+      rerender(newState1);
+      rerender(newState1);
 
-  it('should execute the correct side effect callback on re-render each time state changes', () => {
-    const newState1 = true;
-    const newState2 = false;
-    const { rerender } = renderHook((state) => useOnToggle(state, mockTrueEffectCallback, mockFalseEffectCallback), {
-      initialProps: initialState,
+      expect(mockTrueEffectCallback).toHaveBeenCalledTimes(1);
+      expect(mockTrueEffectCallback).toHaveBeenCalledWith(initialState, newState1);
+
+      jest.resetAllMocks();
+
+      rerender(newState2);
+      rerender(newState2);
+      rerender(newState2);
+
+      expect(mockTrueEffectCallback).toHaveBeenCalledTimes(1);
+      expect(mockTrueEffectCallback).toHaveBeenCalledWith(newState1, newState2);
     });
 
-    rerender(newState1);
-    rerender(newState1);
-    rerender(newState1);
+    it('should execute the correct side effect callback on re-render each time state changes', () => {
+      const newState1 = true;
+      const newState2 = false;
+      const { rerender } = renderHook((state) => useOnToggle(state, mockTrueEffectCallback, mockFalseEffectCallback), {
+        initialProps: initialState,
+      });
 
-    expect(mockTrueEffectCallback).toHaveBeenCalledTimes(1);
-    expect(mockTrueEffectCallback).toHaveBeenCalledWith(initialState, newState1);
-    expect(mockFalseEffectCallback).not.toHaveBeenCalled();
+      rerender(newState1);
+      rerender(newState1);
+      rerender(newState1);
 
-    jest.resetAllMocks();
+      expect(mockTrueEffectCallback).toHaveBeenCalledTimes(1);
+      expect(mockTrueEffectCallback).toHaveBeenCalledWith(initialState, newState1);
+      expect(mockFalseEffectCallback).not.toHaveBeenCalled();
 
-    rerender(newState2);
-    rerender(newState2);
-    rerender(newState2);
+      jest.resetAllMocks();
 
-    expect(mockFalseEffectCallback).toHaveBeenCalledTimes(1);
-    expect(mockFalseEffectCallback).toHaveBeenCalledWith(newState1, newState2);
-    expect(mockTrueEffectCallback).not.toHaveBeenCalled();
+      rerender(newState2);
+      rerender(newState2);
+      rerender(newState2);
+
+      expect(mockFalseEffectCallback).toHaveBeenCalledTimes(1);
+      expect(mockFalseEffectCallback).toHaveBeenCalledWith(newState1, newState2);
+      expect(mockTrueEffectCallback).not.toHaveBeenCalled();
+    });
+
+    it('should execute the latest version of the effect callbacks', () => {
+      const newState1 = true;
+      const newState2 = false;
+      const mockTrueEffectCallback2 = jest.fn();
+      const mockTrueEffectCallback3 = jest.fn();
+      const mockTrueEffectCallback4 = jest.fn();
+      const mockFalseEffectCallback2 = jest.fn();
+      const mockFalseEffectCallback3 = jest.fn();
+      const mockFalseEffectCallback4 = jest.fn();
+      const { rerender } = renderHook(
+        ({ state, trueEffect, falseEffect }) => useOnToggle(state, trueEffect, falseEffect),
+        {
+          initialProps: {
+            state: initialState,
+            trueEffect: mockTrueEffectCallback,
+            falseEffect: mockFalseEffectCallback,
+          },
+        }
+      );
+
+      rerender({ state: initialState, trueEffect: mockTrueEffectCallback2, falseEffect: mockFalseEffectCallback2 });
+
+      expect(mockTrueEffectCallback2).not.toHaveBeenCalled();
+      expect(mockTrueEffectCallback3).not.toHaveBeenCalled();
+      expect(mockTrueEffectCallback4).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback2).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback3).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback4).not.toHaveBeenCalled();
+
+      jest.resetAllMocks();
+
+      rerender({ state: newState1, trueEffect: mockTrueEffectCallback3, falseEffect: mockFalseEffectCallback3 });
+
+      expect(mockTrueEffectCallback2).not.toHaveBeenCalled();
+      expect(mockTrueEffectCallback3).toHaveBeenCalledTimes(1);
+      expect(mockTrueEffectCallback3).toHaveBeenCalledWith(initialState, newState1);
+      expect(mockTrueEffectCallback4).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback2).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback3).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback4).not.toHaveBeenCalled();
+
+      jest.resetAllMocks();
+
+      rerender({ state: newState2, trueEffect: mockTrueEffectCallback4, falseEffect: mockFalseEffectCallback4 });
+
+      expect(mockTrueEffectCallback2).not.toHaveBeenCalled();
+      expect(mockTrueEffectCallback3).not.toHaveBeenCalled();
+      expect(mockTrueEffectCallback4).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback2).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback3).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback4).toHaveBeenCalledTimes(1);
+      expect(mockFalseEffectCallback4).toHaveBeenCalledWith(newState1, newState2);
+    });
   });
 
-  it('should execute the latest version of the effect callbacks', () => {
-    const newState1 = true;
-    const newState2 = false;
-    const mockTrueEffectCallback2 = jest.fn();
-    const mockTrueEffectCallback3 = jest.fn();
-    const mockTrueEffectCallback4 = jest.fn();
-    const mockFalseEffectCallback2 = jest.fn();
-    const mockFalseEffectCallback3 = jest.fn();
-    const mockFalseEffectCallback4 = jest.fn();
-    const { rerender } = renderHook(
-      ({ state, trueEffect, falseEffect }) => useOnToggle(state, trueEffect, falseEffect),
-      {
-        initialProps: { state: initialState, trueEffect: mockTrueEffectCallback, falseEffect: mockFalseEffectCallback },
-      }
-    );
+  describe('state as predicate', () => {
+    const initialState = () => false;
+    it('should not execute on mount', () => {
+      renderHook((state) => useOnToggle(state, mockTrueEffectCallback, mockFalseEffectCallback), {
+        initialProps: initialState,
+      });
 
-    rerender({ state: initialState, trueEffect: mockTrueEffectCallback2, falseEffect: mockFalseEffectCallback2 });
+      expect(mockTrueEffectCallback).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback).not.toHaveBeenCalled();
+    });
 
-    expect(mockTrueEffectCallback2).not.toHaveBeenCalled();
-    expect(mockTrueEffectCallback3).not.toHaveBeenCalled();
-    expect(mockTrueEffectCallback4).not.toHaveBeenCalled();
-    expect(mockFalseEffectCallback2).not.toHaveBeenCalled();
-    expect(mockFalseEffectCallback3).not.toHaveBeenCalled();
-    expect(mockFalseEffectCallback4).not.toHaveBeenCalled();
+    it('should not execute on unmount', () => {
+      const { unmount } = renderHook((state) => useOnToggle(state, mockTrueEffectCallback, mockFalseEffectCallback), {
+        initialProps: initialState,
+      });
 
-    jest.resetAllMocks();
+      unmount();
 
-    rerender({ state: newState1, trueEffect: mockTrueEffectCallback3, falseEffect: mockFalseEffectCallback3 });
+      expect(mockTrueEffectCallback).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback).not.toHaveBeenCalled();
+    });
 
-    expect(mockTrueEffectCallback2).not.toHaveBeenCalled();
-    expect(mockTrueEffectCallback3).toHaveBeenCalledTimes(1);
-    expect(mockTrueEffectCallback3).toHaveBeenCalledWith(initialState, newState1);
-    expect(mockTrueEffectCallback4).not.toHaveBeenCalled();
-    expect(mockFalseEffectCallback2).not.toHaveBeenCalled();
-    expect(mockFalseEffectCallback3).not.toHaveBeenCalled();
-    expect(mockFalseEffectCallback4).not.toHaveBeenCalled();
+    it('should not execute on re-render if the state did not change', () => {
+      const { rerender } = renderHook((state) => useOnToggle(state, mockTrueEffectCallback, mockFalseEffectCallback), {
+        initialProps: initialState,
+      });
 
-    jest.resetAllMocks();
+      rerender(initialState);
+      rerender(initialState);
+      rerender(initialState);
 
-    rerender({ state: newState2, trueEffect: mockTrueEffectCallback4, falseEffect: mockFalseEffectCallback4 });
+      expect(mockTrueEffectCallback).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback).not.toHaveBeenCalled();
+    });
 
-    expect(mockTrueEffectCallback2).not.toHaveBeenCalled();
-    expect(mockTrueEffectCallback3).not.toHaveBeenCalled();
-    expect(mockTrueEffectCallback4).not.toHaveBeenCalled();
-    expect(mockFalseEffectCallback2).not.toHaveBeenCalled();
-    expect(mockFalseEffectCallback3).not.toHaveBeenCalled();
-    expect(mockFalseEffectCallback4).toHaveBeenCalledTimes(1);
-    expect(mockFalseEffectCallback4).toHaveBeenCalledWith(newState1, newState2);
+    it('should execute the given side effect callback on re-render each time state changes', () => {
+      const newState1 = () => true;
+      const newState2 = () => false;
+      const { rerender } = renderHook((state) => useOnToggle(state, mockTrueEffectCallback), {
+        initialProps: initialState,
+      });
+
+      rerender(newState1);
+      rerender(newState1);
+      rerender(newState1);
+
+      expect(mockTrueEffectCallback).toHaveBeenCalledTimes(1);
+      expect(mockTrueEffectCallback).toHaveBeenCalledWith(false, true);
+
+      jest.resetAllMocks();
+
+      rerender(newState2);
+      rerender(newState2);
+      rerender(newState2);
+
+      expect(mockTrueEffectCallback).toHaveBeenCalledTimes(1);
+      expect(mockTrueEffectCallback).toHaveBeenCalledWith(true, false);
+    });
+
+    it('should execute the correct side effect callback on re-render each time state changes', () => {
+      const newState1 = () => true;
+      const newState2 = () => false;
+      const { rerender } = renderHook((state) => useOnToggle(state, mockTrueEffectCallback, mockFalseEffectCallback), {
+        initialProps: initialState,
+      });
+
+      rerender(newState1);
+      rerender(newState1);
+      rerender(newState1);
+
+      expect(mockTrueEffectCallback).toHaveBeenCalledTimes(1);
+      expect(mockTrueEffectCallback).toHaveBeenCalledWith(false, true);
+      expect(mockFalseEffectCallback).not.toHaveBeenCalled();
+
+      jest.resetAllMocks();
+
+      rerender(newState2);
+      rerender(newState2);
+      rerender(newState2);
+
+      expect(mockFalseEffectCallback).toHaveBeenCalledTimes(1);
+      expect(mockFalseEffectCallback).toHaveBeenCalledWith(true, false);
+      expect(mockTrueEffectCallback).not.toHaveBeenCalled();
+    });
+
+    it('should execute the latest version of the effect callbacks', () => {
+      const newState1 = () => true;
+      const newState2 = () => false;
+      const mockTrueEffectCallback2 = jest.fn();
+      const mockTrueEffectCallback3 = jest.fn();
+      const mockTrueEffectCallback4 = jest.fn();
+      const mockFalseEffectCallback2 = jest.fn();
+      const mockFalseEffectCallback3 = jest.fn();
+      const mockFalseEffectCallback4 = jest.fn();
+      const { rerender } = renderHook(
+        ({ state, trueEffect, falseEffect }) => useOnToggle(state, trueEffect, falseEffect),
+        {
+          initialProps: {
+            state: initialState,
+            trueEffect: mockTrueEffectCallback,
+            falseEffect: mockFalseEffectCallback,
+          },
+        }
+      );
+
+      rerender({ state: initialState, trueEffect: mockTrueEffectCallback2, falseEffect: mockFalseEffectCallback2 });
+
+      expect(mockTrueEffectCallback2).not.toHaveBeenCalled();
+      expect(mockTrueEffectCallback3).not.toHaveBeenCalled();
+      expect(mockTrueEffectCallback4).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback2).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback3).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback4).not.toHaveBeenCalled();
+
+      jest.resetAllMocks();
+
+      rerender({ state: newState1, trueEffect: mockTrueEffectCallback3, falseEffect: mockFalseEffectCallback3 });
+
+      expect(mockTrueEffectCallback2).not.toHaveBeenCalled();
+      expect(mockTrueEffectCallback3).toHaveBeenCalledTimes(1);
+      expect(mockTrueEffectCallback3).toHaveBeenCalledWith(false, true);
+      expect(mockTrueEffectCallback4).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback2).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback3).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback4).not.toHaveBeenCalled();
+
+      jest.resetAllMocks();
+
+      rerender({ state: newState2, trueEffect: mockTrueEffectCallback4, falseEffect: mockFalseEffectCallback4 });
+
+      expect(mockTrueEffectCallback2).not.toHaveBeenCalled();
+      expect(mockTrueEffectCallback3).not.toHaveBeenCalled();
+      expect(mockTrueEffectCallback4).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback2).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback3).not.toHaveBeenCalled();
+      expect(mockFalseEffectCallback4).toHaveBeenCalledTimes(1);
+      expect(mockFalseEffectCallback4).toHaveBeenCalledWith(true, false);
+    });
   });
 });

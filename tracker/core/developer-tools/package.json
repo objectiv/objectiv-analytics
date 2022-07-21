@@ -1,6 +1,6 @@
 {
   "name": "@objectiv/developer-tools",
-  "version": "0.0.22",
+  "version": "0.0.23-2",
   "description": "Validation and logging utilities to help pinpoint instrumentation issues while developing",
   "license": "Apache-2.0",
   "homepage": "https://objectiv.io",
@@ -50,13 +50,14 @@
     "test": "jest --silent --runInBand",
     "test:ci": "jest --silent --ci --runInBand",
     "test:coverage": "jest --silent --coverage --runInBand",
-    "check:dependencies": "npx depcheck",
+    "check:dependencies": "npx depcheck --ignores=tsconfig-paths",
     "npm-publish": "npm publish --access=public --tag=$TAG",
     "npm-publish:verdaccio": "npm publish --tag=$TAG"
   },
   "devDependencies": {
-    "@objectiv/testing-tools": "^0.0.22",
-    "@objectiv/tracker-core": "^0.0.22",
+    "@objectiv/developer-tools": "^0.0.23-2",
+    "@objectiv/testing-tools": "^0.0.23-2",
+    "@objectiv/tracker-core": "^0.0.23-2",
     "@types/jest": "^27.4.1",
     "jest": "^27.5.1",
     "jest-standard-reporter": "^2.0.0",
@@ -68,7 +69,7 @@
     "typescript": "^4.6.2"
   },
   "peerDependencies": {
-    "@objectiv/schema": "^0.0.22",
-    "@objectiv/tracker-core": "^0.0.22"
+    "@objectiv/schema": "^0.0.23-2",
+    "@objectiv/tracker-core": "^0.0.23-2"
   }
 }

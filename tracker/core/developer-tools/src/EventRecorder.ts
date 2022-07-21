@@ -20,6 +20,20 @@ const DEFAULT_ENABLED = true;
 const DEFAULT_AUTO_START = true;
 
 /**
+ * A factory to mutate a TrackerEvent into a RecordedEvent. RecordedEvents:
+ * - Have a predictable `id`
+ * - Don't have a `time`
+ * - Don't have discriminatory properties
+ * - Their LocationStack and GlobalContexts don't have discriminatory properties
+ */
+const makeRecordedEvent = ({ id, time, ...trackerEvent }: TrackerEvent, predictableId: string): RecordedEvent => ({
+  id: predictableId,
+  ...cleanObjectFromInternalProperties(trackerEvent),
+  location_stack: trackerEvent.location_stack.map(cleanObjectFromInternalProperties),
+  global_contexts: trackerEvent.global_contexts.map(cleanObjectFromInternalProperties),
+});
+
+/**
  * EventRecorder is a TrackerTransport to store TrackerEvents and error messages for later analysis.
  * Recorded TrackerEvents are automatically assigned predictable identifiers: `event.type` + `#` + number of times
  * Event Type occurred, starting at 1. Also, their `time` is removed. This ensures comparability.
@@ -81,21 +95,13 @@ export const EventRecorder = new (class implements EventRecorderInterface {
     (await Promise.all(args)).forEach((trackerEvent) => {
       const eventType = trackerEvent._type;
 
-      // Clone the event
-      const recordedEvent = new TrackerEvent(trackerEvent);
-
       // Increment how many times have we seen this event type so far
       this.eventsCountByType[eventType] = (this.eventsCountByType[eventType] ?? 0) + 1;
 
-      // Make event predictable, set the new identifier and remove time information
-      recordedEvent.id = `${eventType}#${this.eventsCountByType[eventType]}`;
-      delete recordedEvent.time;
+      // Make TrackerEvent into a RecordedEvent: predictable identifier and no time information
+      const recordedEvent = makeRecordedEvent(trackerEvent, `${eventType}#${this.eventsCountByType[eventType]}`);
 
-      this._events.push({
-        ...cleanObjectFromInternalProperties(recordedEvent),
-        location_stack: recordedEvent.location_stack.map(cleanObjectFromInternalProperties),
-        global_contexts: recordedEvent.global_contexts.map(cleanObjectFromInternalProperties),
-      });
+      this._events.push(recordedEvent);
     });
 
     // Make event list predictable, sort by event id

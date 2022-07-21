@@ -535,10 +535,10 @@ Object.entries(contexts).forEach(([context_type, context]) => {
     // Add __instance_id discriminator to AbstractContext
     if (context_type === 'AbstractContext') {
       properties[DISCRIMINATING_PROPERTY_PREFIX.repeat(2) + 'instance_id'] = {
-        discriminator: 'generateUUID()',
+        discriminator: 'generateGUID()',
         description: 'A unique identifier to discriminate Context instances across Location Stacks.',
         type: `string`,
-        value: 'generateUUID()',
+        value: 'generateGUID()',
       };
     }
 
@@ -676,7 +676,7 @@ Object.keys(object_factories).forEach((factory_type) => {
 
   if (factory_type === 'ContextFactories') {
     import_statements.push(`import { GlobalContextName, LocationContextName } from "./ContextNames";`);
-    import_statements.push(`import { generateUUID } from "./helpers";`);
+    import_statements.push(`import { generateGUID } from "./helpers";`);
   }
 
   const filename = `${core_tracker_package_dir}${factory_type}.ts`;
@@ -757,6 +757,9 @@ Object.keys(object_declarations).forEach((definition_type) => {
     contentContextNamesTsFile += `export type Any${enumName} = '${contextNames.join("' | '")}';\n\n`;
   }
 });
+
+// Append ContextNames Set
+contentContextNamesTsFile += `export const ContextNames = new Set([...Object.keys(LocationContextName), ...Object.keys(GlobalContextName)]);\n\n`;
 
 // write ContextNames.ts to file, if we have any
 if (contentContextNamesTsFile) {

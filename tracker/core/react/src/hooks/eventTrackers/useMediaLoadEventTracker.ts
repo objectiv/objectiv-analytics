@@ -3,20 +3,26 @@
  */
 
 import { trackMediaLoadEvent } from '../../eventTrackers/trackMediaLoadEvent';
-import { EventTrackerHookParameters } from '../../types';
+import { EventTrackerHookCallbackParameters, EventTrackerHookParameters } from '../../types';
 import { useLocationStack } from '../consumers/useLocationStack';
 import { useTracker } from '../consumers/useTracker';
-
-/**
- * The parameters of useMediaLoadEventTracker. No extra attributes, same as EventTrackerHookParameters.
- */
-export type MediaLoadEventTrackerHookParameters = EventTrackerHookParameters;
+import { mergeEventTrackerHookAndCallbackParameters } from './mergeEventTrackerHookAndCallbackParameters';
 
 /**
  * Returns a MediaLoadEvent Tracker callback function, ready to be triggered.
  */
-export const useMediaLoadEventTracker = (parameters: MediaLoadEventTrackerHookParameters = {}) => {
-  const { tracker = useTracker(), locationStack = useLocationStack(), globalContexts } = parameters;
+export const useMediaLoadEventTracker = ({
+  tracker = useTracker(),
+  locationStack = [],
+  ...hookParameters
+}: EventTrackerHookParameters = {}) => {
+  const combinedLocationStack = [...useLocationStack(), ...locationStack];
 
-  return () => trackMediaLoadEvent({ tracker, locationStack, globalContexts });
+  return (callbackParameters: EventTrackerHookCallbackParameters = {}) =>
+    trackMediaLoadEvent(
+      mergeEventTrackerHookAndCallbackParameters(
+        { tracker, locationStack: combinedLocationStack, ...hookParameters },
+        callbackParameters
+      )
+    );
 };

@@ -2,9 +2,9 @@
  * Copyright 2021-2022 Objectiv B.V.
  */
 
-import { matchUUID, MockConsoleImplementation } from '@objectiv/testing-tools';
+import { MockConsoleImplementation } from '@objectiv/testing-tools';
 import {
-  generateUUID,
+  generateGUID,
   LocationContextName,
   makePressEvent,
   TrackerQueue,
@@ -21,7 +21,7 @@ describe('makeClickEventHandler', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     makeTracker({
-      applicationId: generateUUID(),
+      applicationId: generateGUID(),
       endpoint: 'test',
       queue: new TrackerQueue({ store: new TrackerQueueMemoryStore(), batchDelayMs: 1 }),
     });
@@ -46,7 +46,6 @@ describe('makeClickEventHandler', () => {
       1,
       expect.objectContaining({
         _type: 'PressEvent',
-        id: matchUUID,
         global_contexts: [],
         location_stack: [],
       })
