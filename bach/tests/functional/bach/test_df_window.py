@@ -459,9 +459,9 @@ def test_expanding_variations():
             _test_series_vs_full_df(series, min_periods=min_periods)
 
 
-def test_window_functions_not_in_where_having_groupby():
+def test_window_functions_not_in_where_having_groupby(engine):
     # window functions are not allowed in where if constructed externally
-    bt = get_bt_with_test_data(full_data_set=True)
+    bt = get_df_with_test_data(engine, full_data_set=True)
     btg_min_fnd = bt.founding.min(bt.sort_values('inhabitants').window())
     with pytest.raises(ValueError,
                        match='Cannot apply a Boolean series containing a window function to DataFrame.'):
