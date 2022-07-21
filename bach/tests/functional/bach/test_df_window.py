@@ -1,10 +1,12 @@
-import numpy as np
 import pandas as pd
 import pytest
 
-from bach import DataFrame
 from bach.partitioning import WindowFrameMode, WindowFrameBoundary
-from tests.functional.bach.test_data_and_utils import assert_equals_data, get_bt_with_test_data, get_df_with_test_data
+from tests.functional.bach.test_data_and_utils import (
+    assert_equals_data, get_df_with_test_data,
+    TEST_DATA_CITIES_FULL, CITIES_COLUMNS,
+)
+from tests.unit.bach.util import get_pandas_df
 
 
 def test_windowing_frame_clause(engine):
@@ -310,8 +312,10 @@ def test_windowing_expressions(engine):
     )
 
 
-def test_rolling_basics():
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'inhabitants']]
+def test_rolling_basics(engine):
+    bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'inhabitants']]
+    # make the rolling deterministic
+    bt = bt.sort_index()
     bt['rolling'] = bt.rolling(window=2).inhabitants.sum()
 
     assert_equals_data(
@@ -326,8 +330,8 @@ def test_rolling_basics():
     )
 
 
-def test_rolling_group_by_basics():
-    bt = get_bt_with_test_data(full_data_set=True)[['skating_order', 'municipality', 'inhabitants']]
+def test_rolling_group_by_basics(engine):
+    bt = get_df_with_test_data(engine, full_data_set=True)[['skating_order', 'municipality', 'inhabitants']]
     bt['rolling'] = bt.groupby('municipality').sort_values('skating_order').rolling(window=2).inhabitants.sum()
 
     assert_equals_data(
@@ -348,115 +352,193 @@ def test_rolling_group_by_basics():
             [10, 10, 'Waadhoeke', 12760, None]]
     )
 
-def test_rolling_defaults_vs_pandas():
-    import numpy as np
 
-    bdf = get_bt_with_test_data(full_data_set=True)
-    pdf = bdf.to_pandas()
+@pytest.mark.parametrize('center', [False, True])
+def test_rolling_defaults_vs_pandas(engine, center):
+    columns = ['skating_order', 'municipality', 'inhabitants']
+    bdf = get_df_with_test_data(engine, full_data_set=True)[columns].reset_index(drop=True)
+    pdf = get_pandas_df(TEST_DATA_CITIES_FULL, CITIES_COLUMNS)[columns].reset_index(drop=True)
 
-    def get_rolling_values(df, window, min_periods, center, group_by):
-        r = df[['skating_order', 'municipality']]
-        # the first sort_order is for the window order
-        t = df.sort_values('skating_order')
-        t = t.groupby(group_by) if group_by else t
+    bdf = bdf.sort_values(by='skating_order')
+    pdf = pdf.sort_values(by='skating_order')
 
-        rolling = t.rolling(
-            window=window, min_periods=min_periods, center=center
-        ).inhabitants.sum()
+    empty_gb_bdf = bdf.copy()
+    gb_bdf = bdf.groupby('municipality')
 
-        if isinstance(df, DataFrame):
-            # pandas can retain the sorting order and apply group_by,
-            # but bach can not. We need to do one final sort in the larger df
-            r['rolling'] = rolling
-            return r.sort_values([*group_by, 'skating_order'])['rolling'].to_numpy()
-        else:
-            # we can't return the entire frame as in pandas it's not possible
-            # to add the grouped, rolled up values back into the df, due to an
-            # index mismatch.
-            return rolling.to_numpy()
+    empty_gb_pdf = pdf.copy()
+    # keep skating order as index for sorting final results
+    gb_pdf = pdf.set_index('skating_order', append=False).groupby('municipality')
 
-    for center in [False, True]:
-        for window in range(1, 11):
-            for min_periods in range(0, window):
-                for group_by in ([], ['municipality']):
-                    bdf_values = get_rolling_values(
-                        bdf, group_by=group_by, window=window, min_periods=min_periods, center=center)
-                    pdf_values = get_rolling_values(
-                        pdf, group_by=group_by, window=window, min_periods=min_periods, center=center)
-                    try:
-                        # Because the returned values have nan / None mixture,
-                        # it's really hard to compare them easily.
-                        for x, y in zip(bdf_values.tolist(), pdf_values.tolist()):
-                            xnan = x is None or np.isnan(x)
-                            ynan = y is None or np.isnan(y)
-                            if xnan != ynan or (not xnan and x != y):
-                                # this looks ridiculous. but actually gives a nice error
-                                assert(x == y)
+    # can not set aggregated series to grouped df
+    gb_bdf_rolled_series = {}
+    gb_pdf_rolled_series = {}
 
-                    except Exception as e:
-                        print(bdf_values)
-                        print(pdf_values)
-                        raise e
+    for window in range(1, 11):
+        for min_periods in range(0, window):
+            rolling_params = {
+                'window': window,
+                'min_periods': min_periods,
+                'center': center,
+            }
 
+            series_name = f'inhabitants_w_{window}_p_{min_periods}'
+            # roll values with empty groupby
+            empty_gb_bdf[series_name] = empty_gb_bdf.rolling(**rolling_params).inhabitants.sum()
+            empty_gb_pdf[series_name] = empty_gb_pdf.rolling(**rolling_params).inhabitants.sum()
 
-def test_rolling_variations():
-    bt = get_bt_with_test_data(full_data_set=True)
-    bt = bt[['skating_order', 'municipality', 'inhabitants', 'founding']]
+            # roll values with groupby
+            gb_bdf_rolled_series[series_name] = gb_bdf.rolling(**rolling_params).inhabitants.sum()
+            gb_pdf_rolled_series[series_name] = gb_pdf.rolling(**rolling_params).inhabitants.sum()
 
-    def _test_full_df_vs_selection(df, series, **kwargs):
-        r1 = df.rolling(**kwargs).sum()[[series + '_sum']]
-        # the last [] is required because running this on a df will include the index as a series
-        r2 = df[[series]].rolling(**kwargs).sum()[[series + '_sum']]
-        np.testing.assert_equal(r1.to_numpy(), r2.to_numpy())
-
-    def _test_series_vs_full_df(df, series, **kwargs):
-        # get the series
-        r1 = df[series].sum(df.rolling(**kwargs)).to_frame()
-        # get the frame selection
-        # the last [] is required because running this on a df will include the index as a series
-        r2 = df[[series]].rolling(**kwargs).sum()[[series + '_sum']]
-        np.testing.assert_equal(r1.to_numpy(), r2.to_numpy())
-
-    for df in bt[['skating_order', 'inhabitants', 'founding']], bt.groupby('municipality'):
-        for s in df.data_columns:
-            for window in [1, 5, 11]:
-                _test_full_df_vs_selection(df, s, window=window)
-                _test_series_vs_full_df(df, s, window=window)
+    pd.testing.assert_frame_equal(empty_gb_pdf, empty_gb_bdf.to_pandas(), check_dtype=False)
+    gb_bdf_result = gb_bdf.copy_override(
+        series={
+            **{
+                s_name: s.copy_override(name=s_name)
+                for s_name, s in gb_bdf_rolled_series.items()
+            },
+            'skating_order': gb_bdf['skating_order'].copy_override(group_by=None)
+        },
+        group_by=None,
+    )
+    gb_bdf_result = gb_bdf_result.set_index('skating_order', append=True).sort_index()
+    gb_pdf_result = pd.DataFrame(data=gb_pdf_rolled_series).sort_index()
+    pd.testing.assert_frame_equal(
+        gb_pdf_result, gb_bdf_result.to_pandas(), check_dtype=False
+    )
 
 
-def test_expanding_defaults_vs_pandas():
-    bt = get_bt_with_test_data(full_data_set=True)[['skating_order', 'founding', 'inhabitants']]
+@pytest.mark.parametrize('group_by', [[], ['municipality']])
+def test_rolling_variations(engine, group_by):
+    columns_to_roll = ['skating_order', 'inhabitants', 'founding']
 
-    # Create a pandas version of this stuff
-    for series in bt.data_columns:
-        for min_periods in range(0, 11):
-            pdf: pd.DataFrame = bt[[series]].to_pandas()
-            pd_values = pdf.expanding(min_periods=min_periods).sum().to_numpy()
-            bt_values = bt.expanding(min_periods=min_periods).sum()[[series + '_sum']].to_numpy()
-            np.testing.assert_equal(pd_values, bt_values)
+    bt = get_df_with_test_data(engine, full_data_set=True)
+    bt = bt[group_by + columns_to_roll]
+    bt = bt.sort_values(by='skating_order')
+    bt = bt.groupby(group_by)
+
+    windows_to_test = [1, 5, 11]
+    expected_column_names = sorted(
+        f'{col}_sum_w_{w}'
+        for col in columns_to_roll
+        for w in windows_to_test
+    )
+    sorting_column = 'skating_order_sum_w_1'
+
+    full_df_rolling_results = {}
+    for window in windows_to_test:
+        full_df_roll = bt.rolling(window=window).sum()
+        full_df_rolling_results.update(
+            {
+                f'{s.name}_w_{window}': s.copy_override(name=f'{s.name}_w_{window}')
+                for s in full_df_roll.data.values()
+            }
+        )
+
+    per_series_rolling_results = {}
+    for s in bt.data_columns:
+        for window in windows_to_test:
+            series_name = f'{s}_sum_w_{window}'
+            per_series_rolling_results[series_name] = (
+                bt[[s]].rolling(window=window).sum()[s + '_sum'].copy_override(name=series_name)
+            )
+
+    fdf_base = full_df_rolling_results[sorting_column]
+    full_df_result = bt.copy_override(
+        series=full_df_rolling_results,
+        group_by=None,
+        index=fdf_base.index,
+    )[expected_column_names]
+
+    sdf_base = per_series_rolling_results[sorting_column]
+    per_series_result = bt.copy_override(
+        series=per_series_rolling_results, group_by=None, index=sdf_base.index,
+    )[expected_column_names]
+
+    full_df_result = full_df_result.sort_values(by=sorting_column)
+    per_series_result = per_series_result.sort_values(by=sorting_column)
+    pd.testing.assert_frame_equal(full_df_result.to_pandas(), per_series_result.to_pandas())
 
 
-def test_expanding_variations():
-    bt = get_bt_with_test_data(full_data_set=True)
-    bt = bt[['skating_order', 'founding', 'inhabitants']]
-    def _test_full_df_vs_selection(series, **kwargs):
-        r1 = bt.expanding(**kwargs).sum()[[series + '_sum']]
-        # the last [] is required because running this on a df will include the index as a series
-        r2 = bt[[series]].expanding(**kwargs).sum()[[series + '_sum']]
-        np.testing.assert_equal(r1.to_numpy(), r2.to_numpy())
+def test_expanding_defaults_vs_pandas(engine):
+    columns = ['skating_order', 'founding', 'inhabitants']
+    bt = get_df_with_test_data(engine, full_data_set=True)[columns]
+    bt = bt.sort_values(by='skating_order')
 
-    def _test_series_vs_full_df(series, **kwargs):
-        # get the series
-        r1 = bt[series].sum(bt.expanding(**kwargs)).to_frame()
-        # get the frame selection
-        # the last [] is required because running this on a df will include the index as a series
-        r2 = bt[[series]].expanding(**kwargs).sum()[[series + '_sum']]
-        np.testing.assert_equal(r1.to_numpy(), r2.to_numpy())
+    pdf = get_pandas_df(TEST_DATA_CITIES_FULL, CITIES_COLUMNS)[columns]
+    pdf.index = pdf.index.rename(name='_index_skating_order')
+    pdf = pdf.sort_values(by='skating_order')
 
-    for series in bt.data_columns:
-        for min_periods in [1,5,11]:
-            _test_full_df_vs_selection(series, min_periods=min_periods)
-            _test_series_vs_full_df(series, min_periods=min_periods)
+    result_bt = bt.reset_index(drop=True)
+    result_pdf = pdf.reset_index(drop=True)
+
+    for min_periods in range(0, 11):
+        expanding_bdf = bt.expanding(min_periods=min_periods).sum()
+        expanding_bdf = expanding_bdf.rename(
+            columns={f'{col}_sum': f'{col}_mn_{min_periods}' for col in columns}
+        )
+        result_bt = result_bt.copy_override(series={**result_bt.data, **expanding_bdf.data})
+
+        expanding_pdf = pdf.expanding(min_periods=min_periods).sum()
+        expanding_pdf = expanding_pdf.rename(
+            columns={col: f'{col}_mn_{min_periods}' for col in columns}
+        )
+        result_pdf = result_pdf.merge(
+            expanding_pdf,
+            left_on='skating_order',
+            right_on='_index_skating_order',
+            how='left'
+        )
+
+    pd.testing.assert_frame_equal(result_pdf, result_bt.to_pandas(), check_dtype=False)
+
+
+def test_expanding_variations(engine):
+    columns_to_expand = ['skating_order', 'founding', 'inhabitants']
+    bt = get_df_with_test_data(engine, full_data_set=True)[columns_to_expand]
+    bt = bt.sort_index()
+
+    min_periods_to_test = [1, 5, 11]
+    expected_column_names = sorted(
+        f'{col}_sum_mn_{mn}'
+        for col in columns_to_expand
+        for mn in min_periods_to_test
+    )
+    sorting_column = 'skating_order_sum_mn_1'
+
+    full_df_expanding_results = {}
+    for min_periods in min_periods_to_test:
+        full_df_roll = bt.expanding(min_periods=min_periods).sum()
+        full_df_expanding_results.update(
+            {
+                f'{s.name}_mn_{min_periods}': s.copy_override(name=f'{s.name}_mn_{min_periods}')
+                for s in full_df_roll.data.values()
+            }
+        )
+
+    per_series_expanding_results = {}
+    for s in bt.data_columns:
+        for min_periods in min_periods_to_test:
+            series_name = f'{s}_sum_mn_{min_periods}'
+            per_series_expanding_results[series_name] = (
+                bt[[s]].expanding(min_periods=min_periods).sum()[s + '_sum'].copy_override(name=series_name)
+            )
+
+    fdf_base = full_df_expanding_results[sorting_column]
+    full_df_result = bt.copy_override(
+        series=full_df_expanding_results,
+        group_by=None,
+        index=fdf_base.index,
+    )[expected_column_names]
+
+    sdf_base = per_series_expanding_results[sorting_column]
+    per_series_result = bt.copy_override(
+        series=per_series_expanding_results, group_by=None, index=sdf_base.index,
+    )[expected_column_names]
+
+    full_df_result = full_df_result.sort_values(by=sorting_column)
+    per_series_result = per_series_result.sort_values(by=sorting_column)
+    pd.testing.assert_frame_equal(full_df_result.to_pandas(), per_series_result.to_pandas())
 
 
 def test_window_functions_not_in_where_having_groupby(engine):
@@ -487,7 +569,7 @@ def test_window_functions_not_in_where_having_groupby(engine):
         x = bt.groupby(bt.lag)
 
     # window functions not allowed in having (chosen over where when groupby is set)
-    bt = get_bt_with_test_data(full_data_set=True)
+    bt = get_df_with_test_data(engine, full_data_set=True)
     bt = bt.window().min()
     with pytest.raises(ValueError,
                        match='Cannot apply a Boolean series containing a window function to DataFrame.'):
