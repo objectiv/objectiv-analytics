@@ -497,57 +497,121 @@ class Aggregate:
 
         return retention_matrix
 
-    def get_df_consecutive_steps(self, df, step='root_location', event_type=None, groupby_column='user_id'):
-        if event_type is not None:
-            df = df[df['event_type'] == event_type]
+    # TODO add @use_only_required_objectiv_series(
+    def add_to_df_consecutive_steps(self, df,
+                                    step_column='feature_nice_name',
+                                    groupby_column='user_id'):
+        """
+        TODO
+        """
 
-        if step == 'feature_nice_name':
-            df['long_feature_nice_name'] = df.location_stack.ls.nice_name
-            # df['feature_nice_name'] = df['long_feature_nice_name'].str.replace(' located at Root Location:', ',')
-            # df['feature_nice_name'] = df['feature_nice_name'].str.replace(' => ', ' > ')
-            df['step_name'] = df['long_feature_nice_name']
-        elif step == 'root_location':
-            df['step_name'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext',
-                                                                                     key='id')
+        # TODO check if feature_nice_name and root_location already exist
+        if step_column == 'feature_nice_name':
+            df['__current_step'] = df.location_stack.ls.nice_name
+        elif step_column == 'root_location':
+            df['__current_step'] = df.location_stack.ls.get_from_context_with_type_series(type='RootLocationContext',
+                                                                                          key='id')
+        else:
+            if step_column in df.data_columns:
+                df['__current_step'] = df[step_column]
+            else:
+                raise ValueError(f'{step_column} column doesn\'t exist.')
+
         # construct steps column which is a list of strings
-        df_steps = df.groupby(groupby_column)['step_name'].to_json_array().reset_index()
-        df_steps = df_steps.rename(columns={'step_name': 'step_sequences'})
+        by = [df['moment']]
+        df_steps = df.groupby(groupby_column)['__current_step'].to_json_array().reset_index()
+        # TODO json list should be ordered by moment, after merging to main uncomment the line
+        # df_steps = df.groupby(groupby_column)['__current_step'].sort_by_series(by=by).to_json_array()
+        df_steps = df_steps.rename(columns={'__current_step': '__steps_sequence'})
         df_steps = df.merge(df_steps, on=groupby_column)
         return df_steps
 
-    def top_step_sequences(self, df, n_steps=3, n_examples=10, groupby_column='user_id',
-                           step='root_location', event_type=None, display=True):
-        from bach.list_operations import PostgresListShifterOperation, BigQueryListShifterOperation
-        df_steps = self.get_df_consecutive_steps(df, event_type=event_type, step=step,
-                                                 groupby_column=groupby_column)
-        df_steps = df_steps[[groupby_column, 'step_sequences']].drop_duplicates()
+    # TODO add @use_only_required_objectiv_series(
+    def top_step_sequences(self, df, n_steps=3,
+                           groupby_column='user_id',
+                           step_column='feature_nice_name',
+                           event_type=None,
+                           display=True,
+                           target_conversion=True,
+                           n_examples=None,
+                           max_n_examples=100):
+        """
+        TODO
+        """
+        if event_type is not None:
+            df = df[df['event_type'] == event_type]
 
-        func_ngram = lambda data, n: [data[i: i + n] for i in range(len(data) - n + 1)]
+        # get consecutive steps for a given user_id (groupby_column) value
+        if not all(i in df.data_columns for i in ['__current_step', '__steps_sequence']):
+            df_steps = self.add_to_df_consecutive_steps(df,
+                                                        step_column=step_column,
+                                                        groupby_column=groupby_column)
+        else:
+            df_steps = df
 
+        # we want to get whole journey of user_id (groupby_column),
+        # __steps_sequence already contains the whole journey
+        # hence for each (groupby_column, __steps_sequence) pair we need keep only one element
+        df_steps = df_steps[[groupby_column, '__steps_sequence']].drop_duplicates()
+
+        # now calculate consecutive n steps (n value from n_steps) out of whole journey for each groupby_column
+        # and counter of n steps in whole data frame
+        import json
         from sql_models.util import DatabaseNotSupportedException, is_postgres, is_bigquery
-        engine = df.engine
+        from bach.list_operations import PostgresListShifterOperation, BigQueryListShifterOperation
+
+        engine = df_steps.engine
         if is_postgres(engine):
-            df_steps_counter = PostgresListShifterOperation(list_series=df_steps['step_sequences'],
+            df_steps_counter = PostgresListShifterOperation(list_series=df_steps['__steps_sequence'],
                                                             shifting_n=n_steps).count_sublist_occurrence().sort_values(
                 ascending=False)
         elif is_bigquery(engine):
-            df_steps_counter = BigQueryListShifterOperation(list_series=df_steps['step_sequences'],
+            df_steps_counter = BigQueryListShifterOperation(list_series=df_steps['__steps_sequence'],
                                                             shifting_n=n_steps).count_sublist_occurrence().sort_values(
                 ascending=False)
         else:
             raise DatabaseNotSupportedException(engine)
 
-        if n_examples is None:
-            df_steps_counter = df_steps_counter.to_pandas()
-        else:
-            df_steps_counter = df_steps_counter.head(n_examples)
+        df_steps_counter = df_steps_counter.reset_index().to_pandas()
+
+        # the step sequence per groupby_column at some point should arrive
+        # to a conversion event after that we discard the next steps
+        if target_conversion:
+            # TODO implement in Bach!
+            conversion_list = set(df[df['is_conversion_event']][step_column].to_pandas().values)
+
+            def truncate_to_first_conversion_event(x):
+                new_list = []
+                for i in json.loads(x):
+                    if i not in conversion_list:  # TODO
+                        new_list.append(i)
+                    else:
+                        new_list.append(i)
+                        break
+                return json.dumps(new_list)
+
+            # cut the journey if it arrived to a first conversion event
+            df_steps_counter['__steps_sequence'] = df_steps_counter['__steps_sequence'].apply(
+                truncate_to_first_conversion_event)
+
+            # last element should be conversion event
+            df_steps_counter = df_steps_counter[df_steps_counter['__steps_sequence'].apply(lambda x: True
+                if json.loads(x)[-1] in conversion_list else False)]
 
         if display:
-            _counter = df_steps_counter.reset_index().values.tolist()
+            if n_examples is None:
+                n_examples = len(df_steps_counter)
+            n_examples = min(n_examples, max_n_examples)
+            print(f'Showing {n_examples} examples out of {len(df_steps_counter)}')
+
+            _counter = df_steps_counter
+            if n_examples is not None:
+                _counter = df_steps_counter.head(n_examples)
+            _counter = _counter.values.tolist()
 
             label, source, target, value = [], [], [], []
 
-            import json
+            func_ngram = lambda data, n: [data[i: i + n] for i in range(len(data) - n + 1)]
             for elem in _counter:
                 # vertex
                 source_target_list = func_ngram(json.loads(elem[0]), 2)
@@ -560,6 +624,7 @@ class Aggregate:
 
             import pandas as pd
             df_links = pd.DataFrame({'source': source, 'target': target, 'value': value})
+
             unique_source_target = list(pd.unique(df_links[['source', 'target']].values.ravel()))
             mapping_dict = {k: v for v, k in enumerate(unique_source_target)}
             df_links['source'] = df_links['source'].map(mapping_dict)
@@ -567,33 +632,38 @@ class Aggregate:
 
             # summing up loops - we want one link for a loop
             df_links["value"] = df_links.groupby(['source', 'target'])['value'].transform('sum')
+            # after summing, we neet to drop the rest
             df_links = df_links.drop_duplicates(subset=['source', 'target'])
 
-            links_dict = df_links.to_dict(orient='list')
+            if not df_links.empty:
+                links_dict = df_links.to_dict(orient='list')
 
-            import plotly.graph_objects as go
-            fig = go.Figure(data=[go.Sankey(
-                textfont=dict(color="rgba(0,0,0,0)", size=1),
-                node=dict(
-                    pad=25,
-                    thickness=15,
-                    line=dict(color="black", width=0.5),
-                    label=unique_source_target,
-                ),
-                link=dict(
-                    source=links_dict["source"],
-                    target=links_dict["target"],
-                    value=links_dict["value"],
-                ),
-            )])
+                import plotly.graph_objects as go
+                fig = go.Figure(data=[go.Sankey(
+                    textfont=dict(color="rgba(0,0,0,0)", size=1),
+                    orientation='h',  # for vertical orientation - 'v',
+                    node=dict(
+                        pad=25,
+                        thickness=15,
+                        line=dict(color="black", width=0.5),
+                        label=unique_source_target,
+                    ),
+                    link=dict(
+                        source=links_dict["source"],
+                        target=links_dict["target"],
+                        value=links_dict["value"],
+                    ),
+                )])
 
-            fig.update_layout(
-                hoverlabel=dict(
-                    bgcolor="white",
-                    font_size=16,
-                ),
+                fig.update_layout(
+                    hoverlabel=dict(
+                        bgcolor="white",
+                        font_size=16,
+                    ),
 
-                title_text="Location Stack Movement", font_size=12)
-            fig.show()
+                    title_text="Location Stack Movement", font_size=12)
+                fig.show()
+            else:
+                print("There is no data to plot.")
 
         return df_steps_counter
