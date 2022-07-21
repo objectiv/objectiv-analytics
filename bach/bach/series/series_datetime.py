@@ -436,20 +436,6 @@ class SeriesTimestamp(SeriesAbstractDateTime):
                                           other_dtypes=tuple(type_mapping.keys()),
                                           dtype=type_mapping)
 
-    def _comparator_operation(
-        self,
-        other: Union['Series', AllSupportedLiteralTypes],
-        comparator: str,
-        other_dtypes: Tuple[str, ...] = ('timestamp',)
-    ) -> 'SeriesBoolean':
-        # Always convert to a series first.
-        # We also support direct comparisons against string literals, which requires a cast to the correct
-        # type, which requires turning it into a series first.
-        other = value_to_series(base=self, value=other)
-        if isinstance(other, Series) and not isinstance(other, SeriesTimestamp):
-            other = other.astype('timestamp')
-        return super()._comparator_operation(other, comparator, other_dtypes)
-
 
 class SeriesDate(SeriesAbstractDateTime):
     """
@@ -515,20 +501,6 @@ class SeriesDate(SeriesAbstractDateTime):
                                        other_dtypes=tuple(type_mapping.keys()),
                                        dtype=type_mapping)
         )
-
-    def _comparator_operation(
-        self,
-        other: Union['Series', AllSupportedLiteralTypes],
-        comparator: str,
-        other_dtypes: Tuple[str, ...] = ('date',)
-    ) -> 'SeriesBoolean':
-        # Always convert to a series first.
-        # We also support direct comparisons against string literals, which requires a cast to the correct
-        # type, which requires turning it into a series first.
-        other = value_to_series(base=self, value=other)
-        if isinstance(other, Series) and not isinstance(other, SeriesDate):
-            other = other.astype('date')
-        return super()._comparator_operation(other, comparator, other_dtypes)
 
 
 class SeriesTime(SeriesAbstractDateTime):
