@@ -272,13 +272,12 @@ class SeriesString(Series):
 
         # This logic is partially duplicating DataFrame._get_order_by_clause(), but we can't quite re-use
         # that as some of the checks there are not applicable (e.g. it's fine to use a column that we are not
-        # grouping on).
+        # grouping on), and the sorting of null values is slightly different.
         if not order_by:
             raise ValueError('order_by is empty')
 
         expressions: List[Expression] = []
         for sc in order_by:
-            # pandas sorts by default all nulls last
             if sc.expression.has_multi_level_expressions:
                 multi_lvl_exprs = [
                     level_expr for level_expr in sc.expression.data if isinstance(level_expr, Expression)
