@@ -166,7 +166,7 @@ class SeriesString(Series):
     }
     supported_value_types = (str, type(None))  # NoneType ends up as a string for now
 
-    @ classmethod
+    @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         # We override the parent class here because strings are really common, and we don't strictly need
         # to cast them. As all supported databases will interpret a string literal as a string.
