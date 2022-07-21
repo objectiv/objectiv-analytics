@@ -14,10 +14,10 @@ from sqlalchemy.engine import Dialect
 from bach import DataFrame
 from bach.series import Series, SeriesString, SeriesBoolean, SeriesFloat64, SeriesInt64
 from bach.expression import Expression, join_expressions
-from bach.series.series import WrappedPartition, ToPandasInfo
+from bach.series.series import WrappedPartition, ToPandasInfo, value_to_series
 from bach.series.utils.datetime_formats import parse_c_standard_code_to_postgres_code, \
     parse_c_code_to_bigquery_code
-from bach.types import DtypeOrAlias, StructuredDtype
+from bach.types import DtypeOrAlias, StructuredDtype, AllSupportedLiteralTypes
 from sql_models.constants import DBDialect
 from sql_models.util import is_postgres, is_bigquery, DatabaseNotSupportedException
 
@@ -370,10 +370,6 @@ class SeriesTimestamp(SeriesAbstractDateTime):
     supported_value_types = (datetime.datetime, numpy.datetime64, datetime.date, str)
 
     @classmethod
-    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
-
-    @classmethod
     def supported_value_to_literal(
         cls,
         dialect: Dialect,
@@ -459,10 +455,6 @@ class SeriesDate(SeriesAbstractDateTime):
     supported_value_types = (datetime.datetime, datetime.date, str)
 
     @classmethod
-    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        return Expression.construct(f'cast({{}} as date)', literal)
-
-    @classmethod
     def supported_value_to_literal(
         cls,
         dialect: Dialect,
@@ -530,10 +522,6 @@ class SeriesTime(SeriesAbstractDateTime):
     supported_value_types = (datetime.time, str)
 
     @classmethod
-    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
-
-    @classmethod
     def supported_value_to_literal(
         cls,
         dialect: Dialect,
@@ -573,10 +561,6 @@ class SeriesTimedelta(SeriesAbstractDateTime):
         DBDialect.BIGQUERY: 'INTERVAL',
     }
     supported_value_types = (datetime.timedelta, numpy.timedelta64, str)
-
-    @classmethod
-    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
 
     @classmethod
     def supported_value_to_literal(

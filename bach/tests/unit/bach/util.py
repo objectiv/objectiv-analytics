@@ -54,10 +54,6 @@ class FakeSeries(Series):
     def __or__(self, other) -> 'Series':
         pass
 
-    @classmethod
-    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        pass
-
 
 def get_fake_df(
     dialect: Dialect,

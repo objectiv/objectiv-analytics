@@ -375,7 +375,7 @@ class Map:
 
         calc_series_name = series_to_calculate.private_name
         data[calc_series_name] = 1
-        data.loc[~pch_mask, calc_series_name] = None
+        data.loc[~pch_mask, calc_series_name] = bach.SeriesInt64.from_value(base=data, value=None)
 
         pre_conversion_hit_number = (
             data[calc_series_name].astype('int64')

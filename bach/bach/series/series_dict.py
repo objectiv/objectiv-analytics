@@ -50,10 +50,6 @@ class SeriesDict(Series):
     supported_value_types = (dict, )
 
     @classmethod
-    def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
-        return literal
-
-    @classmethod
     def supported_value_to_literal(
             cls,
             dialect: Dialect,
@@ -84,7 +80,7 @@ class SeriesDict(Series):
         cls,
         base: 'DataFrameOrSeries',
         value: Dict[str, Any],
-        name: str,
+        name: str = 'new_series',
         dtype: Optional[StructuredDtype] = None
     ) -> 'SeriesDict':
         """

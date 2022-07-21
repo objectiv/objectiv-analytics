@@ -6,12 +6,11 @@ from decimal import Decimal
 import pandas as pd
 import pytest
 
-from bach import DataFrame
+from bach import DataFrame, SeriesString
 
 from tests.functional.bach.test_data_and_utils import (
     get_df_with_test_data, get_df_with_food_data,
-    assert_equals_data, get_df_with_railway_data,
-    get_bt_with_test_data, get_bt_with_railway_data
+    assert_equals_data, get_df_with_railway_data
 )
 
 
@@ -302,15 +301,18 @@ def test_merge_right_join(engine):
     )
 
 
-def test_merge_right_join_shared_on() -> None:
-    bt = get_bt_with_test_data(full_data_set=False)[['skating_order', 'city']]
-    bt['station'] = None
+def test_merge_right_join_shared_on(engine) -> None:
+    bt = get_df_with_test_data(engine, full_data_set=False)[['skating_order', 'city']]
+    bt['station'] = SeriesString.from_value(base=bt, value=None)
+    bt = bt.materialize()
+
     bt = bt.reset_index(drop=True)
 
-    mt = get_bt_with_railway_data()[['station', 'platforms']]
+    mt = get_df_with_railway_data(engine)[['station', 'platforms']]
     mt = mt.reset_index(drop=True)
 
     result = bt.merge(mt, how='right', on='station')
+    result = result.sort_values('station')
     assert_equals_data(
         result,
         expected_columns=[
@@ -320,11 +322,11 @@ def test_merge_right_join_shared_on() -> None:
             'platforms',
         ],
         expected_data=[
-            [None, None, 'IJlst', 1],
+            [None, None, 'Camminghaburen', 1],
             [None, None, 'Heerenveen', 1],
             [None, None, 'Heerenveen IJsstadion', 2],
+            [None, None, 'IJlst', 1],
             [None, None, 'Leeuwarden', 4],
-            [None, None, 'Camminghaburen', 1],
             [None, None, 'Sneek', 2],
             [None, None, 'Sneek Noord', 2],
         ],

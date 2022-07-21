@@ -216,7 +216,7 @@ class Expression:
 
     @classmethod
     def variable(cls, dtype: str, name: str) -> 'Expression':
-        """ Return an expression that contains a single RawToken. """
+        """ Return an expression that contains a single VariableToken. """
         return cls([VariableToken(dtype=dtype, name=name)])
 
     @classmethod

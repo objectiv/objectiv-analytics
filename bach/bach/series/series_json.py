@@ -166,9 +166,10 @@ class SeriesJson(Series):
     @classmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         if is_postgres(dialect):
-            return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
+            return super().supported_literal_to_expression(dialect=dialect, literal=literal)
         if is_bigquery(dialect):
-            return literal
+            from bach import SeriesString
+            return SeriesString.supported_literal_to_expression(dialect=dialect, literal=literal)
         raise DatabaseNotSupportedException(dialect)
 
     @classmethod

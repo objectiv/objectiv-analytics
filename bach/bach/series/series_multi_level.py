@@ -191,7 +191,7 @@ class SeriesAbstractMultiLevel(Series, ABC):
         cls: Type[T],
         base: DataFrameOrSeries,
         value: Any,
-        name: str,
+        name: str = 'new_series',
         dtype: Optional[StructuredDtype] = None
     ) -> T:
         """
@@ -222,7 +222,8 @@ class SeriesAbstractMultiLevel(Series, ABC):
             }
         else:
             levels = {
-                level_name: value_to_series(base=base, value=None).astype(dtypes[0])
+                level_name: get_series_type_from_dtype(dtypes[0]).from_value(
+                    base=base, value=None, name=level_name)
                 for level_name, dtypes in cls.get_supported_level_dtypes().items()
             }
         result = cls.get_class_instance(

@@ -215,18 +215,22 @@ class Series(ABC):
         self._order_by = order_by or []
 
     @classmethod
-    @abstractmethod
     def supported_literal_to_expression(cls, dialect: Dialect, literal: Expression) -> Expression:
         """
         INTERNAL: Given an expression representing a literal as returned by
         :meth:`supported_value_to_literal()`, this returns an Expression representing the actual value with
         the correct type.
 
+        By default, will generate an expression that will cast the literal to the type defined in
+        cls.supported_db_dtype.
+        This default behaviour can be overridden by subclasses; When overriding make sure that all values
+        returned by :meth:`supported_literal_to_expression()` are supported, including 'NULL'.
+
         Example for dtype `int64`, with Postgres Dialect (`pgd`):
             supported_value_to_literal(pgd, 123) will return an expression representing '123'
             supported_literal_to_expression(pgd, '123') should then turn that into 'cast(123 to bigint)'
         """
-        raise NotImplementedError()
+        return Expression.construct(f'cast({{}} as {cls.get_db_dtype(dialect)})', literal)
 
     @classmethod
     @abstractmethod
@@ -443,7 +447,7 @@ class Series(ABC):
     def from_value(cls: Type[SeriesSubType],
                    base: DataFrameOrSeries,
                    value: Any,
-                   name: str,
+                   name: str = 'new_series',
                    dtype: Optional[StructuredDtype] = None) -> SeriesSubType:
         """
         Create an instance of this class, that represents a column with the given value.
