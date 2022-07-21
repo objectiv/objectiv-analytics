@@ -7,9 +7,9 @@ from bach.partitioning import WindowFrameMode, WindowFrameBoundary
 from tests.functional.bach.test_data_and_utils import assert_equals_data, get_bt_with_test_data, get_df_with_test_data
 
 
-def test_windowing_frame_clause(pg_engine):
-    engine = pg_engine  # TODO: BigQuery
+def test_windowing_frame_clause(engine):
     bt = get_df_with_test_data(engine, full_data_set=True)
+    bt = bt.sort_index()
     w = bt.window().group_by
     # Check the default
     assert (w.frame_clause == "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW")
@@ -154,8 +154,8 @@ def test_windowing_frame_clause(pg_engine):
                             end_boundary=WindowFrameBoundary.FOLLOWING,
                             end_value=2)
 
-def test_windowing_windows(pg_engine):
-    engine = pg_engine  # TODO: BigQuery
+
+def test_windowing_windows(engine):
     ## Just test that different windows don't generate SQL errors. Logic will be checked in different tests.
     bt = get_df_with_test_data(engine, full_data_set=True)
 
@@ -172,11 +172,11 @@ def test_windowing_windows(pg_engine):
     p3 = bt.groupby(['municipality', bt['inhabitants'] < 10000]).window()
 
     for w in [p0,p1,p2,p3]:
-        bt.inhabitants.window_first_value(window=w).to_pandas()
+        bt.inhabitants.window_row_number(window=w).to_pandas()
 
     with pytest.raises(ValueError):
         # Specific window functions should fail on being passed a groupby
-        bt.inhabitants.window_first_value(window=bt.groupby())
+        bt.inhabitants.window_row_number(window=bt.groupby())
 
 
 def test_windowing_functions_agg(engine):
