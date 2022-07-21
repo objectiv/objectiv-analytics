@@ -4,17 +4,16 @@ Copyright 2021 Objectiv B.V.
 import json
 import operator
 from functools import reduce
-from abc import abstractmethod
 from typing import Dict, Union, TYPE_CHECKING, Tuple, cast, Optional, List, Any, TypeVar, Generic
 
 from sqlalchemy.engine import Dialect
 
 from bach import SortColumn
 from bach.series import Series
-from bach.expression import Expression, join_expressions
+from bach.expression import Expression
 from bach.series.series import WrappedPartition, ToPandasInfo
 from bach.sql_model import BachSqlModel
-from bach.types import DtypeOrAlias, StructuredDtype, AllSupportedLiteralTypes, Dtype
+from bach.types import DtypeOrAlias, StructuredDtype, AllSupportedLiteralTypes
 from sql_models.constants import DBDialect
 from sql_models.model import Materialization
 from sql_models.util import quote_string, is_postgres, DatabaseNotSupportedException, is_bigquery
@@ -415,6 +414,23 @@ class JsonAccessor(Generic[TSeriesJson]):
 
         return self._implementation.array_contains(item)
 
+    def flatten_array(self) -> Tuple['TSeriesJson', 'SeriesInt64']:
+        """
+        Converts elements in an array into a set of rows.
+
+        Since the operation might destroy the order of the elements,
+        a series containing the offset is also returned.
+
+        :returns: Tuple with SeriesJson (element from the array) and SeriesInt64 (offset of the element)
+
+        .. note::
+            Both returned series objects will share same base node, but this node is not
+            the same as the unflatten Series.
+
+        This assumes the top-level item in the json is an array.
+        """
+        return self._implementation.flatten_array()
+
 
 class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
     """
@@ -595,6 +611,11 @@ class JsonBigQueryAccessorImpl(Generic[TSeriesJson]):
             .copy_override(expression=expression)\
             .copy_override_type(SeriesBoolean)
 
+    def flatten_array(self) -> Tuple['TSeriesJson', 'SeriesInt64']:
+        """ For documentation, see implementation in class :class:`JsonAccessor` """
+        from bach.series.array_operations.flattening import BigQueryArrayFlattening
+        return BigQueryArrayFlattening(self._series_object)()
+
 
 class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
     """
@@ -709,3 +730,8 @@ class JsonPostgresAccessorImpl(Generic[TSeriesJson]):
     def array_contains(self, item: Union[int, float, bool, str, None]) -> 'SeriesBoolean':
         """ For documentation, see implementation in class :class:`JsonAccessor` """
         return self._series_object._comparator_operation([item], "@>")
+
+    def flatten_array(self) -> Tuple['TSeriesJson', 'SeriesInt64']:
+        """ For documentation, see implementation in class :class:`JsonAccessor` """
+        from bach.series.array_operations.flattening import PostgresArrayFlattening
+        return PostgresArrayFlattening(self._series_object)()
