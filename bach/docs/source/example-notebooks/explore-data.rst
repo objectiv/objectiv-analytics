@@ -24,18 +24,58 @@ The data used in this example is based on the data set that comes with our quick
 A first look at the data
 ------------------------
 
-.. code-block:: python
+.. testsetup:: explore-data
+    :skipif: engine is None
 
-    # have a look at the data
-    df.sort_values(['session_id', 'session_hit_number'], ascending=False).head()
+    from modelhub import ModelHub
+    from bach import display_sql_as_markdown
+    modelhub = ModelHub(time_aggregation='%Y-%m-%d')
+    df = modelhub.get_objectiv_dataframe(
+      start_date='2022-06-01',
+      end_date='2022-06-30',
+      table_name='data')
+
+.. .. code-block:: python
+
+..     # have a look at the data
+..     df.sort_values(['session_id', 'session_hit_number'], ascending=False).head()
+
+.. doctest:: explore-data
+    :skipif: engine is None
+
+    >>> # have a look at the data
+    >>> df.sort_values(['session_id', 'session_hit_number'], ascending=False).head()
+                                                day                  moment                              user_id                                   global_contexts                                    location_stack            event_type                                  stack_event_types session_id session_hit_number
+    event_id
+    96b5e709-bb8a-46de-ac82-245be25dac29 2022-06-30 2022-06-30 21:40:32.401 2d718142-9be7-4975-a669-ba022fd8fd48 [{'id': 'http_context', '_type': 'HttpContext'... [{'id': 'home', '_type': 'RootLocationContext'... VisibleEvent           [AbstractEvent, NonInteractiveEvent, VisibleEv...        872                  3
+    252d7d87-5600-4d90-b24f-2a6fb8986c5e 2022-06-30 2022-06-30 21:40:30.117 2d718142-9be7-4975-a669-ba022fd8fd48 [{'id': 'http_context', '_type': 'HttpContext'... [{'id': 'home', '_type': 'RootLocationContext'... PressEvent             [AbstractEvent, InteractiveEvent, PressEvent]            872                  2
+    157a3000-bbfc-42e0-b857-901bd578ea7c 2022-06-30 2022-06-30 21:40:16.908 2d718142-9be7-4975-a669-ba022fd8fd48 [{'id': 'http_context', '_type': 'HttpContext'... [{'id': 'home', '_type': 'RootLocationContext'... PressEvent             [AbstractEvent, InteractiveEvent, PressEvent]            872                  1
+    8543f519-d3a4-4af6-89f5-cb04393944b8 2022-06-30 2022-06-30 20:43:50.962 bb127c9e-3067-4375-9c73-cb86be332660 [{'id': 'http_context', '_type': 'HttpContext'... [{'id': 'home', '_type': 'RootLocationContext'... MediaLoadEvent         [AbstractEvent, MediaEvent, MediaLoadEvent, No...        871                  2
+    a0ad4364-57e0-4da9-a266-057744550cc2 2022-06-30 2022-06-30 20:43:49.820 bb127c9e-3067-4375-9c73-cb86be332660 [{'id': 'http_context', '_type': 'HttpContext'... [{'id': 'home', '_type': 'RootLocationContext'... ApplicationLoadedEvent [AbstractEvent, ApplicationLoadedEvent, NonInt...        871                  1
+    <BLANKLINE>
 
 Understanding the columns
 -------------------------
 
-.. code-block:: python
+.. .. code-block:: python
 
-    # show the data type of each column
-    df.dtypes
+..     # show the data type of each column
+..     df.dtypes
+
+.. doctest:: explore-data
+    :skipif: engine is None
+
+    >>> # show the data type of each column
+    >>> df.dtypes
+    {'day': 'date',
+    'moment': 'timestamp',
+    'user_id': 'uuid',
+    'global_contexts': 'objectiv_global_context',
+    'location_stack': 'objectiv_location_stack',
+    'event_type': 'string',
+    'stack_event_types': 'json',
+    'session_id': 'int64',
+    'session_hit_number': 'int64'}
 
 What is in these columns:
 
