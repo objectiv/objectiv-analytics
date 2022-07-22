@@ -3194,32 +3194,32 @@ class DataFrame:
 
         Each transformation per feature is performed as follows:
 
-        .. testsetup:: scale
-           :skipif: engine is None
+        # .. testsetup:: scale
+        #    :skipif: engine is None
 
-           import pandas
-           data = {'index': ['a', 'b', 'c', 'd'], 'feature': [1, 2, 3, 4]}
-           pdf = pandas.DataFrame(data)
-           df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
-           df = df.set_index('index')
-           agg_df = df.agg(['mean', 'std_pop'], numeric_only=True)
+        #    import pandas
+        #    data = {'index': ['a', 'b', 'c', 'd'], 'feature': [1, 2, 3, 4]}
+        #    pdf = pandas.DataFrame(data)
+        #    df = DataFrame.from_pandas(engine=engine, df=pdf, convert_objects=True)
+        #    df = df.set_index('index')
+        #    agg_df = df.agg(['mean', 'std_pop'], numeric_only=True)
 
-           feature = df['feature']
-           mean_feature = agg_df['feature_mean']
-           std_feature = agg_df['feature_std_pop']
-           with_mean = True
-           with_std = True
+        #    feature = df['feature']
+        #    mean_feature = agg_df['feature_mean']
+        #    std_feature = agg_df['feature_std_pop']
+        #    with_mean = True
+        #    with_std = True
 
-        .. doctest:: scale
-            :skipif: engine is None
+        # .. doctest:: scale
+        #     :skipif: engine is None
 
-            >>> scaled_feature = feature.copy()
-            >>> if with_mean:
-            ...     scaled_feature -= mean_feature
+        #     >>> scaled_feature = feature.copy()
+        #     >>> if with_mean:
+        #     ...     scaled_feature -= mean_feature
 
 
-            >>> if with_std:
-            ...     scaled_feature /= std_feature
+        #     >>> if with_std:
+        #     ...     scaled_feature /= std_feature
 
         Where:
             * ``feature`` is the series to be scaled
@@ -3255,12 +3255,12 @@ class DataFrame:
            min_feature = agg_df['feature_min']
            max_feature = agg_df['feature_max']
 
-        .. doctest:: minmax_scale
-            :skipif: engine is None
+        # .. doctest:: minmax_scale
+        #     :skipif: engine is None
 
-            >>> range_min,  = (0, 1)
-            >>> feature_std = (feature - min_feature) / (max_feature - min_feature)
-            >>> scaled_feature = feature_std * (range_max - range_min) + range_min
+        #     >>> range_min,  = (0, 1)
+        #     >>> feature_std = (feature - min_feature) / (max_feature - min_feature)
+        #     >>> scaled_feature = feature_std * (range_max - range_min) + range_min
 
         Where:
             * ``feature`` is the series to be scaled
