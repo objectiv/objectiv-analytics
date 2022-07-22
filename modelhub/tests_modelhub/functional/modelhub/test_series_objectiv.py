@@ -120,4 +120,3 @@ def test_objectiv_stack_type5(db_params):
             [6, 'Web Document: #document']
         ]
     )
-
