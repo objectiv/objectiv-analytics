@@ -120,3 +120,10 @@ def test_objectiv_stack_type5(db_params):
             [6, 'Web Document: #document']
         ]
     )
+
+
+def test_location_stack_get_navigation_paths(db_params):
+    bt = get_df_with_json_data_real(db_params)
+
+    bt['b'] = bt.location_stack.astype('objectiv_location_stack')
+    bts = bt.b.location_stack.get_navigation_paths(steps=4)

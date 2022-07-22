@@ -6,6 +6,7 @@ import os
 
 from typing import List, Generic, TypeVar
 # added for metabase export
+import bach
 import requests
 
 from bach import DataFrame, Series, SeriesString, SeriesJson
@@ -168,6 +169,14 @@ class SeriesLocationStack(SeriesJson):
     dtype = 'objectiv_location_stack'
 
     class LocationStack(ObjectivStack):
+        def get_navigation_paths(self, steps: int) -> bach.DataFrame:
+            flattened_lc, offset_lc = self.nice_name.json.flatten_array()
+            nav_df = flattened_lc.to_frame()
+
+            nav_df[offset_lc.name] = offset_lc
+            nav_df = nav_df.sort_values(by=nav_df.index_columns + [offset_lc.name])
+            print('hola')
+
         @property
         def navigation_features(self):
             """
