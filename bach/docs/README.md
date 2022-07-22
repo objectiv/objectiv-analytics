@@ -16,9 +16,9 @@ Generating and publishing the docs for `Bach` involve a few steps:
 
 2. Generate Docusaurus modeling docs:
 ```bash
-  make clean docusaurus
+  make clean doctest docusaurus
   # OR to also clean up the objectiv.io repo's /docs/modeling folder
-  # make clean clean-target docusaurus
+  # make clean clean-target doctest docusaurus
 ```
 3. Push generated docs to docusaurus:
    1. Make sure to have a checkout of objectiv/objectiv.io.
@@ -26,7 +26,7 @@ Generating and publishing the docs for `Bach` involve a few steps:
 ```bash
    make copy-target
   # OR to run a fully clean build from scratch and copy it
-  # make clean clean-target docusaurus copy-target
+  # make clean clean-target doctest docusaurus copy-target
 ```
 
 This process will generate and push the .mdx files to the objectiv.io repo. How to run / publish the docs is 
